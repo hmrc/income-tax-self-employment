@@ -1,7 +1,23 @@
 
 # income-tax-self-employment
 
-This is a placeholder README.md for a new repository
+This is where we make API calls from users viewing and making changes to the Self-Employment section of their income tax return.
+
+## Running the service locally
+
+You will need to have the following:
+- Installed/configured [service manager](https://github.com/hmrc/service-manager).
+
+The service manager profile for this service is:
+
+    sm --start INCOME_TAX_SELF_EMPLOYMENT
+Run the following command to start the remaining services locally:
+
+    sudo mongod (If not already running)
+    sm --start INCOME_TAX_SUBMISSION_ALL -r
+
+This service runs on port: `localhost:10900`
+
 
 ### License
 
