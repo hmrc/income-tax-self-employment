@@ -17,6 +17,7 @@ import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 
 lazy val microservice = Project("income-tax-self-employment", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
+  .disablePlugins(JUnitXmlReportPlugin)
   .settings(
     majorVersion        := 0,
     scalaVersion        := "2.13.8",
@@ -26,6 +27,6 @@ lazy val microservice = Project("income-tax-self-employment", file("."))
     scalacOptions += "-Wconf:src=routes/.*:s",
   )
   .configs(IntegrationTest)
-  .settings(integrationTestSettings(): _*)
+  .settings(integrationTestSettings() *)
   .settings(resolvers += Resolver.jcenterRepo)
-  .settings(CodeCoverageSettings.settings: _*)
+  .settings(CodeCoverageSettings.settings *)

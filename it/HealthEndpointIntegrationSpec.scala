@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxselfemployment
-
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxselfemployment.controllers
+package controller
 
+import controllers.MicroserviceHelloWorldController
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status
