@@ -79,13 +79,19 @@ object BusinessData {
     implicit val businessContactDetailsFormats: OFormat[BusinessContactDetails] = Json.format[BusinessContactDetails]
   }
   
-  case class GetBusinessDataRequest(
+  
+  case class TaxPayerDisplayResponse(
     safeId: String,
     nino: String,
-    mtdbsa: String,
+    mtdId: String,
+    yearOfMigration: String,
     propertyIncome: Boolean,
     businessData: Seq[BusinessData]
   )
+  object TaxPayerDisplayResponse {
+    implicit val taxPayerDisplayResponseFormat: OFormat[TaxPayerDisplayResponse] = Json.format[TaxPayerDisplayResponse]
+  }
+  case class GetBusinessDataRequest(processingDate: String, taxPayerDisplayResponse:TaxPayerDisplayResponse)
   object GetBusinessDataRequest {
     implicit val getBusinessesDataRequestFormat: OFormat[GetBusinessDataRequest] = Json.format[GetBusinessDataRequest]
   }

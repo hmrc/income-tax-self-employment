@@ -31,10 +31,14 @@ class BusinessServiceSpec extends TestUtils {
   
   "getBusinesses" should {
     
-    "return a Right connector return None" in {
+    "return a Right with GetBusinessDataRequest model" in {
+      
+    }
+    
+    "return a Left when connector returns None" in {
       stubBusinessConnector(Right(None))
       val result = await(service.getBusinesses(nino, businessId))
-       result mustBe Right(
+       result mustBe Left()
       
     }
   }

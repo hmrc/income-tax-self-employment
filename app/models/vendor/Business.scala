@@ -16,23 +16,27 @@
 
 package models.vendor
 
-import models.vendor.Business.AccountingPeriod
+import models.vendor.Business.{AccountingPeriod, LatencyDetails}
 import play.api.libs.json.{Json, OFormat}
 
 case class Business(
   businessId: String,
-  tradingName: Option[String],
   typeOfBusiness: String,
+  tradingName: Option[String],
+  yearOfMigration: Option[String],
   accountingPeriods: Seq[AccountingPeriod],
-  accountingType: String,
-  commencementDate: String,
-  cessationDate: String,
-  businessAddressLineOne: String,
-  businessAddressLineTwo: String,
-  businessAddressLineThree: String,
-  businessAddressLineFour: String,
-  businessAddressPostcode: String,
-  businessAddressCountryCode: String
+  firstAccountingPeriodStartDate: Option[String],
+  firstAccountingPeriodEndDate: Option[String],
+  latencyDetails: Option[LatencyDetails],
+  accountingType: Option[String],
+  commencementDate: Option[String],
+  cessationDate: Option[String],
+  businessAddressLineOne: Option[String],
+  businessAddressLineTwo: Option[String],
+  businessAddressLineThree: Option[String],
+  businessAddressLineFour: Option[String],
+  businessAddressPostcode: Option[String],
+  businessAddressCountryCode: Option[String]
 )
 
 object Business {
@@ -42,4 +46,6 @@ object Business {
   object AccountingPeriod {
     implicit val accountingPeriodFormat: OFormat[AccountingPeriod] = Json.format[AccountingPeriod]
   }
+  
+  case class LatencyDetails(latencyEndDate: String, taxYear1: String, latencyIndicator1: String, taxYear2: String, latencyIndicator2: String)
 }
