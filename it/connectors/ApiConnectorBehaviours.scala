@@ -17,20 +17,15 @@
 package connectors
 
 import config.AppConfig
-import connectors.ApiConnector.{ApiType, DES}
 import uk.gov.hmrc.http.HeaderNames.{authorisation, xRequestChain, xSessionId}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier, SessionId}
 import utils.TestUtils
 
 trait ApiConnectorBehaviours extends TestUtils {
-  def apiType: ApiType
+  def headerCarrierBlock: String => HeaderCarrier => HeaderCarrier
   
   class ApiFakeConnector(override val appConfig: AppConfig) extends ApiConnector {
-    def headerCarrierTest(url: String)(hc: HeaderCarrier): HeaderCarrier =
-      apiType match {
-        case DES => desHeaderCarrier(url)(hc)
-        case _ => desHeaderCarrier(url)(hc)
-      }
+    def headerCarrierTest(url: String)(hc: HeaderCarrier): HeaderCarrier = headerCarrierBlock(url)(hc)
   }
 
   val connector = new ApiFakeConnector(appConfig = mockAppConfig)
@@ -42,7 +37,7 @@ trait ApiConnectorBehaviours extends TestUtils {
       result.authorization mustBe Some(Authorization(s"Bearer $authToken"))
     }
   
-  def hostThatAddsEnvironment(internalHost: String, apiEnv: String): Unit =
+  def hostThatAddsEnvironment(internalHost: String, apiEnv: String):Unit =
     "add the correct environment" in {
       val hc = HeaderCarrier()
       val result = connector.headerCarrierTest(internalHost)(hc)

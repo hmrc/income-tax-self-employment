@@ -30,9 +30,9 @@ trait ApiConnector {
 
   val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 
-  private[connectors] def desHeaderCarrier(url : String)(implicit hc: HeaderCarrier): HeaderCarrier = {
-    val hcWithAuth = hc.copy(authorization = Some(Authorization(s"Bearer ${appConfig.desAuthorisationToken}")))
-    apiHeaderCarrier(url, hcWithAuth, "Environment" -> appConfig.desEnvironment)
+  private[connectors] def ifsHeaderCarrier(api : String)(url: String)(hc: HeaderCarrier): HeaderCarrier = {
+    val hcWithAuth = hc.copy(authorization = Some(Authorization(s"Bearer ${appConfig.ifsAuthorisationToken(api)}")))
+    apiHeaderCarrier(url, hcWithAuth, "Environment" -> appConfig.ifsEnvironment)
   }
   
   private def apiHeaderCarrier(url: String, hcWithAuth:  HeaderCarrier, headers: (String, String)) = {
@@ -47,6 +47,5 @@ trait ApiConnector {
 
 object ApiConnector {
   sealed trait ApiType
-  case object DES extends ApiType
-  case object IF extends ApiType
+  case object IFS extends ApiType
 }

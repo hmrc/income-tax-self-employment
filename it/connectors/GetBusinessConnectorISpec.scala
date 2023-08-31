@@ -16,11 +16,11 @@
 
 package connectors
 
+import bulders.BusinessDataBuilder.aGetBusinessDataRequestStr
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.AppConfig
-import connectors.BusinessConnector.{IdType, MtdId, Nino, businessUriPath}
-import connectors.GetBusinessConnectorISpec.expectedResponseBody
-import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesResponse
+import connectors.BusinessConnector.IdType.{MtdId, Nino}
+import connectors.BusinessConnector.businessUriPath
 import helpers.WiremockSpec
 import models.api.BusinessData.GetBusinessDataRequest
 import models.error.APIErrorBody.{APIError, APIStatusError}
@@ -36,108 +36,70 @@ class GetBusinessConnectorISpec extends WiremockSpec {
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
 
   def appConfig(businessApiHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val desBaseUrl: String = s"http://$businessApiHost:$wireMockPort"
+    override val ifsBaseUrl: String = s"http://$businessApiHost:$wireMockPort"
   }
 
   val (nino, mtdId) = ("123456789", "1234567890123456")
-  val (desNinoUrl, desMtdIdUrl) = (businessUriPath(Nino, nino), businessUriPath(MtdId, mtdId))
+  val (apiNinoUrl, apiMtdIdUrl) = (businessUriPath(Nino, nino), businessUriPath(MtdId, mtdId))
 
-  val headersSentToDes = Seq(
+  val headersSentToIfs = Seq(
     new HttpHeader(HeaderNames.authorisation, "Bearer secret"),
     new HttpHeader(HeaderNames.xSessionId, "sessionIdValue")
   )
 
   ".getBusinesses" should {
 
-    for ((idType, idNumber, desUrl) <- Seq((Nino, nino, desNinoUrl), (MtdId, mtdId, desMtdIdUrl))) {
+    for ((idType, idNumber, ifsUrl) <- Seq((Nino, nino, apiNinoUrl), (MtdId, mtdId, apiMtdIdUrl))) {
 
-      s"include internal headers - $desUrl" when {
+      s"include internal headers - $ifsUrl" when {
         val internalHost = "localhost"
         val externalHost = "127.0.0.1"
+        val expectedResponseBody = aGetBusinessDataRequestStr
 
         for ((intExtHost, intExt) <- Seq((internalHost, "Internal"), (externalHost, "External"))) {
 
-          s"the host for DES is '$intExt'" in {
+          s"the host for API is '$intExt'" in {
             val expectedResult = Json.parse(expectedResponseBody).as[GetBusinessDataRequest]
-            val result = connect(idType, idNumber,
-              HeaderCarrier(sessionId = Some(SessionId("sessionIdValue"))),
-              new BusinessConnector(httpClient, appConfig(intExtHost)))(desUrl, OK, expectedResponseBody, headersSentToDes
-            )
-            result mustBe Right(Some(expectedResult))
+
+            stubGetWithResponseBody(ifsUrl, OK, expectedResponseBody, headersSentToIfs)
+            auditStubs()
+
+            implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+            val result = await((new BusinessConnector(httpClient, appConfig(intExtHost))).getBusinesses(idType, idNumber)(hc))
+            result mustBe Right(expectedResult)
           }
         }
       }
 
-      s"return a Right None when NOT_FOUND - $desUrl" in {
-        val result = connect(idType, idNumber)(desUrl, NOT_FOUND, "")
-        result mustBe Right(None)
-      }
-
-      Seq(BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { errorStatus =>
+      Seq(NOT_FOUND, BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { errorStatus =>
         val (invalidIdType, invalidReason) = {
           val invalidParam = "Submission has not passed validation. Invalid parameter"
           if (idType == Nino) ("INVALID_NINO", s"$invalidParam NINO") else ("INVALID_MTDID", s"$invalidParam MTDID")
         }
-        val errorResponseBody = Json.obj("code" -> invalidIdType, "reason" -> invalidReason)
+        val errorResponseBody = Json.obj("code" -> invalidIdType, "reason" -> invalidReason, "errorType" -> "DOWNSTREAM_ERROR_CODE" )
         
-        s"return a $errorStatus  - $desUrl" in {
-          val result = connect(idType, idNumber)(desUrl, errorStatus, errorResponseBody.toString())
+        s"return a $errorStatus  - $ifsUrl" in {
+          stubGetWithResponseBody(ifsUrl, errorStatus, errorResponseBody.toString(), headersSentToIfs)
+          auditStubs()
+
+          implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+          val result = await(connector.getBusinesses(idType, idNumber)(hc))
           result mustBe Left(APIStatusError(errorStatus, APIError(invalidIdType, invalidReason)))
         }
       }
-    }
-    
-    def connect(idType: IdType, idNumber: String, headC: HeaderCarrier = HeaderCarrier(), busConnector: BusinessConnector = connector)
-                   (connectUrl: String, responseStatus: Int, responseBody: String, requestHeaders: Seq[HttpHeader] = Seq.empty): GetBusinessesResponse = {
-      stubGetWithResponseBody(connectUrl, responseStatus, responseBody, requestHeaders)
-      auditStubs()
+      
+      s"return a parsing error when the HeaderCarrier is insufficient - $ifsUrl" in {
+        val (invalidIdType, invalidReason) = ("PARSING_ERROR","Error parsing response from API")
+        val errorResponseBody = Json.obj("code" -> invalidIdType, "reason" -> invalidReason, "errorType" -> "DOWNSTREAM_ERROR_CODE" )
+        val errorStatus = 404
+        
+        stubGetWithResponseBody(ifsUrl, errorStatus, errorResponseBody.toString(), headersSentToIfs)
+        auditStubs()
 
-      implicit val hc: HeaderCarrier = headC
-      val result = await(busConnector.getBusinesses(idType, idNumber)(hc))
-      result
+        implicit val hc: HeaderCarrier = HeaderCarrier()
+        val result = await(connector.getBusinesses(idType, idNumber)(hc))
+        result mustBe Left(APIStatusError(errorStatus, APIError(invalidIdType, invalidReason)))
+      }
     }
-    
   }
-}
-
-object GetBusinessConnectorISpec {
-
-  val expectedResponseBody: String =
-    """
-      |{
-      |  "safeId": "XE00001234567890",
-      |  "nino": "AA123456A",
-      |  "mtdbsa": "123456789012345",
-      |  "propertyIncome": true,
-      |  "businessData": [
-      |    {
-      |      "incomeSourceId": "XAIS12345678910",
-      |      "accountingPeriodStartDate": "2019-01-01",
-      |      "accountingPeriodEndDate": "2019-12-31",
-      |      "tradingName": "RCDTS",
-      |      "businessAddressDetails": {
-      |        "addressLine1": "100 SuttonStreet",
-      |        "addressLine2": "Wokingham",
-      |        "addressLine3": "Surrey",
-      |        "addressLine4": "London",
-      |        "postalCode": "DH14EJ",
-      |        "countryCode": "GB"
-      |      },
-      |      "businessContactDetails": {
-      |        "phoneNumber": "01332752856",
-      |        "mobileNumber": "07782565326",
-      |        "faxNumber": "01332754256",
-      |        "emailAddress": "stephen@manncorpone.co.uk"
-      |      },
-      |      "tradingStartDate": "2001-01-01",
-      |      "cashOrAccruals": "cash",
-      |      "seasonal": true,
-      |      "cessationDate": "2001-01-01",
-      |      "cessationReason": "002",
-      |      "paperLess": true
-      |    }
-      |  ]
-      |}
-      |""".stripMargin
-  
 }

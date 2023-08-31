@@ -17,7 +17,7 @@
 package services
 
 import connectors.BusinessConnector
-import connectors.BusinessConnector.Nino
+import connectors.BusinessConnector.IdType.Nino
 import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesResponse
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -26,8 +26,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class BusinessService @Inject()(businessConnector: BusinessConnector) {
 
-  def getBusinesses(nino: String, businessId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[GetBusinessesResponse] =
-    businessConnector.getBusinesses(Nino, nino).map(_.map(_.map({ getBusinessDataRequest =>
-      getBusinessDataRequest.copy(businessData = getBusinessDataRequest.businessData.filter(_.incomeSourceId == businessId))
-    })))
+  def getBusinesses(nino: String)(implicit hc: HeaderCarrier): Future[GetBusinessesResponse] =
+    businessConnector.getBusinesses(Nino, nino)
+
+  def getBusiness(nino: String, businessId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[GetBusinessesResponse] =
+    businessConnector.getBusinesses(Nino, nino).map(_.map({ getBDR =>
+      getBDR.copy(taxPayerDisplayResponse = getBDR.taxPayerDisplayResponse
+        .copy(businessData = getBDR.taxPayerDisplayResponse.businessData.filter(_.incomeSourceId == businessId)))
+    }))
 }

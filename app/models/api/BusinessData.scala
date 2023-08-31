@@ -16,39 +16,44 @@
 
 package models.api
 
-import models.api.BusinessData.{BusinessAddressDetails, BusinessContactDetails}
-import models.vendor.Business
-import models.vendor.Business.AccountingPeriod
+import models.api.BusinessData.{BusinessAddressDetails, TaxPayerDisplayResponse, latencyIndicatorType, typeOfBusiness}
+import models.mdtp.Business
+import models.mdtp.Business.{AccountingPeriod, LatencyDetails}
 import play.api.libs.json.{Json, OFormat}
 
 case class BusinessData(
   incomeSourceId: String,
-  tradingName: String,
+  tradingName: Option[String],
   accountingPeriodStartDate: String,
   accountingPeriodEndDate: String,
-  cashOrAccruals: String,
-  tradingStartDate: String,
-  seasonal: Boolean,
-  cessationDate: String,
-  cessationReason: String,
-  paperLess: Boolean,
+  firstAccountingPeriodStartDate: Option[String],
+  firstAccountingPeriodEndDate:  Option[String],
+  latencyDetails: Option[LatencyDetails],
+  tradingStartDate: Option[String],
+  cashOrAccruals: Option[Boolean],
+  cessationDate: Option[String],
   businessAddressDetails: BusinessAddressDetails,
-  businessContactDetails: BusinessContactDetails
+
+  
 ) {
-  def toBusiness: Business = Business(
+  def toBusiness(taxPDR: TaxPayerDisplayResponse): Business = Business(
     businessId = incomeSourceId,
-    Some(tradingName),
-    typeOfBusiness = "self-employment",
+    typeOfBusiness,
+    tradingName,
+    taxPDR.yearOfMigration,
     accountingPeriods = Seq(AccountingPeriod(
       accountingPeriodStartDate, accountingPeriodEndDate
     )),
-    accountingType = cashOrAccruals,
+    firstAccountingPeriodStartDate, firstAccountingPeriodEndDate,
+    latencyDetails.map(ld => ld.copy(latencyIndicator1 = latencyIndicatorType(ld.latencyIndicator1),
+                                           latencyIndicator2 = latencyIndicatorType(ld.latencyIndicator2))),
+    accountingType = cashOrAccruals.map(if (_) "ACCRUAL" else "CASH"),
     commencementDate = tradingStartDate,
-    cessationDate = cessationDate,
+    cessationDate,
     businessAddressLineOne = businessAddressDetails.addressLine1,
-    businessAddressLineTwo = businessAddressDetails.addressLine1,
-    businessAddressLineThree = businessAddressDetails.addressLine1,
-    businessAddressLineFour = businessAddressDetails.addressLine1,
+    businessAddressLineTwo = businessAddressDetails.addressLine2,
+    businessAddressLineThree = businessAddressDetails.addressLine3,
+    businessAddressLineFour = businessAddressDetails.addressLine4,
     businessAddressPostcode = businessAddressDetails.postalCode,
     businessAddressCountryCode = businessAddressDetails.countryCode
   )
@@ -59,33 +64,21 @@ object BusinessData {
   
   case class BusinessAddressDetails(
     addressLine1: String,
-    addressLine2: String,
-    addressLine3: String,
-    addressLine4: String,
-    postalCode: String,
+    addressLine2: Option[String],
+    addressLine3: Option[String],
+    addressLine4: Option[String],
+    postalCode: Option[String],
     countryCode: String
   )
   object BusinessAddressDetails {
     implicit val businessAddressDetailsFormat: OFormat[BusinessAddressDetails] = Json.format[BusinessAddressDetails]
   }
   
-  case class BusinessContactDetails(
-    phoneNumber: String,
-    mobileNumber: String,
-    faxNumber: String,
-    emailAddress: String
-  )
-  object BusinessContactDetails {
-    implicit val businessContactDetailsFormats: OFormat[BusinessContactDetails] = Json.format[BusinessContactDetails]
-  }
-  
-  
   case class TaxPayerDisplayResponse(
     safeId: String,
     nino: String,
     mtdId: String,
-    yearOfMigration: String,
-    propertyIncome: Boolean,
+    yearOfMigration: Option[String],
     businessData: Seq[BusinessData]
   )
   object TaxPayerDisplayResponse {
@@ -95,4 +88,7 @@ object BusinessData {
   object GetBusinessDataRequest {
     implicit val getBusinessesDataRequestFormat: OFormat[GetBusinessDataRequest] = Json.format[GetBusinessDataRequest]
   }
+  
+  val latencyIndicatorType: String => String = (latencyIndicator) => if (latencyIndicator == "Q") "Quarterly" else "Annual"
+  val typeOfBusiness = "self-employment"
 }

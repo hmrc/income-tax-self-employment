@@ -26,7 +26,7 @@ lazy val microservice = Project("income-tax-self-employment", file("."))
     // suppress warnings in generated routes files
     scalacOptions += "-Wconf:src=routes/.*:s",
   )
-  .configs(IntegrationTest)
+  .configs(IntegrationTest extend Test)
   .settings(integrationTestSettings() *)
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings *)

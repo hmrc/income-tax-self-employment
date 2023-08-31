@@ -16,23 +16,22 @@
 
 package connectors
 
-import connectors.ApiConnector.DES
-
-class DesConnectorSpec extends ApiConnectorBehaviours {
+class IfsConnectorSpec extends ApiConnectorBehaviours {
   
-  val apiType = DES
+  val api = "1171"
+  val headerCarrierBlock = connector.ifsHeaderCarrier(api)
   
   "FakeConnector" when {
 
     "host is Internal" should {
       val internalHost = "http://localhost"
-      behave like hostThatAddsAuthorization(internalHost, mockAppConfig.desAuthorisationToken)
-      behave like hostThatAddsEnvironment(internalHost, mockAppConfig.desEnvironment)
+      behave like hostThatAddsAuthorization(internalHost, mockAppConfig.ifsAuthorisationToken(api))
+      behave like hostThatAddsEnvironment(internalHost, mockAppConfig.ifsEnvironment)
     }
 
     "host is External" should {
       val externalHost = "http://127.0.0.1"
-      behave like hostThaIncludesAllHeaderCarriers(externalHost, mockAppConfig.desAuthorisationToken, mockAppConfig.desEnvironment)
+      behave like hostThaIncludesAllHeaderCarriers(externalHost, mockAppConfig.ifsAuthorisationToken(api), mockAppConfig.ifsEnvironment)
     }
   }
 

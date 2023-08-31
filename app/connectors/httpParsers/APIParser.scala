@@ -17,16 +17,16 @@
 package connectors.httpParsers
 
 import models.error.APIErrorBody.{APIError, APIErrors, APIStatusError}
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, SERVICE_UNAVAILABLE}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK, SERVICE_UNAVAILABLE}
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.{getCorrelationId, pagerDutyLog}
 
 trait APIParser {
-  val parserName : String
-  val apiType : String
+  val parserName: String
+  val apiType: String
 
-  def logMessage(response:HttpResponse): String =
+  def logMessage(response: HttpResponse): String =
     s"[$parserName][read] Received ${response.status} from $apiType API. Body:${response.body} ${getCorrelationId(response)}"
 
   def badSuccessJsonFromAPI[Response]: Either[APIStatusError, Response] = {
@@ -55,27 +55,34 @@ trait APIParser {
       case _: Exception => Left(APIStatusError(status, APIError.parsingError))
     }
   }
-  
+
+  def pagerDutyError[A](response: HttpResponse): Either[APIStatusError, A] =
+    response.status match {
+      case BAD_REQUEST =>
+        pagerDutyLog(FOURXX_RESPONSE_FROM_API, logMessage(response))
+        handleAPIError(response)
+      case NOT_FOUND =>
+        pagerDutyLog(FOURXX_RESPONSE_FROM_API, logMessage(response))
+        handleAPIError(response)
+      case INTERNAL_SERVER_ERROR =>
+        pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_API, logMessage(response))
+        handleAPIError(response)
+      case SERVICE_UNAVAILABLE =>
+        pagerDutyLog(SERVICE_UNAVAILABLE_FROM_API, logMessage(response))
+        handleAPIError(response)
+      case _ =>
+        pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, logMessage(response))
+        handleAPIError(response, Some(INTERNAL_SERVER_ERROR))
+    }
+
+
   type SessionResponse = Either[APIStatusError, Unit]
 
   implicit object SessionHttpReads extends HttpReads[SessionResponse] {
-    override def read(method: String, url: String, response: HttpResponse): SessionResponse = {
+    override def read(method: String, url: String, response: HttpResponse): SessionResponse =
       response.status match {
-        case NO_CONTENT  => Right(())
-        case NOT_FOUND => Right(None)
-        case BAD_REQUEST =>
-          pagerDutyLog(FOURXX_RESPONSE_FROM_API, logMessage(response))
-          handleAPIError(response)
-        case INTERNAL_SERVER_ERROR =>
-          pagerDutyLog(INTERNAL_SERVER_ERROR_FROM_API, logMessage(response))
-          handleAPIError(response)
-        case SERVICE_UNAVAILABLE =>
-          pagerDutyLog(SERVICE_UNAVAILABLE_FROM_API, logMessage(response))
-          handleAPIError(response)
-        case _ =>
-          pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, logMessage(response))
-          handleAPIError(response, Some(INTERNAL_SERVER_ERROR))
-      }
+        case OK|NO_CONTENT => Right(())
+        case _ => pagerDutyError(response)
     }
   }
 }

@@ -17,7 +17,6 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
-import models.error.APIErrorBody.APIError
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -33,11 +32,22 @@ class BusinessController @Inject()(businessService: BusinessService,
                                    cc: ControllerComponents
                                         )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
-  def getBusinesses(nino: String, businessId: String): Action[AnyContent] = auth.async { implicit user =>
-    businessService.getBusinesses(nino, businessId).map {
-      case Right(None) => NotFound(Json.toJson(APIError.data404))
-      case Right(Some(model)) => Ok(Json.toJson(model.businessData.map(_.toBusiness)))
-      case Left(errorModel) => Status(errorModel.status)(errorModel.toJson)
+  def getBusinesses(nino: String): Action[AnyContent] = auth.async { implicit user =>
+    businessService.getBusinesses(nino).map {
+      case Right(model) => Ok(Json.toJson(model.taxPayerDisplayResponse.businessData.map(_.toBusiness(model.taxPayerDisplayResponse))))
+      case Left(errorModel) =>
+        val mdtpErrorModel = errorModel.toMdtpError
+        Status(mdtpErrorModel.status)(mdtpErrorModel.toJson)
     }
   }
+
+  def getBusiness(nino: String, businessId: String): Action[AnyContent] = auth.async { implicit user =>
+    businessService.getBusiness(nino, businessId).map {
+      case Right(model) => Ok(Json.toJson(model.taxPayerDisplayResponse.businessData.map(_.toBusiness(model.taxPayerDisplayResponse))))
+      case Left(errorModel) =>
+        val mdtpErrorModel = errorModel.toMdtpError
+        Status(mdtpErrorModel.status)(mdtpErrorModel.toJson)
+    }
+  }
+  
 }

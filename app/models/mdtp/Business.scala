@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package models.vendor
+package models.mdtp
 
-import models.vendor.Business.{AccountingPeriod, LatencyDetails}
+import models.mdtp.Business.{AccountingPeriod, LatencyDetails}
 import play.api.libs.json.{Json, OFormat}
 
 case class Business(
@@ -31,12 +31,12 @@ case class Business(
   accountingType: Option[String],
   commencementDate: Option[String],
   cessationDate: Option[String],
-  businessAddressLineOne: Option[String],
+  businessAddressLineOne: String,
   businessAddressLineTwo: Option[String],
   businessAddressLineThree: Option[String],
   businessAddressLineFour: Option[String],
   businessAddressPostcode: Option[String],
-  businessAddressCountryCode: Option[String]
+  businessAddressCountryCode: String
 )
 
 object Business {
@@ -48,4 +48,7 @@ object Business {
   }
   
   case class LatencyDetails(latencyEndDate: String, taxYear1: String, latencyIndicator1: String, taxYear2: String, latencyIndicator2: String)
+  object LatencyDetails {
+    implicit val latencyDetailsFormat: OFormat[LatencyDetails] = Json.format[LatencyDetails]
+  }
 }

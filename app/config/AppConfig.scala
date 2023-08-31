@@ -26,7 +26,7 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
   
-  val desEnvironment: String = config.get[String]("microservice.services.des.environment")
-  val desAuthorisationToken: String = config.get[String]("microservice.services.des.authorisation-token")
-  val desBaseUrl: String = servicesConfig.baseUrl("des")
+  val ifsEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
+  def ifsAuthorisationToken(api:String): String = config.get[String](s"microservice.services.integration-framework.authorisation-token.$api")
+  val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
 }

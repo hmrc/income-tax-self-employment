@@ -17,7 +17,7 @@
 package connectors
 
 import config.AppConfig
-import connectors.BusinessConnector.{IdType, businessUriPath}
+import connectors.BusinessConnector.{BusinessesBaseApi, IdType, businessUriPath}
 import connectors.httpParsers.GetBusinessesHttpParser.{GetBusinessesHttpReads, GetBusinessesResponse}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
@@ -28,7 +28,7 @@ class BusinessConnector @Inject()(val http: HttpClient,
                                   val appConfig: AppConfig)(implicit ec: ExecutionContext) extends ApiConnector {
   
   private def businessIncomeSourceUri(idType: IdType, idNumber: String): String =
-    appConfig.desBaseUrl + businessUriPath(idType, idNumber)
+    appConfig.ifsBaseUrl + businessUriPath(idType, idNumber)
 
   def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier): Future[GetBusinessesResponse] = {
     val incomeSourceUri: String = businessIncomeSourceUri(idType, idNumber)
@@ -36,21 +36,25 @@ class BusinessConnector @Inject()(val http: HttpClient,
     def apiCall(implicit hc: HeaderCarrier): Future[GetBusinessesResponse] = {
       http.GET[GetBusinessesResponse](incomeSourceUri)
     }
-    apiCall(desHeaderCarrier(incomeSourceUri))
+    apiCall(ifsHeaderCarrier(BusinessesBaseApi.Get)(incomeSourceUri)(hc))
   }
 }
 
 object BusinessConnector {
   sealed trait IdType
   object IdType {
-    def fromStr(str: String): IdType = str match {
-      case "nino" => Nino
-      case "mtdId" => MtdId
+    case object Nino extends IdType {
+      override def toString: String = "nino"
+    }
+    case object MtdId extends IdType {
+      override def toString: String = "mtdId"
     }
   }
-  case object Nino extends IdType {override def toString: String = "nino"}
-  case object MtdId extends IdType {override def toString: String = "mtdId"}
   
   def businessUriPath(idType: IdType, idNumber: String): String =
     s"/registration/business-details/$idType/$idNumber"
+    
+  object BusinessesBaseApi {
+    val Get = "1171"
+  }
 }

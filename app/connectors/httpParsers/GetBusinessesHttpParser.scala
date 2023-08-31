@@ -17,14 +17,12 @@
 package connectors.httpParsers
 
 import models.api.BusinessData.GetBusinessDataRequest
-import models.error.APIErrorBody.{APIError, APIStatusError}
+import models.error.APIErrorBody.APIStatusError
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
-import utils.PagerDutyHelper.PagerDutyKeys._
-import utils.PagerDutyHelper.pagerDutyLog
 
 object GetBusinessesHttpParser extends APIParser {
-  type GetBusinessesResponse = Either[APIStatusError, Option[GetBusinessDataRequest]]
+  type GetBusinessesResponse = Either[APIStatusError, GetBusinessDataRequest]
 
   override val parserName: String = "GetBusinessHttpParser"
   override val apiType: String = "income-tax-self-employment"
@@ -34,13 +32,9 @@ object GetBusinessesHttpParser extends APIParser {
     override def read(method: String, url: String, response: HttpResponse): GetBusinessesResponse =
       response.status match {
         case OK => response.json.validate[GetBusinessDataRequest].fold[GetBusinessesResponse](
-          _ => {
-            pagerDutyLog(BAD_SUCCESS_JSON_FROM_DES, s"[GetBusinessHttpParser][read] Invalid Json from DES.")
-            Left(APIStatusError(INTERNAL_SERVER_ERROR, APIError.parsingError))
-          },
-          parsedModel => Right(Some(parsedModel))
+          _ => badSuccessJsonFromAPI, parsedModel => Right(parsedModel)
         )
-        case _ => SessionHttpReads.read(method, url, response).map(_ => None)
+        case _ => pagerDutyError(response)
     }
   }
 }

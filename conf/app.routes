@@ -1,6 +1,5 @@
 # microservice specific routes
 
-GET        /hello-world             controllers.MicroserviceHelloWorldController.hello
-
 #Business
-GET        /business/:nino/:businessId     controllers.BusinessController.getBusinesses(nino: String, businessId: String)
+GET        /business/:nino                 controllers.BusinessController.getBusinesses(nino: String)
+GET        /business/:nino/:businessId     controllers.BusinessController.getBusiness(nino: String, businessId: String)
