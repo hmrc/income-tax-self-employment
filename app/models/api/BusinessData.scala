@@ -32,9 +32,7 @@ case class BusinessData(
   tradingStartDate: Option[String],
   cashOrAccruals: Option[Boolean],
   cessationDate: Option[String],
-  businessAddressDetails: BusinessAddressDetails,
-
-  
+  businessAddressDetails: BusinessAddressDetails
 ) {
   def toBusiness(taxPDR: TaxPayerDisplayResponse): Business = Business(
     businessId = incomeSourceId,
