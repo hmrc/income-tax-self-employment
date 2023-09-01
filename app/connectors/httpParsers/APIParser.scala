@@ -17,19 +17,19 @@
 package connectors.httpParsers
 
 import models.error.APIErrorBody.{APIError, APIErrors, APIStatusError}
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK, SERVICE_UNAVAILABLE}
-import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, SERVICE_UNAVAILABLE}
+import uk.gov.hmrc.http.HttpResponse
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.{getCorrelationId, pagerDutyLog}
 
 trait APIParser {
-  val parserName: String
-  val apiType: String
+  def parserName: String
+  def apiType: String
 
   def logMessage(response: HttpResponse): String =
     s"[$parserName][read] Received ${response.status} from $apiType API. Body:${response.body} ${getCorrelationId(response)}"
 
-  def badSuccessJsonFromAPI[Response]: Either[APIStatusError, Response] = {
+  def nonModelValidatingJsonFromAPI[Response]: Either[APIStatusError, Response] = {
     pagerDutyLog(BAD_SUCCESS_JSON_FROM_API, s"[$parserName][read] Invalid Json from $apiType API.")
     Left(APIStatusError(INTERNAL_SERVER_ERROR, APIError.parsingError))
   }
@@ -45,8 +45,8 @@ trait APIParser {
       lazy val apiErrors = json.asOpt[APIErrors]
 
       (apiError, apiErrors) match {
-        case (Some(apiError), _) => Left(APIStatusError(status, apiError))
-        case (_, Some(apiErrors)) => Left(APIStatusError(status, apiErrors))
+        case (Some(apiErr), _) => Left(APIStatusError(status, apiErr))
+        case (_, Some(apiErrs)) => Left(APIStatusError(status, apiErrs))
         case _ =>
           pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, s"[$parserName][read] Unexpected Json from $apiType API.")
           Left(APIStatusError(status, APIError.parsingError))
@@ -74,15 +74,4 @@ trait APIParser {
         pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, logMessage(response))
         handleAPIError(response, Some(INTERNAL_SERVER_ERROR))
     }
-
-
-  type SessionResponse = Either[APIStatusError, Unit]
-
-  implicit object SessionHttpReads extends HttpReads[SessionResponse] {
-    override def read(method: String, url: String, response: HttpResponse): SessionResponse =
-      response.status match {
-        case OK|NO_CONTENT => Right(())
-        case _ => pagerDutyError(response)
-    }
-  }
 }

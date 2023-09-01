@@ -32,7 +32,7 @@ object GetBusinessesHttpParser extends APIParser {
     override def read(method: String, url: String, response: HttpResponse): GetBusinessesResponse =
       response.status match {
         case OK => response.json.validate[GetBusinessDataRequest].fold[GetBusinessesResponse](
-          _ => badSuccessJsonFromAPI, parsedModel => Right(parsedModel)
+          _ => nonModelValidatingJsonFromAPI, parsedModel => Right(parsedModel)
         )
         case _ => pagerDutyError(response)
     }

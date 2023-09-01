@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package controller
+package controllers
 
 import bulders.BusinessDataBuilder.{aBusinesses, aGetBusinessDataRequestStr}
 import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesResponse
 import controllers.BusinessController
 import models.api.BusinessData.GetBusinessDataRequest
-import play.api.http.Status.OK
+import models.error.APIErrorBody.{APIError, APIStatusError}
+import play.api.http.Status.{BAD_REQUEST, OK}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import services.BusinessService
@@ -35,35 +36,49 @@ class BusinessControllerSpec extends TestUtils {
 
   val nino = "FI290077A"
   val businessId = "SJPR05893938418"
-  
-  behave like businessGetShould("GET /business/:nino")(
-    () => stubGetBusinesses(Right(Json.parse(aGetBusinessDataRequestStr).as[GetBusinessDataRequest])))(
-    () => underTest.getBusinesses(nino))
-  
-  behave like businessGetShould("GET /business/:nino/:businessId")(
-    () => stubGetBusiness(Right(Json.parse(aGetBusinessDataRequestStr).as[GetBusinessDataRequest])))(
-    () => underTest.getBusiness(nino, businessId))
-  
-  def businessGetShould(getName: String)(stubs:() => Unit)(block: () => Action[AnyContent]): Unit =
-    s".$getName" should {
-      "return a 200 response and a GetBusinessRequest model" in {
-        val result = {
-          mockAuth()
-          stubs()
-          block()(fakeRequest)
-        }
-        status(result) mustBe OK
-        bodyOf(result) mustBe Json.toJson(aBusinesses).toString()
+
+  "GET /business" should {
+    behave like businessRequestReturnsOk(
+      () => stubGetBusinesses(Right(Json.parse(aGetBusinessDataRequestStr).as[GetBusinessDataRequest])))(
+      () => underTest.getBusinesses(nino))
+
+    behave like businessRequestReturnsError(
+      () => stubGetBusinesses(Left(APIStatusError(BAD_REQUEST, APIError("INVALID_NINO",
+        "Submission has not passed validation. Invalid parameter  NINO")))))(
+      () => underTest.getBusinesses(nino))
+  }
+
+  "GET /business/:nino" should {
+    behave like businessRequestReturnsOk(
+      () => stubGetBusiness(Right(Json.parse(aGetBusinessDataRequestStr).as[GetBusinessDataRequest])))(
+      () => underTest.getBusiness(nino, businessId))
+
+    behave like businessRequestReturnsError(
+      () => stubGetBusiness(Left(APIStatusError(BAD_REQUEST, APIError("INVALID_NINO",
+        "Submission has not passed validation. Invalid parameter  NINO")))))(
+      () => underTest.getBusiness(nino, businessId))
+  }
+
+
+  def businessRequestReturnsOk(stubs: () => Unit)(block: () => Action[AnyContent]): Unit =
+    "return a 200 response and a GetBusinessRequest model" in {
+      val result = {
+        mockAuth()
+        stubs()
+        block()(fakeRequest)
       }
-      
-      "return an error when the connector returns an error" in {
-        val result = {
-          mockAuth()
-          stubs()
-          block()(fakeRequest)
-        }
-        status(result) mustBe OK
+      status(result) mustBe OK
+      bodyOf(result) mustBe Json.toJson(aBusinesses).toString()
+    }
+
+  def businessRequestReturnsError(stubs: () => Unit)(block: () => Action[AnyContent]): Unit =
+    "return an error when the connector returns an error" in {
+      val result = {
+        mockAuth()
+        stubs()
+        block()(fakeRequest)
       }
+      status(result) mustBe BAD_REQUEST
     }
 
   def stubGetBusinesses(expectedResult: GetBusinessesResponse): Unit =
