@@ -13,26 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import sbt.Setting
-import scoverage.ScoverageKeys
 
-object CodeCoverageSettings {
+package models.api
 
-  private val excludedPackages: Seq[String] = Seq(
-    "<empty>",
-    "Reverse.*",
-    "uk.gov.hmrc.BuildInfo",
-    "app.*",
-    "prod.*",
-    ".*Routes.*",
-    "testOnly.*",
-    "testOnlyDoNotUseInAppConf.*"
-  )
+import models.api.BusinessData.GetBusinessDataRequest
+import play.api.libs.json.{Json, OFormat}
 
-  val settings: Seq[Setting[_]] = Seq(
-    ScoverageKeys.coverageExcludedPackages := excludedPackages.mkString(";"),
-    ScoverageKeys.coverageMinimumStmtTotal := 90,
-    ScoverageKeys.coverageFailOnMinimum := true,
-    ScoverageKeys.coverageHighlighting := true
-  )
+case class AllSelfEmploymentData(businessDetails: Option[GetBusinessDataRequest])
+
+object  AllSelfEmploymentData {
+  implicit val allSelfEmploymentDataFormat: OFormat[AllSelfEmploymentData] = Json.format[AllSelfEmploymentData]
 }
+

@@ -14,14 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.incometaxselfemployment.config
+package connectors.httpParsers
 
-import com.google.inject.AbstractModule
-
-class Module extends AbstractModule {
-
-  override def configure(): Unit = {
-
-    bind(classOf[AppConfig]).asEagerSingleton()
-  }
+class IFSParserSpec extends APIParserBehaviours {
+  val apiTypeName = "IFS"
+  
+  behave like parserShould()
 }

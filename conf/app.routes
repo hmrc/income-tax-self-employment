@@ -1,3 +1,5 @@
 # microservice specific routes
 
-GET        /hello-world             uk.gov.hmrc.incometaxselfemployment.controllers.MicroserviceHelloWorldController.hello
+#Business
+GET        /business/:nino                 controllers.BusinessController.getBusinesses(nino: String)
+GET        /business/:nino/:businessId     controllers.BusinessController.getBusiness(nino: String, businessId: String)
