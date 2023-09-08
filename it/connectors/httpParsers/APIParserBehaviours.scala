@@ -38,6 +38,7 @@ trait APIParserBehaviours extends TestUtils {
   val svcUnavailJs = s"""{"code":"SERVICE_UNAVAILABLE", "reason":"$serviceUnavailableReason", "errorType":"DOWNSTREAM_ERROR_CODE"}"""
   val svrErrJs = s"""{"code":"SERVER_ERROR", "reason":"$serverErrorReason", "errorType":"DOWNSTREAM_ERROR_CODE"}"""
   val multiErrJs = s"""{"failures":[$svcUnavailJs, $svrErrJs]}""".stripMargin
+  val nonValidatingJs = s"""{"code":"SERVER_ERROR", "reason":"$serverErrorReason", "errorType":"WRONG_ERROR_CODE"}"""
 
   def failureHttpResponse(json: JsValue): HttpResponse =
     HttpResponse(INTERNAL_SERVER_ERROR, json, Map("CorrelationId" -> Seq("1234645654645")))
@@ -91,7 +92,7 @@ trait APIParserBehaviours extends TestUtils {
     
   def returnJsonValidationError(): Unit =
     "return a non model validating json error" in {
-      val result = FakeParser.nonModelValidatingJsonFromAPI
+      val result = FakeParser.handleAPIError(failureHttpResponse(Json.parse(nonValidatingJs)))
       result mustBe Left(APIStatusError(INTERNAL_SERVER_ERROR, APIError("PARSING_ERROR", parsingErrorReason)))
     }
     

@@ -18,10 +18,10 @@ package controllers
 
 import bulders.BusinessDataBuilder.{aBusinesses, aGetBusinessDataRequestStr}
 import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesResponse
-import controllers.BusinessController
 import models.api.BusinessData.GetBusinessDataRequest
-import models.error.APIErrorBody.{APIError, APIStatusError}
-import play.api.http.Status.{BAD_REQUEST, OK}
+import models.error.APIErrorBody.APIError.{data404, ifsServer500, nino400, service503}
+import models.error.APIErrorBody.APIStatusError
+import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import services.BusinessService
@@ -37,25 +37,21 @@ class BusinessControllerSpec extends TestUtils {
   val nino = "FI290077A"
   val businessId = "SJPR05893938418"
 
-  "GET /business" should {
+  s"GET /individuals/business/details/$nino/list" should {
     behave like businessRequestReturnsOk(
       () => stubGetBusinesses(Right(Json.parse(aGetBusinessDataRequestStr).as[GetBusinessDataRequest])))(
       () => underTest.getBusinesses(nino))
 
-    behave like businessRequestReturnsError(
-      () => stubGetBusinesses(Left(APIStatusError(BAD_REQUEST, APIError("INVALID_NINO",
-        "Submission has not passed validation. Invalid parameter  NINO")))))(
+    behave like businessRequestReturnsError( stubGetBusinesses )(
       () => underTest.getBusinesses(nino))
   }
 
-  "GET /business/:nino" should {
+  s"GET /individuals/business/details/$nino/$businessId" should {
     behave like businessRequestReturnsOk(
       () => stubGetBusiness(Right(Json.parse(aGetBusinessDataRequestStr).as[GetBusinessDataRequest])))(
       () => underTest.getBusiness(nino, businessId))
-
-    behave like businessRequestReturnsError(
-      () => stubGetBusiness(Left(APIStatusError(BAD_REQUEST, APIError("INVALID_NINO",
-        "Submission has not passed validation. Invalid parameter  NINO")))))(
+    
+    behave like businessRequestReturnsError( stubGetBusiness )(
       () => underTest.getBusiness(nino, businessId))
   }
 
@@ -70,16 +66,25 @@ class BusinessControllerSpec extends TestUtils {
       status(result) mustBe OK
       bodyOf(result) mustBe Json.toJson(aBusinesses).toString()
     }
-
-  def businessRequestReturnsError(stubs: () => Unit)(block: () => Action[AnyContent]): Unit =
-    "return an error when the connector returns an error" in {
-      val result = {
-        mockAuth()
-        stubs()
-        block()(fakeRequest)
+  
+  def businessRequestReturnsError(stubs: GetBusinessesResponse => Unit)(block: () => Action[AnyContent]): Unit =
+    "return an error" when {
+      for ((errorStatus, apiError) <- Seq(
+        (NOT_FOUND, data404), (BAD_REQUEST, nino400),
+        (INTERNAL_SERVER_ERROR, ifsServer500), (SERVICE_UNAVAILABLE, service503))) {
+        
+        s"the connector returns a ${apiError.code} error" in {
+          val result = {
+            mockAuth()
+            stubs(Left(APIStatusError(errorStatus, apiError)))
+            block()(fakeRequest)
+          }
+          status(result) mustBe errorStatus
+          bodyOf(result) mustBe APIStatusError(errorStatus, apiError.toMdtpError).toJson.toString()
+        }
       }
-      status(result) mustBe BAD_REQUEST
     }
+
 
   def stubGetBusinesses(expectedResult: GetBusinessesResponse): Unit =
     (mockBusinessService.getBusinesses(_: String)(_: HeaderCarrier))

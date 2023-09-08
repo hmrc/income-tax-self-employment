@@ -31,12 +31,12 @@ case class Business(
   accountingType: Option[String],
   commencementDate: Option[String],
   cessationDate: Option[String],
-  businessAddressLineOne: String,
+  businessAddressLineOne: Option[String],
   businessAddressLineTwo: Option[String],
   businessAddressLineThree: Option[String],
   businessAddressLineFour: Option[String],
   businessAddressPostcode: Option[String],
-  businessAddressCountryCode: String
+  businessAddressCountryCode: Option[String]
 )
 
 object Business {
