@@ -32,8 +32,8 @@ case class BusinessData(
   tradingStartDate: Option[String],
   cashOrAccruals: Option[Boolean],
   cessationDate: Option[String],
-  businessAddressDetails: BusinessAddressDetails
-) {
+  businessAddressDetails: BusinessAddressDetails) extends IncomeSource {
+  
   def toBusiness(taxPDR: TaxPayerDisplayResponse): Business = Business(
     businessId = incomeSourceId,
     typeOfBusiness,
@@ -61,13 +61,16 @@ object BusinessData {
   implicit val businessFormat: OFormat[BusinessData] = Json.format[BusinessData]
   
   case class BusinessAddressDetails(
-    addressLine1: String,
+    addressLine1: Option[String],
     addressLine2: Option[String],
     addressLine3: Option[String],
     addressLine4: Option[String],
     postalCode: Option[String],
-    countryCode: String
-  )
+    countryCode: Option[String]
+  ) {
+    require(countryCode.getOrElse("") != "GB" || postalCode.nonEmpty)
+    require(countryCode.getOrElse("  ").length == 2)
+  }
   object BusinessAddressDetails {
     implicit val businessAddressDetailsFormat: OFormat[BusinessAddressDetails] = Json.format[BusinessAddressDetails]
   }

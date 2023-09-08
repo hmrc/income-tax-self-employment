@@ -23,6 +23,7 @@ import connectors.BusinessConnector.IdType.{MtdId, Nino}
 import connectors.BusinessConnector.businessUriPath
 import helpers.WiremockSpec
 import models.api.BusinessData.GetBusinessDataRequest
+import models.error.APIErrorBody.APIError.{data404, ifsServer500, mtdId400, nino400, service503}
 import models.error.APIErrorBody.{APIError, APIStatusError}
 import play.api.Configuration
 import play.api.http.Status._
@@ -71,34 +72,44 @@ class GetBusinessConnectorISpec extends WiremockSpec {
         }
       }
 
-      Seq(NOT_FOUND, BAD_REQUEST, INTERNAL_SERVER_ERROR, SERVICE_UNAVAILABLE).foreach { errorStatus =>
-        val (invalidIdType, invalidReason) = {
-          val invalidParam = "Submission has not passed validation. Invalid parameter"
-          if (idType == Nino) ("INVALID_NINO", s"$invalidParam NINO") else ("INVALID_MTDID", s"$invalidParam MTDID")
-        }
-        val errorResponseBody = Json.obj("code" -> invalidIdType, "reason" -> invalidReason, "errorType" -> "DOWNSTREAM_ERROR_CODE" )
-        
+      for ((errorStatus, apiError) <- Seq(
+        (NOT_FOUND, data404), (BAD_REQUEST, if (idType == Nino) nino400 else mtdId400),
+        (INTERNAL_SERVER_ERROR, ifsServer500), (SERVICE_UNAVAILABLE, service503))) {
+        val errorResponseBody = Json.obj("code" -> apiError.code, "reason" -> apiError.reason, "errorType" -> "DOWNSTREAM_ERROR_CODE")
+
         s"return a $errorStatus  - $ifsUrl" in {
           stubGetWithResponseBody(ifsUrl, errorStatus, errorResponseBody.toString(), headersSentToIfs)
           auditStubs()
 
           implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
           val result = await(connector.getBusinesses(idType, idNumber)(hc))
-          result mustBe Left(APIStatusError(errorStatus, APIError(invalidIdType, invalidReason)))
+          result mustBe Left(APIStatusError(errorStatus, apiError))
         }
       }
-      
-      s"return a parsing error when the HeaderCarrier is insufficient - $ifsUrl" in {
-        val (invalidIdType, invalidReason) = ("PARSING_ERROR","Error parsing response from API")
-        val errorResponseBody = Json.obj("code" -> invalidIdType, "reason" -> invalidReason, "errorType" -> "DOWNSTREAM_ERROR_CODE" )
-        val errorStatus = 404
-        
-        stubGetWithResponseBody(ifsUrl, errorStatus, errorResponseBody.toString(), headersSentToIfs)
-        auditStubs()
 
-        implicit val hc: HeaderCarrier = HeaderCarrier()
-        val result = await(connector.getBusinesses(idType, idNumber)(hc))
-        result mustBe Left(APIStatusError(errorStatus, APIError(invalidIdType, invalidReason)))
+      "return a parsing error" when {
+        val (invalidIdType, invalidReason) = ("PARSING_ERROR", "Error parsing response from API")
+        
+        
+        s"the HeaderCarrier is insufficient - $ifsUrl" in {
+          val errorStatus = 404
+          val errorResponseBody = Json.obj("code" -> invalidIdType, "reason" -> invalidReason, "errorType" -> "DOWNSTREAM_ERROR_CODE")
+          stubGetWithResponseBody(ifsUrl, errorStatus, errorResponseBody.toString(), headersSentToIfs)
+          auditStubs()
+          implicit val hc: HeaderCarrier = HeaderCarrier()
+          val result = await(connector.getBusinesses(idType, idNumber)(hc))
+          result mustBe Left(APIStatusError(errorStatus, APIError(invalidIdType, invalidReason)))
+        }
+        
+        s"the json fails to validate a non GetBusinessDataRequest json - $ifsUrl" in {
+          val errorStatus = 500
+          val nonGetBusinessDataRequestBody = Json.obj("field" -> "Non GetBusinessDataRequest json")
+          stubGetWithResponseBody(ifsUrl, OK, nonGetBusinessDataRequestBody.toString(), headersSentToIfs)
+          auditStubs()
+          implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
+          val result = await(connector.getBusinesses(idType, idNumber)(hc))
+          result mustBe Left(APIStatusError(errorStatus, APIError(invalidIdType, invalidReason)))
+        }
       }
     }
   }

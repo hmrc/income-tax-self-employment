@@ -16,14 +16,18 @@
 
 package connectors.httpParsers
 
+import models.error.APIErrorBody
 import models.error.APIErrorBody.{APIError, APIErrors, APIStatusError}
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, SERVICE_UNAVAILABLE}
 import uk.gov.hmrc.http.HttpResponse
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.{getCorrelationId, pagerDutyLog}
 
+import scala.util.{Failure, Success, Try}
+
 trait APIParser {
   def parserName: String
+
   def apiType: String
 
   def logMessage(response: HttpResponse): String =
@@ -35,26 +39,22 @@ trait APIParser {
   }
 
   def handleAPIError[Response](response: HttpResponse, statusOverride: Option[Int] = None): Either[APIStatusError, Response] = {
-
     val status = statusOverride.getOrElse(response.status)
-
-    try {
+    Try {
       val json = response.json
-
-      lazy val apiError = json.asOpt[APIError]
-      lazy val apiErrors = json.asOpt[APIErrors]
-
-      (apiError, apiErrors) match {
-        case (Some(apiErr), _) => Left(APIStatusError(status, apiErr))
-        case (_, Some(apiErrs)) => Left(APIStatusError(status, apiErrs))
-        case _ =>
-          pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, s"[$parserName][read] Unexpected Json from $apiType API.")
-          Left(APIStatusError(status, APIError.parsingError))
+      val apiError: APIErrorBody = {
+        val apiErrs = json.asOpt[APIErrors]
+        if (apiErrs.nonEmpty) apiErrs.get else json.as[APIError]
       }
-    } catch {
-      case _: Exception => Left(APIStatusError(status, APIError.parsingError))
+      Left(APIStatusError(status, apiError))
+    } match {
+      case Success(leftApiStatusError) => leftApiStatusError
+      case Failure(t) =>
+        pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, s"[$parserName][read] Unexpected Json error: ${t.getMessage} from $apiType API.")
+        Left(APIStatusError(status, APIError.parsingError))
     }
   }
+
 
   def pagerDutyError[A](response: HttpResponse): Either[APIStatusError, A] =
     response.status match {

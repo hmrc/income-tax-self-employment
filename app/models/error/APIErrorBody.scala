@@ -102,7 +102,7 @@ object APIErrorBody {
       "NOT_FOUND", "The remote endpoint has indicated that no data can be found.")
 
     val ifsServer500: APIError = APIError(
-      "SERVER_ERROR", "IFS is currently experiencing problems that require live service intervention.")
+      "SERVER_ERROR", "IF is currently experiencing problems that require live service intervention.")
 
     val service503: APIError = APIError(
       "SERVICE_UNAVAILABLE", "Dependent systems are currently not responding.")

@@ -24,6 +24,7 @@ object BusinessDataBuilder {
   lazy val aBusinessData = aGetBusinessDataRequest.taxPayerDisplayResponse.businessData
   lazy val aBusinesses = aBusinessData.map(_.toBusiness(aGetBusinessDataRequest.taxPayerDisplayResponse))
   
+  //Note our models use a subset of all the data pulled back by the API which is included here
   lazy val aGetBusinessDataRequestStr: String =
   """
       |{
