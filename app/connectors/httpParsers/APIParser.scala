@@ -16,8 +16,7 @@
 
 package connectors.httpParsers
 
-import models.error.APIErrorBody
-import models.error.APIErrorBody.{APIError, APIErrors, APIStatusError}
+import models.error.ApiError.{ApiErrorBody, ApiErrorsBody, ApiStatusError, ApiStatusErrors, StatusError}
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, SERVICE_UNAVAILABLE}
 import uk.gov.hmrc.http.HttpResponse
 import utils.PagerDutyHelper.PagerDutyKeys._
@@ -33,30 +32,27 @@ trait APIParser {
   def logMessage(response: HttpResponse): String =
     s"[$parserName][read] Received ${response.status} from $apiType API. Body:${response.body} ${getCorrelationId(response)}"
 
-  def nonModelValidatingJsonFromAPI[Response]: Either[APIStatusError, Response] = {
+  def apiJsonValidatingError[Response]: Either[ApiStatusError, Response] = {
     pagerDutyLog(BAD_SUCCESS_JSON_FROM_API, s"[$parserName][read] Invalid Json from $apiType API.")
-    Left(APIStatusError(INTERNAL_SERVER_ERROR, APIError.parsingError))
+    Left(ApiStatusError(INTERNAL_SERVER_ERROR, ApiErrorBody.parsingError))
   }
 
-  def handleAPIError[Response](response: HttpResponse, statusOverride: Option[Int] = None): Either[APIStatusError, Response] = {
+  def handleAPIError[Response](response: HttpResponse, statusOverride: Option[Int] = None): Either[StatusError, Response] = {
     val status = statusOverride.getOrElse(response.status)
     Try {
       val json = response.json
-      val apiError: APIErrorBody = {
-        val apiErrs = json.asOpt[APIErrors]
-        if (apiErrs.nonEmpty) apiErrs.get else json.as[APIError]
-      }
-      Left(APIStatusError(status, apiError))
+      val apiErrs = json.asOpt[ApiErrorsBody]
+      if (apiErrs.nonEmpty) Left(ApiStatusErrors(status,apiErrs.get)) else Left(ApiStatusError(status, json.as[ApiErrorBody]))
     } match {
-      case Success(leftApiStatusError) => leftApiStatusError
+      case Success(leftStatusError) => leftStatusError
       case Failure(t) =>
         pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, s"[$parserName][read] Unexpected Json error: ${t.getMessage} from $apiType API.")
-        Left(APIStatusError(status, APIError.parsingError))
+        Left(ApiStatusError(status, ApiErrorBody.parsingError))
     }
   }
 
 
-  def pagerDutyError[A](response: HttpResponse): Either[APIStatusError, A] =
+  def pagerDutyError[A](response: HttpResponse): Either[StatusError, A] =
     response.status match {
       case BAD_REQUEST =>
         pagerDutyLog(FOURXX_RESPONSE_FROM_API, logMessage(response))

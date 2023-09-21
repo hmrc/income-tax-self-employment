@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package config
+package bulders
 
-import com.google.inject.AbstractModule
-import repositories.SessionRepository
+import models.mdtp.JourneyState
+import models.mdtp.JourneyState.JourneyStateData
 
-import java.time.{Clock, ZoneOffset}
+import java.util.UUID
 
-class Module extends AbstractModule {
-
-  override def configure(): Unit = {
-    bind(classOf[AppConfig]).asEagerSingleton()
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
-    bind(classOf[SessionRepository]).asEagerSingleton()
-  }
+object JourneyStateDataBuilder { //scalastyle:off magic.number
+  lazy val uuid = UUID.randomUUID()
+  lazy val aJourneyState = JourneyState(
+    journeyStateData =  JourneyStateData(nino = "FI290077A", taxYear = 2023, journey = "view-trades", completed = true)
+  )
 }

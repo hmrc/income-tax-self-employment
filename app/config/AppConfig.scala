@@ -16,9 +16,11 @@
 
 package config
 
-import javax.inject.{Inject, Singleton}
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.duration.Duration
 
 @Singleton
 class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) {
@@ -29,4 +31,7 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   val ifsEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
   def ifsAuthorisationToken(api:String): String = config.get[String](s"microservice.services.integration-framework.authorisation-token.$api")
   val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
+  
+//  val cacheTtl2: Int  =  Duration(servicesConfig.getString("mongodb.timeToLiveInDays2")).toDays.toInt
+  val cacheTtl: Int  =  config.get[Int]("mongodb.timeToLiveInDays")
 }

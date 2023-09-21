@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package config
+package controllers
 
-import com.google.inject.AbstractModule
-import repositories.SessionRepository
+import play.api.mvc.{Action, AnyContent}
+import utils.TestUtils
 
-import java.time.{Clock, ZoneOffset}
+class ControllerBehavioursSpec extends TestUtils {
 
-class Module extends AbstractModule {
-
-  override def configure(): Unit = {
-    bind(classOf[AppConfig]).asEagerSingleton()
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
-    bind(classOf[SessionRepository]).asEagerSingleton()
-  }
+  def controllerSpec(resultStatus: Int, resultBody: String, stubs: () => Unit, methodBlock: () => Action[AnyContent]): Unit =
+    s"return a $resultStatus response and a result value" in {
+      val result = {
+        mockAuth()
+        stubs()
+        methodBlock()(fakeRequest)
+      }
+      status(result) mustBe resultStatus
+      bodyOf(result) mustBe resultBody
+    }
 }

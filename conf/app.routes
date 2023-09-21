@@ -1,5 +1,9 @@
 # microservice specific routes
 
 #Business
-GET        /individuals/business/details/:nino/list            controllers.BusinessController.getBusinesses(nino: String)
-GET        /individuals/business/details/:nino/:businessId     controllers.BusinessController.getBusiness(nino: String, businessId: String)
+GET        /individuals/business/details/:nino/list                      controllers.BusinessController.getBusinesses(nino: String)
+GET        /individuals/business/details/:nino/:businessId               controllers.BusinessController.getBusiness(nino: String, businessId: String)
+
+#JourneyState
+GET        /completed-section/:nino/:taxYear/:journey                     controllers.JourneyStateController.getJourneyState(nino: String, taxYear: Int, journey: String)
+PUT        /completed-section/:nino/:taxYear/:journey/:completed          controllers.JourneyStateController.putJourneyState(nino: String, taxYear: Int, journey: String, completed: Boolean)

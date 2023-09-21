@@ -23,8 +23,9 @@ import connectors.BusinessConnector.IdType.{MtdId, Nino}
 import connectors.BusinessConnector.businessUriPath
 import helpers.WiremockSpec
 import models.api.BusinessData.GetBusinessDataRequest
-import models.error.APIErrorBody.APIError.{data404, ifsServer500, mtdId400, nino400, service503}
-import models.error.APIErrorBody.{APIError, APIStatusError}
+import models.error.ApiError.ApiErrorBody.{data404, ifsServer500, mtdId400, nino400, service503}
+import models.error.ApiError.ApiErrorBody
+import models.error.ApiError.ApiStatusError
 import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -83,7 +84,7 @@ class GetBusinessConnectorISpec extends WiremockSpec {
 
           implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
           val result = await(connector.getBusinesses(idType, idNumber)(hc))
-          result mustBe Left(APIStatusError(errorStatus, apiError))
+          result mustBe Left(ApiStatusError(errorStatus, apiError))
         }
       }
 
@@ -98,7 +99,7 @@ class GetBusinessConnectorISpec extends WiremockSpec {
           auditStubs()
           implicit val hc: HeaderCarrier = HeaderCarrier()
           val result = await(connector.getBusinesses(idType, idNumber)(hc))
-          result mustBe Left(APIStatusError(errorStatus, APIError(invalidIdType, invalidReason)))
+          result mustBe Left(ApiStatusError(errorStatus, ApiErrorBody(invalidIdType, invalidReason)))
         }
         
         s"the json fails to validate a non GetBusinessDataRequest json - $ifsUrl" in {
@@ -108,7 +109,7 @@ class GetBusinessConnectorISpec extends WiremockSpec {
           auditStubs()
           implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
           val result = await(connector.getBusinesses(idType, idNumber)(hc))
-          result mustBe Left(APIStatusError(errorStatus, APIError(invalidIdType, invalidReason)))
+          result mustBe Left(ApiStatusError(errorStatus, ApiErrorBody(invalidIdType, invalidReason)))
         }
       }
     }
