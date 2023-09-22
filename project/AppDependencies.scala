@@ -33,7 +33,7 @@ object AppDependencies {
     "uk.gov.hmrc.mongo"             %% "hmrc-mongo-test-play-28"    % hmrcMongoVersion,
     "com.typesafe.play"             %% "play-test"                  % current,
     "org.scalatest"                 %% "scalatest"                  % "3.2.15",
-     "org.scalatestplus"            %% "scalacheck-1-15"            % "3.2.10.0",
+    "org.scalatestplus"             %% "scalacheck-1-15"            % "3.2.10.0",
     "org.scalatestplus"             %% "mockito-3-4"                % "3.2.10.0",
     "org.mockito"                   %% "mockito-scala"              % "1.16.42",
     "com.vladsch.flexmark"           % "flexmark-all"               % "0.64.6",
