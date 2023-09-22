@@ -98,9 +98,9 @@ class SessionRepositorySpec
     behave like testGet("id")(
       () => repository.get(journeyState.id), () => repository.get("id that does not exist"))
 
-    behave like testGet("taxYear, nino and journey")(
-      () => repository.get(journeyState.journeyStateData.nino, journeyState.journeyStateData.taxYear, journeyState.journeyStateData.journey),
-      () => repository.get("nino with no journey", journeyState.journeyStateData.taxYear, "non existing journey")
+    behave like testGet("taxYear, businessId and journey")(
+      () => repository.get(journeyState.journeyStateData.businessId, journeyState.journeyStateData.journey, journeyState.journeyStateData.taxYear),
+      () => repository.get("businessId with no journey", "non existing journey", journeyState.journeyStateData.taxYear)
     )
 
   }
@@ -159,9 +159,9 @@ class SessionRepositorySpec
     behave like testKeepAlive("id")(
       () => repository.keepAlive(journeyState.id), () => repository.keepAlive("id that does not exist")
     )
-    behave like testKeepAlive("taxYear, nino and journey")(
-      () => repository.keepAlive(journeyState.journeyStateData.nino, journeyState.journeyStateData.taxYear, journeyState.journeyStateData.journey),
-      () => repository.keepAlive("nino with no journey", journeyState.journeyStateData.taxYear, "non existing journey")
+    behave like testKeepAlive(" businessId, journey and taxYear")(
+      () => repository.keepAlive(journeyState.journeyStateData.businessId, journeyState.journeyStateData.journey, journeyState.journeyStateData.taxYear),
+      () => repository.keepAlive("businessId with no journey", "non existing journey", journeyState.journeyStateData.taxYear)
     )
     
   }

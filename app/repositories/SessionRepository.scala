@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-//@Singleton
+@Singleton
 class SessionRepository @Inject()(
   mongoComponent: MongoComponent,
   appConfig: AppConfig,
@@ -42,11 +42,11 @@ class SessionRepository @Inject()(
     indexes = Seq(
       IndexModel(
         compoundIndex(
-          Indexes.ascending("journeyStateData.nino"),
+          Indexes.ascending("journeyStateData.businessId"),
           Indexes.ascending("journeyStateData.journey"),
           Indexes.ascending("journeyStateData.taxYear")
         ),
-        IndexOptions().name("ninoJourneyTaxYear")
+        IndexOptions().name("businessIdJourneyTaxYear")
       ),
       IndexModel(
         Indexes.ascending("lastUpdated"),
@@ -61,15 +61,15 @@ class SessionRepository @Inject()(
 
   private def filterBy(nino: String, taxYear: Int, journey: String): Bson =
     Filters.and(
-      Filters.equal("journeyStateData.nino", nino),
+      Filters.equal("journeyStateData.businessId", nino),
       Filters.equal("journeyStateData.journey", journey),
       Filters.equal("journeyStateData.taxYear", taxYear)
     )
 
   def keepAlive(id: String): Future[Boolean] = keepAlive(() => filterBy(id))
 
-  def keepAlive(nino: String, taxYear: Int, journey: String): Future[Boolean] =
-    keepAlive(() => filterBy(nino, taxYear, journey))
+  def keepAlive(businessId: String, journey: String, taxYear: Int): Future[Boolean] =
+    keepAlive(() => filterBy(businessId, taxYear, journey))
 
   private def keepAlive(filterFn: () => Bson): Future[Boolean] =
     collection
@@ -83,8 +83,8 @@ class SessionRepository @Inject()(
   def get(id: String): Future[Option[JourneyState]] =
     keepAlive(id).flatMap { _ => find(() => filterBy(id)) }
 
-  def get(nino: String, taxYear: Int, journey: String): Future[Option[JourneyState]] =
-    keepAlive(nino, taxYear, journey).flatMap { _ => find(() => filterBy(nino, taxYear, journey)) }
+  def get(businessId: String, journey: String, taxYear: Int): Future[Option[JourneyState]] =
+    keepAlive(businessId, journey, taxYear).flatMap { _ => find(() => filterBy(businessId, taxYear, journey)) }
 
   def set(journeyState: JourneyState): Future[Boolean] = {
     val updatedJourneyState = journeyState copy (lastUpdated = LocalDate.now(clock))

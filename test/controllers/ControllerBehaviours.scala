@@ -19,7 +19,7 @@ package controllers
 import play.api.mvc.{Action, AnyContent}
 import utils.TestUtils
 
-class ControllerBehavioursSpec extends TestUtils {
+class ControllerBehaviours extends TestUtils {
 
   def controllerSpec(resultStatus: Int, resultBody: String, stubs: () => Unit, methodBlock: () => Action[AnyContent]): Unit =
     s"return a $resultStatus response and a result value" in {

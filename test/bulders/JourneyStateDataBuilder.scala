@@ -24,6 +24,6 @@ import java.util.UUID
 object JourneyStateDataBuilder { //scalastyle:off magic.number
   lazy val uuid = UUID.randomUUID()
   lazy val aJourneyState = JourneyState(
-    journeyStateData =  JourneyStateData(nino = "FI290077A", taxYear = 2023, journey = "view-trades", completed = true)
+    journeyStateData =  JourneyStateData(businessId = "XAIS12345678910", journey = "view-trades", taxYear = 2023, completed = true)
   )
 }

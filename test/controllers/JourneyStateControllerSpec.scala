@@ -22,48 +22,48 @@ import models.mdtp.JourneyState
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar.when
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.Json
 import repositories.SessionRepository
 
 import scala.concurrent.Future
 
-class JourneyStateControllerSpec extends ControllerBehavioursSpec {
+class JourneyStateControllerSpec extends ControllerBehaviours {
   
   lazy val mockSessionRepo = MockitoSugar.mock[SessionRepository]
   lazy val underTest = new JourneyStateController(mockSessionRepo, mockAuthorisedAction, mockControllerComponents)
 
   val taxYear = 2024
-  val nino = "FI290077A"
+  val businessId = "XAIS12345678910"
   val journey = "view-trades"
   val completed = false
   
-  s"GET /completed-section/$nino/$taxYear/$journey" should {
+  s"GET /completed-section/$businessId/$taxYear/$journey" should {
     behave like controllerSpec(OK, Json.toJson(aJourneyState.journeyStateData.completed).toString,
       () => stubSessionRepositoryGet(expectedResult = Right(Some(aJourneyState))),
-      () => underTest.getJourneyState(nino, taxYear, journey))
+      () => underTest.getJourneyState(businessId, journey, taxYear))
 
     behave like controllerSpec(NO_CONTENT, "",
       () => stubSessionRepositoryGet(expectedResult = Right(None)),
-      () => underTest.getJourneyState(nino, taxYear, journey))
+      () => underTest.getJourneyState(businessId, journey, taxYear))
     
     behave like controllerSpec(INTERNAL_SERVER_ERROR, Json.toJson(MongoError("db error").msg).toString(),
       () => stubSessionRepositoryGet(expectedResult = Left(MongoError("db error"))),
-      () => underTest.getJourneyState(nino, taxYear, journey))
+      () => underTest.getJourneyState(businessId, journey, taxYear))
   }
   
-  s"PUT /completed-section/$nino/$taxYear/$journey/$completed" should {
+  s"PUT /completed-section/$businessId/$taxYear/$journey/$completed" should {
     behave like controllerSpec(NO_CONTENT, "",
       () => stubSessionRepositorySet(expectedResult = Right(true)),
-      () => underTest.putJourneyState(nino, taxYear, journey, completed))
+      () => underTest.putJourneyState(businessId, journey, taxYear, completed))
 
     behave like controllerSpec(INTERNAL_SERVER_ERROR, Json.toJson(MongoError("db error").msg).toString,
       () => stubSessionRepositorySet(expectedResult = Left(MongoError("db error"))),
-      () => underTest.getJourneyState(nino, taxYear, journey))
+      () => underTest.getJourneyState(businessId, journey, taxYear))
   }
   
   private def stubSessionRepositoryGet(expectedResult: Either[DatabaseError, Option[JourneyState]]): Unit =
-    when(mockSessionRepo.get(nino, taxYear, journey)) thenReturn (expectedResult match {
+    when(mockSessionRepo.get(businessId, journey, taxYear)) thenReturn (expectedResult match {
       case Right(optJourneyState) => Future.successful(optJourneyState)
       case Left(_) => Future.failed(new RuntimeException("db error"))
     })

@@ -31,7 +31,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class BusinessControllerSpec extends ControllerBehavioursSpec {
+class BusinessControllerSpec extends ControllerBehaviours {
   val mockBusinessService = MockitoSugar.mock[BusinessService]
   val underTest = new BusinessController(mockBusinessService, mockAuthorisedAction, mockControllerComponents)
 

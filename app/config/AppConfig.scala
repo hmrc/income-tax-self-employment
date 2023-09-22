@@ -32,6 +32,5 @@ class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig)
   def ifsAuthorisationToken(api:String): String = config.get[String](s"microservice.services.integration-framework.authorisation-token.$api")
   val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
   
-//  val cacheTtl2: Int  =  Duration(servicesConfig.getString("mongodb.timeToLiveInDays2")).toDays.toInt
-  val cacheTtl: Int  =  config.get[Int]("mongodb.timeToLiveInDays")
+  val cacheTtl: Int  =  Duration(servicesConfig.getString("mongodb.timeToLive")).toDays.toInt
 }

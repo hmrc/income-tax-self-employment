@@ -36,9 +36,9 @@ class JourneyStateController @Inject()(sessionRepository: SessionRepository,
                                        cc: ControllerComponents
                                       )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
-  def getJourneyState(nino: String, taxYear: Int, journey: String): Action[AnyContent] = auth.async { _ =>
+  def getJourneyState(businessId: String, journey: String, taxYear: Int): Action[AnyContent] = auth.async { request =>
     lazy val pagerMsg = "[Self-Employment BE SessionRepository][get] Failed to find journey state data."
-    sessionRepository.get(nino, taxYear, journey)
+    sessionRepository.get(businessId, journey, taxYear)
       .recoverWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
       .map {
         case Right(Some(model)) => Ok(Json.toJson(model.journeyStateData.completed))
@@ -47,9 +47,9 @@ class JourneyStateController @Inject()(sessionRepository: SessionRepository,
       }
   }
 
-  def putJourneyState(nino: String, taxYear: Int, journey: String, completed: Boolean): Action[AnyContent] = auth.async { _ =>
+  def putJourneyState(businesId: String, journey: String, taxYear: Int, completed: Boolean): Action[AnyContent] = auth.async { _ =>
     lazy val pagerMsg = "[Self-Employment BE SessionRepository][get] Failed to save journey state data."
-    sessionRepository.set(JourneyState(journeyStateData = JourneyStateData(nino, taxYear, journey, completed)))
+    sessionRepository.set(JourneyState(journeyStateData = JourneyStateData(businesId, journey, taxYear, completed)))
       .recoverWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
       .map {
         case Right(_) => NoContent

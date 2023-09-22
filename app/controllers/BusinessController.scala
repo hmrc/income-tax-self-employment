@@ -47,7 +47,7 @@ class BusinessController @Inject()(businessService: BusinessService,
       case Right(model) => Ok(Json.toJson(model.taxPayerDisplayResponse.businessData.map(_.toBusiness(model.taxPayerDisplayResponse))))
       case Left(errorModel) => errorModel match {
         case apiStatusError: ApiStatusError => Status(errorModel.status)(Json.toJson(apiStatusError.toMdtpError))
-        case _@(apiStatusErrors: ApiStatusErrors) => Status(errorModel.status)(Json.toJson(apiStatusErrors.toMdtpError))
+        case _ => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[ApiStatusErrors].toMdtpError))
       }
     }
   

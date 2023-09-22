@@ -32,9 +32,9 @@ case class JourneyState(
 object JourneyState {
 
   case class JourneyStateData(
-    nino: String,
-    taxYear: Int,
+    businessId: String,
     journey: String,
+    taxYear: Int,
     completed: Boolean
   )
   object JourneyStateData {
