@@ -37,8 +37,9 @@ class GetBusinessConnectorISpec extends WiremockSpec {
   lazy val connector: BusinessConnector = app.injector.instanceOf[BusinessConnector]
   lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
 
-  def appConfig(businessApiHost: String): AppConfig = new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
-    override val ifsBaseUrl: String = s"http://$businessApiHost:$wireMockPort"
+  def appConfig(businessApiHost: String): AppConfig =
+    new AppConfig(app.injector.instanceOf[Configuration],app.injector.instanceOf[ServicesConfig]) {
+      override val ifsBaseUrl: String = s"http://$businessApiHost:$wireMockPort"
   }
 
   val (nino, mtdId) = ("123456789", "1234567890123456")
@@ -67,7 +68,7 @@ class GetBusinessConnectorISpec extends WiremockSpec {
             auditStubs()
 
             implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-            val result = await((new BusinessConnector(httpClient, appConfig(intExtHost))).getBusinesses(idType, idNumber)(hc))
+            val result = await(new BusinessConnector(httpClient, appConfig(intExtHost)).getBusinesses(idType, idNumber)(hc))
             result mustBe Right(expectedResult)
           }
         }
