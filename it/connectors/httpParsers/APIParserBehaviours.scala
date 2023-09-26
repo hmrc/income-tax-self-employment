@@ -62,7 +62,9 @@ trait APIParserBehaviours extends TestUtils {
   def logHttpResponse(): Unit =
     "log the correct message" in {
       val result = FakeParser.logMessage(failureHttpResponse(Json.parse(multiErrJs)))
-      result mustBe  //note*: the spacings in the String below are important and the test will fail if altered
+      
+      result mustBe
+        //note*: the spacings in the String below are important and the test will fail if altered
         s"""[TestParser][read] Received 500 from $apiTypeName API. Body:{
            |  "failures" : [ {
            |    "code" : "SERVICE_UNAVAILABLE",

@@ -17,7 +17,6 @@
 package config
 
 import com.google.inject.AbstractModule
-import repositories.SessionRepository
 
 import java.time.{Clock, ZoneOffset}
 
