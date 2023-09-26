@@ -16,7 +16,9 @@
 
 package controllers
 
+import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesResponse
 import controllers.actions.AuthorisedAction
+import models.error.ApiError.{ApiStatusError, ApiStatusErrors}
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -33,21 +35,20 @@ class BusinessController @Inject()(businessService: BusinessService,
                                         )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
 
   def getBusinesses(nino: String): Action[AnyContent] = auth.async { implicit user =>
-    businessService.getBusinesses(nino).map {
-      case Right(model) => Ok(Json.toJson(model.taxPayerDisplayResponse.businessData.map(_.toBusiness(model.taxPayerDisplayResponse))))
-      case Left(errorModel) =>
-        val mdtpErrorModel = errorModel.toMdtpError
-        Status(mdtpErrorModel.status)(mdtpErrorModel.toJson)
-    }
+    businessService.getBusinesses(nino) map businessDataResponse
   }
 
   def getBusiness(nino: String, businessId: String): Action[AnyContent] = auth.async { implicit user =>
-    businessService.getBusiness(nino, businessId).map {
-      case Right(model) => Ok(Json.toJson(model.taxPayerDisplayResponse.businessData.map(_.toBusiness(model.taxPayerDisplayResponse))))
-      case Left(errorModel) =>
-        val mdtpErrorModel = errorModel.toMdtpError
-        Status(mdtpErrorModel.status)(mdtpErrorModel.toJson)
-    }
+    businessService.getBusiness(nino, businessId) map businessDataResponse
   }
+  
+  private def businessDataResponse(dataResponse: GetBusinessesResponse) =
+    dataResponse match {
+      case Right(model) => Ok(Json.toJson(model.taxPayerDisplayResponse.businessData.map(_.toBusiness(model.taxPayerDisplayResponse))))
+      case Left(errorModel) => errorModel match {
+        case apiStatusError: ApiStatusError => Status(errorModel.status)(Json.toJson(apiStatusError.toMdtpError))
+        case _ => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[ApiStatusErrors].toMdtpError))
+      }
+    }
   
 }

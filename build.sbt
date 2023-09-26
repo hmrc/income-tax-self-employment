@@ -18,6 +18,7 @@ import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 lazy val microservice = Project("income-tax-self-employment", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin)
+  .settings(PlayKeys.playDefaultPort := 10900)
   .settings(
     majorVersion        := 0,
     scalaVersion        := "2.13.8",

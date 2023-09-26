@@ -22,7 +22,8 @@ import connectors.BusinessConnector.IdType
 import connectors.BusinessConnector.IdType.Nino
 import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesResponse
 import models.api.BusinessData.GetBusinessDataRequest
-import models.error.APIErrorBody.{APIError, APIStatusError}
+import models.error.ApiError.ApiErrorBody
+import models.error.ApiError.ApiStatusError
 import org.scalamock.handlers.CallHandler3
 import play.api.libs.json.Json
 import services.BusinessService
@@ -62,7 +63,7 @@ class BusinessServiceSpec extends TestUtils {
 
   def returnLeft(getRequest: () => Future[GetBusinessesResponse]): Unit =
     "return a Left when connector returns an error" in { //scalastyle:off magic.number
-      val apiError = Left(APIStatusError(999, APIError("API_ERROR", "Error response from API")))
+      val apiError = Left(ApiStatusError(999, ApiErrorBody("API_ERROR", "Error response from API")))
       stubGetBusiness(apiError)
       val result = await(getRequest())
       result mustBe apiError
