@@ -46,7 +46,9 @@ class SessionRepository @Inject()(
           Indexes.ascending("journeyStateData.journey"),
           Indexes.ascending("journeyStateData.taxYear")
         ),
-        IndexOptions().name("businessIdJourneyTaxYear")
+        IndexOptions()
+          .name("businessIdJourneyTaxYear")
+          .unique(true)
       ),
       IndexModel(
         Indexes.ascending("lastUpdated"),

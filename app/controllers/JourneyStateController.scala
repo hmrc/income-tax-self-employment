@@ -49,10 +49,17 @@ class JourneyStateController @Inject()(sessionRepository: SessionRepository,
 
   def putJourneyState(businessId: String, journey: String, taxYear: Int, completed: Boolean): Action[AnyContent] = auth.async { _ =>
     lazy val pagerMsg = "[Self-Employment BE SessionRepository][set] Failed to save journey state data."
-    sessionRepository.set(JourneyState(journeyStateData = JourneyStateData(businessId, journey, taxYear, completed)))
+    
+    val journeyStateData = JourneyStateData(businessId, journey, taxYear, completed)
+    sessionRepository.get(businessId, journey, taxYear).flatMap({ optJourneyState =>
+      val (journeystate, isCreated) =
+        optJourneyState.fold((JourneyState(journeyStateData = journeyStateData), true))(js => (JourneyState(js.id, journeyStateData), false))
+      sessionRepository.set(journeystate).map((_, isCreated))
+    })
       .recoverWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
       .map {
-        case Right(_) => NoContent
+        case Right((_, true)) => Created
+        case Right((_, false)) => NoContent
         case Left(serverError) => InternalServerError(Json.toJson(serverError.msg))
       }
   }
