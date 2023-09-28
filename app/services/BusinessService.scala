@@ -30,7 +30,7 @@ class BusinessService @Inject()(businessConnector: BusinessConnector) {
     businessConnector.getBusinesses(Nino, nino)
 
   def getBusiness(nino: String, businessId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[GetBusinessesResponse] =
-    businessConnector.getBusinesses(Nino, nino).map(_.map({ getBDR =>
+    getBusinesses(nino).map(_.map({ getBDR =>
       getBDR.copy(taxPayerDisplayResponse = getBDR.taxPayerDisplayResponse
         .copy(businessData = getBDR.taxPayerDisplayResponse.businessData.filter(_.incomeSourceId == businessId)))
     }))
