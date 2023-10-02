@@ -6,4 +6,5 @@ GET        /individuals/business/details/:nino/:businessId               control
 
 #JourneyState
 GET        /completed-section/:businessId/:journey/:taxYear              controllers.JourneyStateController.getJourneyState(businessId: String, journey: String, taxYear: Int)
+GET        /completed-section/:businessId/:taxYear                       controllers.JourneyStateController.getJourneyState(businessId: String, taxYear: Int)
 PUT        /completed-section/:businessId/:journey/:taxYear/:completed   controllers.JourneyStateController.putJourneyState(businessId: String, journey: String, taxYear: Int, completed: Boolean)

@@ -20,12 +20,13 @@ import controllers.actions.AuthorisedAction
 import models.mdtp.JourneyState
 import models.mdtp.JourneyState.JourneyStateData
 import play.api.Logging
-import play.api.libs.json.Json
+import play.api.libs.json.Format.GenericFormat
+import play.api.libs.json.{JsArray, Json, Writes}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SessionRepository
-import utils.PagerDutyHelper.WithRecovery
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.PagerDutyHelper.PagerDutyKeys.FAILED_TO_GET_JOURNEY_STATE_DATA
+import utils.PagerDutyHelper.WithRecovery
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -47,6 +48,18 @@ class JourneyStateController @Inject()(sessionRepository: SessionRepository,
       }
   }
 
+  def getJourneyState(businessId: String, taxYear: Int): Action[AnyContent] = auth.async { request =>
+    
+    lazy val pagerMsg = "[Self-Employment BE SessionRepository][get] Failed to find journey state data."
+    sessionRepository.get(businessId, taxYear)
+      .recoverWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
+      .map {
+        case Right(Nil) => NoContent
+        case Right(Seq(model)) => Ok(Json.toJson(Seq(model.journeyStateData.journey, model.journeyStateData.completed)))
+        case Left(serverError) => InternalServerError(Json.toJson(serverError.msg))
+      }
+  }
+
   def putJourneyState(businessId: String, journey: String, taxYear: Int, completed: Boolean): Action[AnyContent] = auth.async { _ =>
     lazy val pagerMsg = "[Self-Employment BE SessionRepository][set] Failed to save journey state data."
     
@@ -63,4 +76,9 @@ class JourneyStateController @Inject()(sessionRepository: SessionRepository,
         case Left(serverError) => InternalServerError(Json.toJson(serverError.msg))
       }
   }
+}
+
+object JourneyStateController {
+  implicit def tuple2Writes[A, B](implicit a: Writes[A], b: Writes[B]): Writes[(A, B)] =
+    (tuple: Tuple2[A, B]) => JsArray(Seq(a.writes(tuple._1), b.writes(tuple._2)))
 }
