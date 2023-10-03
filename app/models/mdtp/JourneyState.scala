@@ -35,7 +35,7 @@ object JourneyState {
     businessId: String,
     journey: String,
     taxYear: Int,
-    completed: Boolean
+    completedState: Boolean
   )
   object JourneyStateData {
     implicit val journeyStateDataFormat: OFormat[JourneyStateData] = Json.format[JourneyStateData]

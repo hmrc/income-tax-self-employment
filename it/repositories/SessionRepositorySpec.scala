@@ -103,6 +103,11 @@ class SessionRepositorySpec
       () => repository.get("businessId with no journey", "non existing journey", journeyState.journeyStateData.taxYear)
     )
 
+    behave like testGet("taxYear, businessId")(
+      () => repository.get(journeyState.journeyStateData.businessId, journeyState.journeyStateData.taxYear).map(_.headOption),
+      () => repository.get("businessId with no journey",  journeyState.journeyStateData.taxYear).map(_.headOption)
+    )
+
   }
 
   ".clear" - {

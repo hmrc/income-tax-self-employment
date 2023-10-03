@@ -21,7 +21,7 @@ import models.mdtp.JourneyState
 import models.mdtp.JourneyState.JourneyStateData
 import play.api.Logging
 import play.api.libs.json.Format.GenericFormat
-import play.api.libs.json.{JsArray, Json, Writes}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SessionRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -42,20 +42,21 @@ class JourneyStateController @Inject()(sessionRepository: SessionRepository,
     sessionRepository.get(businessId, journey, taxYear)
       .recoverWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
       .map {
-        case Right(Some(model)) => Ok(Json.toJson(model.journeyStateData.completed))
+        case Right(Some(model)) => Ok(Json.toJson(model.journeyStateData.completedState))
         case Right(None) => NoContent
         case Left(serverError) => InternalServerError(Json.toJson(serverError.msg))
       }
   }
 
-  def getJourneyState(businessId: String, taxYear: Int): Action[AnyContent] = auth.async { request =>
+  def getJourneyStateSeq(businessId: String, taxYear: Int): Action[AnyContent] = auth.async { request =>
     
     lazy val pagerMsg = "[Self-Employment BE SessionRepository][get] Failed to find journey state data."
     sessionRepository.get(businessId, taxYear)
       .recoverWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
       .map {
         case Right(Nil) => NoContent
-        case Right(Seq(model)) => Ok(Json.toJson(Seq(model.journeyStateData.journey, model.journeyStateData.completed)))
+        case Right(journeyStates @ Seq(_)) =>
+          Ok(Json.toJson(journeyStates.map(m => (m.journeyStateData.journey, m.journeyStateData.completedState))))
         case Left(serverError) => InternalServerError(Json.toJson(serverError.msg))
       }
   }
@@ -78,7 +79,3 @@ class JourneyStateController @Inject()(sessionRepository: SessionRepository,
   }
 }
 
-object JourneyStateController {
-  implicit def tuple2Writes[A, B](implicit a: Writes[A], b: Writes[B]): Writes[(A, B)] =
-    (tuple: Tuple2[A, B]) => JsArray(Seq(a.writes(tuple._1), b.writes(tuple._2)))
-}

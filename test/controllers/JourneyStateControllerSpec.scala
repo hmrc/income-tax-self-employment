@@ -39,7 +39,7 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
   val completed = false
   
   s"GET /completed-section/$businessId/$taxYear/$journey" should {
-    behave like controllerSpec(OK, Json.toJson(aJourneyState.journeyStateData.completed).toString,
+    behave like controllerSpec(OK, Json.toJson(aJourneyState.journeyStateData.completedState).toString,
       () => stubSessionRepositoryGet(expectedResult = Right(Some(aJourneyState))),
       () => underTest.getJourneyState(businessId, journey, taxYear))
 
@@ -50,6 +50,20 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
     behave like controllerSpec(INTERNAL_SERVER_ERROR, Json.toJson(MongoError("db error").msg).toString(),
       () => stubSessionRepositoryGet(expectedResult = Left(MongoError("db error"))),
       () => underTest.getJourneyState(businessId, journey, taxYear))
+  }
+  
+  s"GET /completed-section/$businessId/$taxYear" should {
+    behave like controllerSpec(OK, Json.toJson(Seq((aJourneyState.journeyStateData.journey, aJourneyState.journeyStateData.completedState))).toString,
+      () => stubSessionRepositoryGetSeq(expectedResult = Right(Seq(aJourneyState))),
+      () => underTest.getJourneyStateSeq(businessId, taxYear))
+
+    behave like controllerSpec(NO_CONTENT, "",
+      () => stubSessionRepositoryGetSeq(expectedResult = Right(Nil)),
+      () => underTest.getJourneyStateSeq(businessId, taxYear))
+    
+    behave like controllerSpec(INTERNAL_SERVER_ERROR, Json.toJson(MongoError("db error").msg).toString(),
+      () => stubSessionRepositoryGetSeq(expectedResult = Left(MongoError("db error"))),
+      () => underTest.getJourneyStateSeq(businessId, taxYear))
   }
   
   s"PUT /completed-section/$businessId/$taxYear/$journey/$completed" should {
@@ -78,6 +92,12 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
   private def stubSessionRepositoryGet(expectedResult: Either[DatabaseError, Option[JourneyState]]): Unit =
     when(mockSessionRepo.get(businessId, journey, taxYear)) thenReturn (expectedResult match {
       case Right(optJourneyState) => Future.successful(optJourneyState)
+      case Left(_) => Future.failed(new RuntimeException("db error"))
+    })
+
+  private def stubSessionRepositoryGetSeq(expectedResult: Either[DatabaseError, Seq[JourneyState]]): Unit =
+    when(mockSessionRepo.get(businessId, taxYear)) thenReturn (expectedResult match {
+      case Right(journeyStates) => Future.successful(journeyStates)
       case Left(_) => Future.failed(new RuntimeException("db error"))
     })
 
