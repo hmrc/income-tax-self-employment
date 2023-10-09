@@ -17,9 +17,10 @@
 package models.error
 
 import play.api.http.Status.INTERNAL_SERVER_ERROR
-import play.api.libs.json.{Format, JsError, JsString, JsSuccess, JsValue, Json, OFormat, Reads, Writes}
+import play.api.libs.json._
 
 object ApiError {
+
   trait ErrorBody extends ServiceError {
     lazy val msg: String = reason
     def reason: String
@@ -36,42 +37,37 @@ object ApiError {
 
   /** Single API Error * */
   case class ApiErrorBody(code: String, reason: String, errorType: ErrorType = DOWNSTREAM_ERROR_CODE) extends ErrorBody {
+
     def toMdtpError: ApiErrorBody =
       if (errorType == MDTP_ERROR_CODE) {
         this
-      }
-      else {
+      } else {
         val mdtpCode = code match {
-          case "INVALID_NINO" => "FORMAT_NINO"
+          case "INVALID_NINO"         => "FORMAT_NINO"
           case "UNMATCHED_STUB_ERROR" => "RULE_INCORRECT_GOV_TEST_SCENARIO"
-          case "NOT_FOUND" => "MATCHING_RESOURCE_NOT_FOUND"
-          case _ => "INTERNAL_SERVER_ERROR"
+          case "NOT_FOUND"            => "MATCHING_RESOURCE_NOT_FOUND"
+          case _                      => "INTERNAL_SERVER_ERROR"
         }
         ApiErrorBody(mdtpCode, reason, errorType = MDTP_ERROR_CODE)
       }
+
   }
 
   object ApiErrorBody {
     implicit val formats: OFormat[ApiErrorBody] = Json.format[ApiErrorBody]
-    val parsingError: ApiErrorBody = ApiErrorBody("PARSING_ERROR", "Error parsing response from API")
+    val parsingError: ApiErrorBody              = ApiErrorBody("PARSING_ERROR", "Error parsing response from API")
 
-    val nino400: ApiErrorBody = ApiErrorBody(
-      "INVALID_NINO", "Submission has not passed validation. Invalid parameter NINO.")
+    val nino400: ApiErrorBody = ApiErrorBody("INVALID_NINO", "Submission has not passed validation. Invalid parameter NINO.")
 
-    val correlationI400: ApiErrorBody = ApiErrorBody(
-      "INVALID_CORRELATIONID", "Submission has not passed validation. Invalid Header CorrelationId.")
+    val correlationI400: ApiErrorBody = ApiErrorBody("INVALID_CORRELATIONID", "Submission has not passed validation. Invalid Header CorrelationId.")
 
-    val mtdId400: ApiErrorBody = ApiErrorBody(
-      "INVALID_MTDID", "Submission has not passed validation. Invalid parameter MTDID.")
+    val mtdId400: ApiErrorBody = ApiErrorBody("INVALID_MTDID", "Submission has not passed validation. Invalid parameter MTDID.")
 
-    val data404: ApiErrorBody = ApiErrorBody(
-      "NOT_FOUND", "The remote endpoint has indicated that no data can be found.")
+    val data404: ApiErrorBody = ApiErrorBody("NOT_FOUND", "The remote endpoint has indicated that no data can be found.")
 
-    val ifsServer500: ApiErrorBody = ApiErrorBody(
-      "SERVER_ERROR", "IF is currently experiencing problems that require live service intervention.")
+    val ifsServer500: ApiErrorBody = ApiErrorBody("SERVER_ERROR", "IF is currently experiencing problems that require live service intervention.")
 
-    val service503: ApiErrorBody = ApiErrorBody(
-      "SERVICE_UNAVAILABLE", "Dependent systems are currently not responding.")
+    val service503: ApiErrorBody = ApiErrorBody("SERVICE_UNAVAILABLE", "Dependent systems are currently not responding.")
   }
 
   /** Multiple API Errors * */
@@ -82,10 +78,12 @@ object ApiError {
   }
 
   case class ApiStatusError(status: Int, body: ApiErrorBody) extends StatusError {
+
     def toMdtpError: ApiStatusError = {
       val mdtpStatus = if (body.code == "INVALID_MTD_ID" || body.code == "NVALID_CORRELATIONID") INTERNAL_SERVER_ERROR else status
       this.copy(status = mdtpStatus, body = body.toMdtpError)
     }
+
   }
 
   object ApiStatusError {
@@ -93,8 +91,10 @@ object ApiError {
   }
 
   case class ApiStatusErrors(status: Int, body: ApiErrorsBody) extends StatusError {
+
     def toMdtpError: ApiStatusErrors =
       this.copy(body = body.copy(failures = body.failures.map(_.toMdtpError)))
+
   }
 
   object ApiStatusErrors {
@@ -113,12 +113,11 @@ object ApiError {
     Format(
       Reads {
         case JsString("DOWNSTREAM_ERROR_CODE") => JsSuccess(DOWNSTREAM_ERROR_CODE)
-        case JsString("MDTP_ERROR_CODE") => JsSuccess(MDTP_ERROR_CODE)
-        case jsValue: JsValue => JsError(s"ErrorType $jsValue is not one of supported [DOWNSTREAM_ERROR_CODE, MDTP_ERROR_CODE]")
+        case JsString("MDTP_ERROR_CODE")       => JsSuccess(MDTP_ERROR_CODE)
+        case jsValue: JsValue                  => JsError(s"ErrorType $jsValue is not one of supported [DOWNSTREAM_ERROR_CODE, MDTP_ERROR_CODE]")
       },
       Writes { errType: ErrorType => JsString(errType.str) }
     )
   }
+
 }
-
-

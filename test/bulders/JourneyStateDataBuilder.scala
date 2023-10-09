@@ -21,9 +21,11 @@ import models.mdtp.JourneyState.JourneyStateData
 
 import java.util.UUID
 
-object JourneyStateDataBuilder { //scalastyle:off magic.number
+object JourneyStateDataBuilder { // scalastyle:off magic.number
   lazy val uuid = UUID.randomUUID()
+
   lazy val aJourneyState = JourneyState(
-    journeyStateData =  JourneyStateData(businessId = "XAIS12345678910", journey = "view-trades", taxYear = 2023, completed = true)
+    journeyStateData = JourneyStateData(businessId = "XAIS12345678910", journey = "view-trades", taxYear = 2023, completed = true)
   )
+
 }

@@ -18,6 +18,6 @@ package connectors.httpParsers
 
 class IFSParserSpec extends APIParserBehaviours {
   val apiTypeName = "IFS"
-  
+
   behave like parserShould()
 }

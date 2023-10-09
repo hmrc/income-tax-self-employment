@@ -21,7 +21,6 @@ import play.api.libs.json.{Json, OFormat}
 
 case class AllSelfEmploymentData(businessDetails: Option[GetBusinessDataRequest])
 
-object  AllSelfEmploymentData {
+object AllSelfEmploymentData {
   implicit val allSelfEmploymentDataFormat: OFormat[AllSelfEmploymentData] = Json.format[AllSelfEmploymentData]
 }
-

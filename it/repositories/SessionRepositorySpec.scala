@@ -34,7 +34,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SessionRepositorySpec
-  extends AnyFreeSpec
+    extends AnyFreeSpec
     with Matchers
     with DefaultPlayMongoRepositorySupport[JourneyState]
     with ScalaFutures
@@ -42,7 +42,7 @@ class SessionRepositorySpec
     with OptionValues
     with MockitoSugar {
 
-  private val instant = Instant.now.truncatedTo(ChronoUnit.MILLIS)
+  private val instant          = Instant.now.truncatedTo(ChronoUnit.MILLIS)
   private val stubClock: Clock = Clock.fixed(instant, ZoneId.systemDefault)
 
   private val journeyState = aJourneyState
@@ -61,8 +61,8 @@ class SessionRepositorySpec
     "must set the last updated time on the supplied journey state to `now`, and save them" in {
 
       val expectedResult = journeyState copy (lastUpdated = LocalDate.now(stubClock))
-      val setResult = repository.set(journeyState).futureValue
-      val updatedRecord = find(Filters.equal("_id", journeyState.id)).futureValue.headOption.value
+      val setResult      = repository.set(journeyState).futureValue
+      val updatedRecord  = find(Filters.equal("_id", journeyState.id)).futureValue.headOption.value
 
       setResult mustEqual true
       updatedRecord mustEqual expectedResult
@@ -71,8 +71,7 @@ class SessionRepositorySpec
 
   ".get" - {
 
-    def testGet(getArgs: String)(gettingAJourney: () => Future[Option[JourneyState]],
-                                 gettingNoJourney: () => Future[Option[JourneyState]]): Unit = {
+    def testGet(getArgs: String)(gettingAJourney: () => Future[Option[JourneyState]], gettingNoJourney: () => Future[Option[JourneyState]]): Unit = {
       s"for this $getArgs" - {
 
         "when there is a record" - {
@@ -80,7 +79,7 @@ class SessionRepositorySpec
           "must update the lastUpdated time and get the record" in {
             insert(journeyState).futureValue
 
-            val result = gettingAJourney().futureValue
+            val result         = gettingAJourney().futureValue
             val expectedResult = journeyState copy (lastUpdated = LocalDate.now(stubClock))
 
             result.value mustEqual expectedResult
@@ -95,8 +94,7 @@ class SessionRepositorySpec
       }
     }
 
-    behave like testGet("id")(
-      () => repository.get(journeyState.id), () => repository.get("id that does not exist"))
+    behave like testGet("id")(() => repository.get(journeyState.id), () => repository.get("id that does not exist"))
 
     behave like testGet("taxYear, businessId and journey")(
       () => repository.get(journeyState.journeyStateData.businessId, journeyState.journeyStateData.journey, journeyState.journeyStateData.taxYear),
@@ -126,8 +124,7 @@ class SessionRepositorySpec
 
   ".keepAlive" - {
 
-    def testKeepAlive(getArgs: String)(keepAliveMatchingJourney: () => Future[Boolean],
-                                       keepAliveNotMatchingAJourney: () => Future[Boolean]): Unit = {
+    def testKeepAlive(getArgs: String)(keepAliveMatchingJourney: () => Future[Boolean], keepAliveNotMatchingAJourney: () => Future[Boolean]): Unit = {
 
       s"for this $getArgs" - {
 
@@ -157,13 +154,15 @@ class SessionRepositorySpec
     }
 
     behave like testKeepAlive("id")(
-      () => repository.keepAlive(journeyState.id), () => repository.keepAlive("id that does not exist")
+      () => repository.keepAlive(journeyState.id),
+      () => repository.keepAlive("id that does not exist")
     )
     behave like testKeepAlive(" businessId, journey and taxYear")(
-      () => repository.keepAlive(journeyState.journeyStateData.businessId, journeyState.journeyStateData.journey, journeyState.journeyStateData.taxYear),
+      () =>
+        repository.keepAlive(journeyState.journeyStateData.businessId, journeyState.journeyStateData.journey, journeyState.journeyStateData.taxYear),
       () => repository.keepAlive("businessId with no journey", "non existing journey", journeyState.journeyStateData.taxYear)
     )
-    
+
   }
+
 }
-  

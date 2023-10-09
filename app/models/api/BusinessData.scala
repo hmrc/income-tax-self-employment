@@ -21,30 +21,33 @@ import models.mdtp.Business
 import models.mdtp.Business.{AccountingPeriod, LatencyDetails}
 import play.api.libs.json.{Json, OFormat}
 
-case class BusinessData(
-  incomeSourceId: String,
-  tradingName: Option[String],
-  accountingPeriodStartDate: String,
-  accountingPeriodEndDate: String,
-  firstAccountingPeriodStartDate: Option[String],
-  firstAccountingPeriodEndDate:  Option[String],
-  latencyDetails: Option[LatencyDetails],
-  tradingStartDate: Option[String],
-  cashOrAccruals: Option[Boolean],
-  cessationDate: Option[String],
-  businessAddressDetails: BusinessAddressDetails) extends IncomeSource {
-  
+case class BusinessData(incomeSourceId: String,
+                        tradingName: Option[String],
+                        accountingPeriodStartDate: String,
+                        accountingPeriodEndDate: String,
+                        firstAccountingPeriodStartDate: Option[String],
+                        firstAccountingPeriodEndDate: Option[String],
+                        latencyDetails: Option[LatencyDetails],
+                        tradingStartDate: Option[String],
+                        cashOrAccruals: Option[Boolean],
+                        cessationDate: Option[String],
+                        businessAddressDetails: BusinessAddressDetails)
+    extends IncomeSource {
+
   def toBusiness(taxPDR: TaxPayerDisplayResponse): Business = Business(
     businessId = incomeSourceId,
     typeOfBusiness,
     tradingName,
     taxPDR.yearOfMigration,
-    accountingPeriods = Seq(AccountingPeriod(
-      accountingPeriodStartDate, accountingPeriodEndDate
-    )),
-    firstAccountingPeriodStartDate, firstAccountingPeriodEndDate,
-    latencyDetails.map(ld => ld.copy(latencyIndicator1 = latencyIndicatorType(ld.latencyIndicator1),
-                                           latencyIndicator2 = latencyIndicatorType(ld.latencyIndicator2))),
+    accountingPeriods = Seq(
+      AccountingPeriod(
+        accountingPeriodStartDate,
+        accountingPeriodEndDate
+      )),
+    firstAccountingPeriodStartDate,
+    firstAccountingPeriodEndDate,
+    latencyDetails.map(ld =>
+      ld.copy(latencyIndicator1 = latencyIndicatorType(ld.latencyIndicator1), latencyIndicator2 = latencyIndicatorType(ld.latencyIndicator2))),
     accountingType = cashOrAccruals.map(if (_) "ACCRUAL" else "CASH"),
     commencementDate = tradingStartDate,
     cessationDate,
@@ -55,41 +58,46 @@ case class BusinessData(
     businessAddressPostcode = businessAddressDetails.postalCode,
     businessAddressCountryCode = businessAddressDetails.countryCode
   )
+
 }
 
 object BusinessData {
   implicit val businessFormat: OFormat[BusinessData] = Json.format[BusinessData]
-  
+
   case class BusinessAddressDetails(
-    addressLine1: Option[String],
-    addressLine2: Option[String],
-    addressLine3: Option[String],
-    addressLine4: Option[String],
-    postalCode: Option[String],
-    countryCode: Option[String]
+      addressLine1: Option[String],
+      addressLine2: Option[String],
+      addressLine3: Option[String],
+      addressLine4: Option[String],
+      postalCode: Option[String],
+      countryCode: Option[String]
   ) {
     require(countryCode.getOrElse("") != "GB" || postalCode.nonEmpty)
     require(countryCode.getOrElse("  ").length == 2)
   }
+
   object BusinessAddressDetails {
     implicit val businessAddressDetailsFormat: OFormat[BusinessAddressDetails] = Json.format[BusinessAddressDetails]
   }
-  
+
   case class TaxPayerDisplayResponse(
-    safeId: String,
-    nino: String,
-    mtdId: String,
-    yearOfMigration: Option[String],
-    businessData: Seq[BusinessData]
+      safeId: String,
+      nino: String,
+      mtdId: String,
+      yearOfMigration: Option[String],
+      businessData: Seq[BusinessData]
   )
+
   object TaxPayerDisplayResponse {
     implicit val taxPayerDisplayResponseFormat: OFormat[TaxPayerDisplayResponse] = Json.format[TaxPayerDisplayResponse]
   }
-  case class GetBusinessDataRequest(processingDate: String, taxPayerDisplayResponse:TaxPayerDisplayResponse)
+
+  case class GetBusinessDataRequest(processingDate: String, taxPayerDisplayResponse: TaxPayerDisplayResponse)
+
   object GetBusinessDataRequest {
     implicit val getBusinessesDataRequestFormat: OFormat[GetBusinessDataRequest] = Json.format[GetBusinessDataRequest]
   }
-  
+
   val latencyIndicatorType: String => String = (latencyIndicator) => if (latencyIndicator == "Q") "Quarterly" else "Annual"
-  val typeOfBusiness = "self-employment"
+  val typeOfBusiness                         = "self-employment"
 }

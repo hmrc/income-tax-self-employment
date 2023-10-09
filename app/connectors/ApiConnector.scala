@@ -30,12 +30,12 @@ trait ApiConnector {
 
   val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 
-  private[connectors] def ifsHeaderCarrier(api : String)(url: String)(hc: HeaderCarrier): HeaderCarrier = {
+  private[connectors] def ifsHeaderCarrier(api: String)(url: String)(hc: HeaderCarrier): HeaderCarrier = {
     val hcWithAuth = hc.copy(authorization = Some(Authorization(s"Bearer ${appConfig.ifsAuthorisationToken(api)}")))
     apiHeaderCarrier(url, hcWithAuth, "Environment" -> appConfig.ifsEnvironment)
   }
-  
-  private def apiHeaderCarrier(url: String, hcWithAuth:  HeaderCarrier, headers: (String, String)) = {
+
+  private def apiHeaderCarrier(url: String, hcWithAuth: HeaderCarrier, headers: (String, String)) = {
     val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
     if (isInternalHost) {
       hcWithAuth.withExtraHeaders(headers)
@@ -43,6 +43,7 @@ trait ApiConnector {
       hcWithAuth.withExtraHeaders((headers) +: hcWithAuth.toExplicitHeaders: _*)
     }
   }
+
 }
 
 object ApiConnector {

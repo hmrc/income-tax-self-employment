@@ -21,4 +21,4 @@ import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class AuthService @Inject()(val authConnector: AuthConnector) extends AuthorisedFunctions
+class AuthService @Inject() (val authConnector: AuthConnector) extends AuthorisedFunctions

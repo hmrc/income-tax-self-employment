@@ -29,10 +29,9 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class BusinessController @Inject()(businessService: BusinessService,
-                                   auth: AuthorisedAction,
-                                   cc: ControllerComponents
-                                        )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
+class BusinessController @Inject() (businessService: BusinessService, auth: AuthorisedAction, cc: ControllerComponents)(implicit ec: ExecutionContext)
+    extends BackendController(cc)
+    with Logging {
 
   def getBusinesses(nino: String): Action[AnyContent] = auth.async { implicit user =>
     businessService.getBusinesses(nino) map businessDataResponse
@@ -41,14 +40,15 @@ class BusinessController @Inject()(businessService: BusinessService,
   def getBusiness(nino: String, businessId: String): Action[AnyContent] = auth.async { implicit user =>
     businessService.getBusiness(nino, businessId) map businessDataResponse
   }
-  
+
   private def businessDataResponse(dataResponse: GetBusinessesResponse) =
     dataResponse match {
       case Right(model) => Ok(Json.toJson(model.taxPayerDisplayResponse.businessData.map(_.toBusiness(model.taxPayerDisplayResponse))))
-      case Left(errorModel) => errorModel match {
-        case apiStatusError: ApiStatusError => Status(errorModel.status)(Json.toJson(apiStatusError.toMdtpError))
-        case _ => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[ApiStatusErrors].toMdtpError))
-      }
+      case Left(errorModel) =>
+        errorModel match {
+          case apiStatusError: ApiStatusError => Status(errorModel.status)(Json.toJson(apiStatusError.toMdtpError))
+          case _                              => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[ApiStatusErrors].toMdtpError))
+        }
     }
-  
+
 }

@@ -25,11 +25,11 @@ import scala.concurrent.{ExecutionContext, Future}
 object PagerDutyHelper extends Logging {
 
   object PagerDutyKeys extends Enumeration {
-    val BAD_SUCCESS_JSON_FROM_API: PagerDutyKeys.Value = Value
-    val SERVICE_UNAVAILABLE_FROM_API: PagerDutyKeys.Value = Value
-    val INTERNAL_SERVER_ERROR_FROM_API: PagerDutyKeys.Value = Value
-    val UNEXPECTED_RESPONSE_FROM_API: PagerDutyKeys.Value = Value
-    val FOURXX_RESPONSE_FROM_API: PagerDutyKeys.Value = Value
+    val BAD_SUCCESS_JSON_FROM_API: PagerDutyKeys.Value        = Value
+    val SERVICE_UNAVAILABLE_FROM_API: PagerDutyKeys.Value     = Value
+    val INTERNAL_SERVER_ERROR_FROM_API: PagerDutyKeys.Value   = Value
+    val UNEXPECTED_RESPONSE_FROM_API: PagerDutyKeys.Value     = Value
+    val FOURXX_RESPONSE_FROM_API: PagerDutyKeys.Value         = Value
     val FAILED_TO_GET_JOURNEY_STATE_DATA: PagerDutyKeys.Value = Value
   }
 
@@ -37,22 +37,24 @@ object PagerDutyHelper extends Logging {
     logger.error(s"$pagerDutyKey $otherDetail")
   }
 
-  def getCorrelationId(response:HttpResponse): String ={
+  def getCorrelationId(response: HttpResponse): String = {
     response.header("CorrelationId") match {
       case Some(id) => s" CorrelationId: $id"
-      case _ => ""
+      case _        => ""
     }
   }
 
   type PagerDutyKey = PagerDutyHelper.PagerDutyKeys.Value
+
   implicit class WithRecovery[T](futureOpt: Future[T]) {
-    def recoverWithPagerDutyLog(pagerDutyKey: PagerDutyKey, msg: String)
-                               (implicit ec: ExecutionContext): Future[Either[MongoError, T]] = {
-      futureOpt.map(Right(_)).recover {
-        case exception: Exception =>
-          pagerDutyLog(pagerDutyKey, s"$msg Exception: ${exception.getMessage}")
-          Left(MongoError(exception.getMessage))
+
+    def recoverWithPagerDutyLog(pagerDutyKey: PagerDutyKey, msg: String)(implicit ec: ExecutionContext): Future[Either[MongoError, T]] = {
+      futureOpt.map(Right(_)).recover { case exception: Exception =>
+        pagerDutyLog(pagerDutyKey, s"$msg Exception: ${exception.getMessage}")
+        Left(MongoError(exception.getMessage))
       }
     }
+
   }
+
 }

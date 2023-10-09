@@ -31,4 +31,5 @@ class ControllerBehaviours extends TestUtils {
       status(result) mustBe resultStatus
       bodyOf(result) mustBe resultBody
     }
+
 }

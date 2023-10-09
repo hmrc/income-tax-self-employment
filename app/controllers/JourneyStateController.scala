@@ -23,44 +23,48 @@ import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.SessionRepository
-import utils.PagerDutyHelper.WithRecovery
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.PagerDutyHelper.PagerDutyKeys.FAILED_TO_GET_JOURNEY_STATE_DATA
+import utils.PagerDutyHelper.WithRecovery
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class JourneyStateController @Inject()(sessionRepository: SessionRepository,
-                                       auth: AuthorisedAction,
-                                       cc: ControllerComponents
-                                      )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
+class JourneyStateController @Inject() (sessionRepository: SessionRepository, auth: AuthorisedAction, cc: ControllerComponents)(implicit
+    ec: ExecutionContext)
+    extends BackendController(cc)
+    with Logging {
 
   def getJourneyState(businessId: String, journey: String, taxYear: Int): Action[AnyContent] = auth.async { request =>
     lazy val pagerMsg = "[Self-Employment BE SessionRepository][get] Failed to find journey state data."
-    sessionRepository.get(businessId, journey, taxYear)
+    sessionRepository
+      .get(businessId, journey, taxYear)
       .recoverWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
       .map {
         case Right(Some(model)) => Ok(Json.toJson(model.journeyStateData.completed))
-        case Right(None) => NoContent
-        case Left(serverError) => InternalServerError(Json.toJson(serverError.msg))
+        case Right(None)        => NoContent
+        case Left(serverError)  => InternalServerError(Json.toJson(serverError.msg))
       }
   }
 
   def putJourneyState(businessId: String, journey: String, taxYear: Int, completed: Boolean): Action[AnyContent] = auth.async { _ =>
     lazy val pagerMsg = "[Self-Employment BE SessionRepository][set] Failed to save journey state data."
-    
+
     val journeyStateData = JourneyStateData(businessId, journey, taxYear, completed)
-    sessionRepository.get(businessId, journey, taxYear).flatMap({ optJourneyState =>
-      val (journeystate, isCreated) =
-        optJourneyState.fold((JourneyState(journeyStateData = journeyStateData), true))(js => (JourneyState(js.id, journeyStateData), false))
-      sessionRepository.set(journeystate).map((_, isCreated))
-    })
+    sessionRepository
+      .get(businessId, journey, taxYear)
+      .flatMap({ optJourneyState =>
+        val (journeystate, isCreated) =
+          optJourneyState.fold((JourneyState(journeyStateData = journeyStateData), true))(js => (JourneyState(js.id, journeyStateData), false))
+        sessionRepository.set(journeystate).map((_, isCreated))
+      })
       .recoverWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
       .map {
-        case Right((_, true)) => Created
+        case Right((_, true))  => Created
         case Right((_, false)) => NoContent
         case Left(serverError) => InternalServerError(Json.toJson(serverError.msg))
       }
   }
+
 }
