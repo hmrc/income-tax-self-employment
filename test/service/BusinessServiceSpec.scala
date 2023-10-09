@@ -16,58 +16,109 @@
 
 package service
 
-import bulders.BusinessDataBuilder.aGetBusinessDataRequestStr
+import bulders.BusinessDataBuilder.{aBusiness, aBusinessJourneyStateSeq, aGetBusinessDataRequest, aTaxPayerDisplayResponse}
+import bulders.JourneyStateDataBuilder.aJourneyState
 import connectors.BusinessConnector
 import connectors.BusinessConnector.IdType
 import connectors.BusinessConnector.IdType.Nino
-import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesResponse
-import models.api.BusinessData.GetBusinessDataRequest
-import models.error.ApiError.ApiErrorBody
-import models.error.ApiError.ApiStatusError
-import org.scalamock.handlers.CallHandler3
-import play.api.libs.json.Json
+import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesRequestResponse
+import models.error.ErrorBody.ApiErrorBody
+import models.error.ServiceError
+import models.error.ServiceError.MongoError
+import models.error.StatusError.ApiStatusError
+import models.mdtp.JourneyState
+import org.mockito.ArgumentMatchers.{any, eq => meq}
+import org.mockito.Mockito.when
+import org.scalatestplus.mockito.MockitoSugar
+import repositories.SessionRepository
 import services.BusinessService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
+import java.time.LocalDate
 import scala.concurrent.Future
 
 class BusinessServiceSpec extends TestUtils {
   val mockBusinessConnector = mock[BusinessConnector]
+  val mockSessionRepository = MockitoSugar.mock[SessionRepository]
 
-  val service = new BusinessService(mockBusinessConnector)
-  val nino = "FI290077A"
-  val businessId = "SJPR05893938418"
+  lazy val service = new BusinessService(mockBusinessConnector, mockSessionRepository)
+  val nino = aTaxPayerDisplayResponse.nino
+  val businessId = aBusiness.businessId
+  val taxYear = LocalDate.now.getYear
+  
 
-  def stubGetBusiness(expectedResult: GetBusinessesResponse): CallHandler3[IdType, String, HeaderCarrier, Future[GetBusinessesResponse]] =
+  for ((getMethodName, svcMethod) <- Seq(
+    ("getBusinesses", () => service.getBusinesses(nino)),
+    ("getBusiness", () => service.getBusiness(nino, businessId)),
+  )) {
+
+    s"$getMethodName" should { //scalastyle:off magic.number
+      val expectedRight = Right(Seq(aBusiness))
+      behave like rightResponse(svcMethod, expectedRight, () => stubConnectorGetBusiness(Right(aGetBusinessDataRequest)))
+
+      val expectedLeft = Left(ApiStatusError(999, ApiErrorBody("API_ERROR", "Error response from API")))
+      behave like leftResponse(svcMethod, expectedLeft, () => stubConnectorGetBusiness(expectedLeft))
+    }
+  }
+
+  "getBusinessesJourneyStates" should {
+    behave like rightResponse(
+      () => service.getBusinessJourneyStates(nino, taxYear),
+      Right(aBusinessJourneyStateSeq),
+      () => {
+        stubConnectorGetBusiness(Right(aGetBusinessDataRequest))
+        stubSessionRepositoryGetSeq(Right(Seq(aJourneyState)))
+      }
+    )
+
+    val connectorResult = Left(ApiStatusError(999, ApiErrorBody("API_ERROR", "Error response from API")))
+    behave like leftResponse(
+      () => service.getBusinessJourneyStates(nino, taxYear),
+      connectorResult,
+      () => {
+        stubConnectorGetBusiness(connectorResult)
+      },
+      "Connector problems"
+    )
+    
+    val sessionRepoResult = Left(MongoError("db error"))
+    behave like leftResponse(
+      () => service.getBusinessJourneyStates(nino, taxYear),
+      sessionRepoResult,
+      () => {
+        stubConnectorGetBusiness(Right(aGetBusinessDataRequest))
+        stubSessionRepositoryGetSeq(sessionRepoResult)
+      },
+      "Repository problems"
+    )
+  }
+
+
+  def rightResponse[A](svcMethod: () => Future[A], expectedResult: A, stubs: () => Unit): Unit =
+    "return a Right with GetBusinessDataRequest model" in {
+      stubs()
+      await(svcMethod()) mustBe expectedResult
+    }
+
+  def leftResponse[A](svcMethod: () => Future[A], expectedResult: A, stubs: () => Unit, remark: String = ""): Unit =
+    s"$remark error - return a Left when $remark returns an error" in {
+      stubs()
+      await(svcMethod()) mustBe expectedResult
+    }
+
+  private def stubConnectorGetBusiness(expectedResult: GetBusinessesRequestResponse): Unit =
     (mockBusinessConnector.getBusinesses(_: IdType, _: String)(_: HeaderCarrier))
       .expects(Nino, nino, *)
       .returning(Future.successful(expectedResult))
-  
 
-  for ((getMethodName, aGet) <- Seq(("getBusinesses", () => service.getBusinesses(nino)),
-                                    ("getBusiness", () => service.getBusiness(nino, businessId)))) {
-    s"$getMethodName" should {
-      behave like returnRight(aGet)
-      behave like returnLeft(aGet)
-    }
-  }
   
-  def returnRight(getRequest: () => Future[GetBusinessesResponse]): Unit =
-    "return a Right with GetBusinessDataRequest model" in {
-      val expectedResult = Right(Json.parse(aGetBusinessDataRequestStr).as[GetBusinessDataRequest])
-      stubGetBusiness(expectedResult)
-      val result = await(getRequest())
-      result mustBe expectedResult
-    }
-
-  def returnLeft(getRequest: () => Future[GetBusinessesResponse]): Unit =
-    "return a Left when connector returns an error" in { //scalastyle:off magic.number
-      val apiError = Left(ApiStatusError(999, ApiErrorBody("API_ERROR", "Error response from API")))
-      stubGetBusiness(apiError)
-      val result = await(getRequest())
-      result mustBe apiError
-    }
+  type GetJourneyStatesResponse = Either[ServiceError, Seq[JourneyState]]
+  private def stubSessionRepositoryGetSeq(expectedResult: GetJourneyStatesResponse): Unit =
+    when(mockSessionRepository.get(any, meq(taxYear))) thenReturn (expectedResult match {
+      case Right(journeyStates) => Future.successful(journeyStates)
+      case Left(MongoError(error)) => Future.failed(new RuntimeException(error))
+    })
 }
 
 

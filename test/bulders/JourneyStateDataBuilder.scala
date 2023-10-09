@@ -16,6 +16,7 @@
 
 package bulders
 
+import bulders.BusinessDataBuilder.aBusiness
 import models.mdtp.JourneyState
 import models.mdtp.JourneyState.JourneyStateData
 
@@ -24,6 +25,7 @@ import java.util.UUID
 object JourneyStateDataBuilder { //scalastyle:off magic.number
   lazy val uuid = UUID.randomUUID()
   lazy val aJourneyState = JourneyState(
-    journeyStateData =  JourneyStateData(businessId = "XAIS12345678910", journey = "view-trades", taxYear = 2023, completedState = true)
+    journeyStateData =  JourneyStateData(businessId = aBusiness.businessId, journey = "view-trades", taxYear = 2023, completedState = true)
   )
+  lazy val aJourneyAndState = (aJourneyState.journeyStateData.journey, aJourneyState.journeyStateData.completedState)
 }

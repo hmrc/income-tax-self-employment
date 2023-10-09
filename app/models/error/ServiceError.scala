@@ -16,6 +16,8 @@
 
 package models.error
 
+import play.api.libs.json._
+
 trait ServiceError {
   def msg: String
 }
@@ -34,10 +36,56 @@ object ServiceError {
   case class MongoError(error: String) extends DatabaseError {
     val msg: String = s"Mongo exception occurred. Exception: $error"
   }
- 
-  case class EncryptionDecryptionError(error: String) extends DatabaseError {
-    val msg: String = s"Encryption / Decryption exception occurred. Exception: $error"
+
+  object MongoError {
+    implicit val mongoErrorFormat: Format[MongoError] =
+    Format(
+      Reads {
+        case JsString(s"Mongo exception occurred. Exception: $error") => JsSuccess(MongoError(error))
+      },
+      Writes {
+        mge: MongoError => JsString(mge.msg)
+      }
+    )
   }
 
+  object DatabaseError {
+    implicit val databaseErrorFormat: Format[DatabaseError] =
+      Format(
+        Reads {
+          case JsString(DataNotUpdated.msg) => JsSuccess(DataNotUpdated)
+          case JsString(DataNotFound.msg) => JsSuccess(DataNotFound)
+          case jsValue@_ =>
+            MongoError.mongoErrorFormat.reads(jsValue)
+              .orElse(JsError(s"DataBaseError $jsValue is not one of supported"))
+        },
+        Writes { dbError: DatabaseError => JsString(dbError.msg) }
+      )
+  }
+
+  case class UnavailableServiceError(error: String) extends ServiceError {
+    val msg: String = s"Unavailable Service exception occurred. Exception: $error"
+  }
+
+  object UnavailableServiceError {
+    implicit val unavailableServiceErrorFormat: OFormat[UnavailableServiceError] = Json.format[UnavailableServiceError]
+  }
+
+
+  implicit val serviceErrorFormat: Format[ServiceError] =
+    Format(
+      Reads(jsValue =>
+        DatabaseError.databaseErrorFormat.reads(jsValue)
+          .orElse(UnavailableServiceError.unavailableServiceErrorFormat.reads(jsValue))
+          .orElse(StatusError.statusErrorFormat.reads(jsValue))
+          .orElse(ErrorBody.errorBodyFormat.reads(jsValue))
+      ),
+      Writes {
+        case dbe: DatabaseError => DatabaseError.databaseErrorFormat.writes(dbe)
+        case use: UnavailableServiceError => UnavailableServiceError.unavailableServiceErrorFormat.writes(use)
+        case ste: StatusError => StatusError.statusErrorFormat.writes(ste)
+        case eby: ErrorBody => ErrorBody.errorBodyFormat.writes(eby)
+      }
+    )
 }
 

@@ -59,21 +59,6 @@ class SessionRepository @Inject()(
     )
   ) {
   
-  private def filterBy(id: String): Bson = Filters.equal("_id", id)
-
-  private def filterBy(businessId: String, taxYear: Int, journey: String): Bson =
-    Filters.and(
-      Filters.equal("journeyStateData.businessId", businessId),
-      Filters.equal("journeyStateData.journey", journey),
-      Filters.equal("journeyStateData.taxYear", taxYear)
-    )
-    
-  private def filterBy(businessId: String, taxYear: Int): Bson =
-    Filters.and(
-      Filters.equal("journeyStateData.businessId", businessId),
-      Filters.equal("journeyStateData.taxYear", taxYear)
-    )
-
   def keepAlive(id: String): Future[Boolean] = keepAlive(() => filterBy(id))
 
   def keepAlive(businessId: String, journey: String, taxYear: Int): Future[Boolean] =
@@ -121,9 +106,24 @@ class SessionRepository @Inject()(
       .map(_ => true)
 
 
-  private def find(filterFn: () => Bson) = {
+  private def find(filterFn: () => Bson) =
     collection
       .find(filterFn())
-  }
+  
+  private def filterBy(id: String): Bson = Filters.equal("_id", id)
+
+  private def filterBy(businessId: String, taxYear: Int, journey: String): Bson =
+    Filters.and(
+      Filters.equal("journeyStateData.businessId", businessId),
+      Filters.equal("journeyStateData.journey", journey),
+      Filters.equal("journeyStateData.taxYear", taxYear)
+    )
+
+  private def filterBy(businessId: String, taxYear: Int): Bson =
+    Filters.and(
+      Filters.equal("journeyStateData.businessId", businessId),
+      Filters.equal("journeyStateData.taxYear", taxYear)
+    )
+  
 }
 

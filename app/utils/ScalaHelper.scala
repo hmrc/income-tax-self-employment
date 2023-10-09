@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-package controllers
+package utils
 
-import play.api.mvc.{Action, AnyContent}
-import utils.TestUtils
+import scala.concurrent.{ExecutionContext, Future}
 
-class ControllerBehaviours extends TestUtils {
 
-  def controllerSpec(resultStatus: Int, resultBody: String, stubs: () => Unit,
-                     methodBlock: () => Action[AnyContent], testName: String = ""): Unit =
-    s"$testName - return a $resultStatus response and a result value" in {
-      val result = {
-        mockAuth()
-        stubs()
-        methodBlock()(fakeRequest)
-      }
-      status(result) mustBe resultStatus
-      bodyOf(result) mustBe resultBody
-    }
+object ScalaHelper {
+   implicit class FutureEither[L, R](either: Either[L, Future[R]]) {
+     
+     def toFuture()(implicit ec: ExecutionContext): Future[Either[L, R]] = {
+       Some(either).map {
+         case Left(s) => Future.successful(Left(s))
+         case Right(f) => f.map(Right(_))
+       }.get
+     }
+   }
 }

@@ -16,7 +16,9 @@
 
 package connectors.httpParsers
 
-import models.error.ApiError.{ApiErrorBody, ApiErrorsBody, ApiStatusError, ApiStatusErrors, StatusError}
+import models.error.ErrorBody.{ApiErrorBody, ApiErrorsBody}
+import models.error.StatusError
+import models.error.StatusError.{ApiStatusError, ApiStatusErrors}
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, SERVICE_UNAVAILABLE}
 import uk.gov.hmrc.http.HttpResponse
 import utils.PagerDutyHelper.PagerDutyKeys._
