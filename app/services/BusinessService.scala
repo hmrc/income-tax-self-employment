@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class BusinessService @Inject()(businessConnector: BusinessConnector) {
+class BusinessService @Inject() (businessConnector: BusinessConnector) {
 
   def getBusinesses(nino: String)(implicit hc: HeaderCarrier): Future[GetBusinessesResponse] =
     businessConnector.getBusinesses(Nino, nino)
@@ -34,4 +34,5 @@ class BusinessService @Inject()(businessConnector: BusinessConnector) {
       getBDR.copy(taxPayerDisplayResponse = getBDR.taxPayerDisplayResponse
         .copy(businessData = getBDR.taxPayerDisplayResponse.businessData.filter(_.incomeSourceId == businessId)))
     }))
+
 }

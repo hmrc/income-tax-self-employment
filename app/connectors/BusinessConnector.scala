@@ -24,37 +24,42 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class BusinessConnector @Inject()(val http: HttpClient,
-                                  val appConfig: AppConfig)(implicit ec: ExecutionContext) extends ApiConnector {
-  
+class BusinessConnector @Inject() (val http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext) extends ApiConnector {
+
   private def businessIncomeSourceUri(idType: IdType, idNumber: String): String =
     appConfig.ifsBaseUrl + businessUriPath(idType, idNumber)
 
   def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier): Future[GetBusinessesResponse] = {
     val incomeSourceUri: String = businessIncomeSourceUri(idType, idNumber)
-    
+
     def apiCall(implicit hc: HeaderCarrier): Future[GetBusinessesResponse] = {
       http.GET[GetBusinessesResponse](incomeSourceUri)
     }
     apiCall(ifsHeaderCarrier(BusinessesBaseApi.Get)(incomeSourceUri)(hc))
   }
+
 }
 
 object BusinessConnector {
   sealed trait IdType
+
   object IdType {
+
     case object Nino extends IdType {
       override def toString: String = "nino"
     }
+
     case object MtdId extends IdType {
       override def toString: String = "mtdId"
     }
+
   }
-  
+
   def businessUriPath(idType: IdType, idNumber: String): String =
     s"/registration/business-details/$idType/$idNumber"
-    
+
   object BusinessesBaseApi {
     val Get = "1171"
   }
+
 }

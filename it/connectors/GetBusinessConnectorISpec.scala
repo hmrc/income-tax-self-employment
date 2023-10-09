@@ -24,8 +24,7 @@ import connectors.BusinessConnector.businessUriPath
 import helpers.WiremockSpec
 import models.api.BusinessData.GetBusinessDataRequest
 import models.error.ApiError.ApiErrorBody.{data404, ifsServer500, mtdId400, nino400, service503}
-import models.error.ApiError.ApiErrorBody
-import models.error.ApiError.ApiStatusError
+import models.error.ApiError.{ApiErrorBody, ApiStatusError}
 import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -35,14 +34,14 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 class GetBusinessConnectorISpec extends WiremockSpec {
 
   lazy val connector: BusinessConnector = app.injector.instanceOf[BusinessConnector]
-  lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+  lazy val httpClient: HttpClient       = app.injector.instanceOf[HttpClient]
 
   def appConfig(businessApiHost: String): AppConfig =
-    new AppConfig(app.injector.instanceOf[Configuration],app.injector.instanceOf[ServicesConfig]) {
+    new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
       override val ifsBaseUrl: String = s"http://$businessApiHost:$wireMockPort"
-  }
+    }
 
-  val (nino, mtdId) = ("123456789", "1234567890123456")
+  val (nino, mtdId)             = ("123456789", "1234567890123456")
   val (apiNinoUrl, apiMtdIdUrl) = (businessUriPath(Nino, nino), businessUriPath(MtdId, mtdId))
 
   val headersSentToIfs = Seq(
@@ -55,8 +54,8 @@ class GetBusinessConnectorISpec extends WiremockSpec {
     for ((idType, idNumber, ifsUrl) <- Seq((Nino, nino, apiNinoUrl), (MtdId, mtdId, apiMtdIdUrl))) {
 
       s"include internal headers - $ifsUrl" when {
-        val internalHost = "localhost"
-        val externalHost = "127.0.0.1"
+        val internalHost         = "localhost"
+        val externalHost         = "127.0.0.1"
         val expectedResponseBody = aGetBusinessDataRequestStr
 
         for ((intExtHost, intExt) <- Seq((internalHost, "Internal"), (externalHost, "External"))) {
@@ -68,15 +67,17 @@ class GetBusinessConnectorISpec extends WiremockSpec {
             auditStubs()
 
             implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-            val result = await(new BusinessConnector(httpClient, appConfig(intExtHost)).getBusinesses(idType, idNumber)(hc))
+            val result                     = await(new BusinessConnector(httpClient, appConfig(intExtHost)).getBusinesses(idType, idNumber)(hc))
             result mustBe Right(expectedResult)
           }
         }
       }
 
       for ((errorStatus, apiError) <- Seq(
-        (NOT_FOUND, data404), (BAD_REQUEST, if (idType == Nino) nino400 else mtdId400),
-        (INTERNAL_SERVER_ERROR, ifsServer500), (SERVICE_UNAVAILABLE, service503))) {
+          (NOT_FOUND, data404),
+          (BAD_REQUEST, if (idType == Nino) nino400 else mtdId400),
+          (INTERNAL_SERVER_ERROR, ifsServer500),
+          (SERVICE_UNAVAILABLE, service503))) {
         val errorResponseBody = Json.obj("code" -> apiError.code, "reason" -> apiError.reason, "errorType" -> "DOWNSTREAM_ERROR_CODE")
 
         s"return a $errorStatus  - $ifsUrl" in {
@@ -84,35 +85,35 @@ class GetBusinessConnectorISpec extends WiremockSpec {
           auditStubs()
 
           implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-          val result = await(connector.getBusinesses(idType, idNumber)(hc))
+          val result                     = await(connector.getBusinesses(idType, idNumber)(hc))
           result mustBe Left(ApiStatusError(errorStatus, apiError))
         }
       }
 
       "return a parsing error" when {
         val (invalidIdType, invalidReason) = ("PARSING_ERROR", "Error parsing response from API")
-        
-        
+
         s"the HeaderCarrier is insufficient - $ifsUrl" in {
-          val errorStatus = 404
+          val errorStatus       = 404
           val errorResponseBody = Json.obj("code" -> invalidIdType, "reason" -> invalidReason, "errorType" -> "DOWNSTREAM_ERROR_CODE")
           stubGetWithResponseBody(ifsUrl, errorStatus, errorResponseBody.toString(), headersSentToIfs)
           auditStubs()
           implicit val hc: HeaderCarrier = HeaderCarrier()
-          val result = await(connector.getBusinesses(idType, idNumber)(hc))
+          val result                     = await(connector.getBusinesses(idType, idNumber)(hc))
           result mustBe Left(ApiStatusError(errorStatus, ApiErrorBody(invalidIdType, invalidReason)))
         }
-        
+
         s"the json fails to validate a non GetBusinessDataRequest json - $ifsUrl" in {
-          val errorStatus = 500
+          val errorStatus                   = 500
           val nonGetBusinessDataRequestBody = Json.obj("field" -> "Non GetBusinessDataRequest json")
           stubGetWithResponseBody(ifsUrl, OK, nonGetBusinessDataRequestBody.toString(), headersSentToIfs)
           auditStubs()
           implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-          val result = await(connector.getBusinesses(idType, idNumber)(hc))
+          val result                     = await(connector.getBusinesses(idType, idNumber)(hc))
           result mustBe Left(ApiStatusError(errorStatus, ApiErrorBody(invalidIdType, invalidReason)))
         }
       }
     }
   }
+
 }

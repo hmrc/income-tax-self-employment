@@ -21,12 +21,12 @@ import play.api.libs.json.Json
 
 object BusinessDataBuilder {
   lazy val aGetBusinessDataRequest = Json.parse(aGetBusinessDataRequestStr).as[GetBusinessDataRequest]
-  lazy val aBusinessData = aGetBusinessDataRequest.taxPayerDisplayResponse.businessData
-  lazy val aBusinesses = aBusinessData.map(_.toBusiness(aGetBusinessDataRequest.taxPayerDisplayResponse))
-  
-  //Note our models use a subset of all the data pulled back by the API which is included here
+  lazy val aBusinessData           = aGetBusinessDataRequest.taxPayerDisplayResponse.businessData
+  lazy val aBusinesses             = aBusinessData.map(_.toBusiness(aGetBusinessDataRequest.taxPayerDisplayResponse))
+
+  // Note our models use a subset of all the data pulled back by the API which is included here
   lazy val aGetBusinessDataRequestStr: String =
-  """
+    """
       |{
       |  "processingDate": "2023-07-05T09:16:58.655Z",
       |  "taxPayerDisplayResponse": {
@@ -103,4 +103,5 @@ object BusinessDataBuilder {
       |  }
       |}
       |""".stripMargin
+
 }

@@ -34,10 +34,9 @@ object ServiceError {
   case class MongoError(error: String) extends DatabaseError {
     val msg: String = s"Mongo exception occurred. Exception: $error"
   }
- 
+
   case class EncryptionDecryptionError(error: String) extends DatabaseError {
     val msg: String = s"Encryption / Decryption exception occurred. Exception: $error"
   }
 
 }
-

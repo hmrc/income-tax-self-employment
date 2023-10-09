@@ -22,8 +22,7 @@ import connectors.BusinessConnector.IdType
 import connectors.BusinessConnector.IdType.Nino
 import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesResponse
 import models.api.BusinessData.GetBusinessDataRequest
-import models.error.ApiError.ApiErrorBody
-import models.error.ApiError.ApiStatusError
+import models.error.ApiError.{ApiErrorBody, ApiStatusError}
 import org.scalamock.handlers.CallHandler3
 import play.api.libs.json.Json
 import services.BusinessService
@@ -35,24 +34,25 @@ import scala.concurrent.Future
 class BusinessServiceSpec extends TestUtils {
   val mockBusinessConnector = mock[BusinessConnector]
 
-  val service = new BusinessService(mockBusinessConnector)
-  val nino = "FI290077A"
+  val service    = new BusinessService(mockBusinessConnector)
+  val nino       = "FI290077A"
   val businessId = "SJPR05893938418"
 
   def stubGetBusiness(expectedResult: GetBusinessesResponse): CallHandler3[IdType, String, HeaderCarrier, Future[GetBusinessesResponse]] =
-    (mockBusinessConnector.getBusinesses(_: IdType, _: String)(_: HeaderCarrier))
+    (mockBusinessConnector
+      .getBusinesses(_: IdType, _: String)(_: HeaderCarrier))
       .expects(Nino, nino, *)
       .returning(Future.successful(expectedResult))
-  
 
-  for ((getMethodName, aGet) <- Seq(("getBusinesses", () => service.getBusinesses(nino)),
-                                    ("getBusiness", () => service.getBusiness(nino, businessId)))) {
+  for ((getMethodName, aGet) <- Seq(
+      ("getBusinesses", () => service.getBusinesses(nino)),
+      ("getBusiness", () => service.getBusiness(nino, businessId)))) {
     s"$getMethodName" should {
       behave like returnRight(aGet)
       behave like returnLeft(aGet)
     }
   }
-  
+
   def returnRight(getRequest: () => Future[GetBusinessesResponse]): Unit =
     "return a Right with GetBusinessDataRequest model" in {
       val expectedResult = Right(Json.parse(aGetBusinessDataRequestStr).as[GetBusinessDataRequest])
@@ -62,12 +62,11 @@ class BusinessServiceSpec extends TestUtils {
     }
 
   def returnLeft(getRequest: () => Future[GetBusinessesResponse]): Unit =
-    "return a Left when connector returns an error" in { //scalastyle:off magic.number
+    "return a Left when connector returns an error" in { // scalastyle:off magic.number
       val apiError = Left(ApiStatusError(999, ApiErrorBody("API_ERROR", "Error response from API")))
       stubGetBusiness(apiError)
       val result = await(getRequest())
       result mustBe apiError
     }
+
 }
-
-

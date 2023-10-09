@@ -17,10 +17,10 @@
 package connectors
 
 class IfsConnectorSpec extends ApiConnectorBehaviours {
-  
-  val api = "1171"
+
+  val api                = "1171"
   val headerCarrierBlock = connector.ifsHeaderCarrier(api)
-  
+
   "FakeConnector" when {
 
     "host is Internal" should {
