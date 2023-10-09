@@ -18,6 +18,7 @@ package bulders
 
 import bulders.JourneyStateDataBuilder.aJourneyAndState
 import models.api.BusinessData.GetBusinessDataRequest
+import models.mdtp.TradesJourneyStatuses
 import play.api.libs.json.Json
 
 object BusinessDataBuilder {
@@ -29,6 +30,7 @@ object BusinessDataBuilder {
   lazy val aBusiness = aBusinesses.head
   lazy val aBusinessIdAndName = (aBusiness.businessId, aBusiness.tradingName)
   lazy val aBusinessJourneyStateSeq = Seq((aBusiness.businessId, aBusiness.tradingName, Seq(aJourneyAndState)))
+  lazy val aTradesJourneyStatusesSeq = aBusinessJourneyStateSeq.map(TradesJourneyStatuses(_))
   
   //Note our models use a subset of all the data pulled back by the API which is included here
   lazy val aGetBusinessDataRequestStr: String =

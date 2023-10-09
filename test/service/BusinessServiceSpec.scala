@@ -16,7 +16,7 @@
 
 package service
 
-import bulders.BusinessDataBuilder.{aBusiness, aBusinessJourneyStateSeq, aGetBusinessDataRequest, aTaxPayerDisplayResponse}
+import bulders.BusinessDataBuilder.{aBusiness, aBusinessJourneyStateSeq, aGetBusinessDataRequest, aTaxPayerDisplayResponse, aTradesJourneyStatusesSeq}
 import bulders.JourneyStateDataBuilder.aJourneyState
 import connectors.BusinessConnector
 import connectors.BusinessConnector.IdType
@@ -65,7 +65,7 @@ class BusinessServiceSpec extends TestUtils {
   "getBusinessesJourneyStates" should {
     behave like rightResponse(
       () => service.getBusinessJourneyStates(nino, taxYear),
-      Right(aBusinessJourneyStateSeq),
+      Right(aTradesJourneyStatusesSeq),
       () => {
         stubConnectorGetBusiness(Right(aGetBusinessDataRequest))
         stubSessionRepositoryGetSeq(Right(Seq(aJourneyState)))

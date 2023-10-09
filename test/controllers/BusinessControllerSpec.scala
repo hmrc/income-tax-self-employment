@@ -16,7 +16,7 @@
 
 package controllers
 
-import bulders.BusinessDataBuilder.{aBusiness, aBusinessJourneyStateSeq, aBusinesses}
+import bulders.BusinessDataBuilder.{aBusiness, aBusinessJourneyStateSeq, aBusinesses, aTradesJourneyStatusesSeq}
 import controllers.BusinessControllerSpec.{stubGetBusiness, stubGetBusinessJourneyStates, stubGetBusinesses}
 import models.error.ErrorBody.ApiErrorBody.{data404, ifsServer500, nino400, service503}
 import models.error.ServiceError.MongoError
@@ -72,8 +72,8 @@ class BusinessControllerSpec extends ControllerBehaviours {
   }
 
   s"GET /individuals/business/journeyStates/$nino/$taxYear" should {
-    behave like controllerSpec(OK, Json.toJson(aBusinessJourneyStateSeq).toString,
-      () => stubGetBusinessJourneyStates(mockBusinessService, nino, taxYear, Right(aBusinessJourneyStateSeq)),
+    behave like controllerSpec(OK, Json.toJson(aTradesJourneyStatusesSeq).toString,
+      () => stubGetBusinessJourneyStates(mockBusinessService, nino, taxYear, Right(aTradesJourneyStatusesSeq)),
       () => underTest.getBusinessJourneyStates(nino, taxYear)
     )
 

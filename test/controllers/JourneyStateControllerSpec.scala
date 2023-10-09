@@ -16,7 +16,7 @@
 
 package controllers
 
-import bulders.BusinessDataBuilder.{aBusiness, aBusinessJourneyStateSeq}
+import bulders.BusinessDataBuilder.{aBusiness, aBusinessJourneyStateSeq, aTradesJourneyStatusesSeq}
 import bulders.JourneyStateDataBuilder.aJourneyState
 import models.error.ErrorBody.ApiErrorBody.ifsServer500
 import models.error.ServiceError.{DatabaseError, MongoError}
@@ -60,8 +60,8 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
   }
   
   s"GET /completed-section/$nino/$taxYear" should {
-    behave like controllerSpec(OK, Json.toJson(aBusinessJourneyStateSeq).toString,
-      () => stubBusinessConnectorGet(expectedResult = Right(aBusinessJourneyStateSeq)),
+    behave like controllerSpec(OK, Json.toJson(aTradesJourneyStatusesSeq).toString,
+      () => stubBusinessConnectorGet(expectedResult = Right(aTradesJourneyStatusesSeq)),
       () => underTest.getJourneyStateSeq(nino, taxYear)
     )
 

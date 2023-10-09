@@ -3,7 +3,7 @@
 #Business
 GET        /individuals/business/details/:nino/list                      controllers.BusinessController.getBusinesses(nino: String)
 GET        /individuals/business/details/:nino/:businessId               controllers.BusinessController.getBusiness(nino: String, businessId: String)
-GET        /individuals/business/journeyStates/:nino/:taxYear            controllers.BusinessController.getBusinessJourneyStates(nino: String, taxYear: Int)
+GET        /individuals/business/journey-states/:nino/:taxYear           controllers.BusinessController.getBusinessJourneyStates(nino: String, taxYear: Int)
 
 #JourneyState
 GET        /completed-section/:nino/:taxYear                             controllers.JourneyStateController.getJourneyStateSeq(nino: String, taxYear: Int)
