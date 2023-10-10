@@ -59,19 +59,14 @@ class SessionRepository @Inject()(
     )
   ) {
   
-  private def filterBy(id: String): Bson = Filters.equal("_id", id)
-
-  private def filterBy(nino: String, taxYear: Int, journey: String): Bson =
-    Filters.and(
-      Filters.equal("journeyStateData.businessId", nino),
-      Filters.equal("journeyStateData.journey", journey),
-      Filters.equal("journeyStateData.taxYear", taxYear)
-    )
-
   def keepAlive(id: String): Future[Boolean] = keepAlive(() => filterBy(id))
 
   def keepAlive(businessId: String, journey: String, taxYear: Int): Future[Boolean] =
     keepAlive(() => filterBy(businessId, taxYear, journey))
+    
+  def keepAlive(businessId: String, taxYear: Int): Future[Boolean] =
+    keepAlive(() => filterBy(businessId, taxYear))
+    
 
   private def keepAlive(filterFn: () => Bson): Future[Boolean] =
     collection
@@ -83,10 +78,13 @@ class SessionRepository @Inject()(
       .map(_ => true)
 
   def get(id: String): Future[Option[JourneyState]] =
-    keepAlive(id).flatMap { _ => find(() => filterBy(id)) }
+    keepAlive(id).flatMap { _ => find(() => filterBy(id)).headOption() }
 
   def get(businessId: String, journey: String, taxYear: Int): Future[Option[JourneyState]] =
-    keepAlive(businessId, journey, taxYear).flatMap { _ => find(() => filterBy(businessId, taxYear, journey)) }
+    keepAlive(businessId, journey, taxYear).flatMap { _ => find(() => filterBy(businessId, taxYear, journey)).headOption() }
+    
+  def get(businessId: String, taxYear: Int): Future[Seq[JourneyState]] =
+    keepAlive(businessId, taxYear).flatMap { _ => find(() => filterBy(businessId, taxYear)).toFuture() }
 
   def set(journeyState: JourneyState): Future[Boolean] = {
     val updatedJourneyState = journeyState copy (lastUpdated = LocalDate.now(clock))
@@ -108,10 +106,24 @@ class SessionRepository @Inject()(
       .map(_ => true)
 
 
-  private def find(filterFn: () => Bson) = {
+  private def find(filterFn: () => Bson) =
     collection
       .find(filterFn())
-      .headOption()
-  }
+  
+  private def filterBy(id: String): Bson = Filters.equal("_id", id)
+
+  private def filterBy(businessId: String, taxYear: Int, journey: String): Bson =
+    Filters.and(
+      Filters.equal("journeyStateData.businessId", businessId),
+      Filters.equal("journeyStateData.journey", journey),
+      Filters.equal("journeyStateData.taxYear", taxYear)
+    )
+
+  private def filterBy(businessId: String, taxYear: Int): Bson =
+    Filters.and(
+      Filters.equal("journeyStateData.businessId", businessId),
+      Filters.equal("journeyStateData.taxYear", taxYear)
+    )
+  
 }
 

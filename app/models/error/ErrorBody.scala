@@ -16,23 +16,27 @@
 
 package models.error
 
-import play.api.http.Status.INTERNAL_SERVER_ERROR
-import play.api.libs.json.{Format, JsError, JsString, JsSuccess, JsValue, Json, OFormat, Reads, Writes}
+import models.error.ErrorType.{DOWNSTREAM_ERROR_CODE, MDTP_ERROR_CODE}
+import play.api.libs.json._
 
-object ApiError {
-  trait ErrorBody extends ServiceError {
-    lazy val msg: String = reason
-    def reason: String
-  }
 
-  trait StatusError {
-    def status: Int
-    def body: ErrorBody
-  }
+trait ErrorBody extends ServiceError {
+  lazy val msg: String = reason
 
-  trait ErrorType {
-    def str: String
-  }
+  def reason: String
+}
+
+object ErrorBody {
+  
+  implicit val errorBodyFormat: Format[ErrorBody] = Format(
+    Reads { jsValue =>
+      ApiErrorBody.apiErrorBodyFormat.reads(jsValue) orElse ApiErrorsBody.apiErrorsBodyFormat.reads(jsValue)
+    },
+    Writes {
+      case ape: ApiErrorBody => ApiErrorBody.apiErrorBodyFormat.writes(ape)
+      case ape: ApiErrorsBody => ApiErrorsBody.apiErrorsBodyFormat.writes(ape)
+    }
+  )
 
   /** Single API Error * */
   case class ApiErrorBody(code: String, reason: String, errorType: ErrorType = DOWNSTREAM_ERROR_CODE) extends ErrorBody {
@@ -52,7 +56,8 @@ object ApiError {
   }
 
   object ApiErrorBody {
-    implicit val formats: OFormat[ApiErrorBody] = Json.format[ApiErrorBody]
+    implicit val apiErrorBodyFormat: OFormat[ApiErrorBody] = Json.format[ApiErrorBody]
+
     val parsingError: ApiErrorBody = ApiErrorBody("PARSING_ERROR", "Error parsing response from API")
 
     val nino400: ApiErrorBody = ApiErrorBody(
@@ -78,47 +83,6 @@ object ApiError {
   case class ApiErrorsBody(failures: Seq[ApiErrorBody], reason: String = "") extends ErrorBody
 
   object ApiErrorsBody {
-    implicit val formats: OFormat[ApiErrorsBody] = Json.format[ApiErrorsBody]
-  }
-
-  case class ApiStatusError(status: Int, body: ApiErrorBody) extends StatusError {
-    def toMdtpError: ApiStatusError = {
-      val mdtpStatus = if (body.code == "INVALID_MTD_ID" || body.code == "NVALID_CORRELATIONID") INTERNAL_SERVER_ERROR else status
-      this.copy(status = mdtpStatus, body = body.toMdtpError)
-    }
-  }
-
-  object ApiStatusError {
-    implicit val apiStatusErrorFormats: OFormat[ApiStatusError] = Json.format[ApiStatusError]
-  }
-
-  case class ApiStatusErrors(status: Int, body: ApiErrorsBody) extends StatusError {
-    def toMdtpError: ApiStatusErrors =
-      this.copy(body = body.copy(failures = body.failures.map(_.toMdtpError)))
-  }
-
-  object ApiStatusErrors {
-    implicit val apiStatusErrorsFormats: OFormat[ApiStatusErrors] = Json.format[ApiStatusErrors]
-  }
-
-  case object DOWNSTREAM_ERROR_CODE extends ErrorType {
-    val str = "DOWNSTREAM_ERROR_CODE"
-  }
-
-  case object MDTP_ERROR_CODE extends ErrorType {
-    override val str = "MDTP_ERROR_CODE"
-  }
-
-  implicit val errorTypeFormat: Format[ErrorType] = {
-    Format(
-      Reads {
-        case JsString("DOWNSTREAM_ERROR_CODE") => JsSuccess(DOWNSTREAM_ERROR_CODE)
-        case JsString("MDTP_ERROR_CODE") => JsSuccess(MDTP_ERROR_CODE)
-        case jsValue: JsValue => JsError(s"ErrorType $jsValue is not one of supported [DOWNSTREAM_ERROR_CODE, MDTP_ERROR_CODE]")
-      },
-      Writes { errType: ErrorType => JsString(errType.str) }
-    )
+    implicit val apiErrorsBodyFormat: OFormat[ApiErrorsBody] = Json.format[ApiErrorsBody]
   }
 }
-
-

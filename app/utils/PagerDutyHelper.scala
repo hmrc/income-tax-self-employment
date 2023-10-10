@@ -16,9 +16,11 @@
 
 package utils
 
-import models.error.ServiceError.MongoError
+import models.error.ServiceError
+import models.error.ServiceError.{MongoError, UnavailableServiceError}
 import play.api.Logging
 import uk.gov.hmrc.http.HttpResponse
+import utils.PagerDutyHelper.PagerDutyKeys.FAILED_TO_GET_JOURNEY_STATE_DATA
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,14 +47,41 @@ object PagerDutyHelper extends Logging {
   }
 
   type PagerDutyKey = PagerDutyHelper.PagerDutyKeys.Value
-  implicit class WithRecovery[T](futureOpt: Future[T]) {
+   
+  type Not[T] = T => Nothing  //L,R,T <: Not[Either[L,R]]
+  
+  implicit class WithRecovery[T](future: Future[T]) {
     def recoverWithPagerDutyLog(pagerDutyKey: PagerDutyKey, msg: String)
-                               (implicit ec: ExecutionContext): Future[Either[MongoError, T]] = {
-      futureOpt.map(Right(_)).recover {
+                               (implicit ec: ExecutionContext): Future[Either[ServiceError, T]] = {
+      future.map(Right(_))
+       .recover {
         case exception: Exception =>
           pagerDutyLog(pagerDutyKey, s"$msg Exception: ${exception.getMessage}")
-          Left(MongoError(exception.getMessage))
+          pagerDutyKey match {
+            case FAILED_TO_GET_JOURNEY_STATE_DATA => Left(MongoError(exception.getMessage))
+            case _  => Left(UnavailableServiceError(exception.getMessage))
+          }
       }
+    }
+  }
+
+  implicit class WithRecoveryEither[L, R](future: Future[Either[L, R]]) {
+    def recoverEitherWithPagerDutyLog(pagerDutyKey: PagerDutyKey, msg: String)
+                               (implicit ec: ExecutionContext): Future[Either[ServiceError, R]] = {
+      future
+        .map({
+        case Left(serviceError: ServiceError) => Left(serviceError)
+        case Left(error) => throw new RuntimeException(error.toString)
+        case Right(r) => Right(r)
+      })
+        .recover {
+          case exception: Exception =>
+            pagerDutyLog(pagerDutyKey, s"$msg Exception: ${exception.getMessage}")
+            pagerDutyKey match {
+              case FAILED_TO_GET_JOURNEY_STATE_DATA => Left(MongoError(exception.getMessage))
+              case _ => Left(UnavailableServiceError(exception.getMessage))
+            }
+        }
     }
   }
 }
