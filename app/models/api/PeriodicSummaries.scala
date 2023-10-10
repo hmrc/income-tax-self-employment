@@ -16,13 +16,15 @@
 
 package models.api
 
+import models.api.PeriodicSummaries.Financials
 import play.api.libs.json.{Json, OFormat}
 
 import java.time.LocalDate
 
 case class PeriodicSummaries(
   from: LocalDate,
-  to: LocalDate
+  to: LocalDate,
+  financials: Financials
 )
 
 object PeriodicSummaries {
@@ -36,8 +38,8 @@ object PeriodicSummaries {
     implicit val financialsFormat: OFormat[Financials] = Json.format[Financials]
   }
   case class Incomes(
-    turnover: Double,
-    other: Double
+    turnover: BigDecimal,
+    other: BigDecimal
   )
   object Incomes {
     implicit val incomesFormat: OFormat[Incomes] = Json.format[Incomes]
@@ -57,14 +59,14 @@ object PeriodicSummaries {
     professionalFees: Deduction,
     depreciation: Deduction,
     other: Deduction,
-    simplifiedExpenses: Double
+    simplifiedExpenses: BigDecimal
   )
   object Deductions {
     implicit val deductionsFormat: OFormat[Deductions] = Json.format[Deductions]
   }
   case class Deduction(
-    amount: Double,   //TODO would like a money type => int.[d][d]
-    disallowableAmount: Double
+    amount: BigDecimal,   //TODO would like a money type => int.[d][d]
+    disallowableAmount: BigDecimal
   )
   object Deduction {
     implicit val deductionFormat: OFormat[Deduction] = Json.format[Deduction]
