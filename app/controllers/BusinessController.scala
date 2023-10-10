@@ -16,13 +16,13 @@
 
 package controllers
 
-import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesResponse
 import controllers.actions.AuthorisedAction
-import models.error.ApiError.{ApiStatusError, ApiStatusErrors}
+import models.error.StatusError.{ApiStatusError, ApiStatusErrors}
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.BusinessService
+import services.BusinessService.GetBusinessResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
@@ -41,10 +41,19 @@ class BusinessController @Inject()(businessService: BusinessService,
   def getBusiness(nino: String, businessId: String): Action[AnyContent] = auth.async { implicit user =>
     businessService.getBusiness(nino, businessId) map businessDataResponse
   }
+
+  def getBusinessJourneyStates(nino: String, taxYear: Int): Action[AnyContent] = auth.async { implicit request =>
+    businessService.getBusinessJourneyStates(nino, taxYear)
+      .map {
+        case Left(serviceError) => InternalServerError(Json.toJson(serviceError))
+        case Right(Seq()) => NoContent
+        case Right(res) => Ok(Json.toJson(res))
+      }
+  }
   
-  private def businessDataResponse(dataResponse: GetBusinessesResponse) =
+  private def businessDataResponse(dataResponse: GetBusinessResponse) =
     dataResponse match {
-      case Right(model) => Ok(Json.toJson(model.taxPayerDisplayResponse.businessData.map(_.toBusiness(model.taxPayerDisplayResponse))))
+      case Right(model) => Ok(Json.toJson(model))
       case Left(errorModel) => errorModel match {
         case apiStatusError: ApiStatusError => Status(errorModel.status)(Json.toJson(apiStatusError.toMdtpError))
         case _ => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[ApiStatusErrors].toMdtpError))

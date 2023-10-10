@@ -98,9 +98,14 @@ class SessionRepositorySpec
     behave like testGet("id")(
       () => repository.get(journeyState.id), () => repository.get("id that does not exist"))
 
-    behave like testGet("taxYear, businessId and journey")(
+    behave like testGet("businessId, journey and taxYear")(
       () => repository.get(journeyState.journeyStateData.businessId, journeyState.journeyStateData.journey, journeyState.journeyStateData.taxYear),
       () => repository.get("businessId with no journey", "non existing journey", journeyState.journeyStateData.taxYear)
+    )
+
+    behave like testGet(" businessId, taxYear")(
+      () => repository.get(journeyState.journeyStateData.businessId, journeyState.journeyStateData.taxYear).map(_.headOption),
+      () => repository.get("businessId with no journey",  journeyState.journeyStateData.taxYear).map(_.headOption)
     )
 
   }

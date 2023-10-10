@@ -18,7 +18,7 @@ package connectors
 
 import config.AppConfig
 import connectors.BusinessConnector.{BusinessesBaseApi, IdType, businessUriPath}
-import connectors.httpParsers.GetBusinessesHttpParser.{GetBusinessesHttpReads, GetBusinessesResponse}
+import connectors.httpParsers.GetBusinessesHttpParser._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject
@@ -30,11 +30,11 @@ class BusinessConnector @Inject()(val http: HttpClient,
   private def businessIncomeSourceUri(idType: IdType, idNumber: String): String =
     appConfig.ifsBaseUrl + businessUriPath(idType, idNumber)
 
-  def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier): Future[GetBusinessesResponse] = {
+  def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier): Future[GetBusinessesRequestResponse] = {
     val incomeSourceUri: String = businessIncomeSourceUri(idType, idNumber)
     
-    def apiCall(implicit hc: HeaderCarrier): Future[GetBusinessesResponse] = {
-      http.GET[GetBusinessesResponse](incomeSourceUri)
+    def apiCall(implicit hc: HeaderCarrier): Future[GetBusinessesRequestResponse] = {
+      http.GET[GetBusinessesRequestResponse](incomeSourceUri)
     }
     apiCall(ifsHeaderCarrier(BusinessesBaseApi.Get)(incomeSourceUri)(hc))
   }

@@ -23,9 +23,9 @@ import connectors.BusinessConnector.IdType.{MtdId, Nino}
 import connectors.BusinessConnector.businessUriPath
 import helpers.WiremockSpec
 import models.api.BusinessData.GetBusinessDataRequest
-import models.error.ApiError.ApiErrorBody.{data404, ifsServer500, mtdId400, nino400, service503}
-import models.error.ApiError.ApiErrorBody
-import models.error.ApiError.ApiStatusError
+import models.error.ErrorBody.ApiErrorBody
+import models.error.ErrorBody.ApiErrorBody.{data404, ifsServer500, mtdId400, nino400, service503}
+import models.error.StatusError.ApiStatusError
 import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json

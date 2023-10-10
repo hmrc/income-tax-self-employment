@@ -16,8 +16,8 @@
 
 package connectors.httpParsers
 
-import models.error.ApiError.{ApiErrorBody, ApiErrorsBody}
-import models.error.ApiError.{ApiStatusError, ApiStatusErrors}
+import models.error.ErrorBody.{ApiErrorBody, ApiErrorsBody}
+import models.error.StatusError.{ApiStatusError, ApiStatusErrors}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse

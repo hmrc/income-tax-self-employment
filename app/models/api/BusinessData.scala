@@ -81,7 +81,9 @@ object BusinessData {
     mtdId: String,
     yearOfMigration: Option[String],
     businessData: Seq[BusinessData]
-  )
+  ) {
+    def toBusinessData: Seq[Business] = businessData.map(_.toBusiness(this))
+  }
   object TaxPayerDisplayResponse {
     implicit val taxPayerDisplayResponseFormat: OFormat[TaxPayerDisplayResponse] = Json.format[TaxPayerDisplayResponse]
   }
@@ -90,6 +92,6 @@ object BusinessData {
     implicit val getBusinessesDataRequestFormat: OFormat[GetBusinessDataRequest] = Json.format[GetBusinessDataRequest]
   }
   
-  val latencyIndicatorType: String => String = (latencyIndicator) => if (latencyIndicator == "Q") "Quarterly" else "Annual"
+  val latencyIndicatorType: String => String = latencyIndicator => if (latencyIndicator == "Q") "Quarterly" else "Annual"
   val typeOfBusiness = "self-employment"
 }
