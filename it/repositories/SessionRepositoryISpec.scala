@@ -33,7 +33,7 @@ import java.time.{Clock, Instant, LocalDate, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SessionRepositorySpec
+class SessionRepositoryISpec
   extends AnyFreeSpec
     with Matchers
     with DefaultPlayMongoRepositorySupport[JourneyState]
