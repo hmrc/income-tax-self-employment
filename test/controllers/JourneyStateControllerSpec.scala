@@ -37,7 +37,7 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
   
   lazy val mockSessionRepo = MockitoSugar.mock[MongoJourneyStateRepository]
   lazy val mockBusinessService = MockitoSugar.mock[BusinessService]
-  lazy val underTest = new JourneyStateController(mockSessionRepo, mockBusinessService, mockAuthorisedAction, mockControllerComponents)
+  lazy val underTest = new JourneyStateController(mockSessionRepo, mockBusinessService, mockAuthorisedAction, stubControllerComponents)
 
   val taxYear = 2024
   val nino = "some-nino"

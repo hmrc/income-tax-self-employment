@@ -20,7 +20,7 @@ import connectors.BusinessConnector
 import connectors.BusinessConnector.IdType.Nino
 import models.error.{ServiceError, StatusError}
 import models.mdtp.{Business, TradesJourneyStatuses}
-import repositories.{JourneyStateRepository, MongoJourneyStateRepository}
+import repositories.JourneyStateRepository
 import services.BusinessService.{GetBusinessJourneyStatesResponse, GetBusinessResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.PagerDutyHelper.PagerDutyKeys.FAILED_TO_GET_JOURNEY_STATE_DATA

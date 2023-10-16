@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class BusinessControllerSpec extends ControllerBehaviours {
   val mockBusinessService = MockitoSugar.mock[BusinessService]
-  val underTest = new BusinessController(mockBusinessService, mockAuthorisedAction, mockControllerComponents)
+  val underTest = new BusinessController(mockBusinessService, mockAuthorisedAction, stubControllerComponents)
 
   val nino = "FI290077A"
   val businessId = "SJPR05893938418"
