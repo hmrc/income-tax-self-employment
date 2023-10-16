@@ -27,7 +27,7 @@ import org.mockito.MockitoSugar.when
 import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status.{CREATED, INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.Json
-import repositories.SessionRepository
+import repositories.MongoJourneyStateRepository
 import services.BusinessService
 import services.BusinessService.GetBusinessJourneyStatesResponse
 
@@ -35,7 +35,7 @@ import scala.concurrent.Future
 
 class JourneyStateControllerSpec extends ControllerBehaviours {
   
-  lazy val mockSessionRepo = MockitoSugar.mock[SessionRepository]
+  lazy val mockSessionRepo = MockitoSugar.mock[MongoJourneyStateRepository]
   lazy val mockBusinessService = MockitoSugar.mock[BusinessService]
   lazy val underTest = new JourneyStateController(mockSessionRepo, mockBusinessService, mockAuthorisedAction, mockControllerComponents)
 
@@ -109,7 +109,7 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
   }
   
   private def stubSessionRepositoryGet(expectedResult: Either[DatabaseError, Option[JourneyState]]): Unit =
-    when(mockSessionRepo.get(businessId, journey, taxYear)) thenReturn (expectedResult match {
+    when(mockSessionRepo.get(businessId, taxYear, journey)) thenReturn (expectedResult match {
       case Right(optJourneyState) => Future.successful(optJourneyState)
       case Left(MongoError(error)) => Future.failed(new RuntimeException(error))
     })

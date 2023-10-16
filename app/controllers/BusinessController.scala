@@ -29,10 +29,9 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class BusinessController @Inject()(businessService: BusinessService,
-                                   auth: AuthorisedAction,
-                                   cc: ControllerComponents
-                                        )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
+class BusinessController @Inject() (businessService: BusinessService, auth: AuthorisedAction, cc: ControllerComponents)(implicit ec: ExecutionContext)
+    extends BackendController(cc)
+    with Logging {
 
   def getBusinesses(nino: String): Action[AnyContent] = auth.async { implicit user =>
     businessService.getBusinesses(nino) map businessDataResponse
@@ -43,21 +42,23 @@ class BusinessController @Inject()(businessService: BusinessService,
   }
 
   def getBusinessJourneyStates(nino: String, taxYear: Int): Action[AnyContent] = auth.async { implicit request =>
-    businessService.getBusinessJourneyStates(nino, taxYear)
+    businessService
+      .getBusinessJourneyStates(nino, taxYear)
       .map {
         case Left(serviceError) => InternalServerError(Json.toJson(serviceError))
-        case Right(Seq()) => NoContent
-        case Right(res) => Ok(Json.toJson(res))
+        case Right(Seq())       => NoContent
+        case Right(res)         => Ok(Json.toJson(res))
       }
   }
-  
+
   private def businessDataResponse(dataResponse: GetBusinessResponse) =
     dataResponse match {
       case Right(model) => Ok(Json.toJson(model))
-      case Left(errorModel) => errorModel match {
-        case apiStatusError: ApiStatusError => Status(errorModel.status)(Json.toJson(apiStatusError.toMdtpError))
-        case _ => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[ApiStatusErrors].toMdtpError))
-      }
+      case Left(errorModel) =>
+        errorModel match {
+          case apiStatusError: ApiStatusError => Status(errorModel.status)(Json.toJson(apiStatusError.toMdtpError))
+          case _                              => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[ApiStatusErrors].toMdtpError))
+        }
     }
-  
+
 }
