@@ -20,7 +20,14 @@ import models.mdtp.PersistedUserAnswers
 
 import scala.concurrent.Future
 
+sealed trait SetResult
+
+object SetResult {
+  case object UserAnswersCreated extends SetResult
+  case object UserAnswersUpdated extends SetResult
+}
+
 trait PersistedUserAnswersRepository {
   def get(id: String): Future[Option[PersistedUserAnswers]]
-  def set(answers: PersistedUserAnswers): Future[Unit]
+  def set(answers: PersistedUserAnswers): Future[SetResult]
 }

@@ -24,6 +24,7 @@ import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Result
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout}
+import repositories.SetResult
 import utils.TestUtils
 
 import java.time._
@@ -43,11 +44,11 @@ class SetPersistedUserAnswersControllerSpec extends TestUtils with MockSetPersis
 
   "SetPersistedUserAnswersController" when {
     "handling a request where the request json can be read as PersistedUserAnswers" when {
-      "the service returns a successful future" must {
+      "the service returns a UserAnswersCreated" must {
         "return NO_CONTENT" in {
           MockSetPersistedUserAnswersService
             .setPersistedUserAnswers(someUserAnswers)
-            .thenReturn(Future.successful(()))
+            .thenReturn(Future.successful(SetResult.UserAnswersCreated))
 
           val result: Future[Result] = controller.handleRequest()(fakeRequest.withBody(validRequestJson))
           status(result) shouldBe NO_CONTENT

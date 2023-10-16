@@ -12,4 +12,4 @@ PUT        /completed-section/:businessId/:journey/:taxYear/:completed   control
 
 # User Answers
 GET        /check-your-answers/get/:id                                   controllers.persistedUserAnswers.GetPersistedUserAnswersController.handleRequest(id: String)
-GET        /check-your-answers/set                                       controllers.persistedUserAnswers.SetPersistedUserAnswersController.handleRequest()
+PUT        /check-your-answers/set                                       controllers.persistedUserAnswers.SetPersistedUserAnswersController.handleRequest()

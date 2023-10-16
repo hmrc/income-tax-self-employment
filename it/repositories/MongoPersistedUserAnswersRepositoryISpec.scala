@@ -77,7 +77,7 @@ class MongoPersistedUserAnswersRepositoryISpec
     "setting user answers" when {
       "no users answers exist for the supplied id" must {
         "store them and update the `lastUpdated` field to now" in {
-          repository.set(someUserAnswers).futureValue shouldBe ()
+          repository.set(someUserAnswers).futureValue shouldBe SetResult.UserAnswersCreated
 
           withClue("lastUpdated was not updated to now") {
             lastUpdated(someUserAnswers.id) shouldBe Some(now)
@@ -86,12 +86,12 @@ class MongoPersistedUserAnswersRepositoryISpec
       }
       "user answers exist for the supplied id" must {
         "update them " in {
-          await(repository.set(someUserAnswers)) shouldBe ()
+          await(repository.set(someUserAnswers)) shouldBe SetResult.UserAnswersCreated
 
           val updatedData        = Json.obj("field" -> "updatedValue")
           val updatedUserAnswers = someUserAnswers.copy(data = updatedData)
 
-          await(repository.set(updatedUserAnswers)) shouldBe ()
+          await(repository.set(updatedUserAnswers)) shouldBe SetResult.UserAnswersUpdated
 
           repository.get(id).futureValue.map(_.data) shouldBe Some(updatedData)
 
@@ -104,14 +104,14 @@ class MongoPersistedUserAnswersRepositoryISpec
     "getting user answers" when {
       "no user answers exist for that id" must {
         "not be able to retrieve it and not update the `lastUpdated` field" in {
-          await(repository.set(someUserAnswers)) shouldBe ()
+          await(repository.set(someUserAnswers)) shouldBe SetResult.UserAnswersCreated
 
           repository.get("some_other_id").futureValue shouldBe None
         }
       }
       "user answers exist for the supplied id" must {
         "get them and update the `lastUpdated` field" in {
-          await(repository.set(someUserAnswers)) shouldBe ()
+          await(repository.set(someUserAnswers)) shouldBe SetResult.UserAnswersCreated
 
           val expectedUserAnswers = someUserAnswers.copy(lastUpdated = now)
 

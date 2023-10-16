@@ -17,12 +17,21 @@
 package services.persistedUserAnswers
 
 import models.mdtp.PersistedUserAnswers
-import repositories.PersistedUserAnswersRepository
+import play.api.Logging
+import repositories.{PersistedUserAnswersRepository, SetResult}
 
 import javax.inject.Inject
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class SetPersistedUserAnswersService @Inject() (repository: PersistedUserAnswersRepository) {
+class SetPersistedUserAnswersService @Inject() (repository: PersistedUserAnswersRepository)(implicit ec: ExecutionContext) extends Logging {
 
-  def setPersistedUserAnswers(userAnswers: PersistedUserAnswers): Future[Unit] = repository.set(userAnswers)
+  def setPersistedUserAnswers(userAnswers: PersistedUserAnswers): Future[Unit] =
+    repository.set(userAnswers).map {
+      case SetResult.UserAnswersCreated =>
+        logger.info(s"User Answers were created with id: ${userAnswers.id}")
+
+      case SetResult.UserAnswersUpdated =>
+        logger.info(s"User Answers were updated with id: ${userAnswers.id}")
+    }
+
 }

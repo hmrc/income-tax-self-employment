@@ -22,9 +22,12 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
+import repositories.SetResult
+import repositories.SetResult.{UserAnswersCreated, UserAnswersUpdated}
 import services.persistedUserAnswers.SetPersistedUserAnswersService
 
 import java.time.Instant
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class SetPersistedUserAnswersServiceSpec extends AnyWordSpec with MockPersistedUserAnswersRepository with ScalaFutures {
@@ -37,11 +40,20 @@ class SetPersistedUserAnswersServiceSpec extends AnyWordSpec with MockPersistedU
   private val someUserAnswers = PersistedUserAnswers(id, data, timestamp)
 
   "SetPersistedUserAnswersService" when {
-    "user answers have been successfully set by the repository" must {
-      "return unit" in {
+    "user answers have been successfully created by the repository" must {
+      "return UserAnswersCreated" in {
         MockPersistedUserAnswersRepository
           .set(someUserAnswers)
-          .thenReturn(Future.successful(()))
+          .thenReturn(Future.successful(UserAnswersCreated))
+
+        service.setPersistedUserAnswers(someUserAnswers).futureValue shouldBe ()
+      }
+    }
+    "user answers have been successfully updated by the repository" must {
+      "return UserAnswersUpdated" in {
+        MockPersistedUserAnswersRepository
+          .set(someUserAnswers)
+          .thenReturn(Future.successful(UserAnswersUpdated))
 
         service.setPersistedUserAnswers(someUserAnswers).futureValue shouldBe ()
       }

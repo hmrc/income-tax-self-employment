@@ -20,7 +20,7 @@ import models.mdtp.PersistedUserAnswers
 import org.mockito.MockitoSugar.when
 import org.mockito.stubbing.ScalaFirstStubbing
 import org.scalatestplus.mockito.MockitoSugar
-import repositories.PersistedUserAnswersRepository
+import repositories.{PersistedUserAnswersRepository, SetResult}
 
 import scala.concurrent.Future
 
@@ -32,7 +32,7 @@ trait MockPersistedUserAnswersRepository extends MockitoSugar {
     def get(id: String): ScalaFirstStubbing[Future[Option[PersistedUserAnswers]]] =
       when(mockPersistedUserAnswersRepository.get(id))
 
-    def set(answers: PersistedUserAnswers): ScalaFirstStubbing[Future[Unit]] =
+    def set(answers: PersistedUserAnswers): ScalaFirstStubbing[Future[SetResult]] =
       when(mockPersistedUserAnswersRepository.set(answers))
   }
 

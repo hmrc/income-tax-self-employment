@@ -20,6 +20,7 @@ import models.mdtp.PersistedUserAnswers
 import org.mockito.MockitoSugar.when
 import org.mockito.stubbing.ScalaFirstStubbing
 import org.scalatestplus.mockito.MockitoSugar
+import repositories.SetResult
 import services.persistedUserAnswers.{GetPersistedUserAnswersResult, GetPersistedUserAnswersService, SetPersistedUserAnswersService}
 
 import scala.concurrent.Future

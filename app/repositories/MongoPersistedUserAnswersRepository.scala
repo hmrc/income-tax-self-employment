@@ -61,7 +61,7 @@ class MongoPersistedUserAnswersRepository @Inject() (mongo: MongoComponent, appC
     }
   }
 
-  override def set(answers: PersistedUserAnswers): Future[Unit] = {
+  override def set(answers: PersistedUserAnswers): Future[SetResult] = {
     val updatedAnswers = answers.copy(lastUpdated = Instant.now(clock))
     collection
       .replaceOne(
@@ -70,7 +70,13 @@ class MongoPersistedUserAnswersRepository @Inject() (mongo: MongoComponent, appC
         options = ReplaceOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => ())
+      .map { mongoResult =>
+        if (mongoResult.getMatchedCount > 0) {
+          SetResult.UserAnswersUpdated
+        } else {
+          SetResult.UserAnswersCreated
+        }
+      }
   }
 
   private def keepAlive(id: String): Future[Unit] =
