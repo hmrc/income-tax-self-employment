@@ -29,9 +29,11 @@ trait MongoTestSupport[A] {
   protected def indexWithField(fieldName: String): IndexModel => Boolean = {
     _.getKeys match {
       case keys: BsonDocument => keys.containsKey(fieldName)
-      case _                  => false
+      case _                  => false // Could be a compound index
     }
   }
+
+  protected def indexByName(name: String): IndexModel => Boolean = _.getOptions.getName == name
 
   protected def checkIndex(selector: IndexModel => Boolean)(check: IndexModel => Assertion): Unit = {
     val indexes = repository.indexes

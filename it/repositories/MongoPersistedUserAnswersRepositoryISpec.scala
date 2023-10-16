@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class PersistedUserAnswersRepositoryISpec
+class MongoPersistedUserAnswersRepositoryISpec
     extends AnyWordSpec
     with Matchers
     with MongoSupport
@@ -55,11 +55,11 @@ class PersistedUserAnswersRepositoryISpec
     .build()
 
   private val appConfig   = inject[AppConfig]
-  override val repository = new PersistedUserAnswersRepository(mongoComponent, appConfig, clock)
+  override val repository = new MongoPersistedUserAnswersRepository(mongoComponent, appConfig, clock)
 
   private val someOldTimestamp             = Instant.parse("2022-01-01T21:02:03.000Z")
   private val id                           = "some_id"
-  private val previouslyCreatedUserAnswers = PersistedUserAnswers(id, Json.obj("field" -> "value"), someOldTimestamp)
+  private val someUserAnswers = PersistedUserAnswers(id, Json.obj("field" -> "value"), someOldTimestamp)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -68,7 +68,7 @@ class PersistedUserAnswersRepositoryISpec
 
   "PersistedUserAnswersRepository" when {
     "initialised" must {
-      "include an TTL index for the `lastUpdated` field" in {
+      "include an TTL index for the `lastUpdated` field (where expiry is set through the app config)" in {
         checkIndex(indexWithField("lastUpdated")) { indexModel =>
           indexModel.getOptions.getExpireAfter(TimeUnit.DAYS) shouldBe 2
         }
@@ -77,21 +77,21 @@ class PersistedUserAnswersRepositoryISpec
     "setting user answers" when {
       "no users answers exist for the supplied id" must {
         "store them and update the `lastUpdated` field to now" in {
-          repository.set(previouslyCreatedUserAnswers).futureValue shouldBe true
+          repository.set(someUserAnswers).futureValue shouldBe ()
 
           withClue("lastUpdated was not updated to now") {
-            lastUpdated(previouslyCreatedUserAnswers.id) shouldBe Some(now)
+            lastUpdated(someUserAnswers.id) shouldBe Some(now)
           }
         }
       }
       "user answers exist for the supplied id" must {
         "update them " in {
-          await(repository.set(previouslyCreatedUserAnswers)) shouldBe true
+          await(repository.set(someUserAnswers)) shouldBe ()
 
           val updatedData        = Json.obj("field" -> "updatedValue")
-          val updatedUserAnswers = previouslyCreatedUserAnswers.copy(data = updatedData)
+          val updatedUserAnswers = someUserAnswers.copy(data = updatedData)
 
-          await(repository.set(updatedUserAnswers)) shouldBe true
+          await(repository.set(updatedUserAnswers)) shouldBe ()
 
           repository.get(id).futureValue.map(_.data) shouldBe Some(updatedData)
 
@@ -104,16 +104,16 @@ class PersistedUserAnswersRepositoryISpec
     "getting user answers" when {
       "no user answers exist for that id" must {
         "not be able to retrieve it and not update the `lastUpdated` field" in {
-          await(repository.set(previouslyCreatedUserAnswers)) shouldBe true
+          await(repository.set(someUserAnswers)) shouldBe ()
 
           repository.get("some_other_id").futureValue shouldBe None
         }
       }
       "user answers exist for the supplied id" must {
         "get them and update the `lastUpdated` field" in {
-          await(repository.set(previouslyCreatedUserAnswers)) shouldBe true
+          await(repository.set(someUserAnswers)) shouldBe ()
 
-          val expectedUserAnswers = previouslyCreatedUserAnswers.copy(lastUpdated = now)
+          val expectedUserAnswers = someUserAnswers.copy(lastUpdated = now)
 
           repository.get(id).futureValue shouldBe Some(expectedUserAnswers)
         }

@@ -17,6 +17,7 @@
 package config
 
 import com.google.inject.AbstractModule
+import repositories.{JourneyStateRepository, MongoJourneyStateRepository, MongoPersistedUserAnswersRepository, PersistedUserAnswersRepository}
 
 import java.time.{Clock, ZoneOffset}
 
@@ -25,5 +26,8 @@ class Module extends AbstractModule {
   override def configure(): Unit = {
     bind(classOf[AppConfig]).asEagerSingleton()
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
+    bind(classOf[JourneyStateRepository]).to(classOf[MongoJourneyStateRepository])
+    bind(classOf[PersistedUserAnswersRepository]).to(classOf[MongoPersistedUserAnswersRepository])
   }
+
 }
