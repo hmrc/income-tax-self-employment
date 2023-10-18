@@ -22,21 +22,21 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time._
 
-case class PersistedUserAnswers(id: String, data: JsObject = Json.obj(), lastUpdated: Instant = Instant.now)
+case class JourneyAnswers(id: String, data: JsObject = Json.obj(), lastUpdated: Instant = Instant.now)
 
-object PersistedUserAnswers {
-  val reads: Reads[PersistedUserAnswers] = {
+object JourneyAnswers {
+  val reads: Reads[JourneyAnswers] = {
     ((JsPath \ "_id").read[String] and
       (JsPath \ "data").read[JsObject] and
-      (JsPath \ "lastUpdated").read(MongoJavatimeFormats.instantFormat))(PersistedUserAnswers.apply _)
+      (JsPath \ "lastUpdated").read(MongoJavatimeFormats.instantFormat))(JourneyAnswers.apply _)
   }
 
-  val writes: OWrites[PersistedUserAnswers] = {
+  val writes: OWrites[JourneyAnswers] = {
     ((JsPath \ "_id").write[String] and
       (JsPath \ "data").write[JsObject] and
-      (JsPath \ "lastUpdated").write(MongoJavatimeFormats.instantFormat))(unlift(PersistedUserAnswers.unapply))
+      (JsPath \ "lastUpdated").write(MongoJavatimeFormats.instantFormat))(unlift(JourneyAnswers.unapply))
   }
 
-  implicit val formats: OFormat[PersistedUserAnswers] = OFormat(reads, writes)
+  implicit val formats: OFormat[JourneyAnswers] = OFormat(reads, writes)
 
 }

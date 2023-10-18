@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package services.persistedUserAnswers
+package services.journeyAnswers
 
-import models.mdtp.PersistedUserAnswers
+import models.mdtp.JourneyAnswers
 import play.api.Logging
-import repositories.{PersistedUserAnswersRepository, SetResult}
+import repositories.{JourneyAnswersRepository, SetResult}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class SetPersistedUserAnswersService @Inject() (repository: PersistedUserAnswersRepository)(implicit ec: ExecutionContext) extends Logging {
+class SetJourneyAnswersService @Inject() (repository: JourneyAnswersRepository)(implicit ec: ExecutionContext) extends Logging {
 
-  def setPersistedUserAnswers(userAnswers: PersistedUserAnswers): Future[Unit] =
-    repository.set(userAnswers).map {
-      case SetResult.UserAnswersCreated =>
-        logger.info(s"User Answers were created with id: ${userAnswers.id}")
+  def setJourneyAnswers(journeyAnswers: JourneyAnswers): Future[Unit] =
+    repository.set(journeyAnswers).map {
+      case SetResult.JourneyAnswersCreated =>
+        logger.info(s"Journey Answers were created with id: ${journeyAnswers.id}")
 
-      case SetResult.UserAnswersUpdated =>
-        logger.info(s"User Answers were updated with id: ${userAnswers.id}")
+      case SetResult.JourneyAnswersUpdated =>
+        logger.info(s"Journey Answers were updated with id: ${journeyAnswers.id}")
     }
 
 }

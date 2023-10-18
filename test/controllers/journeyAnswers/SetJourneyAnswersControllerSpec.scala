@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package controllers.persistedUserAnswers
+package controllers.journeyAnswers
 
-import mocks.MockSetPersistedUserAnswersService
-import models.mdtp.PersistedUserAnswers
+import mocks.MockSetJourneyAnswersService
+import models.mdtp.JourneyAnswers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
@@ -30,32 +30,32 @@ import utils.TestUtils
 import java.time._
 import scala.concurrent.Future
 
-class SetPersistedUserAnswersControllerSpec extends TestUtils with MockSetPersistedUserAnswersService with GuiceOneAppPerSuite {
+class SetJourneyAnswersControllerSpec extends TestUtils with MockSetJourneyAnswersService with GuiceOneAppPerSuite {
 
-  private val controller = new SetPersistedUserAnswersController(stubControllerComponents, mockSetPersistedUserAnswersService)
+  private val controller = new SetJourneyAnswersController(stubControllerComponents, mockSetJourneyAnswersService)
 
-  private val id              = "some_id"
-  private val data            = Json.obj("field" -> "value")
-  private val timestamp       = Instant.parse("2022-01-01T22:02:03.000Z")
-  private val someUserAnswers = PersistedUserAnswers(id, data, timestamp)
+  private val id                 = "some_id"
+  private val data               = Json.obj("field" -> "value")
+  private val timestamp          = Instant.parse("2022-01-01T22:02:03.000Z")
+  private val someJourneyAnswers = JourneyAnswers(id, data, timestamp)
 
-  private val validRequestJson   = Json.toJson(someUserAnswers)
+  private val validRequestJson   = Json.toJson(someJourneyAnswers)
   private val invalidRequestJson = validRequestJson.as[JsObject] - "lastUpdated"
 
-  "SetPersistedUserAnswersController" when {
-    "handling a request where the request json can be read as PersistedUserAnswers" when {
-      "the service returns a UserAnswersCreated" must {
+  "SetJourneyAnswersController" when {
+    "handling a request where the request json can be read as JourneyAnswers" when {
+      "the service returns a JourneyAnswersCreated" must {
         "return NO_CONTENT" in {
-          MockSetPersistedUserAnswersService
-            .setPersistedUserAnswers(someUserAnswers)
-            .thenReturn(Future.successful(SetResult.UserAnswersCreated))
+          MockSetJourneyAnswersService
+            .setJourneyAnswers(someJourneyAnswers)
+            .thenReturn(Future.successful(SetResult.JourneyAnswersCreated))
 
           val result: Future[Result] = controller.handleRequest()(fakeRequest.withBody(validRequestJson))
           status(result) shouldBe NO_CONTENT
         }
       }
     }
-    "handling a request where the request json does not conform to PersistedUserAnswers reads" must {
+    "handling a request where the request json does not conform to JourneyAnswers reads" must {
       "return BAD_REQUEST" in {
         val result: Future[Result] = controller.handleRequest()(fakeRequest.withBody(invalidRequestJson))
 

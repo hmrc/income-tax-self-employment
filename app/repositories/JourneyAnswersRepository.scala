@@ -16,18 +16,18 @@
 
 package repositories
 
-import models.mdtp.PersistedUserAnswers
+import models.mdtp.JourneyAnswers
 
 import scala.concurrent.Future
 
 sealed trait SetResult
 
 object SetResult {
-  case object UserAnswersCreated extends SetResult
-  case object UserAnswersUpdated extends SetResult
+  case object JourneyAnswersCreated extends SetResult
+  case object JourneyAnswersUpdated extends SetResult
 }
 
-trait PersistedUserAnswersRepository {
-  def get(id: String): Future[Option[PersistedUserAnswers]]
-  def set(answers: PersistedUserAnswers): Future[SetResult]
+trait JourneyAnswersRepository {
+  def get(id: String): Future[Option[JourneyAnswers]]
+  def set(answers: JourneyAnswers): Future[SetResult]
 }

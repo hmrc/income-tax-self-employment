@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package controllers.persistedUserAnswers
+package controllers.journeyAnswers
 
 import play.api.libs.json.Json
 import play.api.mvc._
-import services.persistedUserAnswers.GetPersistedUserAnswersResult.{NoPersistedUserAnswersFound, PersistedUserAnswersFound}
-import services.persistedUserAnswers.GetPersistedUserAnswersService
+import services.journeyAnswers.GetJourneyAnswersResult.{NoJourneyAnswersFound, JourneyAnswersFound}
+import services.journeyAnswers.GetJourneyAnswersService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class GetPersistedUserAnswersController @Inject() (cc: ControllerComponents, service: GetPersistedUserAnswersService)(implicit ec: ExecutionContext)
+class GetJourneyAnswersController @Inject()(cc: ControllerComponents, service: GetJourneyAnswersService)(implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
   def handleRequest(id: String): Action[AnyContent] = Action.async { _ =>
-    service.getPersistedUserAnswers(id).map {
-      case PersistedUserAnswersFound(answers) => Ok(Json.toJson(answers))
-      case NoPersistedUserAnswersFound        => NotFound(Json.obj("code" -> "NOT_FOUND", "reason" -> s"No user answers found for id: $id"))
+    service.getJourneyAnswers(id).map {
+      case JourneyAnswersFound(answers) => Ok(Json.toJson(answers))
+      case NoJourneyAnswersFound        => NotFound(Json.obj("code" -> "NOT_FOUND", "reason" -> s"No journey answers found for id: $id"))
     }
   }
 

@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package controllers.persistedUserAnswers
+package controllers.journeyAnswers
 
-import models.mdtp.PersistedUserAnswers
+import models.mdtp.JourneyAnswers
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
-import services.persistedUserAnswers.SetPersistedUserAnswersService
+import services.journeyAnswers.SetJourneyAnswersService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class SetPersistedUserAnswersController @Inject() (cc: ControllerComponents, service: SetPersistedUserAnswersService)(implicit ec: ExecutionContext)
+class SetJourneyAnswersController @Inject()(cc: ControllerComponents, service: SetJourneyAnswersService)(implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
   def handleRequest(): Action[JsValue] = Action.async(parse.json) { request =>
-    request.body.validate[PersistedUserAnswers] match {
-      case JsSuccess(value, _) => service.setPersistedUserAnswers(value).map(_ => NoContent)
+    request.body.validate[JourneyAnswers] match {
+      case JsSuccess(value, _) => service.setJourneyAnswers(value).map(_ => NoContent)
       case JsError(_) =>
         Future.successful(
           BadRequest(Json.obj("code" -> "RULE_INCORRECT_OR_EMPTY_BODY_SUBMITTED", "reason" -> "An empty or non-matching body was submitted")))

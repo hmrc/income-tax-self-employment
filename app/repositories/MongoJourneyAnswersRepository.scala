@@ -17,7 +17,7 @@
 package repositories
 
 import config.AppConfig
-import models.mdtp.PersistedUserAnswers
+import models.mdtp.JourneyAnswers
 import org.mongodb.scala.ReadPreference
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.equal
@@ -32,27 +32,27 @@ import scala.concurrent.{ExecutionContext, Future}
 
 // Awaiting guidelines on how we are going to calculate the TTL. Default TTL implemented for time-being.
 @Singleton
-class MongoPersistedUserAnswersRepository @Inject() (mongo: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
-    extends PlayMongoRepository[PersistedUserAnswers](
-      collectionName = "persisted-user-answers",
+class MongoJourneyAnswersRepository @Inject()(mongo: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[JourneyAnswers](
+      collectionName = "journey-answers",
       mongoComponent = mongo,
-      domainFormat = PersistedUserAnswers.formats,
+      domainFormat = JourneyAnswers.formats,
       replaceIndexes = true,
       indexes = Seq(
         IndexModel(
           Indexes.ascending("lastUpdated"),
           IndexOptions()
-            .name("persistedUserAnswersTTL")
+            .name("journeyAnswersTTL")
             .expireAfter(appConfig.cacheTtl, TimeUnit.DAYS)
         )
       )
     )
-    with PersistedUserAnswersRepository {
+    with JourneyAnswersRepository {
 
   /*
-   * Do we really want to keepAlive upon access of the user answers?
+   * Do we really want to keepAlive upon access of the journey answers?
    */
-  override def get(id: String): Future[Option[PersistedUserAnswers]] = {
+  override def get(id: String): Future[Option[JourneyAnswers]] = {
     keepAlive(id).flatMap { _ =>
       collection
         .withReadPreference(ReadPreference.primaryPreferred())
@@ -61,7 +61,7 @@ class MongoPersistedUserAnswersRepository @Inject() (mongo: MongoComponent, appC
     }
   }
 
-  override def set(answers: PersistedUserAnswers): Future[SetResult] = {
+  override def set(answers: JourneyAnswers): Future[SetResult] = {
     val updatedAnswers = answers.copy(lastUpdated = Instant.now(clock))
     collection
       .replaceOne(
@@ -72,9 +72,9 @@ class MongoPersistedUserAnswersRepository @Inject() (mongo: MongoComponent, appC
       .toFuture()
       .map { mongoResult =>
         if (mongoResult.getMatchedCount > 0) {
-          SetResult.UserAnswersUpdated
+          SetResult.JourneyAnswersUpdated
         } else {
-          SetResult.UserAnswersCreated
+          SetResult.JourneyAnswersCreated
         }
       }
   }

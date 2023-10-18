@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package controllers.persistedUserAnswers
+package controllers.journeyAnswers
 
-import models.mdtp.PersistedUserAnswers
+import models.mdtp.JourneyAnswers
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.Application
@@ -26,12 +26,12 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSRequest
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.test.Injecting
-import repositories.MongoPersistedUserAnswersRepository
+import repositories.MongoJourneyAnswersRepository
 import utils.IntegrationBaseSpec
 
 import java.time.{Clock, Instant, ZoneOffset}
 
-class SetPersistedUserAnswersControllerISpec extends IntegrationBaseSpec with Injecting {
+class SetJourneyAnswersControllerISpec extends IntegrationBaseSpec with Injecting {
 
   private val timestamp = Instant.parse("2022-01-01T22:02:03.000Z")
   private val clock     = Clock.fixed(timestamp, ZoneOffset.UTC)
@@ -40,23 +40,23 @@ class SetPersistedUserAnswersControllerISpec extends IntegrationBaseSpec with In
     .overrides(bind[Clock].toInstance(clock))
     .build()
 
-  private val repository = inject[MongoPersistedUserAnswersRepository]
+  private val repository = inject[MongoJourneyAnswersRepository]
 
-  private val id          = "some_id"
-  private val data        = Json.obj("field" -> "value")
-  private val userAnswers = PersistedUserAnswers(id, data, timestamp)
+  private val id             = "some_id"
+  private val data           = Json.obj("field" -> "value")
+  private val journeyAnswers = JourneyAnswers(id, data, timestamp)
 
-  private val requestBody = Json.toJson(userAnswers)
+  private val requestBody = Json.toJson(journeyAnswers)
 
   def request(): WSRequest =
     buildClient(s"income-tax-self-employment/check-your-answers/set").withBody(requestBody)
 
-  "SetPersistedUserAnswersController" when {
-    "receiving request json that can be read as PersistedUserAnswers" must {
-      "create or update user answers and return a 204" in {
+  "SetJourneyAnswersController" when {
+    "receiving request json that can be read as JourneyAnswers" must {
+      "create or update journey answers and return a 204" in {
         val response = await(request().put(requestBody))
 
-        repository.get(userAnswers.id).futureValue shouldBe Some(userAnswers)
+        repository.get(journeyAnswers.id).futureValue shouldBe Some(journeyAnswers)
 
         response.status shouldBe 204
       }

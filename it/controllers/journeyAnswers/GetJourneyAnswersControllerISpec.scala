@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package controllers.persistedUserAnswers
+package controllers.journeyAnswers
 
-import models.mdtp.PersistedUserAnswers
+import models.mdtp.JourneyAnswers
 import org.mongodb.scala.model.Filters
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -28,13 +28,13 @@ import play.api.libs.json.Json
 import play.api.libs.ws.{WSRequest, WSResponse}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import play.api.test.Injecting
-import repositories.MongoPersistedUserAnswersRepository
+import repositories.MongoJourneyAnswersRepository
 import utils.IntegrationBaseSpec
 
 import java.time.{Clock, Instant, ZoneOffset}
 import scala.concurrent.Future
 
-class GetPersistedUserAnswersControllerISpec extends IntegrationBaseSpec with Injecting with BeforeAndAfterEach with GuiceOneAppPerSuite {
+class GetJourneyAnswersControllerISpec extends IntegrationBaseSpec with Injecting with BeforeAndAfterEach with GuiceOneAppPerSuite {
 
   private val timestamp = Instant.parse("2022-01-01T22:02:03.000Z")
   private val clock     = Clock.fixed(timestamp, ZoneOffset.UTC)
@@ -43,7 +43,7 @@ class GetPersistedUserAnswersControllerISpec extends IntegrationBaseSpec with In
     .overrides(bind[Clock].toInstance(clock))
     .build()
 
-  private val repository = inject[MongoPersistedUserAnswersRepository]
+  private val repository = inject[MongoJourneyAnswersRepository]
 
   private val id   = "some_id"
   private val data = Json.obj("field" -> "value")
@@ -52,35 +52,35 @@ class GetPersistedUserAnswersControllerISpec extends IntegrationBaseSpec with In
 
   override def beforeEach(): Unit = await(removeAll())
 
-  "GetPersistedUserAnswersController" when {
-    "user answers exist for the requested id" must {
+  "GetJourneyAnswersController" when {
+    "journey answers exist for the requested id" must {
       "return Ok and the answers as json" in {
-        val someUserAnswers = PersistedUserAnswers(id, data, timestamp)
+        val someJourneyAnswers = JourneyAnswers(id, data, timestamp)
 
-        createUserAnswers(someUserAnswers) shouldBe ()
+        createJourneyAnswers(someJourneyAnswers) shouldBe ()
 
         val response: WSResponse = await(request().get())
 
         response.status shouldBe 200
-        response.json shouldBe Json.toJson(someUserAnswers)
+        response.json shouldBe Json.toJson(someJourneyAnswers)
       }
     }
-    "no user answers exist for the requested id" must {
+    "no journey answers exist for the requested id" must {
       "return NOT_FOUND" in {
-        val someOtherId      = "some_other_id"
-        val otherUserAnswers = PersistedUserAnswers(someOtherId, data, timestamp)
+        val someOtherId         = "some_other_id"
+        val otherJourneyAnswers = JourneyAnswers(someOtherId, data, timestamp)
 
-        createUserAnswers(otherUserAnswers) shouldBe ()
+        createJourneyAnswers(otherJourneyAnswers) shouldBe ()
 
         val response: WSResponse = await(request().get())
 
         response.status shouldBe 404
-        response.json shouldBe Json.obj("code" -> "NOT_FOUND", "reason" -> s"No user answers found for id: $id")
+        response.json shouldBe Json.obj("code" -> "NOT_FOUND", "reason" -> s"No journey answers found for id: $id")
       }
     }
   }
 
-  private def createUserAnswers(answers: PersistedUserAnswers): Unit =
+  private def createJourneyAnswers(answers: JourneyAnswers): Unit =
     await(repository.set(answers))
 
   private def removeAll(): Future[Unit] =

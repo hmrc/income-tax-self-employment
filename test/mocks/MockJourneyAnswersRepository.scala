@@ -16,21 +16,24 @@
 
 package mocks
 
+import models.mdtp.JourneyAnswers
 import org.mockito.MockitoSugar.when
 import org.mockito.stubbing.ScalaFirstStubbing
 import org.scalatestplus.mockito.MockitoSugar
-import services.persistedUserAnswers.{GetPersistedUserAnswersResult, GetPersistedUserAnswersService}
+import repositories.{JourneyAnswersRepository, SetResult}
 
 import scala.concurrent.Future
 
-trait MockGetPersistedUserAnswersService extends MockitoSugar {
+trait MockJourneyAnswersRepository extends MockitoSugar {
+  val mockJourneyAnswersRepository: JourneyAnswersRepository = mock[JourneyAnswersRepository]
 
-  val mockGetPersistedUserAnswersService: GetPersistedUserAnswersService = mock[GetPersistedUserAnswersService]
+  object MockJourneyAnswersRepository {
 
-  object MockGetPersistedUserAnswersService {
+    def get(id: String): ScalaFirstStubbing[Future[Option[JourneyAnswers]]] =
+      when(mockJourneyAnswersRepository.get(id))
 
-    def getPersistedUserAnswers(id: String): ScalaFirstStubbing[Future[GetPersistedUserAnswersResult]] =
-      when(mockGetPersistedUserAnswersService.getPersistedUserAnswers(id))
+    def set(answers: JourneyAnswers): ScalaFirstStubbing[Future[SetResult]] =
+      when(mockJourneyAnswersRepository.set(answers))
   }
 
 }
