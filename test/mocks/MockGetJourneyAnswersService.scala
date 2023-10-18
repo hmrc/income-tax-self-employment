@@ -14,20 +14,23 @@
  * limitations under the License.
  */
 
-package repositories
+package mocks
 
-import models.mdtp.JourneyAnswers
+import org.mockito.MockitoSugar.when
+import org.mockito.stubbing.ScalaFirstStubbing
+import org.scalatestplus.mockito.MockitoSugar
+import services.journeyAnswers.{GetJourneyAnswersResult, GetJourneyAnswersService}
 
 import scala.concurrent.Future
 
-sealed trait SetResult
+trait MockGetJourneyAnswersService extends MockitoSugar {
+  val mockGetJourneyAnswersService: GetJourneyAnswersService = mock[GetJourneyAnswersService]
 
-object SetResult {
-  case object JourneyAnswersCreated extends SetResult
-  case object JourneyAnswersUpdated extends SetResult
-}
+  object MockGetJourneyAnswersService {
 
-trait JourneyAnswersRepository {
-  def get(id: String): Future[Option[JourneyAnswers]]
-  def set(answers: JourneyAnswers): Future[SetResult]
+    def getJourneyAnswers(id: String): ScalaFirstStubbing[Future[GetJourneyAnswersResult]] =
+      when(mockGetJourneyAnswersService.getJourneyAnswers(id))
+
+  }
+
 }
