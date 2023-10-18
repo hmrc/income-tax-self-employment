@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 // Awaiting guidelines on how we are going to calculate the TTL. Default TTL implemented for time-being.
 @Singleton
-class MongoJourneyAnswersRepository @Inject()(mongo: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
+class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[JourneyAnswers](
       collectionName = "journey-answers",
       mongoComponent = mongo,

@@ -66,7 +66,7 @@ class MongoJourneyAnswersRepositoryISpec
     await(removeAll())
   }
 
-  "JourneyAnswersRepository" when {
+  "MongoJourneyAnswersRepository" when {
     "initialised" must {
       "include an TTL index for the `lastUpdated` field (where expiry is set through the app config)" in {
         checkIndex(indexWithField("lastUpdated")) { indexModel =>
