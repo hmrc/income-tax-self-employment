@@ -16,7 +16,7 @@
 
 package controllers
 
-import bulders.BusinessDataBuilder.{aBusiness, aBusinessJourneyStateSeq, aBusinesses, aTradesJourneyStatusesSeq}
+import bulders.BusinessDataBuilder._
 import controllers.BusinessControllerSpec.{stubGetBusiness, stubGetBusinessJourneyStates, stubGetBusinesses}
 import models.error.ErrorBody.ApiErrorBody.{data404, ifsServer500, nino400, service503}
 import models.error.ServiceError.MongoError

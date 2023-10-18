@@ -16,7 +16,7 @@
 
 package controllers
 
-import bulders.BusinessDataBuilder.{aBusiness, aBusinessJourneyStateSeq, aTradesJourneyStatusesSeq}
+import bulders.BusinessDataBuilder.{aBusiness, aTradesJourneyStatusesSeq}
 import bulders.JourneyStateDataBuilder.aJourneyState
 import models.error.ErrorBody.ApiErrorBody.ifsServer500
 import models.error.ServiceError.{DatabaseError, MongoError}
@@ -34,92 +34,117 @@ import services.BusinessService.GetBusinessJourneyStatesResponse
 import scala.concurrent.Future
 
 class JourneyStateControllerSpec extends ControllerBehaviours {
-  
-  lazy val mockSessionRepo = MockitoSugar.mock[MongoJourneyStateRepository]
-  lazy val mockBusinessService = MockitoSugar.mock[BusinessService]
-  lazy val underTest = new JourneyStateController(mockSessionRepo, mockBusinessService, mockAuthorisedAction, stubControllerComponents)
 
-  val taxYear = 2024
-  val nino = "some-nino"
+  lazy val mockJourneyStateRepo = MockitoSugar.mock[MongoJourneyStateRepository]
+  lazy val mockBusinessService  = MockitoSugar.mock[BusinessService]
+  lazy val underTest = new JourneyStateController(mockJourneyStateRepo, mockBusinessService, mockAuthorisedAction, stubControllerComponents)
+
+  val taxYear    = 2024
+  val nino       = "some-nino"
   val businessId = aBusiness.businessId
-  val journey = "view-trades"
-  val completed = false
-  
+  val journey    = "view-trades"
+  val completed  = false
+
   s"GET /completed-section/$businessId/$taxYear/$journey" should {
-    behave like controllerSpec(OK, Json.toJson(aJourneyState.journeyStateData.completedState).toString,
-      () => stubSessionRepositoryGet(expectedResult = Right(Some(aJourneyState))),
+    behave like controllerSpec(
+      OK,
+      Json.toJson(aJourneyState.journeyStateData.completedState).toString,
+      () => stubJourneyStateRepositoryGet(expectedResult = Right(Some(aJourneyState))),
+      () => underTest.getJourneyState(businessId, journey, taxYear)
+    )
+
+    behave like controllerSpec(
+      NO_CONTENT,
+      "",
+      () => stubJourneyStateRepositoryGet(expectedResult = Right(None)),
       () => underTest.getJourneyState(businessId, journey, taxYear))
 
-    behave like controllerSpec(NO_CONTENT, "",
-      () => stubSessionRepositoryGet(expectedResult = Right(None)),
-      () => underTest.getJourneyState(businessId, journey, taxYear))
-    
-    behave like controllerSpec(INTERNAL_SERVER_ERROR, Json.toJson(MongoError("db error").msg).toString(),
-      () => stubSessionRepositoryGet(expectedResult = Left(MongoError("db error"))),
-      () => underTest.getJourneyState(businessId, journey, taxYear))
+    behave like controllerSpec(
+      INTERNAL_SERVER_ERROR,
+      Json.toJson(MongoError("db error").msg).toString(),
+      () => stubJourneyStateRepositoryGet(expectedResult = Left(MongoError("db error"))),
+      () => underTest.getJourneyState(businessId, journey, taxYear)
+    )
   }
-  
+
   s"GET /completed-section/$nino/$taxYear" should {
-    behave like controllerSpec(OK, Json.toJson(aTradesJourneyStatusesSeq).toString,
+    behave like controllerSpec(
+      OK,
+      Json.toJson(aTradesJourneyStatusesSeq).toString,
       () => stubBusinessConnectorGet(expectedResult = Right(aTradesJourneyStatusesSeq)),
       () => underTest.getJourneyStateSeq(nino, taxYear)
     )
 
-    behave like controllerSpec(NO_CONTENT, "",
+    behave like controllerSpec(
+      NO_CONTENT,
+      "",
       () => stubBusinessConnectorGet(expectedResult = Right(Seq())),
       () => underTest.getJourneyStateSeq(businessId, taxYear),
-      "No content"
-    )
+      "No content")
 
-    behave like controllerSpec(INTERNAL_SERVER_ERROR, Json.toJson(MongoError("db error")).toString(),
-      () =>  stubBusinessConnectorGet(expectedResult =  Left(MongoError("db error"))),
+    behave like controllerSpec(
+      INTERNAL_SERVER_ERROR,
+      Json.toJson(MongoError("db error")).toString(),
+      () => stubBusinessConnectorGet(expectedResult = Left(MongoError("db error"))),
       () => underTest.getJourneyStateSeq(businessId, taxYear),
       "Mongo-Error"
     )
-    
+
     val apiStatusError = ApiStatusError(INTERNAL_SERVER_ERROR, ifsServer500)
-    behave like controllerSpec(INTERNAL_SERVER_ERROR, Json.toJson(apiStatusError).toString(),
+    behave like controllerSpec(
+      INTERNAL_SERVER_ERROR,
+      Json.toJson(apiStatusError).toString(),
       () => stubBusinessConnectorGet(expectedResult = Left(apiStatusError)),
       () => underTest.getJourneyStateSeq(businessId, taxYear),
       "Api-Error"
     )
   }
-  
+
   s"PUT /completed-section/$businessId/$taxYear/$journey/$completed" should {
-    behave like controllerSpec(CREATED, "",
+    behave like controllerSpec(
+      CREATED,
+      "",
       () => {
-        stubSessionRepositoryGet(expectedResult = Right(None))
-        stubSessionRepositorySet(expectedResult = Right(true))
+        stubJourneyStateRepositoryGet(expectedResult = Right(None))
+        stubJourneyStateRepositorySet(expectedResult = Right(true))
       },
-      () => underTest.putJourneyState(businessId, journey, taxYear, completed))
+      () => underTest.putJourneyState(businessId, journey, taxYear, completed)
+    )
 
-    behave like controllerSpec(NO_CONTENT, "",
+    behave like controllerSpec(
+      NO_CONTENT,
+      "",
       () => {
-        stubSessionRepositoryGet(expectedResult = Right(Some(aJourneyState)))
-        stubSessionRepositorySet(expectedResult = Right(true))
+        stubJourneyStateRepositoryGet(expectedResult = Right(Some(aJourneyState)))
+        stubJourneyStateRepositorySet(expectedResult = Right(true))
       },
-      () => underTest.putJourneyState(businessId, journey, taxYear, completed))
+      () => underTest.putJourneyState(businessId, journey, taxYear, completed)
+    )
 
-    behave like controllerSpec(INTERNAL_SERVER_ERROR, Json.toJson(MongoError("db error").msg).toString,
+    behave like controllerSpec(
+      INTERNAL_SERVER_ERROR,
+      Json.toJson(MongoError("db error").msg).toString,
       () => {
-        stubSessionRepositoryGet(expectedResult = Right(Some(aJourneyState)))
-        stubSessionRepositorySet(expectedResult = Left(MongoError("db error")))
+        stubJourneyStateRepositoryGet(expectedResult = Right(Some(aJourneyState)))
+        stubJourneyStateRepositorySet(expectedResult = Left(MongoError("db error")))
       },
-      () => underTest.putJourneyState(businessId, journey, taxYear, completed))
+      () => underTest.putJourneyState(businessId, journey, taxYear, completed)
+    )
   }
-  
-  private def stubSessionRepositoryGet(expectedResult: Either[DatabaseError, Option[JourneyState]]): Unit =
-    when(mockSessionRepo.get(businessId, taxYear, journey)) thenReturn (expectedResult match {
-      case Right(optJourneyState) => Future.successful(optJourneyState)
+
+  private def stubJourneyStateRepositoryGet(expectedResult: Either[DatabaseError, Option[JourneyState]]): Unit =
+    when(mockJourneyStateRepo.get(businessId, taxYear, journey)) thenReturn (expectedResult match {
+      case Right(optJourneyState)  => Future.successful(optJourneyState)
       case Left(MongoError(error)) => Future.failed(new RuntimeException(error))
     })
 
-  private def stubSessionRepositorySet(expectedResult: Either[DatabaseError, Boolean]): Unit =
-    when(mockSessionRepo.set(any[JourneyState])) thenReturn(expectedResult match {
-      case Right(_) =>  Future.successful(true)
+  private def stubJourneyStateRepositorySet(expectedResult: Either[DatabaseError, Boolean]): Unit =
+    when(mockJourneyStateRepo.set(any[JourneyState])) thenReturn (expectedResult match {
+      case Right(_)                => Future.successful(true)
       case Left(MongoError(error)) => Future.failed(new RuntimeException(error))
     })
-    
+
   private def stubBusinessConnectorGet(expectedResult: GetBusinessJourneyStatesResponse): Unit =
     when(mockBusinessService.getBusinessJourneyStates(any(), meq(taxYear))(any(), any())) thenReturn Future.successful(expectedResult)
+
 }
