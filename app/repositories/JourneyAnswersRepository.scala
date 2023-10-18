@@ -16,11 +16,11 @@
 
 package repositories
 
-import models.mdtp.PersistedUserAnswers
+import models.mdtp.JourneyAnswers
 
 import scala.concurrent.Future
 
-trait PersistedUserAnswersRepository {
-  def get(id: String): Future[Option[PersistedUserAnswers]]
-  def set(answers: PersistedUserAnswers): Future[Unit]
+trait JourneyAnswersRepository {
+  def get(id: String): Future[Option[JourneyAnswers]]
+  def set(answers: JourneyAnswers): Future[Unit]
 }

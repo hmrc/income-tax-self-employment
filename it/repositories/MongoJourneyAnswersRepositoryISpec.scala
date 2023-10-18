@@ -17,7 +17,7 @@
 package repositories
 
 import config.AppConfig
-import models.mdtp.PersistedUserAnswers
+import models.mdtp.JourneyAnswers
 import org.mongodb.scala.model.Filters
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
@@ -37,11 +37,11 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class MongoPersistedUserAnswersRepositoryISpec
+class MongoJourneyAnswersRepositoryISpec
     extends AnyWordSpec
     with Matchers
     with MongoSupport
-    with MongoTestSupport[PersistedUserAnswers]
+    with MongoTestSupport[JourneyAnswers]
     with Injecting
     with BeforeAndAfterEach
     with GuiceOneAppPerSuite {
@@ -55,18 +55,18 @@ class MongoPersistedUserAnswersRepositoryISpec
     .build()
 
   private val appConfig   = inject[AppConfig]
-  override val repository = new MongoPersistedUserAnswersRepository(mongoComponent, appConfig, clock)
+  override val repository = new MongoJourneyAnswersRepository(mongoComponent, appConfig, clock)
 
-  private val someOldTimestamp             = Instant.parse("2022-01-01T21:02:03.000Z")
-  private val id                           = "some_id"
-  private val someUserAnswers = PersistedUserAnswers(id, Json.obj("field" -> "value"), someOldTimestamp)
+  private val someOldTimestamp   = Instant.parse("2022-01-01T21:02:03.000Z")
+  private val id                 = "some_id"
+  private val someJourneyAnswers = JourneyAnswers(id, Json.obj("field" -> "value"), someOldTimestamp)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
     await(removeAll())
   }
 
-  "MongoPersistedUserAnswersRepository" when {
+  "MongoJourneyAnswersRepository" when {
     "initialised" must {
       "include an TTL index for the `lastUpdated` field (where expiry is set through the app config)" in {
         checkIndex(indexWithField("lastUpdated")) { indexModel =>
@@ -74,48 +74,48 @@ class MongoPersistedUserAnswersRepositoryISpec
         }
       }
     }
-    "setting user answers" when {
-      "no users answers exist for the supplied id" must {
+    "setting journey answers" when {
+      "no journey answers exist for the supplied id" must {
         "store them and update the `lastUpdated` field to now" in {
-          repository.set(someUserAnswers).futureValue shouldBe ()
+          repository.set(someJourneyAnswers).futureValue shouldBe ()
 
           withClue("lastUpdated was not updated to now") {
-            lastUpdated(someUserAnswers.id) shouldBe Some(now)
+            lastUpdated(someJourneyAnswers.id) shouldBe Some(now)
           }
         }
       }
-      "user answers exist for the supplied id" must {
+      "journey answers exist for the supplied id" must {
         "update them " in {
-          await(repository.set(someUserAnswers)) shouldBe ()
+          await(repository.set(someJourneyAnswers)) shouldBe ()
 
-          val updatedData        = Json.obj("field" -> "updatedValue")
-          val updatedUserAnswers = someUserAnswers.copy(data = updatedData)
+          val updatedData           = Json.obj("field" -> "updatedValue")
+          val updatedJourneyAnswers = someJourneyAnswers.copy(data = updatedData)
 
-          await(repository.set(updatedUserAnswers)) shouldBe ()
+          await(repository.set(updatedJourneyAnswers)) shouldBe ()
 
           repository.get(id).futureValue.map(_.data) shouldBe Some(updatedData)
 
           withClue("lastUpdated was not updated to now") {
-            lastUpdated(updatedUserAnswers.id) shouldBe Some(now)
+            lastUpdated(updatedJourneyAnswers.id) shouldBe Some(now)
           }
         }
       }
     }
-    "getting user answers" when {
-      "no user answers exist for that id" must {
+    "getting journey answers" when {
+      "no journey answers exist for that id" must {
         "not be able to retrieve it and not update the `lastUpdated` field" in {
-          await(repository.set(someUserAnswers)) shouldBe ()
+          await(repository.set(someJourneyAnswers)) shouldBe ()
 
           repository.get("some_other_id").futureValue shouldBe None
         }
       }
-      "user answers exist for the supplied id" must {
+      "journey answers exist for the supplied id" must {
         "get them and update the `lastUpdated` field" in {
-          await(repository.set(someUserAnswers)) shouldBe ()
+          await(repository.set(someJourneyAnswers)) shouldBe ()
 
-          val expectedUserAnswers = someUserAnswers.copy(lastUpdated = now)
+          val expectedJourneyAnswers = someJourneyAnswers.copy(lastUpdated = now)
 
-          repository.get(id).futureValue shouldBe Some(expectedUserAnswers)
+          repository.get(id).futureValue shouldBe Some(expectedJourneyAnswers)
         }
       }
     }
@@ -124,9 +124,9 @@ class MongoPersistedUserAnswersRepositoryISpec
 
   private def lastUpdated(id: String): Option[Instant] = {
     repository.collection
-      .find[PersistedUserAnswers](Filters.equal("_id", id))
+      .find[JourneyAnswers](Filters.equal("_id", id))
       .headOption()
-      .map(maybeUserAnswers => maybeUserAnswers.map(_.lastUpdated))
+      .map(maybeJourneyAnswers => maybeJourneyAnswers.map(_.lastUpdated))
       .futureValue
   }
 
