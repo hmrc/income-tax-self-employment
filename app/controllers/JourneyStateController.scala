@@ -23,7 +23,7 @@ import play.api.Logging
 import play.api.libs.json.Format.GenericFormat
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import repositories.SessionRepository
+import repositories.JourneyStateRepository
 import services.BusinessService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.PagerDutyHelper.PagerDutyKeys.FAILED_TO_GET_JOURNEY_STATE_DATA
@@ -33,30 +33,33 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class JourneyStateController @Inject()(sessionRepository: SessionRepository,
-                                       businessService: BusinessService,
-                                       auth: AuthorisedAction,
-                                       cc: ControllerComponents
-                                      )(implicit ec: ExecutionContext) extends BackendController(cc) with Logging {
+class JourneyStateController @Inject() (journeyStateRepository: JourneyStateRepository,
+                                        businessService: BusinessService,
+                                        auth: AuthorisedAction,
+                                        cc: ControllerComponents)(implicit ec: ExecutionContext)
+    extends BackendController(cc)
+    with Logging {
 
   def getJourneyState(businessId: String, journey: String, taxYear: Int): Action[AnyContent] = auth.async { _ =>
     lazy val pagerMsg = "[Self-Employment BE SessionRepository][get] Failed to find journey state data."
-    
-    sessionRepository.get(businessId, journey, taxYear)
+
+    journeyStateRepository
+      .get(businessId, taxYear, journey)
       .recoverWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
       .map {
         case Right(Some(model)) => Ok(Json.toJson(model.journeyStateData.completedState))
-        case Right(None) => NoContent
+        case Right(None)        => NoContent
         case Left(serviceError) => InternalServerError(Json.toJson(serviceError.msg))
       }
   }
 
   def getJourneyStateSeq(nino: String, taxYear: Int): Action[AnyContent] = auth.async { implicit request =>
-    businessService.getBusinessJourneyStates(nino, taxYear)
+    businessService
+      .getBusinessJourneyStates(nino, taxYear)
       .map {
         case Left(serviceError) => InternalServerError(Json.toJson(serviceError))
-        case Right(Seq()) => NoContent
-        case Right(res) => Ok(Json.toJson(res))
+        case Right(Seq())       => NoContent
+        case Right(res)         => Ok(Json.toJson(res))
       }
   }
 
@@ -64,16 +67,23 @@ class JourneyStateController @Inject()(sessionRepository: SessionRepository,
     lazy val pagerMsg = "[Self-Employment BE SessionRepository][set] Failed to save journey state data."
 
     val journeyStateData = JourneyStateData(businessId, journey, taxYear, completed)
-    sessionRepository.get(businessId, journey, taxYear).flatMap({ optJourneyState =>
-      val (journeystate, isCreated) =
-        optJourneyState.fold((JourneyState(journeyStateData = journeyStateData), true))(js => (JourneyState(js.id, journeyStateData), false))
-      sessionRepository.set(journeystate).map((_, isCreated))
-    })
+
+    journeyStateRepository
+      .get(businessId, taxYear, journey)
+      .flatMap { maybeJourneyState =>
+        val (journeyState, isCreated) =
+          maybeJourneyState.fold((JourneyState(journeyStateData = journeyStateData), true))(js => (JourneyState(js.id, journeyStateData), false))
+
+        journeyStateRepository
+          .set(journeyState)
+          .map((_, isCreated))
+      }
       .recoverWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
       .map {
-        case Right((_, true)) => Created
+        case Right((_, true))  => Created
         case Right((_, false)) => NoContent
         case Left(serverError) => InternalServerError(Json.toJson(serverError.msg))
       }
   }
+
 }

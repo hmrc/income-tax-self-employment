@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package config
+package repositories
 
-import com.google.inject.AbstractModule
-import repositories.{JourneyStateRepository, MongoJourneyStateRepository, MongoJourneyAnswersRepository, JourneyAnswersRepository}
+import models.mdtp.JourneyAnswers
 
-import java.time.{Clock, ZoneOffset}
+import scala.concurrent.Future
 
-class Module extends AbstractModule {
-
-  override def configure(): Unit = {
-    bind(classOf[AppConfig]).asEagerSingleton()
-    bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
-    bind(classOf[JourneyStateRepository]).to(classOf[MongoJourneyStateRepository])
-    bind(classOf[JourneyAnswersRepository]).to(classOf[MongoJourneyAnswersRepository])
-  }
-
+trait JourneyAnswersRepository {
+  def get(id: String): Future[Option[JourneyAnswers]]
+  def set(answers: JourneyAnswers): Future[Unit]
 }

@@ -30,7 +30,7 @@ import models.mdtp.JourneyState
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
-import repositories.SessionRepository
+import repositories.MongoJourneyStateRepository
 import services.BusinessService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
@@ -40,7 +40,7 @@ import scala.concurrent.Future
 
 class BusinessServiceSpec extends TestUtils {
   val mockBusinessConnector = mock[BusinessConnector]
-  val mockSessionRepository = MockitoSugar.mock[SessionRepository]
+  val mockSessionRepository = MockitoSugar.mock[MongoJourneyStateRepository]
 
   lazy val service = new BusinessService(mockBusinessConnector, mockSessionRepository)
   val nino = aTaxPayerDisplayResponse.nino
