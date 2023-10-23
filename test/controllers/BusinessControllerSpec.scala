@@ -16,7 +16,7 @@
 
 package controllers
 
-import bulders.BusinessDataBuilder.{aBusiness, aBusinessJourneyStateSeq, aBusinesses, aTradesJourneyStatusesSeq}
+import bulders.BusinessDataBuilder._
 import controllers.BusinessControllerSpec.{stubGetBusiness, stubGetBusinessJourneyStates, stubGetBusinesses}
 import models.error.ErrorBody.ApiErrorBody.{data404, ifsServer500, nino400, service503}
 import models.error.ServiceError.MongoError
@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class BusinessControllerSpec extends ControllerBehaviours {
   val mockBusinessService = MockitoSugar.mock[BusinessService]
-  val underTest = new BusinessController(mockBusinessService, mockAuthorisedAction, mockControllerComponents)
+  val underTest = new BusinessController(mockBusinessService, mockAuthorisedAction, stubControllerComponents)
 
   val nino = "FI290077A"
   val businessId = "SJPR05893938418"

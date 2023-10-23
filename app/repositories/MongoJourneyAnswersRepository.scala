@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 // Awaiting guidelines on how we are going to calculate the TTL. Default TTL implemented for time-being.
 @Singleton
-class MongoJourneyAnswersRepository @Inject()(mongo: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
+class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[JourneyAnswers](
       collectionName = "journey-answers",
       mongoComponent = mongo,
@@ -50,7 +50,7 @@ class MongoJourneyAnswersRepository @Inject()(mongo: MongoComponent, appConfig: 
     with JourneyAnswersRepository {
 
   /*
-   * Do we really want to keepAlive upon access of the user answers?
+   * Do we really want to keepAlive upon access of the journey answers?
    */
   override def get(id: String): Future[Option[JourneyAnswers]] = {
     keepAlive(id).flatMap { _ =>
@@ -61,7 +61,7 @@ class MongoJourneyAnswersRepository @Inject()(mongo: MongoComponent, appConfig: 
     }
   }
 
-  override def set(answers: JourneyAnswers): Future[Unit] = {
+  override def set(answers: JourneyAnswers): Future[SetResult] = {
     val updatedAnswers = answers.copy(lastUpdated = Instant.now(clock))
     collection
       .replaceOne(
@@ -70,7 +70,13 @@ class MongoJourneyAnswersRepository @Inject()(mongo: MongoComponent, appConfig: 
         options = ReplaceOptions().upsert(true)
       )
       .toFuture()
-      .map(_ => ())
+      .map { mongoResult =>
+        if (mongoResult.getMatchedCount > 0) {
+          SetResult.JourneyAnswersUpdated
+        } else {
+          SetResult.JourneyAnswersCreated
+        }
+      }
   }
 
   private def keepAlive(id: String): Future[Unit] =
