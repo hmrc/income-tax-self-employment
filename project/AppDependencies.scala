@@ -21,12 +21,20 @@ object AppDependencies {
   private val bootstrapVersion = "7.21.0"
   private val hmrcMongoVersion = "1.2.0"
 
+  val jacksonAndPlayExclusions = Seq(
+    ExclusionRule(organization = "com.fasterxml.jackson.core"),
+    ExclusionRule(organization = "com.fasterxml.jackson.datatype"),
+    ExclusionRule(organization = "com.fasterxml.jackson.module"),
+    ExclusionRule(organization = "com.fasterxml.jackson.core:jackson-annotations"),
+    ExclusionRule(organization = "com.typesafe.play")
+  )
+
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-28" % bootstrapVersion,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-test-play-28"   % hmrcMongoVersion,
     "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.14.2",
     "com.beachape"                 %% "enumeratum"                % "1.7.3",
-    "com.beachape"                 %% "enumeratum-play-json"      % "1.7.3"
+    "com.beachape"                 %% "enumeratum-play-json"      % "1.7.3" excludeAll (jacksonAndPlayExclusions *)
   )
 
   val test: Seq[ModuleID] = Seq(
