@@ -17,7 +17,7 @@
 package repositories
 
 import config.AppConfig
-import models.mdtp.JourneyAnswers
+import models.database.JourneyAnswers
 import org.mongodb.scala.ReadPreference
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.equal

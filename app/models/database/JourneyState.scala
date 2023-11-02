@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package models.mdtp
+package models.database
 
-import models.mdtp.JourneyState.JourneyStateData
+import models.database.JourneyState.JourneyStateData
 import play.api.libs.json._
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 

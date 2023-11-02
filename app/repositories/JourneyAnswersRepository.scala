@@ -16,8 +16,7 @@
 
 package repositories
 
-import models.mdtp.JourneyAnswers
-
+import models.database.JourneyAnswers
 import scala.concurrent.Future
 
 sealed trait SetResult

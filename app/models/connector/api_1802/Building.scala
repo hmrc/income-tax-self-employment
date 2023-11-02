@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package models.api
+package models.connector.api_1802
 
-import models.api.BusinessData.GetBusinessDataRequest
 import play.api.libs.json.{Json, OFormat}
 
-case class AllSelfEmploymentData(businessDetails: Option[GetBusinessDataRequest])
+case class Building(name: Option[String], number: Option[String], postCode: String)
 
-object  AllSelfEmploymentData {
-  implicit val allSelfEmploymentDataFormat: OFormat[AllSelfEmploymentData] = Json.format[AllSelfEmploymentData]
+object Building {
+  implicit val format: OFormat[Building] = Json.format[Building]
 }
-

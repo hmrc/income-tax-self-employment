@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package models.api
+package models.connector.api_1802
 
-import models.mdtp.Business.LatencyDetails
+import play.api.libs.json.{Json, OFormat}
 
-trait IncomeSource {
-  val incomeSourceId: String
-  val accountingPeriodStartDate: String
-  val accountingPeriodEndDate: String
-  val firstAccountingPeriodStartDate: Option[String]
-  val firstAccountingPeriodEndDate:  Option[String]
-  val latencyDetails: Option[LatencyDetails]
-  val tradingStartDate: Option[String]
-  val cashOrAccruals: Option[Boolean]
-  val cessationDate: Option[String]
+case class FirstYear(qualifyingDate: String, qualifyingAmountExpenditure: BigDecimal)
+
+object FirstYear {
+  implicit val format: OFormat[FirstYear] = Json.format[FirstYear]
 }
+

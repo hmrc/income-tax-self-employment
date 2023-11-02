@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package repositories
+package models.connector.api_1171
 
-import models.database.JourneyState
-import scala.concurrent.Future
+import models.domain.Business.LatencyDetails
 
-trait JourneyStateRepository {
-  def get(businessId: String, taxYear: Int): Future[Seq[JourneyState]]
-  def get(businessId: String, taxYear: Int, journey: String): Future[Option[JourneyState]]
-  def set(journeyState: JourneyState): Future[Unit]
+trait IncomeSource {
+  val incomeSourceId: String
+  val accountingPeriodStartDate: String
+  val accountingPeriodEndDate: String
+  val firstAccountingPeriodStartDate: Option[String]
+  val firstAccountingPeriodEndDate:  Option[String]
+  val latencyDetails: Option[LatencyDetails]
+  val tradingStartDate: Option[String]
+  val cashOrAccruals: Option[Boolean]
+  val cessationDate: Option[String]
 }

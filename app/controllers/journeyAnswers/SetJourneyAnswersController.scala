@@ -16,7 +16,7 @@
 
 package controllers.journeyAnswers
 
-import models.mdtp.JourneyAnswers
+import models.database.JourneyAnswers
 import play.api.libs.json.{JsError, JsSuccess, JsValue, Json}
 import play.api.mvc.{Action, ControllerComponents}
 import services.journeyAnswers.SetJourneyAnswersService

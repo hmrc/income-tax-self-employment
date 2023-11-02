@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package models.mdtp
+package models.domain
 
-import models.mdtp.TradesJourneyStatuses.JourneyStatus
+import models.domain.TradesJourneyStatuses.JourneyStatus
 import play.api.libs.json._
 
-case class TradesJourneyStatuses(businessId: String,
-                                 tradingName: Option[String],
-                                 journeyStatuses: Seq[JourneyStatus]
-                                )
+case class TradesJourneyStatuses(businessId: String, tradingName: Option[String], journeyStatuses: Seq[JourneyStatus])
 
 object TradesJourneyStatuses {
   implicit val format: OFormat[TradesJourneyStatuses] = Json.format[TradesJourneyStatuses]
@@ -40,5 +37,5 @@ object TradesJourneyStatuses {
   object JourneyStatus {
     implicit val format: OFormat[JourneyStatus] = Json.format[JourneyStatus]
   }
-}
 
+}

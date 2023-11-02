@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package repositories
+package models.connector.api_1802
 
-import models.database.JourneyState
-import scala.concurrent.Future
+import play.api.libs.json.{Json, OFormat}
 
-trait JourneyStateRepository {
-  def get(businessId: String, taxYear: Int): Future[Seq[JourneyState]]
-  def get(businessId: String, taxYear: Int, journey: String): Future[Option[JourneyState]]
-  def set(journeyState: JourneyState): Future[Unit]
+
+case class CreateAmendSelfEmploymentAnnualSubmission(annualAdjustments: Option[AnnualAdjustments],
+                                                     annualAllowances: Option[AnnualAllowances],
+                                                     annualNonFinancials: Option[AnnualNonFinancials])
+
+object CreateAmendSelfEmploymentAnnualSubmission {
+  implicit val format: OFormat[CreateAmendSelfEmploymentAnnualSubmission] = Json.format[CreateAmendSelfEmploymentAnnualSubmission]
 }

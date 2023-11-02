@@ -16,7 +16,7 @@
 
 package services.journeyAnswers
 
-import models.mdtp.JourneyAnswers
+import models.database.JourneyAnswers
 import play.api.Logging
 import repositories.{JourneyAnswersRepository, SetResult}
 

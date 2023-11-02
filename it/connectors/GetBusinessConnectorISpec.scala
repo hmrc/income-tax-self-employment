@@ -22,7 +22,7 @@ import config.AppConfig
 import connectors.BusinessConnector.IdType.{MtdId, Nino}
 import connectors.BusinessConnector.businessUriPath
 import helpers.WiremockSpec
-import models.api.BusinessData.GetBusinessDataRequest
+import models.connector.api_1171.BusinessData.GetBusinessDataRequest
 import models.error.ErrorBody.ApiErrorBody
 import models.error.ErrorBody.ApiErrorBody.{data404, ifsServer500, mtdId400, nino400, service503}
 import models.error.StatusError.ApiStatusError

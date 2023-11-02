@@ -17,8 +17,8 @@
 package bulders
 
 import bulders.JourneyStateDataBuilder.aJourneyAndState
-import models.api.BusinessData.GetBusinessDataRequest
-import models.mdtp.TradesJourneyStatuses
+import models.connector.api_1171.BusinessData.GetBusinessDataRequest
+import models.domain.TradesJourneyStatuses
 import play.api.libs.json.Json
 
 object BusinessDataBuilder {

@@ -16,7 +16,7 @@
 
 package controllers.journeyAnswers
 
-import models.mdtp.JourneyAnswers
+import models.database.JourneyAnswers
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.Application

@@ -22,11 +22,11 @@ import connectors.BusinessConnector
 import connectors.BusinessConnector.IdType
 import connectors.BusinessConnector.IdType.Nino
 import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesRequestResponse
+import models.database.JourneyState
 import models.error.ErrorBody.ApiErrorBody
 import models.error.ServiceError
 import models.error.ServiceError.MongoError
 import models.error.StatusError.ApiStatusError
-import models.mdtp.JourneyState
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar

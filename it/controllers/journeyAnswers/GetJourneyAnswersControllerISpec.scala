@@ -16,7 +16,7 @@
 
 package controllers.journeyAnswers
 
-import models.mdtp.JourneyAnswers
+import models.database.JourneyAnswers
 import org.mongodb.scala.model.Filters
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper

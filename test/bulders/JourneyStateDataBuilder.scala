@@ -17,8 +17,8 @@
 package bulders
 
 import bulders.BusinessDataBuilder.aBusiness
-import models.mdtp.JourneyState
-import models.mdtp.JourneyState.JourneyStateData
+import models.database.JourneyState
+import JourneyState.JourneyStateData
 
 import java.util.UUID
 
