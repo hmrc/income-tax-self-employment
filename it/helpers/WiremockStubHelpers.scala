@@ -53,5 +53,6 @@ trait WiremockStubHelpers {
     val auditResponseCode = 204
     stubPostWithoutResponseAndRequestBody("/write/audit", auditResponseCode)
     stubPostWithoutResponseAndRequestBody("/write/audit/merged", auditResponseCode)
+    ()
   }
 }

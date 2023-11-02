@@ -80,8 +80,10 @@ class GetJourneyAnswersControllerISpec extends IntegrationBaseSpec with Injectin
     }
   }
 
-  private def createJourneyAnswers(answers: JourneyAnswers): Unit =
+  private def createJourneyAnswers(answers: JourneyAnswers): Unit = {
     await(repository.set(answers))
+    ()
+  }
 
   private def removeAll(): Future[Unit] =
     repository.collection

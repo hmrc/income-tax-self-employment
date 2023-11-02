@@ -41,6 +41,7 @@ trait MongoTestSupport[A] {
       case Some(index) => check(index)
       case None        => fail(s"Required index does not exist")
     }
+    ()
   }
 
 }
