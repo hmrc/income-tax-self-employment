@@ -18,18 +18,18 @@ package models.connector.api_1894
 
 import play.api.libs.json._
 
-/**
-  * Represents the Swagger definition for requestBody.
-  * @param from Defines a date in the format yyyy-mm-dd
-  * @param to Defines a date in the format yyyy-mm-dd
+/** Represents the Swagger definition for requestBody.
+  * @param from
+  *   Defines a date in the format yyyy-mm-dd
+  * @param to
+  *   Defines a date in the format yyyy-mm-dd
   */
 case class RequestBody(
-  from: String,
-  to: String,
-  financials: Option[FinancialsType]
+    from: String,
+    to: String,
+    financials: Option[FinancialsType]
 )
 
 object RequestBody {
   implicit lazy val requestBodyJsonFormat: Format[RequestBody] = Json.format[RequestBody]
 }
-

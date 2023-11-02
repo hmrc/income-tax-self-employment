@@ -18,15 +18,13 @@ package models.connector.api_1894
 
 import play.api.libs.json._
 
-/**
-  * Represents the Swagger definition for financialsType.
+/** Represents the Swagger definition for financialsType.
   */
 case class FinancialsType(
-  incomes: Option[IncomesType],
-  deductions: Option[DeductionsType]
+    incomes: Option[IncomesType],
+    deductions: Option[DeductionsType]
 )
 
 object FinancialsType {
   implicit lazy val financialsTypeJsonFormat: Format[FinancialsType] = Json.format[FinancialsType]
 }
-

@@ -18,15 +18,17 @@ package models.connector.api_1894
 
 import play.api.libs.json._
 
-/**
-  * Represents the Swagger definition for postSelfEmploymentPeriod_201_response.
-  * @param ibdSubmissionPeriodId ID of the created period submission.
+/** Represents the Swagger definition for postSelfEmploymentPeriod_201_response.
+  * @param ibdSubmissionPeriodId
+  *   ID of the created period submission.
   */
 case class PostSelfEmploymentPeriod201Response(
-  ibdSubmissionPeriodId: String
+    ibdSubmissionPeriodId: String
 )
 
 object PostSelfEmploymentPeriod201Response {
-  implicit lazy val postSelfEmploymentPeriod201ResponseJsonFormat: Format[PostSelfEmploymentPeriod201Response] = Json.format[PostSelfEmploymentPeriod201Response]
-}
 
+  implicit lazy val postSelfEmploymentPeriod201ResponseJsonFormat: Format[PostSelfEmploymentPeriod201Response] =
+    Json.format[PostSelfEmploymentPeriod201Response]
+
+}

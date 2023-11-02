@@ -18,17 +18,17 @@ package models.connector.api_1894
 
 import play.api.libs.json._
 
-/**
-  * Represents the Swagger definition for incomesType.
-  * @param turnover Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
-  * @param other Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
+/** Represents the Swagger definition for incomesType.
+  * @param turnover
+  *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
+  * @param other
+  *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   */
 case class IncomesType(
-  turnover: Option[BigDecimal],
-  other: Option[BigDecimal]
+    turnover: Option[BigDecimal],
+    other: Option[BigDecimal]
 )
 
 object IncomesType {
   implicit lazy val incomesTypeJsonFormat: Format[IncomesType] = Json.format[IncomesType]
 }
-

@@ -18,17 +18,20 @@ package models.connector.api_1894
 
 import play.api.libs.json._
 
-/**
-  * Represents the Swagger definition for selfEmploymentDeductionsDetailType.
-  * @param amount Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
-  * @param disallowableAmount Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
+/** Represents the Swagger definition for selfEmploymentDeductionsDetailType.
+  * @param amount
+  *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
+  * @param disallowableAmount
+  *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   */
 case class SelfEmploymentDeductionsDetailType(
-  amount: Option[BigDecimal],
-  disallowableAmount: Option[BigDecimal]
+    amount: Option[BigDecimal],
+    disallowableAmount: Option[BigDecimal]
 )
 
 object SelfEmploymentDeductionsDetailType {
-  implicit lazy val selfEmploymentDeductionsDetailTypeJsonFormat: Format[SelfEmploymentDeductionsDetailType] = Json.format[SelfEmploymentDeductionsDetailType]
-}
 
+  implicit lazy val selfEmploymentDeductionsDetailTypeJsonFormat: Format[SelfEmploymentDeductionsDetailType] =
+    Json.format[SelfEmploymentDeductionsDetailType]
+
+}
