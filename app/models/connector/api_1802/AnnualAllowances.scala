@@ -25,8 +25,8 @@ case class AnnualAllowances(annualInvestmentAllowance: Option[BigDecimal],
                             businessPremisesRenovationAllowance: Option[BigDecimal],
                             enhanceCapitalAllowance: Option[BigDecimal],
                             allowanceOnSales: Option[BigDecimal],
-                            structuredBuildingAllowance: Option[BuildingAllowance],
-                            enhancedStructuredBuildingAllowance: Option[BuildingAllowance])
+                            structuredBuildingAllowance: Option[List[BuildingAllowance]],
+                            enhancedStructuredBuildingAllowance: Option[List[BuildingAllowance]])
 
 object AnnualAllowances {
   implicit val format: OFormat[AnnualAllowances] = Json.format[AnnualAllowances]
