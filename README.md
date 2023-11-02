@@ -73,8 +73,8 @@ it is false in yaml. We had to remove it manually.
 There was a companion object custom Format with this line which was not
 compiling: `val newObj = JsObject(restructuredProps)`.
 
-The solution was to just use our macro like in other case classes: `Json.format[AnnualAllowancesType]`. This approach
-should work when additionalProperties is false.
+The solution was to just use our macro like in other case classes: `Json.format[AnnualAllowancesType]`. 
+This approach should work when additionalProperties is false.
 
 ## License
 
