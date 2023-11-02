@@ -40,15 +40,41 @@ This service runs on port: `localhost:10900`
 
 3. **Copy case classes**
 
-Navigate to the `output/app/model` directory and copy the generated case classes to your project.
+Navigate to the `output/app/model` directory and copy the generated case classes to your project. To be on safe side
+just File Explorer, as Intellij likes to cut some of the code.
 
-4. **Remove annotations**
+4. **Remove annotations and rename package**
 
-Remove the `javax` annotations from the generated case classes.
+Remove the `javax` annotations from the generated case classes. Rename package name.
 
 5. **Add Copyright**
 
 Add copyright. You can use Intellij copyright profile and Action: `Update Copyright`.
+
+6. **Tweak it as you need it**
+
+Sometimes generator is confused with large yaml file, so manual intervention is required. Fix it manually and add it
+below
+if this is a new tweak.
+
+### Known codegen issues
+
+#### The file is cut
+
+Copying between intellij may cause some files cut, it's better to use File Explorer.
+
+#### The additionalProperties field is generated but there is no type next to it
+
+There was situation with API#1802 which caused strange additionalProperties: <empty> to be generated, even though
+it is false in yaml. We had to remove it manually.
+
+#### JsObject does not compile
+
+There was a companion object custom Format with this line which was not
+compiling: `val newObj = JsObject(restructuredProps)`.
+
+The solution was to just use our macro like in other case classes: `Json.format[AnnualAllowancesType]`. This approach
+should work when additionalProperties is false.
 
 ## License
 
