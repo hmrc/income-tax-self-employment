@@ -19,7 +19,7 @@ package services
 import connectors.BusinessConnector
 import connectors.BusinessConnector.IdType.Nino
 import models.error.{ServiceError, StatusError}
-import models.mdtp.{Business, TradesJourneyStatuses}
+import models.domain.{Business, TradesJourneyStatuses}
 import repositories.JourneyStateRepository
 import services.BusinessService.{GetBusinessJourneyStatesResponse, GetBusinessResponse}
 import uk.gov.hmrc.http.HeaderCarrier

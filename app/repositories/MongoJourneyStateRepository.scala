@@ -17,7 +17,7 @@
 package repositories
 
 import config.AppConfig
-import models.mdtp.JourneyState
+import models.database.JourneyState
 import org.bson.conversions.Bson
 import org.mongodb.scala.model.Indexes.compoundIndex
 import org.mongodb.scala.model._

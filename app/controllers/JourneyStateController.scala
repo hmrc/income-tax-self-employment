@@ -17,8 +17,8 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
-import models.mdtp.JourneyState
-import models.mdtp.JourneyState.JourneyStateData
+import models.database.JourneyState
+import JourneyState.JourneyStateData
 import play.api.Logging
 import play.api.libs.json.Format.GenericFormat
 import play.api.libs.json.Json

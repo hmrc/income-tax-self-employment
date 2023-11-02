@@ -18,10 +18,10 @@ package controllers
 
 import bulders.BusinessDataBuilder.{aBusiness, aTradesJourneyStatusesSeq}
 import bulders.JourneyStateDataBuilder.aJourneyState
+import models.database.JourneyState
 import models.error.ErrorBody.ApiErrorBody.ifsServer500
 import models.error.ServiceError.{DatabaseError, MongoError}
 import models.error.StatusError.ApiStatusError
-import models.mdtp.JourneyState
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.MockitoSugar.when
 import org.scalatestplus.mockito.MockitoSugar

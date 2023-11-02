@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package models.api.selfEmploymentBusiness.createAmendSEAnnualSubmission
+package models.connector.api_1802
 
 import play.api.libs.json.{Json, OFormat}
 
-case class AnnualNonFinancials(businessDetailsChangedRecently: Boolean,
-                               exemptFromPayingClass4Nics: Boolean,
-                               class4NicsExemptionReason: Option[String])
+case class FirstYear(qualifyingDate: String, qualifyingAmountExpenditure: BigDecimal)
 
-object AnnualNonFinancials {
-  implicit val format: OFormat[AnnualNonFinancials] = Json.format[AnnualNonFinancials]
+object FirstYear {
+  implicit val format: OFormat[FirstYear] = Json.format[FirstYear]
 }
+

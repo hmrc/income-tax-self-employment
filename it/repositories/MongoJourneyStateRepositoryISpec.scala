@@ -17,8 +17,8 @@
 package repositories
 
 import config.AppConfig
-import models.mdtp.JourneyState
-import models.mdtp.JourneyState.JourneyStateData
+import models.database.JourneyState
+import JourneyState.JourneyStateData
 import org.mongodb.scala.model.Filters
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers

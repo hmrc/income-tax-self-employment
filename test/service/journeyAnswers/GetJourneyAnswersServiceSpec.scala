@@ -17,7 +17,7 @@
 package service.journeyAnswers
 
 import mocks.MockJourneyAnswersRepository
-import models.mdtp.JourneyAnswers
+import models.database.JourneyAnswers
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec

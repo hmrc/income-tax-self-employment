@@ -16,7 +16,7 @@
 
 package services.journeyAnswers
 
-import models.mdtp.JourneyAnswers
+import models.database.JourneyAnswers
 import repositories.JourneyAnswersRepository
 import services.journeyAnswers.GetJourneyAnswersResult.{JourneyAnswersFound, NoJourneyAnswersFound}
 

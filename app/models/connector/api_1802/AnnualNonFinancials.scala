@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package models.api
+package models.connector.api_1802
 
-import models.api.BusinessData.GetBusinessDataRequest
 import play.api.libs.json.{Json, OFormat}
 
-case class AllSelfEmploymentData(businessDetails: Option[GetBusinessDataRequest])
+case class AnnualNonFinancials(businessDetailsChangedRecently: Boolean,
+                               exemptFromPayingClass4Nics: Boolean,
+                               class4NicsExemptionReason: Option[String])
 
-object  AllSelfEmploymentData {
-  implicit val allSelfEmploymentDataFormat: OFormat[AllSelfEmploymentData] = Json.format[AllSelfEmploymentData]
+object AnnualNonFinancials {
+  implicit val format: OFormat[AnnualNonFinancials] = Json.format[AnnualNonFinancials]
 }
-

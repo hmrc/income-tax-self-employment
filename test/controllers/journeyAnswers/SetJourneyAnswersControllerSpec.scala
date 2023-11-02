@@ -17,7 +17,7 @@
 package controllers.journeyAnswers
 
 import mocks.MockSetJourneyAnswersService
-import models.mdtp.JourneyAnswers
+import models.database.JourneyAnswers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}

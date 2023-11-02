@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package models.mdtp
+package models.domain
 
-import models.mdtp.Business.{AccountingPeriod, LatencyDetails}
+import models.domain.Business.{AccountingPeriod, LatencyDetails}
 import play.api.libs.json.{Json, OFormat}
 
 case class Business(

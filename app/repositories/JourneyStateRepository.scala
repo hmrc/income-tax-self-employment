@@ -16,8 +16,7 @@
 
 package repositories
 
-import models.mdtp.JourneyState
-
+import models.database.JourneyState
 import scala.concurrent.Future
 
 trait JourneyStateRepository {

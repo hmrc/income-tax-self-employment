@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package models.api.selfEmploymentBusiness.createAmendSEAnnualSubmission
+package models.connector.api_1171
 
-import play.api.libs.json.{Json, OFormat}
+import models.domain.Business.LatencyDetails
 
-case class BuildingAllowance(amount: BigDecimal, firstYear: Option[FirstYear], building: Building)
-
-object BuildingAllowance {
-  implicit val format: OFormat[BuildingAllowance] = Json.format[BuildingAllowance]
+trait IncomeSource {
+  val incomeSourceId: String
+  val accountingPeriodStartDate: String
+  val accountingPeriodEndDate: String
+  val firstAccountingPeriodStartDate: Option[String]
+  val firstAccountingPeriodEndDate:  Option[String]
+  val latencyDetails: Option[LatencyDetails]
+  val tradingStartDate: Option[String]
+  val cashOrAccruals: Option[Boolean]
+  val cessationDate: Option[String]
 }
-

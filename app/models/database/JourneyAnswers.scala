@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.mdtp
+package models.database
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json._

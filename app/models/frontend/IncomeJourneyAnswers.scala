@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.journeys.income
+package models.frontend
 
 import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
 

@@ -17,7 +17,7 @@
 package controllers.journeyAnswers
 
 import mocks.MockGetJourneyAnswersService
-import models.mdtp.JourneyAnswers
+import models.database.JourneyAnswers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status.OK

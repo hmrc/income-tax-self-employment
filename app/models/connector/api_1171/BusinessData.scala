@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package models.api
+package models.connector.api_1171
 
-import models.api.BusinessData.{BusinessAddressDetails, TaxPayerDisplayResponse, latencyIndicatorType, typeOfBusiness}
-import models.mdtp.Business
-import models.mdtp.Business.{AccountingPeriod, LatencyDetails}
+import BusinessData.{BusinessAddressDetails, TaxPayerDisplayResponse, latencyIndicatorType, typeOfBusiness}
+import models.domain.Business.{AccountingPeriod, LatencyDetails}
+import models.domain.Business
 import play.api.libs.json.{Json, OFormat}
 
 case class BusinessData(

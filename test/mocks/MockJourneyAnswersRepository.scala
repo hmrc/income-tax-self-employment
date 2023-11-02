@@ -16,7 +16,7 @@
 
 package mocks
 
-import models.mdtp.JourneyAnswers
+import models.database.JourneyAnswers
 import org.mockito.MockitoSugar.when
 import org.mockito.stubbing.ScalaFirstStubbing
 import org.scalatestplus.mockito.MockitoSugar

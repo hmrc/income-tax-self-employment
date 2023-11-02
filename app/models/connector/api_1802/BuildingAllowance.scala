@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package models.api.selfEmploymentBusiness.createAmendSEAnnualSubmission
+package models.connector.api_1802
 
 import play.api.libs.json.{Json, OFormat}
 
-case class FirstYear(qualifyingDate: String, qualifyingAmountExpenditure: BigDecimal)
+case class BuildingAllowance(amount: BigDecimal, firstYear: Option[FirstYear], building: Building)
 
-object FirstYear {
-  implicit val format: OFormat[FirstYear] = Json.format[FirstYear]
+object BuildingAllowance {
+  implicit val format: OFormat[BuildingAllowance] = Json.format[BuildingAllowance]
 }
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.api.selfEmploymentBusiness.createAmendSEAnnualSubmission
+package models.connector.api_1802
 
 import play.api.libs.json.{Json, OFormat}
 
