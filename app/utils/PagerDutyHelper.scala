@@ -17,7 +17,8 @@
 package utils
 
 import models.error.ServiceError
-import models.error.ServiceError.{MongoError, UnavailableServiceError}
+import models.error.ServiceError.DatabaseError.MongoError
+import models.error.ServiceError.UnavailableServiceError
 import play.api.Logging
 import uk.gov.hmrc.http.HttpResponse
 import utils.PagerDutyHelper.PagerDutyKeys.FAILED_TO_GET_JOURNEY_STATE_DATA

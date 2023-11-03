@@ -19,7 +19,7 @@ package controllers
 import bulders.BusinessDataBuilder._
 import controllers.BusinessControllerSpec.{stubGetBusiness, stubGetBusinessJourneyStates, stubGetBusinesses}
 import models.error.ErrorBody.ApiErrorBody.{data404, ifsServer500, nino400, service503}
-import models.error.ServiceError.MongoError
+import models.error.ServiceError.DatabaseError.MongoError
 import models.error.StatusError.ApiStatusError
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.MockitoSugar.when
@@ -35,77 +35,108 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class BusinessControllerSpec extends ControllerBehaviours {
   val mockBusinessService = MockitoSugar.mock[BusinessService]
-  val underTest = new BusinessController(mockBusinessService, mockAuthorisedAction, stubControllerComponents)
+  val underTest           = new BusinessController(mockBusinessService, mockAuthorisedAction, stubControllerComponents)
 
-  val nino = "FI290077A"
+  val nino       = "FI290077A"
   val businessId = "SJPR05893938418"
-  val taxYear = LocalDate.now.getYear
+  val taxYear    = LocalDate.now.getYear
 
   s"GET /individuals/business/details/$nino/list" should {
-    behave like controllerSpec(OK, Json.toJson(aBusinesses).toString(),
-      () => stubGetBusinesses(mockBusinessService, nino,Right(Seq(aBusiness))),
+    behave like controllerSpec(
+      OK,
+      Json.toJson(aBusinesses).toString(),
+      () => stubGetBusinesses(mockBusinessService, nino, Right(Seq(aBusiness))),
       () => underTest.getBusinesses(nino))
 
     for ((errorStatus, apiError) <- Seq(
-      (NOT_FOUND, data404), (BAD_REQUEST, nino400),
-      (INTERNAL_SERVER_ERROR, ifsServer500), (SERVICE_UNAVAILABLE, service503))) {
-      
-      behave like controllerSpec(errorStatus, Json.toJson(ApiStatusError(errorStatus, apiError.toMdtpError)).toString(),
-        () => stubGetBusinesses(mockBusinessService, nino,Left(ApiStatusError(errorStatus, apiError))),
-        () => underTest.getBusinesses(nino))
+        (NOT_FOUND, data404),
+        (BAD_REQUEST, nino400),
+        (INTERNAL_SERVER_ERROR, ifsServer500),
+        (SERVICE_UNAVAILABLE, service503))) {
+
+      behave like controllerSpec(
+        errorStatus,
+        Json.toJson(ApiStatusError(errorStatus, apiError.toMdtpError)).toString(),
+        () => stubGetBusinesses(mockBusinessService, nino, Left(ApiStatusError(errorStatus, apiError))),
+        () => underTest.getBusinesses(nino)
+      )
     }
   }
 
   s"GET /individuals/business/details/$nino/$businessId" should {
-    behave like controllerSpec(OK, Json.toJson(aBusinesses).toString(),
+    behave like controllerSpec(
+      OK,
+      Json.toJson(aBusinesses).toString(),
       () => stubGetBusiness(mockBusinessService, nino, businessId, Right(Seq(aBusiness))),
-      () => underTest.getBusiness(nino, businessId))
-    
-     for ((errorStatus, apiError) <- Seq(
-      (NOT_FOUND, data404), (BAD_REQUEST, nino400),
-      (INTERNAL_SERVER_ERROR, ifsServer500), (SERVICE_UNAVAILABLE, service503))) {
-      
-       behave like controllerSpec(errorStatus, Json.toJson(ApiStatusError(errorStatus, apiError.toMdtpError)).toString(),
-         () => stubGetBusiness(mockBusinessService, nino, businessId, Left(ApiStatusError(errorStatus, apiError))),
-         () => underTest.getBusiness(nino, businessId))
-     }
+      () => underTest.getBusiness(nino, businessId)
+    )
+
+    for ((errorStatus, apiError) <- Seq(
+        (NOT_FOUND, data404),
+        (BAD_REQUEST, nino400),
+        (INTERNAL_SERVER_ERROR, ifsServer500),
+        (SERVICE_UNAVAILABLE, service503))) {
+
+      behave like controllerSpec(
+        errorStatus,
+        Json.toJson(ApiStatusError(errorStatus, apiError.toMdtpError)).toString(),
+        () => stubGetBusiness(mockBusinessService, nino, businessId, Left(ApiStatusError(errorStatus, apiError))),
+        () => underTest.getBusiness(nino, businessId)
+      )
+    }
   }
 
   s"GET /individuals/business/journeyStates/$nino/$taxYear" should {
-    behave like controllerSpec(OK, Json.toJson(aTradesJourneyStatusesSeq).toString,
-      () => stubGetBusinessJourneyStates(mockBusinessService, nino, taxYear, Right(aTradesJourneyStatusesSeq)),
+    behave like controllerSpec(
+      OK,
+      Json.toJson(aTradesJourneyStatusesSeq).toString,
+      () => stubGetBusinessJourneyStates(mockBusinessService, taxYear, Right(aTradesJourneyStatusesSeq)),
       () => underTest.getBusinessJourneyStates(nino, taxYear)
     )
 
-    behave like controllerSpec(NO_CONTENT, "",
-      () => stubGetBusinessJourneyStates(mockBusinessService, nino, taxYear, Right(Nil)),
-      () => underTest.getBusinessJourneyStates(nino, taxYear)
-    )
+    behave like controllerSpec(
+      NO_CONTENT,
+      "",
+      () => stubGetBusinessJourneyStates(mockBusinessService, taxYear, Right(Nil)),
+      () => underTest.getBusinessJourneyStates(nino, taxYear))
 
-    behave like controllerSpec(INTERNAL_SERVER_ERROR, Json.toJson(MongoError("db error")).toString(),
-      () => stubGetBusinessJourneyStates(mockBusinessService, nino, taxYear, Left(MongoError("db error"))),
+    behave like controllerSpec(
+      INTERNAL_SERVER_ERROR,
+      Json.toJson(MongoError("db error")).toString(),
+      () => stubGetBusinessJourneyStates(mockBusinessService, taxYear, Left(MongoError("db error"))),
       () => underTest.getBusinessJourneyStates(nino, taxYear),
       "Mongo-Error"
     )
 
     val apiStatusError = ApiStatusError(INTERNAL_SERVER_ERROR, ifsServer500)
-    behave like controllerSpec(INTERNAL_SERVER_ERROR, Json.toJson(apiStatusError).toString(),
-      () => stubGetBusinessJourneyStates(mockBusinessService, nino, taxYear, Left(apiStatusError)),
+    behave like controllerSpec(
+      INTERNAL_SERVER_ERROR,
+      Json.toJson(apiStatusError).toString(),
+      () => stubGetBusinessJourneyStates(mockBusinessService, taxYear, Left(apiStatusError)),
       () => underTest.getBusinessJourneyStates(businessId, taxYear),
       "Api-Error"
     )
   }
+
 }
 
 object BusinessControllerSpec {
-  def stubGetBusinesses(mockBusinessService:  BusinessService, nino: String, expectedResult: GetBusinessResponse): Unit =
+
+  def stubGetBusinesses(mockBusinessService: BusinessService, nino: String, expectedResult: GetBusinessResponse): Unit = {
     when(mockBusinessService.getBusinesses(meq(nino))(any[HeaderCarrier])) thenReturn Future.successful(expectedResult)
+    ()
+  }
 
-  def stubGetBusiness(mockBusinessService:  BusinessService, nino: String, businessId: String,expectedResult: GetBusinessResponse): Unit =
-    when(mockBusinessService.getBusiness(meq(nino), meq(businessId))(any[HeaderCarrier], any[ExecutionContext])) thenReturn Future.successful(expectedResult)
+  def stubGetBusiness(mockBusinessService: BusinessService, nino: String, businessId: String, expectedResult: GetBusinessResponse): Unit = {
+    when(mockBusinessService.getBusiness(meq(nino), meq(businessId))(any[HeaderCarrier], any[ExecutionContext])) thenReturn Future.successful(
+      expectedResult)
+    ()
+  }
 
-  def stubGetBusinessJourneyStates(mockBusinessService:  BusinessService, nino: String, taxYear: Int,
-                                           expectedResult: GetBusinessJourneyStatesResponse ): Unit =
+  def stubGetBusinessJourneyStates(mockBusinessService: BusinessService, taxYear: Int, expectedResult: GetBusinessJourneyStatesResponse): Unit = {
     when(mockBusinessService.getBusinessJourneyStates(any, meq(taxYear))(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(Future.successful(expectedResult))
+    ()
+  }
+
 }
