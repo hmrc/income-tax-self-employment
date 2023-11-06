@@ -28,6 +28,7 @@ class Module extends AbstractModule {
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
     bind(classOf[JourneyStateRepository]).to(classOf[MongoJourneyStateRepository])
     bind(classOf[JourneyAnswersRepository]).to(classOf[MongoJourneyAnswersRepository])
+    ()
   }
 
 }

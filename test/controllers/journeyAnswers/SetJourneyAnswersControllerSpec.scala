@@ -24,7 +24,6 @@ import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.Result
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout}
-import repositories.SetResult
 import utils.TestUtils
 
 import java.time._
@@ -48,7 +47,7 @@ class SetJourneyAnswersControllerSpec extends TestUtils with MockSetJourneyAnswe
         "return NO_CONTENT" in {
           MockSetJourneyAnswersService
             .setJourneyAnswers(someJourneyAnswers)
-            .thenReturn(Future.successful(SetResult.JourneyAnswersCreated))
+            .thenReturn(Future.successful(()))
 
           val result: Future[Result] = controller.handleRequest()(fakeRequest.withBody(validRequestJson))
           status(result) shouldBe NO_CONTENT

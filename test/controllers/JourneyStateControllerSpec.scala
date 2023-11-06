@@ -20,7 +20,8 @@ import bulders.BusinessDataBuilder.{aBusiness, aTradesJourneyStatusesSeq}
 import bulders.JourneyStateDataBuilder.aJourneyState
 import models.database.JourneyState
 import models.error.ErrorBody.ApiErrorBody.ifsServer500
-import models.error.ServiceError.{DatabaseError, MongoError}
+import models.error.ServiceError.DatabaseError
+import models.error.ServiceError.DatabaseError.MongoError
 import models.error.StatusError.ApiStatusError
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.MockitoSugar.when
@@ -132,19 +133,27 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
     )
   }
 
-  private def stubJourneyStateRepositoryGet(expectedResult: Either[DatabaseError, Option[JourneyState]]): Unit =
+  private def stubJourneyStateRepositoryGet(expectedResult: Either[DatabaseError, Option[JourneyState]]): Unit = {
     when(mockJourneyStateRepo.get(businessId, taxYear, journey)) thenReturn (expectedResult match {
       case Right(optJourneyState)  => Future.successful(optJourneyState)
       case Left(MongoError(error)) => Future.failed(new RuntimeException(error))
+      case Left(error)             => Future.failed(new RuntimeException(error.msg))
     })
+    ()
+  }
 
-  private def stubJourneyStateRepositorySet(expectedResult: Either[DatabaseError, Boolean]): Unit =
+  private def stubJourneyStateRepositorySet(expectedResult: Either[DatabaseError, Boolean]): Unit = {
     when(mockJourneyStateRepo.set(any[JourneyState])) thenReturn (expectedResult match {
-      case Right(_)                => Future.successful(true)
+      case Right(_)                => Future.successful(())
       case Left(MongoError(error)) => Future.failed(new RuntimeException(error))
+      case Left(error)             => Future.failed(new RuntimeException(error.msg))
     })
+    ()
+  }
 
-  private def stubBusinessConnectorGet(expectedResult: GetBusinessJourneyStatesResponse): Unit =
+  private def stubBusinessConnectorGet(expectedResult: GetBusinessJourneyStatesResponse): Unit = {
     when(mockBusinessService.getBusinessJourneyStates(any(), meq(taxYear))(any(), any())) thenReturn Future.successful(expectedResult)
+    ()
+  }
 
 }
