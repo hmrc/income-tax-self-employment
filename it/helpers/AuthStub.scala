@@ -26,13 +26,13 @@ import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel}
 trait AuthStub {
 
   private val authoriseUri: String = "/auth/authorise"
-  private val AGENT_ENROLMENT_KEY = "HMRC-AS-AGENT"
+  private val AGENT_ENROLMENT_KEY  = "HMRC-AS-AGENT"
 
   val otherEnrolment: JsObject = Json.obj(
     "key" -> "HMRC-OTHER-ENROLMENT",
     "identifiers" -> Json.arr(
       Json.obj(
-        "key" -> "OTHERID",
+        "key"   -> "OTHERID",
         "value" -> "555555555"
       )
     )
@@ -41,7 +41,7 @@ trait AuthStub {
     "key" -> AGENT_ENROLMENT_KEY,
     "identifiers" -> Json.arr(
       Json.obj(
-        "key" -> "AgentReferenceNumber",
+        "key"   -> "AgentReferenceNumber",
         "value" -> "1234567890"
       )
     )
@@ -51,7 +51,7 @@ trait AuthStub {
     "key" -> "HMRC-MTD-IT",
     "identifiers" -> Json.arr(
       Json.obj(
-        "key" -> "MTDITID",
+        "key"   -> "MTDITID",
         "value" -> "555555555"
       )
     )
@@ -61,56 +61,57 @@ trait AuthStub {
     "key" -> "HMRC-NI",
     "identifiers" -> Json.arr(
       Json.obj(
-        "key" -> "NINO",
+        "key"   -> "NINO",
         "value" -> "AA123123A"
       )
     )
   )
 
-  private def successfulAuthResponse(affinityGroup: Option[AffinityGroup], confidenceLevel: Option[ConfidenceLevel], enrolments: JsObject*): JsObject = {
+  private def successfulAuthResponse(affinityGroup: Option[AffinityGroup],
+                                     confidenceLevel: Option[ConfidenceLevel],
+                                     enrolments: JsObject*): JsObject =
     affinityGroup.fold(Json.obj())(unwrappedAffinityGroup => Json.obj("affinityGroup" -> unwrappedAffinityGroup)) ++
       confidenceLevel.fold(Json.obj())(unwrappedConfidenceLevel => Json.obj("confidenceLevel" -> unwrappedConfidenceLevel)) ++
       Json.obj("allEnrolments" -> enrolments)
-  }
 
-  def authorised(response: JsObject = successfulAuthResponse(Some(Individual), Some(ConfidenceLevel.L250), mtditEnrolment, ninoEnrolment)): StubMapping = {
-    stubFor(post(urlMatching(authoriseUri))
-      .willReturn(
-        aResponse()
-          .withStatus(OK)
-          .withBody(response.toString())
-          .withHeader("Content-Type", "application/json; charset=utf-8")))
-  }
+  def authorised(
+      response: JsObject = successfulAuthResponse(Some(Individual), Some(ConfidenceLevel.L250), mtditEnrolment, ninoEnrolment)): StubMapping =
+    stubFor(
+      post(urlMatching(authoriseUri))
+        .willReturn(
+          aResponse()
+            .withStatus(OK)
+            .withBody(response.toString())
+            .withHeader("Content-Type", "application/json; charset=utf-8")))
 
-  def agentAuthorised(): StubMapping = {
-    stubFor(post(urlMatching(authoriseUri))
-      .willReturn(
-        aResponse()
-          .withStatus(OK)
-          .withBody(successfulAuthResponse(Some(Agent), None, agentEnrolment).toString())
-          .withHeader("Content-Type", "application/json; charset=utf-8")))
-  }
+  def agentAuthorised(): StubMapping =
+    stubFor(
+      post(urlMatching(authoriseUri))
+        .willReturn(
+          aResponse()
+            .withStatus(OK)
+            .withBody(successfulAuthResponse(Some(Agent), None, agentEnrolment).toString())
+            .withHeader("Content-Type", "application/json; charset=utf-8")))
 
-  def unauthorisedOtherEnrolment(): StubMapping = {
-    stubFor(post(urlMatching(authoriseUri))
-      .willReturn(
-        aResponse()
-          .withStatus(OK)
-          .withBody(successfulAuthResponse(Some(Individual), Some(ConfidenceLevel.L250), otherEnrolment).toString())
-          .withHeader("Content-Type", "application/json; charset=utf-8")))
-  }
+  def unauthorisedOtherEnrolment(): StubMapping =
+    stubFor(
+      post(urlMatching(authoriseUri))
+        .willReturn(
+          aResponse()
+            .withStatus(OK)
+            .withBody(successfulAuthResponse(Some(Individual), Some(ConfidenceLevel.L250), otherEnrolment).toString())
+            .withHeader("Content-Type", "application/json; charset=utf-8")))
 
-  def insufficientEnrolments(): StubMapping = {
-    stubFor(post(urlMatching(authoriseUri))
-      .willReturn(
-        aResponse()
-          .withStatus(UNAUTHORIZED)
-          .withBody(successfulAuthResponse(Some(Agent), None, agentEnrolment).toString())
-          .withHeader("WWW-Authenticate", """MDTP detail="InsufficientEnrolments""")
-      ))
-  }
+  def insufficientEnrolments(): StubMapping =
+    stubFor(
+      post(urlMatching(authoriseUri))
+        .willReturn(
+          aResponse()
+            .withStatus(UNAUTHORIZED)
+            .withBody(successfulAuthResponse(Some(Agent), None, agentEnrolment).toString())
+            .withHeader("WWW-Authenticate", """MDTP detail="InsufficientEnrolments""")
+        ))
 
-  def partialsAuthResponse(enrolments: JsObject*): JsObject = {
+  def partialsAuthResponse(enrolments: JsObject*): JsObject =
     Json.obj("authorisedEnrolments" -> enrolments)
-  }
 }

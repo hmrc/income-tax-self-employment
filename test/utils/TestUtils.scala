@@ -113,11 +113,10 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
       .returning(Future.successful(enrolments))
   }
 
-  def mockAuthReturnException(exception: Exception): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] = {
+  def mockAuthReturnException(exception: Exception): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] =
     (mockAuthConnector
       .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, *, *, *)
       .returning(Future.failed(exception))
-  }
 
 }

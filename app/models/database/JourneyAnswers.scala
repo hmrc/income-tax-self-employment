@@ -25,17 +25,15 @@ import java.time._
 case class JourneyAnswers(id: String, data: JsObject = Json.obj(), lastUpdated: Instant = Instant.now)
 
 object JourneyAnswers {
-  val reads: Reads[JourneyAnswers] = {
+  val reads: Reads[JourneyAnswers] =
     ((JsPath \ "_id").read[String] and
       (JsPath \ "data").read[JsObject] and
       (JsPath \ "lastUpdated").read(MongoJavatimeFormats.instantFormat))(JourneyAnswers.apply _)
-  }
 
-  val writes: OWrites[JourneyAnswers] = {
+  val writes: OWrites[JourneyAnswers] =
     ((JsPath \ "_id").write[String] and
       (JsPath \ "data").write[JsObject] and
       (JsPath \ "lastUpdated").write(MongoJavatimeFormats.instantFormat))(unlift(JourneyAnswers.unapply))
-  }
 
   implicit val formats: OFormat[JourneyAnswers] = OFormat(reads, writes)
 

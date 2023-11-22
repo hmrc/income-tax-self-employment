@@ -24,18 +24,18 @@ import java.time.LocalDate
 import java.util.UUID
 
 case class JourneyState(
-  id: String = UUID.randomUUID().toString,
-  journeyStateData: JourneyStateData,
-  lastUpdated: LocalDate = LocalDate.now()
+    id: String = UUID.randomUUID().toString,
+    journeyStateData: JourneyStateData,
+    lastUpdated: LocalDate = LocalDate.now()
 )
 
 object JourneyState {
 
   case class JourneyStateData(
-    businessId: String,
-    journey: String,
-    taxYear: Int,
-    completedState: Boolean
+      businessId: String,
+      journey: String,
+      taxYear: Int,
+      completedState: Boolean
   )
   object JourneyStateData {
     implicit val journeyStateDataFormat: OFormat[JourneyStateData] = Json.format[JourneyStateData]
@@ -43,22 +43,21 @@ object JourneyState {
 
   implicit val mongoJourneyStateFormat: OFormat[JourneyState] = {
     import play.api.libs.functional.syntax._
-    
+
     val reads: Reads[JourneyState] =
       (
         (__ \ "_id").read[String] and
-        (__ \ "journeyStateData").read[JourneyStateData] and
-        (__ \ "lastUpdated").read(MongoJavatimeFormats.localDateFormat)
-      ) (JourneyState.apply _)
+          (__ \ "journeyStateData").read[JourneyStateData] and
+          (__ \ "lastUpdated").read(MongoJavatimeFormats.localDateFormat)
+      )(JourneyState.apply _)
 
     val writes: OWrites[JourneyState] =
       (
         (__ \ "_id").write[String] and
-        (__ \ "journeyStateData").write[JourneyStateData] and
-        (__ \ "lastUpdated").write(MongoJavatimeFormats.localDateFormat)
+          (__ \ "journeyStateData").write[JourneyStateData] and
+          (__ \ "lastUpdated").write(MongoJavatimeFormats.localDateFormat)
       )(unlift(JourneyState.unapply))
 
     OFormat(reads, writes)
   }
 }
-

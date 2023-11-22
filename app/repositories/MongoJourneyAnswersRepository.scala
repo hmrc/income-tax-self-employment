@@ -52,14 +52,13 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
   /*
    * Do we really want to keepAlive upon access of the journey answers?
    */
-  override def get(id: String): Future[Option[JourneyAnswers]] = {
+  override def get(id: String): Future[Option[JourneyAnswers]] =
     keepAlive(id).flatMap { _ =>
       collection
         .withReadPreference(ReadPreference.primaryPreferred())
         .find(filterByConstraint("_id", id))
         .headOption()
     }
-  }
 
   override def set(answers: JourneyAnswers): Future[SetResult] = {
     val updatedAnswers = answers.copy(lastUpdated = Instant.now(clock))

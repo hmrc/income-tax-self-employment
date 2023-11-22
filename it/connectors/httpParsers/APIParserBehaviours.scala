@@ -29,16 +29,16 @@ trait APIParserBehaviours extends TestUtils {
 
   object FakeParser extends APIParser {
     val parserName: String = "TestParser"
-    val apiType = apiTypeName
+    val apiType            = apiTypeName
   }
 
   val serviceUnavailableReason = "Dependent systems are currently not responding."
-  val serverErrorReason = "IFS is currently experiencing problems that require live service intervention."
-  val parsingErrorReason = "Error parsing response from API"
-  
-  val svcUnavailJs = s"""{"code":"SERVICE_UNAVAILABLE", "reason":"$serviceUnavailableReason", "errorType":"DOWNSTREAM_ERROR_CODE"}"""
-  val svrErrJs = s"""{"code":"SERVER_ERROR", "reason":"$serverErrorReason", "errorType":"DOWNSTREAM_ERROR_CODE"}"""
-  val multiErrJs = s"""{"failures":[$svcUnavailJs, $svrErrJs], "reason":""}""".stripMargin
+  val serverErrorReason        = "IFS is currently experiencing problems that require live service intervention."
+  val parsingErrorReason       = "Error parsing response from API"
+
+  val svcUnavailJs    = s"""{"code":"SERVICE_UNAVAILABLE", "reason":"$serviceUnavailableReason", "errorType":"DOWNSTREAM_ERROR_CODE"}"""
+  val svrErrJs        = s"""{"code":"SERVER_ERROR", "reason":"$serverErrorReason", "errorType":"DOWNSTREAM_ERROR_CODE"}"""
+  val multiErrJs      = s"""{"failures":[$svcUnavailJs, $svrErrJs], "reason":""}""".stripMargin
   val nonValidatingJs = s"""{"code":"SERVER_ERROR", "reason":"$serverErrorReason", "errorType":"WRONG_ERROR_CODE"}"""
 
   def failureHttpResponse(json: JsValue): HttpResponse =
@@ -62,9 +62,9 @@ trait APIParserBehaviours extends TestUtils {
   def logHttpResponse(): Unit =
     "log the correct message" in {
       val result = FakeParser.logMessage(failureHttpResponse(Json.parse(multiErrJs)))
-      
+
       result mustBe
-        //note*: the spacings in the String below are important and the test will fail if altered
+        // note*: the spacings in the String below are important and the test will fail if altered
         s"""[TestParser][read] Received 500 from $apiTypeName API. Body:{
            |  "failures" : [ {
            |    "code" : "SERVICE_UNAVAILABLE",
@@ -78,38 +78,42 @@ trait APIParserBehaviours extends TestUtils {
            |  "reason" : ""
            |}  CorrelationId: 1234645654645""".stripMargin
     }
-    
+
   def handleSingleError(): Unit =
     "handle a single error" in {
       val result = FakeParser.handleAPIError(failureHttpResponse(Json.parse(svrErrJs)))
       result mustBe Left(ApiStatusError(INTERNAL_SERVER_ERROR, ApiErrorBody("SERVER_ERROR", serverErrorReason)))
     }
-    
+
   def handleMultpleError(): Unit =
     "handle a multiple error" in {
       val result = FakeParser.handleAPIError(failureHttpResponse(Json.parse(multiErrJs)))
-      result mustBe Left(ApiStatusErrors(INTERNAL_SERVER_ERROR, ApiErrorsBody(Seq(
-        ApiErrorBody("SERVICE_UNAVAILABLE", serviceUnavailableReason),
-        ApiErrorBody("SERVER_ERROR", serverErrorReason)
-      ))))
+      result mustBe Left(
+        ApiStatusErrors(
+          INTERNAL_SERVER_ERROR,
+          ApiErrorsBody(
+            Seq(
+              ApiErrorBody("SERVICE_UNAVAILABLE", serviceUnavailableReason),
+              ApiErrorBody("SERVER_ERROR", serverErrorReason)
+            ))))
     }
-    
+
   def returnJsonValidationError(): Unit =
     "return a non model validating json error" in {
       val result = FakeParser.handleAPIError(failureHttpResponse(Json.parse(nonValidatingJs)))
       result mustBe Left(ApiStatusError(INTERNAL_SERVER_ERROR, ApiErrorBody("PARSING_ERROR", parsingErrorReason)))
     }
-    
+
   def handleNonApiErrorResponseError(): Unit =
     "handling a response that is neither a single or a multiple error" in {
       val result = FakeParser.handleAPIError(failureHttpResponse(Json.obj()))
       result mustBe Left(ApiStatusError(INTERNAL_SERVER_ERROR, ApiErrorBody("PARSING_ERROR", parsingErrorReason)))
     }
-    
+
   def handleNonJsonResponseBodyError(): Unit =
     "handling a response where the response body is not json" in {
       val result = FakeParser.handleAPIError(HttpResponse(INTERNAL_SERVER_ERROR, "", Map("CorrelationId" -> Seq("1234645654645"))))
       result mustBe Left(ApiStatusError(INTERNAL_SERVER_ERROR, ApiErrorBody("PARSING_ERROR", parsingErrorReason)))
     }
-  
+
 }

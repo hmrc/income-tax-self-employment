@@ -23,4 +23,3 @@ case class FirstYear(qualifyingDate: String, qualifyingAmountExpenditure: BigDec
 object FirstYear {
   implicit val format: OFormat[FirstYear] = Json.format[FirstYear]
 }
-

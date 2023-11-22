@@ -111,10 +111,10 @@ object StatusError {
   implicit val statusErrorFormat: Format[StatusError] =
     Format(
       Reads(jsValue => ApiStatusError.apiStatusErrorFormat.reads(jsValue) orElse ApiStatusErrors.apiStatusErrorsFormat.reads(jsValue)),
-      Writes({
+      Writes {
         case statusError: ApiStatusError  => ApiStatusError.apiStatusErrorFormat.writes(statusError)
         case statusError: ApiStatusErrors => ApiStatusErrors.apiStatusErrorsFormat.writes(statusError)
-      })
+      }
     )
 
   case class ApiStatusError(status: Int, body: ApiErrorBody) extends StatusError {

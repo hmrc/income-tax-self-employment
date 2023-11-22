@@ -50,8 +50,7 @@ class BusinessServiceSpec extends TestUtils {
   for ((getMethodName, svcMethod) <- Seq(
       ("getBusinesses", () => service.getBusinesses(nino)),
       ("getBusiness", () => service.getBusiness(nino, businessId))
-    )) {
-
+    ))
     s"$getMethodName" should { // scalastyle:off magic.number
       val expectedRight = Right(Seq(aBusiness))
       behave like rightResponse(svcMethod, expectedRight, () => stubConnectorGetBusiness(Right(aGetBusinessDataRequest)))
@@ -59,7 +58,6 @@ class BusinessServiceSpec extends TestUtils {
       val expectedLeft = Left(ApiStatusError(999, ApiErrorBody("API_ERROR", "Error response from API")))
       behave like leftResponse(svcMethod, expectedLeft, () => stubConnectorGetBusiness(expectedLeft))
     }
-  }
 
   "getBusinessesJourneyStates" should {
     behave like rightResponse(
@@ -75,9 +73,7 @@ class BusinessServiceSpec extends TestUtils {
     behave like leftResponse(
       () => service.getBusinessJourneyStates(nino, taxYear),
       connectorResult,
-      () => {
-        stubConnectorGetBusiness(connectorResult)
-      },
+      () => stubConnectorGetBusiness(connectorResult),
       "Connector problems"
     )
 
