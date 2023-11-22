@@ -23,4 +23,3 @@ case class BuildingAllowance(amount: BigDecimal, firstYear: Option[FirstYear], b
 object BuildingAllowance {
   implicit val format: OFormat[BuildingAllowance] = Json.format[BuildingAllowance]
 }
-

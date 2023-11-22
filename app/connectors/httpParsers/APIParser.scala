@@ -42,9 +42,9 @@ trait APIParser {
   def handleAPIError[Response](response: HttpResponse, statusOverride: Option[Int] = None): Either[StatusError, Response] = {
     val status = statusOverride.getOrElse(response.status)
     Try {
-      val json = response.json
+      val json    = response.json
       val apiErrs = json.asOpt[ApiErrorsBody]
-      if (apiErrs.nonEmpty) Left(ApiStatusErrors(status,apiErrs.get)) else Left(ApiStatusError(status, json.as[ApiErrorBody]))
+      if (apiErrs.nonEmpty) Left(ApiStatusErrors(status, apiErrs.get)) else Left(ApiStatusError(status, json.as[ApiErrorBody]))
     } match {
       case Success(leftStatusError) => leftStatusError
       case Failure(t) =>
@@ -52,7 +52,6 @@ trait APIParser {
         Left(ApiStatusError(status, ApiErrorBody.parsingError))
     }
   }
-
 
   def pagerDutyError[A](response: HttpResponse): Either[StatusError, A] =
     response.status match {

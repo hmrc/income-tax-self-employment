@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class SetJourneyAnswersController @Inject()(cc: ControllerComponents, service: SetJourneyAnswersService)(implicit ec: ExecutionContext)
+class SetJourneyAnswersController @Inject() (cc: ControllerComponents, service: SetJourneyAnswersService)(implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
   def handleRequest(): Action[JsValue] = Action.async(parse.json) { request =>

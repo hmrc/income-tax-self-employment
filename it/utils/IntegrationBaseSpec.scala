@@ -37,13 +37,12 @@ trait IntegrationBaseSpec extends PlaySpec with GuiceOneServerPerSuite with Befo
 
   lazy val baseUrl = s"http://localhost:$port"
 
-  val extraConfig: Map[String, Any] = {
+  val extraConfig: Map[String, Any] =
     Map[String, Any](
       "metrics.enabled" -> false
     )
-  }
 
-  def buildClient(path: String)(implicit app: Application): WSRequest = {
+  def buildClient(path: String)(implicit app: Application): WSRequest =
     app.injector
       .instanceOf[WSClient]
       .url(s"http://localhost:$port/$path")
@@ -51,6 +50,5 @@ trait IntegrationBaseSpec extends PlaySpec with GuiceOneServerPerSuite with Befo
         "Content-Type" -> "application/json",
         "Authorization" -> "Bearer BXQ3/Treo4kQCZvVcCqKPhA7wE/2hNqCz4BjnFzEN5m6lmzrFrQI96Au2BZrW0e9WLpDsptzxUoUEaw0V1MQH6EXGq/8151X26j/qnvuZUXEsWcJ6ru7Fr+/ci2kcBf4NHKTPCIju1pIGJG5Oqihp7aDpRrleO+Ik/A5cDedlvf9KwIkeIPK/mMlBESjue4V"
       )
-  }
 
 }

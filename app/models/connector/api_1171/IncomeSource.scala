@@ -23,7 +23,7 @@ trait IncomeSource {
   val accountingPeriodStartDate: String
   val accountingPeriodEndDate: String
   val firstAccountingPeriodStartDate: Option[String]
-  val firstAccountingPeriodEndDate:  Option[String]
+  val firstAccountingPeriodEndDate: Option[String]
   val latencyDetails: Option[LatencyDetails]
   val tradingStartDate: Option[String]
   val cashOrAccruals: Option[Boolean]

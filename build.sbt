@@ -24,7 +24,7 @@ lazy val compileOpts = Seq(
   "-Ywarn-unused:params",
   "-Ywarn-unused:patvars",
   "-Ywarn-unused:privates",
-  "-Ywarn-value-discard",
+  "-Ywarn-value-discard"
 )
 
 lazy val microservice = Project("income-tax-self-employment", file("."))
@@ -32,12 +32,12 @@ lazy val microservice = Project("income-tax-self-employment", file("."))
   .disablePlugins(JUnitXmlReportPlugin)
   .settings(PlayKeys.playDefaultPort := 10900)
   .settings(
-    majorVersion        := 0,
-    scalaVersion        := "2.13.8",
+    majorVersion := 0,
+    scalaVersion := "2.13.8",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress warnings in generated routes files
-    scalacOptions ++= compileOpts,
+    scalacOptions ++= compileOpts
   )
   .configs(IntegrationTest extend Test)
   .settings(integrationTestSettings() *)

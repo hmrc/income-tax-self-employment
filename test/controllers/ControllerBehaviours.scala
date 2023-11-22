@@ -21,8 +21,7 @@ import utils.TestUtils
 
 class ControllerBehaviours extends TestUtils {
 
-  def controllerSpec(resultStatus: Int, resultBody: String, stubs: () => Unit,
-                     methodBlock: () => Action[AnyContent], testName: String = ""): Unit =
+  def controllerSpec(resultStatus: Int, resultBody: String, stubs: () => Unit, methodBlock: () => Action[AnyContent], testName: String = ""): Unit =
     s"$testName - return a $resultStatus response and a result value" in {
       val result = {
         mockAuth()

@@ -52,15 +52,13 @@ class BusinessControllerSpec extends ControllerBehaviours {
         (NOT_FOUND, data404),
         (BAD_REQUEST, nino400),
         (INTERNAL_SERVER_ERROR, ifsServer500),
-        (SERVICE_UNAVAILABLE, service503))) {
-
+        (SERVICE_UNAVAILABLE, service503)))
       behave like controllerSpec(
         errorStatus,
         Json.toJson(ApiStatusError(errorStatus, apiError.toMdtpError)).toString(),
         () => stubGetBusinesses(mockBusinessService, nino, Left(ApiStatusError(errorStatus, apiError))),
         () => underTest.getBusinesses(nino)
       )
-    }
   }
 
   s"GET /individuals/business/details/$nino/$businessId" should {
@@ -75,15 +73,13 @@ class BusinessControllerSpec extends ControllerBehaviours {
         (NOT_FOUND, data404),
         (BAD_REQUEST, nino400),
         (INTERNAL_SERVER_ERROR, ifsServer500),
-        (SERVICE_UNAVAILABLE, service503))) {
-
+        (SERVICE_UNAVAILABLE, service503)))
       behave like controllerSpec(
         errorStatus,
         Json.toJson(ApiStatusError(errorStatus, apiError.toMdtpError)).toString(),
         () => stubGetBusiness(mockBusinessService, nino, businessId, Left(ApiStatusError(errorStatus, apiError))),
         () => underTest.getBusiness(nino, businessId)
       )
-    }
   }
 
   s"GET /individuals/business/journeyStates/$nino/$taxYear" should {
