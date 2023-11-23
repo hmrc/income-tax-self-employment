@@ -16,15 +16,17 @@
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
 
 lazy val compileOpts = Seq(
-  "-Wconf:src=routes/.*:s",
   "-Xfatal-warnings",
+  "-feature",
+  "-unchecked",
   "-Ywarn-unused:implicits",
   "-Ywarn-unused:imports",
   "-Ywarn-unused:locals",
   "-Ywarn-unused:params",
   "-Ywarn-unused:patvars",
   "-Ywarn-unused:privates",
-  "-Ywarn-value-discard"
+  "-Ywarn-value-discard",
+  "-Wconf:src=routes/.*:s",
 )
 
 lazy val microservice = Project("income-tax-self-employment", file("."))
