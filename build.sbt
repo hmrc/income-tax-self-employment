@@ -26,7 +26,7 @@ lazy val compileOpts = Seq(
   "-Ywarn-unused:patvars",
   "-Ywarn-unused:privates",
   "-Ywarn-value-discard",
-  "-Wconf:src=routes/.*:s",
+  "-Wconf:src=routes/.*:s"
 )
 
 lazy val microservice = Project("income-tax-self-employment", file("."))
