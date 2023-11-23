@@ -1,4 +1,4 @@
-
+import wartremover.Wart
 
 object WartRemoverSettings {
 
