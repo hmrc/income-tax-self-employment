@@ -156,13 +156,12 @@ class MongoJourneyStateRepositoryISpec
 
   }
 
-  private def lastUpdated(id: String): Option[LocalDate] = {
+  private def lastUpdated(id: String): Option[LocalDate] =
     repository.collection
       .find[JourneyState](Filters.equal("_id", id))
       .headOption()
       .map(maybeJourneyState => maybeJourneyState.map(_.lastUpdated))
       .futureValue
-  }
 
   private def removeAll(): Future[Unit] =
     repository.collection

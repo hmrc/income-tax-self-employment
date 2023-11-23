@@ -18,7 +18,6 @@ package models.connector.api_1802
 
 import play.api.libs.json.{Json, OFormat}
 
-
 case class CreateAmendSelfEmploymentAnnualSubmission(annualAdjustments: Option[AnnualAdjustments],
                                                      annualAllowances: Option[AnnualAllowances],
                                                      annualNonFinancials: Option[AnnualNonFinancials])

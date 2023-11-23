@@ -33,13 +33,12 @@ import scala.concurrent.{ExecutionContext, Future}
 class BusinessService @Inject() (businessConnector: BusinessConnector, journeyStateRepository: JourneyStateRepository)(implicit
     ec: ExecutionContext) {
 
-  def getBusinesses(nino: String)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] = {
+  def getBusinesses(nino: String)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
     businessConnector
       .getBusinesses(Nino, nino)
       .map(
         _.map(_.taxPayerDisplayResponse)
           .map(taxPayerDisplayResponse => taxPayerDisplayResponse.businessData.map(_.toBusiness(taxPayerDisplayResponse))))
-  }
 
   def getBusiness(nino: String, businessId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[GetBusinessResponse] =
     getBusinesses(nino).map(_.map(_.filter(_.businessId == businessId)))

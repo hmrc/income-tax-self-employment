@@ -18,15 +18,13 @@ package utils
 
 import scala.concurrent.{ExecutionContext, Future}
 
-
 object ScalaHelper {
-   implicit class FutureEither[L, R](either: Either[L, Future[R]]) {
-     
-     def toFuture()(implicit ec: ExecutionContext): Future[Either[L, R]] = {
-       Some(either).map {
-         case Left(s) => Future.successful(Left(s))
-         case Right(f) => f.map(Right(_))
-       }.get
-     }
-   }
+  implicit class FutureEither[L, R](either: Either[L, Future[R]]) {
+
+    def toFuture()(implicit ec: ExecutionContext): Future[Either[L, R]] =
+      Some(either).map {
+        case Left(s)  => Future.successful(Left(s))
+        case Right(f) => f.map(Right(_))
+      }.get
+  }
 }

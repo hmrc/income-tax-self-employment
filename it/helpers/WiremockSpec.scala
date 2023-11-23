@@ -31,13 +31,20 @@ import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 
 import scala.concurrent.ExecutionContext
 
-trait WiremockSpec extends PlaySpec with BeforeAndAfterEach with BeforeAndAfterAll with GuiceOneServerPerSuite
-  with FutureAwaits with DefaultAwaitTimeout with WiremockStubHelpers with AuthStub {
+trait WiremockSpec
+    extends PlaySpec
+    with BeforeAndAfterEach
+    with BeforeAndAfterAll
+    with GuiceOneServerPerSuite
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with WiremockStubHelpers
+    with AuthStub {
   self: PlaySpec =>
 
   val wireMockPort = 11111
 
-  lazy val ws: WSClient = app.injector.instanceOf(classOf[WSClient])
+  lazy val ws: WSClient             = app.injector.instanceOf(classOf[WSClient])
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   val wireMockServer: WireMockServer = new WireMockServer(wireMockConfig().port(wireMockPort))

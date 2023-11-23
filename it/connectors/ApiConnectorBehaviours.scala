@@ -23,30 +23,30 @@ import utils.TestUtils
 
 trait ApiConnectorBehaviours extends TestUtils {
   def headerCarrierBlock: String => HeaderCarrier => HeaderCarrier
-  
+
   class ApiFakeConnector(override val appConfig: AppConfig) extends ApiConnector {
     def headerCarrierTest(url: String)(hc: HeaderCarrier): HeaderCarrier = headerCarrierBlock(url)(hc)
   }
 
   val connector = new ApiFakeConnector(appConfig = mockAppConfig)
-  
+
   def hostThatAddsAuthorization(internalHost: String, authToken: String): Unit =
     "add the correct authorization" in {
-      val hc = HeaderCarrier()
+      val hc     = HeaderCarrier()
       val result = connector.headerCarrierTest(internalHost)(hc)
       result.authorization mustBe Some(Authorization(s"Bearer $authToken"))
     }
-  
-  def hostThatAddsEnvironment(internalHost: String, apiEnv: String):Unit =
+
+  def hostThatAddsEnvironment(internalHost: String, apiEnv: String): Unit =
     "add the correct environment" in {
-      val hc = HeaderCarrier()
+      val hc     = HeaderCarrier()
       val result = connector.headerCarrierTest(internalHost)(hc)
       result.extraHeaders mustBe List("Environment" -> apiEnv)
     }
-    
+
   def hostThaIncludesAllHeaderCarriers(externalHost: String, authToken: String, apiEnv: String): Unit =
     "include all HeaderCarrier headers in the extraHeaders when the host is external" in {
-      val hc = HeaderCarrier(sessionId = Some(SessionId("sessionIdHeaderValue")))
+      val hc     = HeaderCarrier(sessionId = Some(SessionId("sessionIdHeaderValue")))
       val result = connector.headerCarrierTest(externalHost)(hc)
 
       result.extraHeaders.size mustBe 4

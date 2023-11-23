@@ -25,15 +25,19 @@ object GetBusinessesHttpParser extends APIParser {
   type GetBusinessesRequestResponse = Either[StatusError, GetBusinessDataRequest]
 
   override val parserName: String = "GetBusinessHttpParser"
-  override val apiType: String = "income-tax-self-employment"
-  
+  override val apiType: String    = "income-tax-self-employment"
+
   implicit object GetBusinessesHttpReads extends HttpReads[GetBusinessesRequestResponse] {
     override def read(method: String, url: String, response: HttpResponse): GetBusinessesRequestResponse =
       response.status match {
-        case OK => response.json.validate[GetBusinessDataRequest].fold[GetBusinessesRequestResponse](
-          _ => apiJsonValidatingError, parsedModel => Right(parsedModel)
-        )
+        case OK =>
+          response.json
+            .validate[GetBusinessDataRequest]
+            .fold[GetBusinessesRequestResponse](
+              _ => apiJsonValidatingError,
+              parsedModel => Right(parsedModel)
+            )
         case _ => pagerDutyError(response)
-    }
+      }
   }
 }

@@ -122,13 +122,12 @@ class MongoJourneyAnswersRepositoryISpec
 
   }
 
-  private def lastUpdated(id: String): Option[Instant] = {
+  private def lastUpdated(id: String): Option[Instant] =
     repository.collection
       .find[JourneyAnswers](Filters.equal("_id", id))
       .headOption()
       .map(maybeJourneyAnswers => maybeJourneyAnswers.map(_.lastUpdated))
       .futureValue
-  }
 
   private def removeAll(): Future[Unit] =
     repository.collection

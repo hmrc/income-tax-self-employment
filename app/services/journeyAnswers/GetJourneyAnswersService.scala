@@ -30,13 +30,12 @@ object GetJourneyAnswersResult {
   case object NoJourneyAnswersFound                       extends GetJourneyAnswersResult
 }
 
-class GetJourneyAnswersService @Inject()(repository: JourneyAnswersRepository)(implicit ec: ExecutionContext) {
+class GetJourneyAnswersService @Inject() (repository: JourneyAnswersRepository)(implicit ec: ExecutionContext) {
 
-  def getJourneyAnswers(id: String): Future[GetJourneyAnswersResult] = {
+  def getJourneyAnswers(id: String): Future[GetJourneyAnswersResult] =
     repository.get(id).map {
       case Some(answers) => JourneyAnswersFound(answers)
       case None          => NoJourneyAnswersFound
     }
-  }
 
 }

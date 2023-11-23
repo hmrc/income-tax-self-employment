@@ -26,12 +26,11 @@ trait MongoTestSupport[A] {
 
   val repository: PlayMongoRepository[A]
 
-  protected def indexWithField(fieldName: String): IndexModel => Boolean = {
+  protected def indexWithField(fieldName: String): IndexModel => Boolean =
     _.getKeys match {
       case keys: BsonDocument => keys.containsKey(fieldName)
       case _                  => false // Could be a compound index
     }
-  }
 
   protected def indexByName(name: String): IndexModel => Boolean = _.getOptions.getName == name
 

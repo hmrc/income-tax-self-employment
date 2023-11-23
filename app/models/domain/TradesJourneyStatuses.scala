@@ -24,13 +24,12 @@ case class TradesJourneyStatuses(businessId: String, tradingName: Option[String]
 object TradesJourneyStatuses {
   implicit val format: OFormat[TradesJourneyStatuses] = Json.format[TradesJourneyStatuses]
 
-  def apply(tradesJourneyStatuses: (String, Option[String], Seq[(String, Boolean)])): TradesJourneyStatuses = {
+  def apply(tradesJourneyStatuses: (String, Option[String], Seq[(String, Boolean)])): TradesJourneyStatuses =
     TradesJourneyStatuses(
       businessId = tradesJourneyStatuses._1,
       tradingName = tradesJourneyStatuses._2,
       journeyStatuses = tradesJourneyStatuses._3.map(tgs => JourneyStatus(tgs._1, tgs._2))
     )
-  }
 
   case class JourneyStatus(journey: String, completedState: Boolean)
 

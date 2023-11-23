@@ -28,27 +28,29 @@ trait WiremockStubHelpers {
       result.withHeader(nxt.key(), equalTo(nxt.firstValue()))
     }
 
-    stubFor(mappingWithHeaders
-      .willReturn(
-        aResponse()
-          .withStatus(status)
-          .withBody(response)
-          .withHeader("Content-Type", "application/json; charset=utf-8")))
+    stubFor(
+      mappingWithHeaders
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(response)
+            .withHeader("Content-Type", "application/json; charset=utf-8")))
   }
 
   def stubGetWithoutResponseBody(url: String, status: Int): StubMapping =
-    stubFor(get(urlMatching(url))
-      .willReturn(
-        aResponse()
+    stubFor(
+      get(urlMatching(url))
+        .willReturn(aResponse()
           .withStatus(status)))
-  
+
   def stubPostWithoutResponseAndRequestBody(url: String, status: Int): StubMapping =
-    stubFor(post(urlEqualTo(url))
-      .willReturn(
-        aResponse()
-          .withStatus(status)
-          .withHeader("Content-Type", "application/json; charset=utf-8")))
-  
+    stubFor(
+      post(urlEqualTo(url))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withHeader("Content-Type", "application/json; charset=utf-8")))
+
   def auditStubs(): Unit = {
     val auditResponseCode = 204
     stubPostWithoutResponseAndRequestBody("/write/audit", auditResponseCode)

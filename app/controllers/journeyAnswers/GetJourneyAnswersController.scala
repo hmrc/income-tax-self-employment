@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class GetJourneyAnswersController @Inject()(cc: ControllerComponents, service: GetJourneyAnswersService)(implicit ec: ExecutionContext)
+class GetJourneyAnswersController @Inject() (cc: ControllerComponents, service: GetJourneyAnswersService)(implicit ec: ExecutionContext)
     extends BackendController(cc) {
 
   def handleRequest(id: String): Action[AnyContent] = Action.async { _ =>
