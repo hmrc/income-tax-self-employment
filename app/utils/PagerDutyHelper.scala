@@ -18,7 +18,7 @@ package utils
 
 import models.error.ServiceError
 import models.error.ServiceError.DatabaseError.MongoError
-import models.error.ServiceError.UnavailableServiceError
+import models.error.ServiceError.ServiceUnavailableError
 import play.api.Logging
 import uk.gov.hmrc.http.HttpResponse
 import utils.PagerDutyHelper.PagerDutyKeys.FAILED_TO_GET_JOURNEY_STATE_DATA
@@ -57,7 +57,7 @@ object PagerDutyHelper extends Logging {
           pagerDutyLog(pagerDutyKey, s"$msg Exception: ${exception.getMessage}")
           pagerDutyKey match {
             case FAILED_TO_GET_JOURNEY_STATE_DATA => Left(MongoError(exception.getMessage))
-            case _                                => Left(UnavailableServiceError(exception.getMessage))
+            case _                                => Left(ServiceUnavailableError(exception.getMessage))
           }
         }
   }
@@ -74,7 +74,7 @@ object PagerDutyHelper extends Logging {
           pagerDutyLog(pagerDutyKey, s"$msg Exception: ${exception.getMessage}")
           pagerDutyKey match {
             case FAILED_TO_GET_JOURNEY_STATE_DATA => Left(MongoError(exception.getMessage))
-            case _                                => Left(UnavailableServiceError(exception.getMessage))
+            case _                                => Left(ServiceUnavailableError(exception.getMessage))
           }
         }
   }

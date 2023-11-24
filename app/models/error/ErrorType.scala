@@ -19,25 +19,25 @@ package models.error
 import play.api.libs.json._
 
 trait ErrorType {
-  def str: String
+  val errorCode: String
 }
 
 object ErrorType {
-  case object DOWNSTREAM_ERROR_CODE extends ErrorType {
-    val str = "DOWNSTREAM_ERROR_CODE"
+  case object DownstreamErrorCode extends ErrorType {
+    val errorCode = "DOWNSTREAM_ERROR_CODE"
   }
 
-  case object MDTP_ERROR_CODE extends ErrorType {
-    override val str = "MDTP_ERROR_CODE"
+  case object DomainErrorCode extends ErrorType {
+    val errorCode = "DOMAIN_ERROR_CODE"
   }
 
-  implicit val errorTypeFormat: Format[ErrorType] =
+  implicit val formats: Format[ErrorType] =
     Format(
       Reads {
-        case JsString("DOWNSTREAM_ERROR_CODE") => JsSuccess(DOWNSTREAM_ERROR_CODE)
-        case JsString("MDTP_ERROR_CODE")       => JsSuccess(MDTP_ERROR_CODE)
-        case jsValue: JsValue                  => JsError(s"ErrorType $jsValue is not one of supported [DOWNSTREAM_ERROR_CODE, MDTP_ERROR_CODE]")
+        case JsString("DOWNSTREAM_ERROR_CODE") => JsSuccess(DownstreamErrorCode)
+        case JsString("DOMAIN_ERROR_CODE")     => JsSuccess(DomainErrorCode)
+        case jsValue: JsValue                  => JsError(s"ErrorType $jsValue is not one of supported [DOWNSTREAM_ERROR_CODE, DOMAIN_ERROR_CODE]")
       },
-      Writes { errType: ErrorType => JsString(errType.str) }
+      Writes { errType: ErrorType => JsString(errType.errorCode) }
     )
 }

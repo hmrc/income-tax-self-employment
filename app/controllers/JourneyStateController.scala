@@ -49,7 +49,7 @@ class JourneyStateController @Inject() (journeyStateRepository: JourneyStateRepo
       .map {
         case Right(Some(model)) => Ok(Json.toJson(model.journeyStateData.completedState))
         case Right(None)        => NoContent
-        case Left(serviceError) => InternalServerError(Json.toJson(serviceError.msg))
+        case Left(serviceError) => InternalServerError(Json.toJson(serviceError.errorMessage))
       }
   }
 
@@ -82,7 +82,7 @@ class JourneyStateController @Inject() (journeyStateRepository: JourneyStateRepo
       .map {
         case Right((_, true))  => Created
         case Right((_, false)) => NoContent
-        case Left(serverError) => InternalServerError(Json.toJson(serverError.msg))
+        case Left(serverError) => InternalServerError(Json.toJson(serverError.errorMessage))
       }
   }
 
