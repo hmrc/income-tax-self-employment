@@ -39,7 +39,9 @@ lazy val microservice = Project("income-tax-self-employment", file("."))
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress warnings in generated routes files
-    scalacOptions ++= compileOpts
+    scalacOptions ++= compileOpts,
+    // sbt-wartremover is adding this, and it causes problem with sbt doc step in pipeline
+    Compile / scalacOptions -= "utf8"
   )
   .configs(IntegrationTest extend Test)
   .settings(integrationTestSettings() *)
