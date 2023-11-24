@@ -19,10 +19,10 @@ package controllers
 import bulders.BusinessDataBuilder.{aBusiness, aTradesJourneyStatusesSeq}
 import bulders.JourneyStateDataBuilder.aJourneyState
 import models.database.JourneyState
-import models.error.ErrorBody.ApiErrorBody.ifsServer500
+import models.error.DownstreamError.SingleDownstreamError
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody.serverError
 import models.error.ServiceError.DatabaseError
 import models.error.ServiceError.DatabaseError.MongoError
-import models.error.StatusError.ApiStatusError
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.MockitoSugar.when
 import org.scalatestplus.mockito.MockitoSugar
@@ -62,7 +62,7 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
 
     behave like controllerSpec(
       INTERNAL_SERVER_ERROR,
-      Json.toJson(MongoError("db error").msg).toString(),
+      Json.toJson(MongoError("db error").errorMessage).toString(),
       () => stubJourneyStateRepositoryGet(expectedResult = Left(MongoError("db error"))),
       () => underTest.getJourneyState(businessId, journey, taxYear)
     )
@@ -91,11 +91,11 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
       "Mongo-Error"
     )
 
-    val apiStatusError = ApiStatusError(INTERNAL_SERVER_ERROR, ifsServer500)
+    val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, serverError)
     behave like controllerSpec(
       INTERNAL_SERVER_ERROR,
-      Json.toJson(apiStatusError).toString(),
-      () => stubBusinessConnectorGet(expectedResult = Left(apiStatusError)),
+      Json.toJson(downstreamError).toString(),
+      () => stubBusinessConnectorGet(expectedResult = Left(downstreamError)),
       () => underTest.getJourneyStateSeq(businessId, taxYear),
       "Api-Error"
     )
@@ -124,7 +124,7 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
 
     behave like controllerSpec(
       INTERNAL_SERVER_ERROR,
-      Json.toJson(MongoError("db error").msg).toString,
+      Json.toJson(MongoError("db error").errorMessage).toString,
       () => {
         stubJourneyStateRepositoryGet(expectedResult = Right(Some(aJourneyState)))
         stubJourneyStateRepositorySet(expectedResult = Left(MongoError("db error")))
@@ -137,7 +137,7 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
     when(mockJourneyStateRepo.get(businessId, taxYear, journey)) thenReturn (expectedResult match {
       case Right(optJourneyState)  => Future.successful(optJourneyState)
       case Left(MongoError(error)) => Future.failed(new RuntimeException(error))
-      case Left(error)             => Future.failed(new RuntimeException(error.msg))
+      case Left(error)             => Future.failed(new RuntimeException(error.errorMessage))
     })
     ()
   }
@@ -146,7 +146,7 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
     when(mockJourneyStateRepo.set(any[JourneyState])) thenReturn (expectedResult match {
       case Right(_)                => Future.successful(())
       case Left(MongoError(error)) => Future.failed(new RuntimeException(error))
-      case Left(error)             => Future.failed(new RuntimeException(error.msg))
+      case Left(error)             => Future.failed(new RuntimeException(error.errorMessage))
     })
     ()
   }

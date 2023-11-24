@@ -23,10 +23,10 @@ import connectors.BusinessConnector.IdType
 import connectors.BusinessConnector.IdType.Nino
 import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesRequestResponse
 import models.database.JourneyState
-import models.error.ErrorBody.ApiErrorBody
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
 import models.error.ServiceError.DatabaseError.MongoError
-import models.error.StatusError.ApiStatusError
+import models.error.DownstreamError.SingleDownstreamError
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.Mockito.when
 import org.scalatestplus.mockito.MockitoSugar
@@ -55,7 +55,7 @@ class BusinessServiceSpec extends TestUtils {
       val expectedRight = Right(Seq(aBusiness))
       behave like rightResponse(svcMethod, expectedRight, () => stubConnectorGetBusiness(Right(aGetBusinessDataRequest)))
 
-      val expectedLeft = Left(ApiStatusError(999, ApiErrorBody("API_ERROR", "Error response from API")))
+      val expectedLeft = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
       behave like leftResponse(svcMethod, expectedLeft, () => stubConnectorGetBusiness(expectedLeft))
     }
 
@@ -69,7 +69,7 @@ class BusinessServiceSpec extends TestUtils {
       }
     )
 
-    val connectorResult = Left(ApiStatusError(999, ApiErrorBody("API_ERROR", "Error response from API")))
+    val connectorResult = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
     behave like leftResponse(
       () => service.getBusinessJourneyStates(nino, taxYear),
       connectorResult,
@@ -115,7 +115,7 @@ class BusinessServiceSpec extends TestUtils {
     when(mockSessionRepository.get(any, meq(taxYear))) thenReturn (expectedResult match {
       case Right(journeyStates)    => Future.successful(journeyStates)
       case Left(MongoError(error)) => Future.failed(new RuntimeException(error))
-      case Left(error)             => Future.failed(new RuntimeException(error.msg))
+      case Left(error)             => Future.failed(new RuntimeException(error.errorMessage))
     })
     ()
   }

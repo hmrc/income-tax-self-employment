@@ -18,7 +18,7 @@ package services
 
 import connectors.BusinessConnector
 import connectors.BusinessConnector.IdType.Nino
-import models.error.{ServiceError, StatusError}
+import models.error.{ServiceError, DownstreamError}
 import models.domain.{Business, TradesJourneyStatuses}
 import repositories.JourneyStateRepository
 import services.BusinessService.{GetBusinessJourneyStatesResponse, GetBusinessResponse}
@@ -64,6 +64,6 @@ class BusinessService @Inject() (businessConnector: BusinessConnector, journeySt
 }
 
 object BusinessService {
-  type GetBusinessResponse              = Either[StatusError, Seq[Business]]
+  type GetBusinessResponse              = Either[DownstreamError, Seq[Business]]
   type GetBusinessJourneyStatesResponse = Either[ServiceError, Seq[TradesJourneyStatuses]]
 }
