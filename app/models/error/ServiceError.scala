@@ -37,7 +37,9 @@ object ServiceError {
         case se: ServiceUnavailableError => ServiceUnavailableError.formats.writes(se)
         case de: DownstreamError         => DownstreamError.formats.writes(de)
         case eb: DownstreamErrorBody     => DownstreamErrorBody.formats.writes(eb)
-        case _                           => ??? // TODO
+        case _                           => throw new Exception("Unexpected service error type")
+        // FIXME - Shouldn't get here (to _ case) but as trait is not sealed, build fails if match not exhaustive.
+        // A redesign of these error classes should be done when we have learned more about the integration with IFS.
       }
     )
 
