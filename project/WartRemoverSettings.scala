@@ -6,7 +6,6 @@ object WartRemoverSettings {
     Wart.ArrayEquals,
     Wart.ExplicitImplicitTypes,
     Wart.MutableDataStructures,
-    Wart.Null
     // Not yet ready to enable it
     //    Wart.Enumeration
     //    Wart.LeakingSealed,
