@@ -17,7 +17,7 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
-import models.error.StatusError.{ApiStatusError, ApiStatusErrors}
+import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -56,8 +56,8 @@ class BusinessController @Inject() (businessService: BusinessService, auth: Auth
       case Right(model) => Ok(Json.toJson(model))
       case Left(errorModel) =>
         errorModel match {
-          case apiStatusError: ApiStatusError => Status(errorModel.status)(Json.toJson(apiStatusError.toMdtpError))
-          case _                              => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[ApiStatusErrors].toMdtpError))
+          case apiStatusError: SingleDownstreamError => Status(errorModel.status)(Json.toJson(apiStatusError.toDomain))
+          case _ => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[MultipleDownstreamErrors].toDomain))
         }
     }
 

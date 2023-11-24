@@ -18,9 +18,9 @@ package controllers
 
 import bulders.BusinessDataBuilder._
 import controllers.BusinessControllerSpec.{stubGetBusiness, stubGetBusinessJourneyStates, stubGetBusinesses}
-import models.error.ErrorBody.ApiErrorBody.{data404, ifsServer500, nino400, service503}
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody.{notFound, serverError, invalidNino, serviceUnavailable}
 import models.error.ServiceError.DatabaseError.MongoError
-import models.error.StatusError.ApiStatusError
+import models.error.DownstreamError.SingleDownstreamError
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.MockitoSugar.when
 import org.scalatestplus.mockito.MockitoSugar
@@ -49,14 +49,14 @@ class BusinessControllerSpec extends ControllerBehaviours {
       () => underTest.getBusinesses(nino))
 
     for ((errorStatus, apiError) <- Seq(
-        (NOT_FOUND, data404),
-        (BAD_REQUEST, nino400),
-        (INTERNAL_SERVER_ERROR, ifsServer500),
-        (SERVICE_UNAVAILABLE, service503)))
+        (NOT_FOUND, notFound),
+        (BAD_REQUEST, invalidNino),
+        (INTERNAL_SERVER_ERROR, serverError),
+        (SERVICE_UNAVAILABLE, serviceUnavailable)))
       behave like controllerSpec(
         errorStatus,
-        Json.toJson(ApiStatusError(errorStatus, apiError.toMdtpError)).toString(),
-        () => stubGetBusinesses(mockBusinessService, nino, Left(ApiStatusError(errorStatus, apiError))),
+        Json.toJson(SingleDownstreamError(errorStatus, apiError.toDomain)).toString(),
+        () => stubGetBusinesses(mockBusinessService, nino, Left(SingleDownstreamError(errorStatus, apiError))),
         () => underTest.getBusinesses(nino)
       )
   }
@@ -70,14 +70,14 @@ class BusinessControllerSpec extends ControllerBehaviours {
     )
 
     for ((errorStatus, apiError) <- Seq(
-        (NOT_FOUND, data404),
-        (BAD_REQUEST, nino400),
-        (INTERNAL_SERVER_ERROR, ifsServer500),
-        (SERVICE_UNAVAILABLE, service503)))
+        (NOT_FOUND, notFound),
+        (BAD_REQUEST, invalidNino),
+        (INTERNAL_SERVER_ERROR, serverError),
+        (SERVICE_UNAVAILABLE, serviceUnavailable)))
       behave like controllerSpec(
         errorStatus,
-        Json.toJson(ApiStatusError(errorStatus, apiError.toMdtpError)).toString(),
-        () => stubGetBusiness(mockBusinessService, nino, businessId, Left(ApiStatusError(errorStatus, apiError))),
+        Json.toJson(SingleDownstreamError(errorStatus, apiError.toDomain)).toString(),
+        () => stubGetBusiness(mockBusinessService, nino, businessId, Left(SingleDownstreamError(errorStatus, apiError))),
         () => underTest.getBusiness(nino, businessId)
       )
   }
@@ -104,7 +104,7 @@ class BusinessControllerSpec extends ControllerBehaviours {
       "Mongo-Error"
     )
 
-    val apiStatusError = ApiStatusError(INTERNAL_SERVER_ERROR, ifsServer500)
+    val apiStatusError = SingleDownstreamError(INTERNAL_SERVER_ERROR, serverError)
     behave like controllerSpec(
       INTERNAL_SERVER_ERROR,
       Json.toJson(apiStatusError).toString(),
