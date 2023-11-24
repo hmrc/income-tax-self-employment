@@ -44,7 +44,8 @@ trait APIParser {
     Try {
       val json    = response.json
       val apiErrs = json.asOpt[MultipleDownstreamErrorBody]
-      if (apiErrs.nonEmpty) Left(MultipleDownstreamErrors(status, apiErrs.get)) else Left(SingleDownstreamError(status, json.as[SingleDownstreamErrorBody]))
+      if (apiErrs.nonEmpty) Left(MultipleDownstreamErrors(status, apiErrs.get))
+      else Left(SingleDownstreamError(status, json.as[SingleDownstreamErrorBody]))
     } match {
       case Success(leftStatusError) => leftStatusError
       case Failure(t) =>

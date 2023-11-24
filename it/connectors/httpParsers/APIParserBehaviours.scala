@@ -95,7 +95,8 @@ trait APIParserBehaviours extends TestUtils {
             Seq(
               SingleDownstreamErrorBody("SERVICE_UNAVAILABLE", serviceUnavailableReason),
               SingleDownstreamErrorBody("SERVER_ERROR", serverErrorReason)
-            ))))
+            ))
+        ))
     }
 
   def returnJsonValidationError(): Unit =

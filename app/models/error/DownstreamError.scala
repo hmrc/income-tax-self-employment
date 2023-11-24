@@ -16,7 +16,7 @@
 
 package models.error
 
-import models.error.DownstreamErrorBody.{SingleDownstreamErrorBody, MultipleDownstreamErrorBody}
+import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json._
 
@@ -31,7 +31,7 @@ object DownstreamError {
     Format(
       Reads(jsValue => SingleDownstreamError.formats.reads(jsValue) orElse MultipleDownstreamErrors.formats.reads(jsValue)),
       Writes {
-        case statusError: SingleDownstreamError  => SingleDownstreamError.formats.writes(statusError)
+        case statusError: SingleDownstreamError    => SingleDownstreamError.formats.writes(statusError)
         case statusError: MultipleDownstreamErrors => MultipleDownstreamErrors.formats.writes(statusError)
       }
     )

@@ -19,10 +19,10 @@ package controllers
 import bulders.BusinessDataBuilder.{aBusiness, aTradesJourneyStatusesSeq}
 import bulders.JourneyStateDataBuilder.aJourneyState
 import models.database.JourneyState
+import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody.serverError
 import models.error.ServiceError.DatabaseError
 import models.error.ServiceError.DatabaseError.MongoError
-import models.error.DownstreamError.SingleDownstreamError
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.MockitoSugar.when
 import org.scalatestplus.mockito.MockitoSugar
@@ -91,11 +91,11 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
       "Mongo-Error"
     )
 
-    val apiStatusError = SingleDownstreamError(INTERNAL_SERVER_ERROR, serverError)
+    val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, serverError)
     behave like controllerSpec(
       INTERNAL_SERVER_ERROR,
-      Json.toJson(apiStatusError).toString(),
-      () => stubBusinessConnectorGet(expectedResult = Left(apiStatusError)),
+      Json.toJson(downstreamError).toString(),
+      () => stubBusinessConnectorGet(expectedResult = Left(downstreamError)),
       () => underTest.getJourneyStateSeq(businessId, taxYear),
       "Api-Error"
     )

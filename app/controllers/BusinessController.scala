@@ -56,8 +56,8 @@ class BusinessController @Inject() (businessService: BusinessService, auth: Auth
       case Right(model) => Ok(Json.toJson(model))
       case Left(errorModel) =>
         errorModel match {
-          case apiStatusError: SingleDownstreamError => Status(errorModel.status)(Json.toJson(apiStatusError.toDomain))
-          case _ => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[MultipleDownstreamErrors].toDomain))
+          case sde: SingleDownstreamError => Status(errorModel.status)(Json.toJson(sde.toDomain))
+          case _                          => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[MultipleDownstreamErrors].toDomain))
         }
     }
 

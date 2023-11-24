@@ -104,11 +104,11 @@ class BusinessControllerSpec extends ControllerBehaviours {
       "Mongo-Error"
     )
 
-    val apiStatusError = SingleDownstreamError(INTERNAL_SERVER_ERROR, serverError)
+    val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, serverError)
     behave like controllerSpec(
       INTERNAL_SERVER_ERROR,
-      Json.toJson(apiStatusError).toString(),
-      () => stubGetBusinessJourneyStates(mockBusinessService, taxYear, Left(apiStatusError)),
+      Json.toJson(downstreamError).toString(),
+      () => stubGetBusinessJourneyStates(mockBusinessService, taxYear, Left(downstreamError)),
       () => underTest.getBusinessJourneyStates(businessId, taxYear),
       "Api-Error"
     )

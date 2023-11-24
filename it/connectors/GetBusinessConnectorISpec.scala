@@ -76,7 +76,8 @@ class GetBusinessConnectorISpec extends WiremockSpec {
           (NOT_FOUND, notFound),
           (BAD_REQUEST, if (idType == Nino) invalidNino else invalidMtdid),
           (INTERNAL_SERVER_ERROR, serverError),
-          (SERVICE_UNAVAILABLE, serviceUnavailable))) {
+          (SERVICE_UNAVAILABLE, serviceUnavailable)
+        )) {
         val errorResponseBody = Json.obj("code" -> apiError.code, "reason" -> apiError.reason, "errorType" -> "DOWNSTREAM_ERROR_CODE")
 
         s"return a $errorStatus  - $ifsUrl" in {
