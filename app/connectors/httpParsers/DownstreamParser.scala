@@ -38,7 +38,6 @@ trait DownstreamParser {
     SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
   }
 
-
   // FIXME - I don't think this code does what it should do.
   // It seems as if the case classes for deserializing the response json are wrong based off what is documented in the
   // API OAS. Until we know what the response json will look like from IFS (which we currently do not), we cannot be sure

@@ -32,8 +32,7 @@ class GoodsToSellOrUseJourneyAnswersSpec extends AnyWordSpec {
     }
   }
   "serialize json" in {
-    val expectedJson = Json.parse(
-      s"""
+    val expectedJson = Json.parse(s"""
          |{
          |  "financials": {
          |    "deductions": {

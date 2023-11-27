@@ -30,8 +30,8 @@ import utils.ScalaHelper.FutureEither
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class BusinessService @Inject()(businessConnector: BusinessDetailsConnector, journeyStateRepository: JourneyStateRepository)(implicit
-                                                                                                                             ec: ExecutionContext) {
+class BusinessService @Inject() (businessConnector: BusinessDetailsConnector, journeyStateRepository: JourneyStateRepository)(implicit
+    ec: ExecutionContext) {
 
   def getBusinesses(nino: String)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
     businessConnector

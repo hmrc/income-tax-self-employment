@@ -66,4 +66,3 @@ lazy val itSettings = Defaults.itSettings ++ Seq(
   parallelExecution := false,
   fork              := true
 )
-

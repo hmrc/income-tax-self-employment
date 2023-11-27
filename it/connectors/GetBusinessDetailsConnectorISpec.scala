@@ -66,7 +66,7 @@ class GetBusinessDetailsConnectorISpec extends WiremockSpec with IntegrationBase
             auditStubs()
 
             implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-            val result                     = await(new BusinessDetailsConnector(httpClient, appConfig(intExtHost)).getBusinesses(idType, idNumber)(hc))
+            val result = await(new BusinessDetailsConnector(httpClient, appConfig(intExtHost)).getBusinesses(idType, idNumber)(hc))
             result mustBe Right(expectedResult)
           }
       }
