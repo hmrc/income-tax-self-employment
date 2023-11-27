@@ -36,7 +36,7 @@ object CreateSEPeriodSummaryHttpParser extends DownstreamParser {
           case CREATED =>
             response.json
               .validate[CreateSEPeriodSummaryResponse]
-              .fold[Api1894Response](_ => Left(apiJsonValidatingError), parsedModel => Right(parsedModel))
+              .fold[Api1894Response](_ => Left(invalidJsonError), parsedModel => Right(parsedModel))
 
           case _ => Left(pagerDutyError(response))
         }

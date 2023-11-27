@@ -33,7 +33,7 @@ object GetBusinessesHttpParser extends DownstreamParser {
         case OK =>
           response.json
             .validate[GetBusinessDataRequest]
-            .fold[GetBusinessesRequestResponse](_ => Left(apiJsonValidatingError), parsedModel => Right(parsedModel))
+            .fold[GetBusinessesRequestResponse](_ => Left(invalidJsonError), parsedModel => Right(parsedModel))
 
         case _ => Left(pagerDutyError(response))
       }
