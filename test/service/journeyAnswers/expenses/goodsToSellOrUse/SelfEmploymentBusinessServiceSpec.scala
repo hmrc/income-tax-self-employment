@@ -48,9 +48,9 @@ class SelfEmploymentBusinessServiceSpec extends BaseSpec {
     "connector returns a downstream error" must {
       "return the error" in {
         mockConnector
-          .createSEPeriodSummary(eqTo(requestData), eqTo(someJourneyAnswers))(*, *, *) returns Future.successful(someDownstreamError.asLeft)
+          .createSEPeriodSummary(eqTo(requestData), eqTo(someJourneyAnswers))(*, *, *) returns Future.successful(singleDownstreamError.asLeft)
 
-        service.createSEPeriodSummary(requestData, someJourneyAnswers).futureValue shouldBe someDownstreamError.asLeft
+        service.createSEPeriodSummary(requestData, someJourneyAnswers).futureValue shouldBe singleDownstreamError.asLeft
       }
     }
   }

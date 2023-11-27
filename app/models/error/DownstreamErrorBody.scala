@@ -35,7 +35,7 @@ object DownstreamErrorBody {
     }
   )
 
-  // Not convinced this is the right model for what IFS will return.
+  // This response model does not seem to align with the error response schema we get from IFS.
   case class SingleDownstreamErrorBody(code: String, reason: String, errorType: ErrorType = DownstreamErrorCode) extends DownstreamErrorBody {
 
     def toDomain: SingleDownstreamErrorBody =
@@ -73,7 +73,7 @@ object DownstreamErrorBody {
       SingleDownstreamErrorBody("SERVICE_UNAVAILABLE", "Dependent systems are currently not responding.")
   }
 
-  case class MultipleDownstreamErrorBody(failures: Seq[SingleDownstreamErrorBody], reason: String = "") extends DownstreamErrorBody
+  case class MultipleDownstreamErrorBody(failures: Seq[SingleDownstreamErrorBody]) extends DownstreamErrorBody
 
   object MultipleDownstreamErrorBody {
     implicit val formats: OFormat[MultipleDownstreamErrorBody] = Json.format[MultipleDownstreamErrorBody]

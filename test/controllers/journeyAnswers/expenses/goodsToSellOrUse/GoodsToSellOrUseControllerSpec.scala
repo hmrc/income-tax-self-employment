@@ -21,7 +21,7 @@ import mocks.MockAuth
 import models.frontend.journeys.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import org.mockito.IdiomaticMockito.StubbingOps
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import play.api.http.Status.INTERNAL_SERVER_ERROR
+import play.api.http.Status.BAD_REQUEST
 import play.api.libs.json.Json
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import services.journeyAnswers.expenses.goodsToSellOrUse.SelfEmploymentBusinessService
@@ -39,36 +39,76 @@ class GoodsToSellOrUseControllerSpec extends MockAuth {
 
   private val controller = new GoodsToSellOrUseController(mockService, mockAuthorisedAction, stubControllerComponents)
 
-  "service returns a success response" must {
-    "return a 204" in {
-      mockService
-        .createSEPeriodSummary(eqTo(requestData), eqTo(expectedAnswers))(*, *) returns Future.successful(().asRight)
+  "incoming request is json" when {
+    "service returns a success response" must {
+      "return a 204" in {
+        mockService
+          .createSEPeriodSummary(eqTo(requestData), eqTo(expectedAnswers))(*, *) returns Future.successful(().asRight)
 
-      val result = controller.handleRequest(taxYear, businessId, nino)(fakeRequestWithAnswers)
+        val result = controller.handleRequest(taxYear, businessId, nino)(fakeRequestWithAnswers)
 
-      status(result) shouldBe 204
+        status(result) shouldBe 204
+      }
+    }
+    "service returns a single downstream error" must {
+      "return the error" in {
+        mockService
+          .createSEPeriodSummary(eqTo(requestData), eqTo(expectedAnswers))(*, *) returns Future.successful(singleDownstreamError.asLeft)
+
+        val result = controller.handleRequest(taxYear, businessId, nino)(fakeRequestWithAnswers)
+
+        val expectedJson = Json.parse(s"""
+             |{
+             |  "status": 400,
+             |  "body": {
+             |    "code": "FORMAT_NINO",
+             |    "reason": "Submission has not passed validation. Invalid parameter NINO.",
+             |    "errorType": "DOMAIN_ERROR_CODE"
+             |  }
+             |}
+             |""".stripMargin)
+
+        status(result) shouldBe BAD_REQUEST
+        contentAsJson(result) shouldBe expectedJson
+      }
+    }
+    "service returns multiple downstream errors" must {
+      "return all errors" in {
+        mockService
+          .createSEPeriodSummary(eqTo(requestData), eqTo(expectedAnswers))(*, *) returns Future.successful(multipleDownstreamErrors.asLeft)
+
+        val result = controller.handleRequest(taxYear, businessId, nino)(fakeRequestWithAnswers)
+
+        val expectedJson = Json.parse(s"""
+             |{
+             |  "status": 400,
+             |  "body": {
+             |    "failures": [
+             |      {
+             |        "code": "FORMAT_NINO",
+             |        "reason": "Submission has not passed validation. Invalid parameter NINO.",
+             |        "errorType": "DOMAIN_ERROR_CODE"
+             |      },
+             |      {
+             |        "code": "INTERNAL_SERVER_ERROR",
+             |        "reason": "Submission has not passed validation. Invalid parameter MTDID.",
+             |        "errorType": "DOMAIN_ERROR_CODE"
+             |       }
+             |    ]
+             |  }
+             |}
+             |""".stripMargin)
+
+        status(result) shouldBe BAD_REQUEST
+        contentAsJson(result) shouldBe expectedJson
+      }
     }
   }
-  "service returns an error from downstream" must {
-    "return the error status and code" in {
-      mockService
-        .createSEPeriodSummary(eqTo(requestData), eqTo(expectedAnswers))(*, *) returns Future.successful(someDownstreamError.asLeft)
+  "incoming request does not have a json payload" must {
+    "return a 500" in {
+      val result = controller.handleRequest(taxYear, businessId, nino)(fakeRequest)
 
-      val result = controller.handleRequest(taxYear, businessId, nino)(fakeRequestWithAnswers)
-
-      val expectedJson = Json.parse(s"""
-               |{
-               |  "status": $INTERNAL_SERVER_ERROR,
-               |  "body": {
-               |    "code": "INTERNAL_SERVER_ERROR",
-               |    "reason": "some reason",
-               |    "errorType":"DOMAIN_ERROR_CODE"
-               |  }
-               |}
-               |""".stripMargin)
-
-      status(result) shouldBe INTERNAL_SERVER_ERROR
-      contentAsJson(result) shouldBe expectedJson
+      status(result) shouldBe BAD_REQUEST
     }
   }
 

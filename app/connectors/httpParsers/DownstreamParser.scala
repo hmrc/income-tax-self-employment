@@ -39,9 +39,9 @@ trait DownstreamParser {
   }
 
   // FIXME - I don't think this code does what it should do.
-  // It seems as if the case classes for deserializing the response json are wrong based off what is documented in the
-  // API OAS. Until we know what the response json will look like from IFS (which we currently do not), we cannot be sure
-  // what model deserialization model we need.
+  // It seems as if the case classes for deserializing the error response json are wrong based off what is documented in
+  // the API OAS for error responses. Until we know what the response json will actually look like from IFS (which we
+  // currently have not integrated with them in order to try), we cannot be sure what our model will look like.
   def handleDownstreamError(response: HttpResponse, statusOverride: Option[Int] = None): DownstreamError = {
     val status = statusOverride.getOrElse(response.status)
     Try {

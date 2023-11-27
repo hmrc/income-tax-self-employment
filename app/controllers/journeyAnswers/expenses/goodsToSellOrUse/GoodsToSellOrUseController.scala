@@ -48,8 +48,8 @@ class GoodsToSellOrUseController @Inject() (service: SelfEmploymentBusinessServi
         } yield NoContent).leftMap(resultFromError).merge
 
       case None =>
-        logger.warn("[GoodsToSellOrUseController] [createSEPeriodSummary] Unexpected payload content type - expected JSON.")
-        Future.successful(UnsupportedMediaType)
+        logger.warn("[GoodsToSellOrUseController] [createSEPeriodSummary] Expected a JSON payload.")
+        Future.successful(BadRequest)
     }
   }
 

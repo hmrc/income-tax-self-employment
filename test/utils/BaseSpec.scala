@@ -17,13 +17,13 @@
 package utils
 
 import models.common.{BusinessId, Nino, RequestData, TaxYear}
-import models.error.DownstreamError.SingleDownstreamError
-import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
+import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
+import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
 import org.mockito.ArgumentMatchersSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.http.Status.INTERNAL_SERVER_ERROR
+import play.api.http.Status.BAD_REQUEST
 import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, DefaultActionBuilder}
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -47,7 +47,12 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
 
   protected val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders("mtditid" -> "1234567890")
 
-  protected val someDownstreamError: SingleDownstreamError =
-    SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody("ERROR_CODE", "some reason"))
+  protected val singleDownstreamError: SingleDownstreamError =
+    SingleDownstreamError(BAD_REQUEST, SingleDownstreamErrorBody.invalidNino)
 
+  protected val multipleDownstreamErrors: MultipleDownstreamErrors =
+    MultipleDownstreamErrors(
+      BAD_REQUEST,
+      MultipleDownstreamErrorBody(Seq(SingleDownstreamErrorBody.invalidNino, SingleDownstreamErrorBody.invalidMtdid))
+    )
 }
