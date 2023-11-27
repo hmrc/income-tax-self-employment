@@ -27,7 +27,7 @@ lazy val compileOpts = Seq(
   "-Ywarn-unused:patvars",
   "-Ywarn-unused:privates",
   "-Ywarn-value-discard",
-  "-Wconf:src=routes/.*:s",
+  "-Wconf:src=routes/.*:s"
 )
 
 lazy val microservice = Project("income-tax-self-employment", file("."))
@@ -45,8 +45,11 @@ lazy val microservice = Project("income-tax-self-employment", file("."))
       "models.common._",
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
     ),
+    // sbt-wartremover is adding this, and it causes problem with sbt doc step in pipeline
+    Compile / scalacOptions -= "utf8"
   )
   .settings(inConfig(IntegrationTest)(itSettings): _*)
+  .settings(wartremoverErrors ++= WartRemoverSettings.warts)
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
   .configs(IntegrationTest extend Test)
@@ -63,3 +66,4 @@ lazy val itSettings = Defaults.itSettings ++ Seq(
   parallelExecution := false,
   fork              := true
 )
+
