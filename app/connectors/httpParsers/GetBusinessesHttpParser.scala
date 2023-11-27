@@ -21,11 +21,11 @@ import models.error.DownstreamError
 import play.api.http.Status._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
-object GetBusinessesHttpParser extends APIParser {
+object GetBusinessesHttpParser extends DownstreamParser {
   type GetBusinessesRequestResponse = Either[DownstreamError, GetBusinessDataRequest]
 
-  override val parserName: String = "GetBusinessHttpParser"
-  override val apiType: String    = "income-tax-self-employment"
+  override val parserName: String        = "GetBusinessHttpParser"
+  override val downstreamService: String = "Business Details API"
 
   implicit object GetBusinessesHttpReads extends HttpReads[GetBusinessesRequestResponse] {
     override def read(method: String, url: String, response: HttpResponse): GetBusinessesRequestResponse =
@@ -33,11 +33,9 @@ object GetBusinessesHttpParser extends APIParser {
         case OK =>
           response.json
             .validate[GetBusinessDataRequest]
-            .fold[GetBusinessesRequestResponse](
-              _ => apiJsonValidatingError,
-              parsedModel => Right(parsedModel)
-            )
-        case _ => pagerDutyError(response)
+            .fold[GetBusinessesRequestResponse](_ => Left(apiJsonValidatingError), parsedModel => Right(parsedModel))
+
+        case _ => Left(pagerDutyError(response))
       }
   }
 }

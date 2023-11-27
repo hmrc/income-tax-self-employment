@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894
+package models.connector.api_1894.request
 
 import play.api.libs.json._
-import scala.collection.immutable.Set
 
-/** Represents the Swagger definition for errorResponse.
+/** Represents the Swagger definition for postSelfEmploymentPeriod_201_response.
+  * @param ibdSubmissionPeriodId
+  *   ID of the created period submission.
   */
-case class ErrorResponse(
-    failures: Set[ErrorResponseFailuresInner]
+case class PostSelfEmploymentPeriod201Response(
+    ibdSubmissionPeriodId: String
 )
 
-object ErrorResponse {
-  implicit lazy val errorResponseJsonFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
+object PostSelfEmploymentPeriod201Response {
+
+  implicit lazy val postSelfEmploymentPeriod201ResponseJsonFormat: Format[PostSelfEmploymentPeriod201Response] =
+    Json.format[PostSelfEmploymentPeriod201Response]
+
 }

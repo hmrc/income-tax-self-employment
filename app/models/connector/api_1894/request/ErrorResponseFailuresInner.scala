@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894
+package models.connector.api_1894.request
 
 import play.api.libs.json._
 
-/** Represents the Swagger definition for requestBody.
-  * @param from
-  *   Defines a date in the format yyyy-mm-dd
-  * @param to
-  *   Defines a date in the format yyyy-mm-dd
+/** Represents the Swagger definition for errorResponse_failures_inner.
+  * @param code
+  *   Keys for all the errors returned
+  * @param reason
+  *   A simple description for the failure
   */
-case class RequestBody(
-    from: String,
-    to: String,
-    financials: Option[FinancialsType]
+case class ErrorResponseFailuresInner(
+    code: String,
+    reason: String
 )
 
-object RequestBody {
-  implicit lazy val requestBodyJsonFormat: Format[RequestBody] = Json.format[RequestBody]
+object ErrorResponseFailuresInner {
+  implicit lazy val errorResponseFailuresInnerJsonFormat: Format[ErrorResponseFailuresInner] = Json.format[ErrorResponseFailuresInner]
 }

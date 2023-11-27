@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894
+package models.connector.api_1894.request
 
 import play.api.libs.json._
 
-/** Represents the Swagger definition for errorResponse_failures_inner.
-  * @param code
-  *   Keys for all the errors returned
-  * @param reason
-  *   A simple description for the failure
+/** Represents the Swagger definition for financialsType.
   */
-case class ErrorResponseFailuresInner(
-    code: String,
-    reason: String
+case class FinancialsType(
+    incomes: Option[IncomesType],
+    deductions: Option[DeductionsType]
 )
 
-object ErrorResponseFailuresInner {
-  implicit lazy val errorResponseFailuresInnerJsonFormat: Format[ErrorResponseFailuresInner] = Json.format[ErrorResponseFailuresInner]
+object FinancialsType {
+  implicit lazy val financialsTypeJsonFormat: Format[FinancialsType] = Json.format[FinancialsType]
 }

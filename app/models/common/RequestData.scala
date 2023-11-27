@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-package connectors.httpParsers
+package models.common
 
-class IFSParserSpec extends DownstreamParserBehaviours {
-  val downstreamApi = "IFS"
-
-  behave like parserShould()
-}
+case class RequestData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

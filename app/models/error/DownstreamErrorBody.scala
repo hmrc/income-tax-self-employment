@@ -35,6 +35,7 @@ object DownstreamErrorBody {
     }
   )
 
+  // Not convinced this is the right model for what IFS will return.
   case class SingleDownstreamErrorBody(code: String, reason: String, errorType: ErrorType = DownstreamErrorCode) extends DownstreamErrorBody {
 
     def toDomain: SingleDownstreamErrorBody =

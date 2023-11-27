@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894
+package models.common
 
-import play.api.libs.json._
+import play.api.mvc.PathBindable
 
-/** Represents the Swagger definition for financialsType.
-  */
-case class FinancialsType(
-    incomes: Option[IncomesType],
-    deductions: Option[DeductionsType]
-)
+final case class Nino(value: String) extends AnyVal
 
-object FinancialsType {
-  implicit lazy val financialsTypeJsonFormat: Format[FinancialsType] = Json.format[FinancialsType]
+object Nino {
+
+  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[Nino] = new PathBindable[Nino] {
+
+    override def bind(key: String, value: String): Either[String, Nino] =
+      strBinder.bind(key, value).map(Nino.apply)
+
+    override def unbind(key: String, nino: Nino): String =
+      strBinder.unbind(key, nino.value)
+
+  }
 }

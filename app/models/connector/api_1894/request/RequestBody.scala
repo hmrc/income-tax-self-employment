@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894
+package models.connector.api_1894.request
 
 import play.api.libs.json._
 
-/** Represents the Swagger definition for postSelfEmploymentPeriod_201_response.
-  * @param ibdSubmissionPeriodId
-  *   ID of the created period submission.
+/** Represents the Swagger definition for requestBody.
+  * @param from
+  *   Defines a date in the format yyyy-mm-dd
+  * @param to
+  *   Defines a date in the format yyyy-mm-dd
   */
-case class PostSelfEmploymentPeriod201Response(
-    ibdSubmissionPeriodId: String
+case class RequestBody(
+    from: String,
+    to: String,
+    financials: Option[FinancialsType]
 )
 
-object PostSelfEmploymentPeriod201Response {
-
-  implicit lazy val postSelfEmploymentPeriod201ResponseJsonFormat: Format[PostSelfEmploymentPeriod201Response] =
-    Json.format[PostSelfEmploymentPeriod201Response]
-
+object RequestBody {
+  implicit lazy val requestBodyJsonFormat: Format[RequestBody] = Json.format[RequestBody]
 }

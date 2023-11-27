@@ -1,15 +1,19 @@
 # microservice specific routes
 
 # Business
-GET        /individuals/business/details/:nino/list                      controllers.BusinessController.getBusinesses(nino: String)
-GET        /individuals/business/details/:nino/:businessId               controllers.BusinessController.getBusiness(nino: String, businessId: String)
-GET        /individuals/business/journey-states/:nino/:taxYear           controllers.BusinessController.getBusinessJourneyStates(nino: String, taxYear: Int)
+GET        /individuals/business/details/:nino/list                                                     controllers.BusinessDetailsController.getBusinesses(nino: String)
+GET        /individuals/business/details/:nino/:businessId                                              controllers.BusinessDetailsController.getBusiness(nino: String, businessId: String)
+GET        /individuals/business/journey-states/:nino/:taxYear                                          controllers.BusinessDetailsController.getBusinessJourneyStates(nino: String, taxYear: Int)
 
 # Journey State
-GET        /completed-section/:nino/:taxYear                             controllers.JourneyStateController.getJourneyStateSeq(nino: String, taxYear: Int)
-GET        /completed-section/:businessId/:journey/:taxYear              controllers.JourneyStateController.getJourneyState(businessId: String, journey: String, taxYear: Int)
-PUT        /completed-section/:businessId/:journey/:taxYear/:completed   controllers.JourneyStateController.putJourneyState(businessId: String, journey: String, taxYear: Int, completed: Boolean)
+GET        /completed-section/:nino/:taxYear                                                            controllers.JourneyStateController.getJourneyStateSeq(nino: String, taxYear: Int)
+GET        /completed-section/:businessId/:journey/:taxYear                                             controllers.JourneyStateController.getJourneyState(businessId: String, journey: String, taxYear: Int)
+PUT        /completed-section/:businessId/:journey/:taxYear/:completed                                  controllers.JourneyStateController.putJourneyState(businessId: String, journey: String, taxYear: Int, completed: Boolean)
 
 # Journey Answers
-GET        /check-your-answers/get/:id                                   controllers.journeyAnswers.GetJourneyAnswersController.handleRequest(id: String)
-PUT        /check-your-answers/set                                       controllers.journeyAnswers.SetJourneyAnswersController.handleRequest()
+GET        /check-your-answers/get/:id                                                                  controllers.journeyAnswers.GetJourneyAnswersController.handleRequest(id: String)
+PUT        /check-your-answers/set                                                                      controllers.journeyAnswers.SetJourneyAnswersController.handleRequest()
+
+# Expenses
+# Goods to sell or use
+POST       /send-expenses-answers/expenses-goods-to-sell-or-use/:taxYear/:businessId/:nino              controllers.journeyAnswers.expenses.goodsToSellOrUse.GoodsToSellOrUseController.handleRequest(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

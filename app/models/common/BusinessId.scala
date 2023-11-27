@@ -14,21 +14,22 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894
+package models.common
 
-import play.api.libs.json._
+import play.api.mvc.PathBindable
 
-/** Represents the Swagger definition for incomesType.
-  * @param turnover
-  *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
-  * @param other
-  *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
-  */
-case class IncomesType(
-    turnover: Option[BigDecimal],
-    other: Option[BigDecimal]
-)
+final case class BusinessId(value: String) extends AnyVal
 
-object IncomesType {
-  implicit lazy val incomesTypeJsonFormat: Format[IncomesType] = Json.format[IncomesType]
+object BusinessId {
+
+  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[BusinessId] = new PathBindable[BusinessId] {
+
+    override def bind(key: String, value: String): Either[String, BusinessId] =
+      strBinder.bind(key, value).map(BusinessId.apply)
+
+    override def unbind(key: String, businessId: BusinessId): String =
+      strBinder.unbind(key, businessId.value)
+
+  }
+
 }
