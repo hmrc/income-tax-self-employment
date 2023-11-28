@@ -105,7 +105,7 @@ class GoodsToSellOrUseControllerSpec extends MockAuth {
     }
   }
   "incoming request does not have a json payload" must {
-    "return a 500" in {
+    "return a 400" in {
       val result =
         controller.handleRequest(taxYear, businessId, nino)(fakeRequest)
 
