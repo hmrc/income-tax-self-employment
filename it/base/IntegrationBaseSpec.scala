@@ -16,7 +16,7 @@
 
 package base
 
-import models.common.{BusinessId, Nino, RequestData, TaxYear}
+import models.common.{BusinessId, Nino, TaxYear}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -28,11 +28,10 @@ import scala.concurrent.ExecutionContext
 
 trait IntegrationBaseSpec extends PlaySpec with GuiceOneServerPerSuite with ScalaFutures {
 
-  protected val businessId: BusinessId   = BusinessId("someBusinessId")
-  protected val nino: Nino               = Nino("someNino")
-  protected val mtditid: String          = "mtditid"
-  protected val taxYear: TaxYear         = TaxYear(LocalDate.now().getYear)
-  protected val requestData: RequestData = RequestData(taxYear, businessId, nino)
+  protected val businessId: BusinessId = BusinessId("someBusinessId")
+  protected val nino: Nino             = Nino("someNino")
+  protected val mtditid: String        = "mtditid"
+  protected val taxYear: TaxYear       = TaxYear(LocalDate.now().getYear)
 
   implicit val ec: ExecutionContext = ExecutionContext.global
   implicit val hc: HeaderCarrier    = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))

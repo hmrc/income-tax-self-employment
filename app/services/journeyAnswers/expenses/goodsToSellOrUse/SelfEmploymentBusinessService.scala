@@ -18,9 +18,8 @@ package services.journeyAnswers.expenses.goodsToSellOrUse
 
 import cats.implicits.catsSyntaxEitherId
 import connectors.SelfEmploymentBusinessConnector
-import models.common.RequestData
+import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.error.DownstreamError
-import play.api.libs.json.Writes
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.Inject
@@ -28,8 +27,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class SelfEmploymentBusinessService @Inject() (connector: SelfEmploymentBusinessConnector)(implicit ec: ExecutionContext) {
 
-  def createSEPeriodSummary[T](data: RequestData, answers: T)(implicit writes: Writes[T], hc: HeaderCarrier): Future[Either[DownstreamError, Unit]] =
-    connector.createSEPeriodSummary(data, answers).map {
+  def createSEPeriodSummary(requestData: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier): Future[Either[DownstreamError, Unit]] =
+    connector.createSEPeriodSummary(requestData).map {
       case Right(_)              => ().asRight
       case Left(downstreamError) => downstreamError.asLeft
     }

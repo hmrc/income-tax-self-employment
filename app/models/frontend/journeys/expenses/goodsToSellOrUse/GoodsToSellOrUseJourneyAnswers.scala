@@ -21,7 +21,6 @@ import play.api.libs.json._
 
 case class GoodsToSellOrUseJourneyAnswers(amount: BigDecimal, disallowableAmount: Option[BigDecimal])
 
-// Add to and from date
 object GoodsToSellOrUseJourneyAnswers {
   implicit val reads: Reads[GoodsToSellOrUseJourneyAnswers] = (
     (JsPath \ "goodsToSellOrUseAmount").read[BigDecimal] and
@@ -29,7 +28,7 @@ object GoodsToSellOrUseJourneyAnswers {
   )(GoodsToSellOrUseJourneyAnswers.apply _)
 
   implicit val writes: OWrites[GoodsToSellOrUseJourneyAnswers] = (
-    (JsPath \ "financials" \ "deductions" \ "costOfGoods" \ "amount").write[BigDecimal] and
-      (JsPath \ "financials" \ "deductions" \ "costOfGoods" \ "disallowableAmount").writeNullable[BigDecimal]
+    (JsPath \ "deductions" \ "costOfGoods" \ "amount").write[BigDecimal] and
+      (JsPath \ "deductions" \ "costOfGoods" \ "disallowableAmount").writeNullable[BigDecimal]
   )(unlift(GoodsToSellOrUseJourneyAnswers.unapply))
 }

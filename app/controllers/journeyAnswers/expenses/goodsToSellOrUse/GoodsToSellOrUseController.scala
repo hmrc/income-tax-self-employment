@@ -18,7 +18,9 @@ package controllers.journeyAnswers.expenses.goodsToSellOrUse
 
 import cats.data.EitherT
 import controllers.actions.AuthorisedAction
-import models.common.{BusinessId, Nino, RequestData, TaxYear}
+import models.common.TaxYear.{endDate, startDate}
+import models.common.{BusinessId, Nino, TaxYear}
+import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType}
 import models.error.DownstreamError
 import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
 import models.frontend.journeys.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
@@ -36,15 +38,17 @@ class GoodsToSellOrUseController @Inject() (service: SelfEmploymentBusinessServi
     extends BackendController(cc)
     with Logging {
 
-  def handleRequest(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
-    val data = RequestData(taxYear, businessId, nino)
-
-    // Can we pass in a json body type parser?
-    request.request.body.asJson match {
+  def handleRequest(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    user.request.body.asJson match {
       case Some(json) =>
-        val answers = json.as[GoodsToSellOrUseJourneyAnswers]
+        val answers    = json.as[GoodsToSellOrUseJourneyAnswers]
+        val financials = Json.toJson(answers).as[FinancialsType]
+
+        val body = CreateSEPeriodSummaryRequestBody(startDate(taxYear), endDate(taxYear), Some(financials))
+        val data = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, body)
+
         (for {
-          _ <- EitherT(service.createSEPeriodSummary(data, answers))
+          _ <- EitherT(service.createSEPeriodSummary(data))
         } yield NoContent).leftMap(resultFromError).merge
 
       case None =>

@@ -16,7 +16,7 @@
 
 package utils
 
-import models.common.{BusinessId, Nino, RequestData, TaxYear}
+import models.common.{BusinessId, Nino, TaxYear}
 import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
 import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
 import org.mockito.ArgumentMatchersSugar
@@ -36,10 +36,9 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
   protected implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
   protected implicit val hc: HeaderCarrier    = HeaderCarrier()
 
-  protected val taxYear: TaxYear         = TaxYear(LocalDate.now().getYear)
-  protected val businessId: BusinessId   = BusinessId("someBusinessId")
-  protected val nino: Nino               = Nino("someNino")
-  protected val requestData: RequestData = RequestData(taxYear, businessId, nino)
+  protected val taxYear: TaxYear       = TaxYear(LocalDate.now().getYear)
+  protected val businessId: BusinessId = BusinessId("someBusinessId")
+  protected val nino: Nino             = Nino("someNino")
 
   protected val stubControllerComponents: ControllerComponents = Helpers.stubControllerComponents()
 

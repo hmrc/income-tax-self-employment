@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894.request
+package models.common
 
-import play.api.libs.json._
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import utils.BaseSpec
 
-/** Represents the Swagger definition for requestBody.
-  * @param from
-  *   Defines a date in the format yyyy-mm-dd
-  * @param to
-  *   Defines a date in the format yyyy-mm-dd
-  */
-case class RequestBody(
-    from: String,
-    to: String,
-    financials: Option[FinancialsType]
-)
+class TaxYearSpec extends BaseSpec {
 
-object RequestBody {
-  implicit lazy val requestBodyJsonFormat: Format[RequestBody] = Json.format[RequestBody]
+  private val year = TaxYear(2024)
+
+  "getting start and end dates" must {
+    "get April 5th and 6th" in {
+      TaxYear.startDate(year) shouldBe "2023-04-06"
+      TaxYear.endDate(year) shouldBe "2024-04-05"
+    }
+  }
+  "get a TYS (YY-YY) format" in {
+    TaxYear.asTys(year) shouldBe "23-24"
+  }
+
 }

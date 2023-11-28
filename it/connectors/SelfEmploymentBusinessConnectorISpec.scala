@@ -19,60 +19,28 @@ package connectors
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
 import helpers.WiremockSpec
+import models.common.TaxYear
+import models.connector.api_1894.request._
 import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
-import models.frontend.journeys.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.CREATED
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 
 class SelfEmploymentBusinessConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
-
-  private val someJourneyAnswers = GoodsToSellOrUseJourneyAnswers(100.00, Some(100.00))
-
-  private val downstreamUrl =
-    s"/income-tax/${requestData.taxYear.value}/${requestData.nino.value}/self-employments/${requestData.businessId.value}/periodic-summaries"
-
-  private val downstreamSuccessResponse = Json.obj("ibdSubmissionPeriodId" -> "someId")
-
-//  private val downstreamSingleFailureResponse = Json.parse(s"""
-//       |{
-//       |  "failures": [
-//       |    {
-//       |      "code": "SOME_CODE",
-//       |      "reason": "Some reason."
-//       |    }
-//       |  ]
-//       |}
-//       |""".stripMargin)
-
-//  private val downstreamMultipleFailuresResponse = Json.parse(s"""
-//       |{
-//       |  "failures": [
-//       |    {
-//       |      "code": "SOME_CODE",
-//       |      "reason": "Some reason."
-//       |    },
-//       |    {
-//       |      "code": "SOME_OTHER_CODE",
-//       |      "reason": "Some other reason."
-//       |    }
-//       |  ]
-//       |}
-//       |""".stripMargin)
 
   private val connector = new SelfEmploymentBusinessConnector(httpClient, appConfig)
 
   "Downstream returns a success response" must {
-    "return the submission id" in {
+    "return the submission id" in new Test {
       stubPostWithRequestAndResponseBody(
         url = downstreamUrl,
-        requestBody = someJourneyAnswers,
+        requestBody = expectedRequestBody,
         expectedResponse = downstreamSuccessResponse.toString,
         expectedStatus = CREATED)
 
-      val expectedResponse = CreateSEPeriodSummaryResponse("someId")
+      val expectedResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("someId")
 
-      connector.createSEPeriodSummary(requestData, someJourneyAnswers).futureValue shouldBe expectedResponse.asRight
+      connector.createSEPeriodSummary(data).futureValue shouldBe expectedResponse.asRight
     }
     // FIXME - Reinstate tests when we know what our IFS response will look like - currently what is in our `DownstreamParser` for error handling looks wrong.
     //
@@ -103,5 +71,67 @@ class SelfEmploymentBusinessConnectorISpec extends WiremockSpec with Integration
     //    }
     //  }
 
+  }
+
+  trait Test {
+    protected val downstreamSuccessResponse: JsObject = Json.obj("ibdSubmissionPeriodId" -> "someId")
+
+    protected val expectedRequestBody: CreateSEPeriodSummaryRequestBody = CreateSEPeriodSummaryRequestBody(
+      "someFromDate",
+      "someToDate",
+      Some(
+        FinancialsType(
+          None,
+          Some(
+            DeductionsType(
+              Some(SelfEmploymentDeductionsDetailPosNegType(Some(100.00), Some(100.00))),
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None))
+        ))
+    )
+
+    protected val data: CreateSEPeriodSummaryRequestData = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, expectedRequestBody)
+
+    protected val downstreamUrl =
+      s"/income-tax/${TaxYear.asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries"
+
+    //  private val downstreamSingleFailureResponse = Json.parse(s"""
+    //       |{
+    //       |  "failures": [
+    //       |    {
+    //       |      "code": "SOME_CODE",
+    //       |      "reason": "Some reason."
+    //       |    }
+    //       |  ]
+    //       |}
+    //       |""".stripMargin)
+
+    //  private val downstreamMultipleFailuresResponse = Json.parse(s"""
+    //       |{
+    //       |  "failures": [
+    //       |    {
+    //       |      "code": "SOME_CODE",
+    //       |      "reason": "Some reason."
+    //       |    },
+    //       |    {
+    //       |      "code": "SOME_OTHER_CODE",
+    //       |      "reason": "Some other reason."
+    //       |    }
+    //       |  ]
+    //       |}
+    //       |""".stripMargin)
   }
 }

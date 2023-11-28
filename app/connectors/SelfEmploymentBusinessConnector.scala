@@ -18,8 +18,8 @@ package connectors
 
 import config.AppConfig
 import connectors.httpParsers.CreateSEPeriodSummaryHttpParser.{Api1894Response, createSEPeriodSummaryHttpReads}
-import models.common.RequestData
-import play.api.libs.json.Writes
+import models.common.TaxYear.asTys
+import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject
@@ -27,13 +27,13 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class SelfEmploymentBusinessConnector @Inject() (val http: HttpClient, appConfig: AppConfig) {
 
-  def createSEPeriodSummary[T](data: RequestData, answers: T)(implicit
-      writes: Writes[T],
-      hc: HeaderCarrier,
-      ec: ExecutionContext): Future[Api1894Response] =
-    http.POST[T, Api1894Response](
-      url = buildUrl(s"/income-tax/${data.taxYear.value}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries"),
-      body = answers)(wts = writes, rds = createSEPeriodSummaryHttpReads, hc, ec)
+  def createSEPeriodSummary(
+      requestData: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] =
+    http.POST[CreateSEPeriodSummaryRequestBody, Api1894Response](
+      url = buildUrl(
+        s"/income-tax/${asTys(requestData.taxYear)}/${requestData.nino.value}/self-employments/${requestData.businessId.value}/periodic-summaries"),
+      body = requestData.body
+    )(wts = CreateSEPeriodSummaryRequestBody.formats, rds = createSEPeriodSummaryHttpReads, hc, ec)
 
   private def buildUrl(path: String): String =
     appConfig.ifsBaseUrl + path

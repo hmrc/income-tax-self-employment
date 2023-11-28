@@ -18,8 +18,9 @@ package service.journeyAnswers.expenses.goodsToSellOrUse
 
 import cats.implicits.catsSyntaxEitherId
 import connectors.SelfEmploymentBusinessConnector
+import models.common.TaxYear
+import models.connector.api_1894.request._
 import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
-import models.frontend.journeys.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import org.mockito.IdiomaticMockito.StubbingOps
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import services.journeyAnswers.expenses.goodsToSellOrUse.SelfEmploymentBusinessService
@@ -31,28 +32,59 @@ class SelfEmploymentBusinessServiceSpec extends BaseSpec {
 
   private val mockConnector = mock[SelfEmploymentBusinessConnector]
 
-  private val someJourneyAnswers = GoodsToSellOrUseJourneyAnswers(100.00, Some(100.00))
-  private val successResponse    = CreateSEPeriodSummaryResponse("someSubmissionId")
-
   private val service = new SelfEmploymentBusinessService(mockConnector)
 
   "SelfEmploymentBusinessService" when {
     "connector returns a success response" must {
-      "evaluate to unit" in {
+      "evaluate to unit" in new Test {
         mockConnector
-          .createSEPeriodSummary(eqTo(requestData), eqTo(someJourneyAnswers))(*, *, *) returns Future.successful(successResponse.asRight)
+          .createSEPeriodSummary(eqTo(requestData))(*, *) returns Future.successful(successResponse.asRight)
 
-        service.createSEPeriodSummary(requestData, someJourneyAnswers).futureValue shouldBe ().asRight
+        service.createSEPeriodSummary(requestData).futureValue shouldBe ().asRight
       }
     }
     "connector returns a downstream error" must {
-      "return the error" in {
+      "return the error" in new Test {
         mockConnector
-          .createSEPeriodSummary(eqTo(requestData), eqTo(someJourneyAnswers))(*, *, *) returns Future.successful(singleDownstreamError.asLeft)
+          .createSEPeriodSummary(eqTo(requestData))(*, *) returns Future.successful(singleDownstreamError.asLeft)
 
-        service.createSEPeriodSummary(requestData, someJourneyAnswers).futureValue shouldBe singleDownstreamError.asLeft
+        service.createSEPeriodSummary(requestData).futureValue shouldBe singleDownstreamError.asLeft
       }
     }
+  }
+
+  trait Test {
+    protected val successResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("someSubmissionId")
+
+    // Pull out somewhere as used a lot
+    protected val expectedRequestBody: CreateSEPeriodSummaryRequestBody = CreateSEPeriodSummaryRequestBody(
+      TaxYear.startDate(taxYear),
+      TaxYear.endDate(taxYear),
+      Some(
+        FinancialsType(
+          None,
+          Some(
+            DeductionsType(
+              Some(SelfEmploymentDeductionsDetailPosNegType(Some(100.00), Some(100.00))),
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None,
+              None))
+        ))
+    )
+
+    protected val requestData: CreateSEPeriodSummaryRequestData = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, expectedRequestBody)
   }
 
 }
