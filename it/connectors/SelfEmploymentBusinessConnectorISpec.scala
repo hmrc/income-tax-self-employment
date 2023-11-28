@@ -30,7 +30,7 @@ class SelfEmploymentBusinessConnectorISpec extends WiremockSpec with Integration
 
   private val connector = new SelfEmploymentBusinessConnector(httpClient, appConfig)
 
-  "Downstream returns a success response" must {
+  "downstream returns a success response" must {
     "return the submission id" in new Test {
       stubPostWithRequestAndResponseBody(
         url = downstreamUrl,

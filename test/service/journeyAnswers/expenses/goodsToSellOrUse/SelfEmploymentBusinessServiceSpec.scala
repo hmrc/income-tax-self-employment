@@ -34,22 +34,20 @@ class SelfEmploymentBusinessServiceSpec extends BaseSpec {
 
   private val service = new SelfEmploymentBusinessService(mockConnector)
 
-  "SelfEmploymentBusinessService" when {
-    "connector returns a success response" must {
-      "evaluate to unit" in new Test {
-        mockConnector
-          .createSEPeriodSummary(eqTo(requestData))(*, *) returns Future.successful(successResponse.asRight)
+  "connector returns a success response" must {
+    "evaluate to unit" in new Test {
+      mockConnector
+        .createSEPeriodSummary(eqTo(requestData))(*, *) returns Future.successful(successResponse.asRight)
 
-        service.createSEPeriodSummary(requestData).futureValue shouldBe ().asRight
-      }
+      service.createSEPeriodSummary(requestData).futureValue shouldBe ().asRight
     }
-    "connector returns a downstream error" must {
-      "return the error" in new Test {
-        mockConnector
-          .createSEPeriodSummary(eqTo(requestData))(*, *) returns Future.successful(singleDownstreamError.asLeft)
+  }
+  "connector returns a downstream error" must {
+    "return the error" in new Test {
+      mockConnector
+        .createSEPeriodSummary(eqTo(requestData))(*, *) returns Future.successful(singleDownstreamError.asLeft)
 
-        service.createSEPeriodSummary(requestData).futureValue shouldBe singleDownstreamError.asLeft
-      }
+      service.createSEPeriodSummary(requestData).futureValue shouldBe singleDownstreamError.asLeft
     }
   }
 

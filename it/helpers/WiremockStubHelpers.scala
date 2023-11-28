@@ -55,6 +55,7 @@ trait WiremockStubHelpers {
             .withStatus(expectedStatus)
             .withHeader("Content-Type", "application/json; charset=utf-8")))
 
+  // TODO Reduce duplication in this trait.
   def stubPostWithRequestAndResponseBody[T](url: String,
                                             requestBody: T,
                                             expectedResponse: String,

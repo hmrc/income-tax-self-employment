@@ -32,13 +32,14 @@ object TaxYear {
 
   def endDate(taxYear: TaxYear): String = LocalDate.of(taxYear.endYear, taxYearMonth, taxYearEndDay).toString
 
+  /* Gets a representation of a taxYear in a YY-YY format (from a YYYY format).
+   */
   def asTys(taxYear: TaxYear): String = {
     val end   = taxYear.endYear - 2000
     val start = end - 1
     s"$start-$end"
   }
 
-  // If binding doesn't work it could be because of the ending method
   implicit def pathBindable(implicit intBinder: PathBindable[Int]): PathBindable[TaxYear] = new PathBindable[TaxYear] {
 
     override def bind(key: String, value: String): Either[String, TaxYear] =

@@ -62,7 +62,7 @@ class GoodsToSellOrUseController @Inject() (service: SelfEmploymentBusinessServi
       case sde: SingleDownstreamError    => Json.toJson(sde.toDomain)
       case mde: MultipleDownstreamErrors => Json.toJson(mde.toDomain)
     }
-    Status(error.status)(Json.toJson(domainError))
+    Status(error.status)(domainError)
   }
 
 }
