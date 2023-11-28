@@ -54,7 +54,6 @@ class SelfEmploymentBusinessServiceSpec extends BaseSpec {
   trait Test {
     protected val successResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("someSubmissionId")
 
-    // Pull out somewhere as used a lot
     protected val expectedRequestBody: CreateSEPeriodSummaryRequestBody = CreateSEPeriodSummaryRequestBody(
       TaxYear.startDate(taxYear),
       TaxYear.endDate(taxYear),
