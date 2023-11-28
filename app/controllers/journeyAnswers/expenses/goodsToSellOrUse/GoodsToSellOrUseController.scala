@@ -39,20 +39,21 @@ class GoodsToSellOrUseController @Inject() (service: SelfEmploymentBusinessServi
     with Logging {
 
   def handleRequest(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    user.request.body.asJson match {
-      case Some(json) =>
-        val answers    = json.as[GoodsToSellOrUseJourneyAnswers]
-        val financials = Json.toJson(answers).as[FinancialsType]
+    val requestData = for {
+      json    <- user.request.body.asJson
+      answers <- json.asOpt[GoodsToSellOrUseJourneyAnswers]
+      financials = Json.toJson(answers).as[FinancialsType]
+      body       = CreateSEPeriodSummaryRequestBody(startDate(taxYear), endDate(taxYear), Some(financials))
+    } yield CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, body)
 
-        val body = CreateSEPeriodSummaryRequestBody(startDate(taxYear), endDate(taxYear), Some(financials))
-        val data = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, body)
-
+    requestData match {
+      case Some(data) =>
         (for {
           _ <- EitherT(service.createSEPeriodSummary(data))
         } yield NoContent).leftMap(resultFromError).merge
 
       case None =>
-        logger.warn("[GoodsToSellOrUseController] [createSEPeriodSummary] Expected a JSON payload.")
+        logger.warn("[GoodsToSellOrUseController] [createSEPeriodSummary] Expected a JSON payload that can be read by GoodsToSellOrUseJourneyAnswers")
         Future.successful(BadRequest)
     }
   }
