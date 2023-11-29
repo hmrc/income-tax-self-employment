@@ -30,6 +30,11 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+trait JourneyAnswersRepository {
+  def get(id: String): Future[Option[JourneyAnswers]]
+  def set(answers: JourneyAnswers): Future[Unit]
+}
+
 // Awaiting guidelines on how we are going to calculate the TTL. Default TTL implemented for time-being.
 @Singleton
 class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
@@ -60,7 +65,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
         .headOption()
     }
 
-  override def set(answers: JourneyAnswers): Future[SetResult] = {
+  override def set(answers: JourneyAnswers): Future[Unit] = {
     val updatedAnswers = answers.copy(lastUpdated = Instant.now(clock))
     collection
       .replaceOne(
@@ -69,15 +74,10 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
         options = ReplaceOptions().upsert(true)
       )
       .toFuture()
-      .map { mongoResult =>
-        if (mongoResult.getMatchedCount > 0) {
-          SetResult.JourneyAnswersUpdated
-        } else {
-          SetResult.JourneyAnswersCreated
-        }
-      }
+      .map(_ => ())
   }
 
+  // TODO We don't need keepalive as we will have 4 tax years
   private def keepAlive(id: String): Future[Unit] =
     collection
       .updateOne(

@@ -22,8 +22,10 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time._
 
+// TODO Refactor to the new model in SASS-6340
 case class JourneyAnswers(id: String, data: JsObject = Json.obj(), lastUpdated: Instant = Instant.now)
 
+// TODO use case class and OFormat instead of manual reads and writes
 object JourneyAnswers {
   val reads: Reads[JourneyAnswers] =
     ((JsPath \ "_id").read[String] and

@@ -41,7 +41,8 @@ class JourneyStateController @Inject() (journeyStateRepository: JourneyStateRepo
     with Logging {
 
   def getJourneyState(businessId: String, journey: String, taxYear: Int): Action[AnyContent] = auth.async { _ =>
-    lazy val pagerMsg = "[Self-Employment BE SessionRepository][get] Failed to find journey state data."
+    lazy val pagerMsg =
+      "[Self-Employment BE SessionRepository][get] Failed to find journey state data." // TODO Move it to external object with all PagerDuty messages
 
     journeyStateRepository
       .get(businessId, taxYear, journey)

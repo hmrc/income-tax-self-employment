@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package repositories
+package models
 
-import models.database.JourneyState
+import cats.data.EitherT
+import models.error.ServiceError
+
 import scala.concurrent.Future
 
-trait JourneyStateRepository {
-  def get(businessId: String, taxYear: Int): Future[Seq[JourneyState]]
-  def get(businessId: String, taxYear: Int, journey: String): Future[Option[JourneyState]]
-  def set(journeyState: JourneyState): Future[Unit]
+package object domain {
+  type ApiResultT[A] = EitherT[Future, ServiceError, A]
 }

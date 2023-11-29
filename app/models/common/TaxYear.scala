@@ -20,7 +20,9 @@ import play.api.mvc.PathBindable
 
 import java.time.LocalDate
 
-final case class TaxYear(endYear: Int) extends AnyVal
+final case class TaxYear(endYear: Int) extends AnyVal {
+  override def toString: String = endYear.toString()
+}
 
 object TaxYear {
 

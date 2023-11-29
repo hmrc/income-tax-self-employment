@@ -29,6 +29,12 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+trait JourneyStateRepository {
+  def get(businessId: String, taxYear: Int): Future[Seq[JourneyState]]
+  def get(businessId: String, taxYear: Int, journey: String): Future[Option[JourneyState]]
+  def set(journeyState: JourneyState): Future[Unit]
+}
+
 @Singleton
 class MongoJourneyStateRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[JourneyState](

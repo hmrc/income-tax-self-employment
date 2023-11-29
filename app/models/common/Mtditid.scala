@@ -14,24 +14,6 @@
  * limitations under the License.
  */
 
-package mocks
+package models.common
 
-import models.database.JourneyAnswers
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaFirstStubbing
-import org.scalatestplus.mockito.MockitoSugar
-import services.JourneyService
-
-import scala.concurrent.Future
-
-trait MockSetJourneyAnswersService extends MockitoSugar {
-  val mockSetJourneyAnswersService: JourneyService = mock[JourneyService]
-
-  object MockSetJourneyAnswersService {
-
-    def setJourneyAnswers(answers: JourneyAnswers): ScalaFirstStubbing[Future[Unit]] =
-      when(mockSetJourneyAnswersService.setAnswers(answers))
-
-  }
-
-}
+final case class Mtditid(value: String) extends AnyVal

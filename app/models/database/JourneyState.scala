@@ -23,6 +23,7 @@ import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import java.time.LocalDate
 import java.util.UUID
 
+// TODO Merge with answer collection
 case class JourneyState(
     id: String = UUID.randomUUID().toString,
     journeyStateData: JourneyStateData,

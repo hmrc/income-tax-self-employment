@@ -18,7 +18,9 @@ package models.common
 
 import play.api.mvc.PathBindable
 
-final case class BusinessId(value: String) extends AnyVal
+final case class BusinessId(value: String) extends AnyVal {
+  override def toString: String = value
+}
 
 object BusinessId {
 

@@ -32,7 +32,7 @@ trait MockJourneyAnswersRepository extends MockitoSugar {
     def get(id: String): ScalaFirstStubbing[Future[Option[JourneyAnswers]]] =
       when(mockJourneyAnswersRepository.get(id))
 
-    def set(answers: JourneyAnswers): ScalaFirstStubbing[Future[SetResult]] =
+    def set(answers: JourneyAnswers): ScalaFirstStubbing[Future[Unit]] =
       when(mockJourneyAnswersRepository.set(answers))
   }
 

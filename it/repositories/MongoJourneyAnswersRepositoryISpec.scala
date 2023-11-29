@@ -91,7 +91,7 @@ class MongoJourneyAnswersRepositoryISpec
           val updatedData           = Json.obj("field" -> "updatedValue")
           val updatedJourneyAnswers = someJourneyAnswers.copy(data = updatedData)
 
-          await(repository.set(updatedJourneyAnswers)) shouldBe SetResult.JourneyAnswersUpdated
+          await(repository.set(updatedJourneyAnswers)) shouldBe ()
 
           repository.get(id).futureValue.map(_.data) shouldBe Some(updatedData)
 

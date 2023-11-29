@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package repositories
+package models.frontend
 
-import models.database.JourneyAnswers
-import scala.concurrent.Future
+import play.api.libs.json.{Format, Json}
 
-sealed trait SetResult
+final case class ExpensesTailoringJourneyAnswers(
+    officeSupplies: String
+)
 
-object SetResult {
-  case object JourneyAnswersCreated extends SetResult
-  case object JourneyAnswersUpdated extends SetResult
-}
+object ExpensesTailoringJourneyAnswers {
+  implicit val format: Format[ExpensesTailoringJourneyAnswers] = Json.format[ExpensesTailoringJourneyAnswers]
 
-trait JourneyAnswersRepository {
-  def get(id: String): Future[Option[JourneyAnswers]]
-  def set(answers: JourneyAnswers): Future[SetResult]
 }
