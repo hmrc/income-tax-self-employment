@@ -21,15 +21,14 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
+import config.AppConfig
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.Application
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.ws.{WSClient, WSRequest}
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
-
-import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.http.HttpClient
 
 trait WiremockSpec
     extends PlaySpec
@@ -44,12 +43,13 @@ trait WiremockSpec
 
   val wireMockPort = 11111
 
-  lazy val ws: WSClient             = app.injector.instanceOf(classOf[WSClient])
-  implicit val ec: ExecutionContext = ExecutionContext.global
-
   val wireMockServer: WireMockServer = new WireMockServer(wireMockConfig().port(wireMockPort))
 
   lazy val connectedServices: Seq[String] = Seq("auth", "integration-framework")
+
+  protected lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+
+  protected val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   def servicesToUrlConfig: Seq[(String, String)] = connectedServices
     .flatMap(service => Seq(s"microservice.services.$service.host" -> s"localhost", s"microservice.services.$service.port" -> wireMockPort.toString))
@@ -77,9 +77,5 @@ trait WiremockSpec
     super.beforeEach()
     reset()
   }
-
-  def buildClient(urlandUri: String, port: Int = port): WSRequest = ws
-    .url(s"http://localhost:$port$urlandUri")
-    .withFollowRedirects(false)
 
 }

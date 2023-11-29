@@ -18,9 +18,9 @@ package service
 
 import bulders.BusinessDataBuilder.{aBusiness, aGetBusinessDataRequest, aTaxPayerDisplayResponse, aTradesJourneyStatusesSeq}
 import bulders.JourneyStateDataBuilder.aJourneyState
-import connectors.BusinessConnector
-import connectors.BusinessConnector.IdType
-import connectors.BusinessConnector.IdType.Nino
+import connectors.BusinessDetailsConnector
+import connectors.BusinessDetailsConnector.IdType
+import connectors.BusinessDetailsConnector.IdType.Nino
 import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesRequestResponse
 import models.database.JourneyState
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
@@ -39,7 +39,7 @@ import java.time.LocalDate
 import scala.concurrent.Future
 
 class BusinessServiceSpec extends TestUtils {
-  val mockBusinessConnector = mock[BusinessConnector]
+  val mockBusinessConnector = mock[BusinessDetailsConnector]
   val mockSessionRepository = MockitoSugar.mock[MongoJourneyStateRepository]
 
   lazy val service = new BusinessService(mockBusinessConnector, mockSessionRepository)

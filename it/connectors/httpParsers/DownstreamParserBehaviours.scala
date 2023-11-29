@@ -16,20 +16,20 @@
 
 package connectors.httpParsers
 
-import models.error.DownstreamErrorBody.{SingleDownstreamErrorBody, MultipleDownstreamErrorBody}
-import models.error.DownstreamError.{SingleDownstreamError, MultipleDownstreamErrors}
+import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
+import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.http.HttpResponse
 import utils.TestUtils
 
-trait APIParserBehaviours extends TestUtils {
+trait DownstreamParserBehaviours extends TestUtils {
 
-  def apiTypeName: String
+  def downstreamApi: String
 
-  object FakeParser extends APIParser {
+  object FakeParser extends DownstreamParser {
     val parserName: String = "TestParser"
-    val apiType            = apiTypeName
+    val downstreamService  = downstreamApi
   }
 
   val serviceUnavailableReason = "Dependent systems are currently not responding."
@@ -65,7 +65,7 @@ trait APIParserBehaviours extends TestUtils {
 
       result mustBe
         // note*: the spacings in the String below are important and the test will fail if altered
-        s"""[TestParser][read] Received 500 from $apiTypeName API. Body:{
+        s"""[TestParser][read] Received 500 from $downstreamApi. Body:{
            |  "failures" : [ {
            |    "code" : "SERVICE_UNAVAILABLE",
            |    "reason" : "$serviceUnavailableReason",
@@ -81,14 +81,14 @@ trait APIParserBehaviours extends TestUtils {
 
   def handleSingleError(): Unit =
     "handle a single error" in {
-      val result = FakeParser.handleAPIError(failureHttpResponse(Json.parse(svrErrJs)))
-      result mustBe Left(SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody("SERVER_ERROR", serverErrorReason)))
+      val result = FakeParser.handleDownstreamError(failureHttpResponse(Json.parse(svrErrJs)))
+      result mustBe SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody("SERVER_ERROR", serverErrorReason))
     }
 
   def handleMultpleError(): Unit =
     "handle a multiple error" in {
-      val result = FakeParser.handleAPIError(failureHttpResponse(Json.parse(multiErrJs)))
-      result mustBe Left(
+      val result = FakeParser.handleDownstreamError(failureHttpResponse(Json.parse(multiErrJs)))
+      result mustBe
         MultipleDownstreamErrors(
           INTERNAL_SERVER_ERROR,
           MultipleDownstreamErrorBody(
@@ -96,25 +96,25 @@ trait APIParserBehaviours extends TestUtils {
               SingleDownstreamErrorBody("SERVICE_UNAVAILABLE", serviceUnavailableReason),
               SingleDownstreamErrorBody("SERVER_ERROR", serverErrorReason)
             ))
-        ))
+        )
     }
 
   def returnJsonValidationError(): Unit =
     "return a non model validating json error" in {
-      val result = FakeParser.handleAPIError(failureHttpResponse(Json.parse(nonValidatingJs)))
-      result mustBe Left(SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody("PARSING_ERROR", parsingErrorReason)))
+      val result = FakeParser.handleDownstreamError(failureHttpResponse(Json.parse(nonValidatingJs)))
+      result mustBe SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody("PARSING_ERROR", parsingErrorReason))
     }
 
   def handleNonApiErrorResponseError(): Unit =
     "handling a response that is neither a single or a multiple error" in {
-      val result = FakeParser.handleAPIError(failureHttpResponse(Json.obj()))
-      result mustBe Left(SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody("PARSING_ERROR", parsingErrorReason)))
+      val result = FakeParser.handleDownstreamError(failureHttpResponse(Json.obj()))
+      result mustBe SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody("PARSING_ERROR", parsingErrorReason))
     }
 
   def handleNonJsonResponseBodyError(): Unit =
     "handling a response where the response body is not json" in {
-      val result = FakeParser.handleAPIError(HttpResponse(INTERNAL_SERVER_ERROR, "", Map("CorrelationId" -> Seq("1234645654645"))))
-      result mustBe Left(SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody("PARSING_ERROR", parsingErrorReason)))
+      val result = FakeParser.handleDownstreamError(HttpResponse(INTERNAL_SERVER_ERROR, "", Map("CorrelationId" -> Seq("1234645654645"))))
+      result mustBe SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody("PARSING_ERROR", parsingErrorReason))
     }
 
 }

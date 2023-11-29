@@ -17,14 +17,14 @@
 package connectors
 
 import config.AppConfig
-import connectors.BusinessConnector.{BusinessesBaseApi, IdType, businessUriPath}
+import connectors.BusinessDetailsConnector.{BusinessesBaseApi, IdType, businessUriPath}
 import connectors.httpParsers.GetBusinessesHttpParser._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class BusinessConnector @Inject() (val http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext) extends ApiConnector {
+class BusinessDetailsConnector @Inject() (val http: HttpClient, val appConfig: AppConfig)(implicit ec: ExecutionContext) extends ApiConnector {
 
   private def businessIncomeSourceUri(idType: IdType, idNumber: String): String =
     appConfig.ifsBaseUrl + businessUriPath(idType, idNumber)
@@ -38,7 +38,7 @@ class BusinessConnector @Inject() (val http: HttpClient, val appConfig: AppConfi
   }
 }
 
-object BusinessConnector {
+object BusinessDetailsConnector {
   sealed trait IdType
   object IdType {
     case object Nino extends IdType {

@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
+
+import play.sbt.routes.RoutesKeys
 
 lazy val compileOpts = Seq(
   "-Xfatal-warnings",
@@ -31,7 +32,7 @@ lazy val compileOpts = Seq(
 
 lazy val microservice = Project("income-tax-self-employment", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
-  .disablePlugins(JUnitXmlReportPlugin)
+  .disablePlugins(JUnitXmlReportPlugin) // Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(PlayKeys.playDefaultPort := 10900)
   .settings(
     majorVersion := 0,
@@ -40,11 +41,28 @@ lazy val microservice = Project("income-tax-self-employment", file("."))
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress warnings in generated routes files
     scalacOptions ++= compileOpts,
+    RoutesKeys.routesImport ++= Seq(
+      "models.common._",
+      "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
+    ),
     // sbt-wartremover is adding this, and it causes problem with sbt doc step in pipeline
     Compile / scalacOptions -= "utf8"
   )
-  .configs(IntegrationTest extend Test)
-  .settings(integrationTestSettings() *)
-  .settings(resolvers += Resolver.jcenterRepo)
+  .settings(inConfig(IntegrationTest)(itSettings): _*)
   .settings(wartremoverErrors ++= WartRemoverSettings.warts)
-  .settings(CodeCoverageSettings.settings *)
+  .settings(resolvers += Resolver.jcenterRepo)
+  .settings(CodeCoverageSettings.settings: _*)
+  .configs(IntegrationTest extend Test)
+
+lazy val testSettings: Seq[Def.Setting[_]] = Seq(
+  fork := true,
+  unmanagedSourceDirectories += baseDirectory.value / "test-utils"
+)
+
+lazy val itSettings = Defaults.itSettings ++ Seq(
+  unmanagedSourceDirectories := Seq(
+    baseDirectory.value / "it"
+  ),
+  parallelExecution := false,
+  fork              := true
+)

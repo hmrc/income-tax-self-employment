@@ -14,10 +14,21 @@
  * limitations under the License.
  */
 
-package connectors.httpParsers
+package models.connector.api_1894.request
 
-class IFSParserSpec extends DownstreamParserBehaviours {
-  val downstreamApi = "IFS"
+import play.api.libs.json._
 
-  behave like parserShould()
+/** Represents the Swagger definition for errorResponse_failures_inner.
+  * @param code
+  *   Keys for all the errors returned
+  * @param reason
+  *   A simple description for the failure
+  */
+case class ErrorResponseFailuresInner(
+    code: String,
+    reason: String
+)
+
+object ErrorResponseFailuresInner {
+  implicit lazy val errorResponseFailuresInnerJsonFormat: Format[ErrorResponseFailuresInner] = Json.format[ErrorResponseFailuresInner]
 }

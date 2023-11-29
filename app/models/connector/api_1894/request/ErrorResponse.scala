@@ -14,24 +14,16 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894
+package models.connector.api_1894.request
 
 import play.api.libs.json._
 
-/** Represents the Swagger definition for selfEmploymentDeductionsDetailPosNegType.
-  * @param amount
-  *   positive or negative money
-  * @param disallowableAmount
-  *   positive or negative money
+/** Represents the Swagger definition for errorResponse.
   */
-case class SelfEmploymentDeductionsDetailPosNegType(
-    amount: Option[BigDecimal],
-    disallowableAmount: Option[BigDecimal]
+case class ErrorResponse(
+    failures: Set[ErrorResponseFailuresInner]
 )
 
-object SelfEmploymentDeductionsDetailPosNegType {
-
-  implicit lazy val selfEmploymentDeductionsDetailPosNegTypeJsonFormat: Format[SelfEmploymentDeductionsDetailPosNegType] =
-    Json.format[SelfEmploymentDeductionsDetailPosNegType]
-
+object ErrorResponse {
+  implicit lazy val errorResponseJsonFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
 }

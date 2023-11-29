@@ -29,7 +29,8 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class BusinessController @Inject() (businessService: BusinessService, auth: AuthorisedAction, cc: ControllerComponents)(implicit ec: ExecutionContext)
+class BusinessDetailsController @Inject() (businessService: BusinessService, auth: AuthorisedAction, cc: ControllerComponents)(implicit
+    ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 

@@ -14,10 +14,18 @@
  * limitations under the License.
  */
 
-package connectors.httpParsers
+package models.connector.api_1894.request
 
-class IFSParserSpec extends DownstreamParserBehaviours {
-  val downstreamApi = "IFS"
+import play.api.libs.json._
 
-  behave like parserShould()
+/** Represents the Swagger definition for requestBody.
+  * @param from
+  *   Defines a date in the format yyyy-mm-dd
+  * @param to
+  *   Defines a date in the format yyyy-mm-dd
+  */
+case class CreateSEPeriodSummaryRequestBody(from: String, to: String, financials: Option[FinancialsType])
+
+object CreateSEPeriodSummaryRequestBody {
+  implicit lazy val formats: Format[CreateSEPeriodSummaryRequestBody] = Json.format[CreateSEPeriodSummaryRequestBody]
 }

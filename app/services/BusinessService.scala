@@ -16,8 +16,8 @@
 
 package services
 
-import connectors.BusinessConnector
-import connectors.BusinessConnector.IdType.Nino
+import connectors.BusinessDetailsConnector
+import connectors.BusinessDetailsConnector.IdType.Nino
 import models.error.{ServiceError, DownstreamError}
 import models.domain.{Business, TradesJourneyStatuses}
 import repositories.JourneyStateRepository
@@ -30,7 +30,7 @@ import utils.ScalaHelper.FutureEither
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class BusinessService @Inject() (businessConnector: BusinessConnector, journeyStateRepository: JourneyStateRepository)(implicit
+class BusinessService @Inject() (businessConnector: BusinessDetailsConnector, journeyStateRepository: JourneyStateRepository)(implicit
     ec: ExecutionContext) {
 
   def getBusinesses(nino: String)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =

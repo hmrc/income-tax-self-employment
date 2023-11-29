@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894
+package models.common
 
-import play.api.libs.json._
+import play.api.mvc.PathBindable
 
-/** Represents the Swagger definition for requestBody.
-  * @param from
-  *   Defines a date in the format yyyy-mm-dd
-  * @param to
-  *   Defines a date in the format yyyy-mm-dd
-  */
-case class RequestBody(
-    from: String,
-    to: String,
-    financials: Option[FinancialsType]
-)
+final case class BusinessId(value: String) extends AnyVal
 
-object RequestBody {
-  implicit lazy val requestBodyJsonFormat: Format[RequestBody] = Json.format[RequestBody]
+object BusinessId {
+
+  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[BusinessId] = new PathBindable[BusinessId] {
+
+    override def bind(key: String, value: String): Either[String, BusinessId] =
+      strBinder.bind(key, value).map(BusinessId.apply)
+
+    override def unbind(key: String, businessId: BusinessId): String =
+      strBinder.unbind(key, businessId.value)
+
+  }
+
 }

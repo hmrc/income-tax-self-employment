@@ -14,17 +14,8 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894
+package models.connector.api_1894.request
 
-import play.api.libs.json._
-import scala.collection.immutable.Set
+import models.common.{BusinessId, Nino, TaxYear}
 
-/** Represents the Swagger definition for errorResponse.
-  */
-case class ErrorResponse(
-    failures: Set[ErrorResponseFailuresInner]
-)
-
-object ErrorResponse {
-  implicit lazy val errorResponseJsonFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
-}
+case class CreateSEPeriodSummaryRequestData(taxYear: TaxYear, businessId: BusinessId, nino: Nino, body: CreateSEPeriodSummaryRequestBody)

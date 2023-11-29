@@ -5,7 +5,7 @@ object WartRemoverSettings {
   lazy val warts: Seq[Wart] = Seq(
     Wart.ArrayEquals,
     Wart.ExplicitImplicitTypes,
-    Wart.MutableDataStructures,
+    Wart.MutableDataStructures
     // Not yet ready to enable it
     //    Wart.Enumeration
     //    Wart.LeakingSealed,
