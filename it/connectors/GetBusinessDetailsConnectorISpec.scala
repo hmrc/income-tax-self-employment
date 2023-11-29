@@ -66,7 +66,7 @@ class GetBusinessDetailsConnectorISpec extends WiremockSpec with IntegrationBase
             auditStubs()
 
             implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-            val result = await(new BusinessDetailsConnector(httpClient, appConfig(intExtHost)).getBusinesses(idType, idNumber)(hc))
+            val result = await(new BusinessDetailsConnector(httpClient, appConfig(intExtHost)).getBusinessDetails(idType, idNumber)(hc))
             result mustBe Right(expectedResult)
           }
       }
@@ -84,7 +84,7 @@ class GetBusinessDetailsConnectorISpec extends WiremockSpec with IntegrationBase
           auditStubs()
 
           implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-          val result                     = await(connector.getBusinesses(idType, idNumber)(hc))
+          val result                     = await(connector.getBusinessDetails(idType, idNumber)(hc))
           result mustBe Left(SingleDownstreamError(errorStatus, apiError))
         }
       }
@@ -98,7 +98,7 @@ class GetBusinessDetailsConnectorISpec extends WiremockSpec with IntegrationBase
           stubGetWithResponseBody(ifsUrl, errorStatus, errorResponseBody.toString(), headersSentToIfs)
           auditStubs()
           implicit val hc: HeaderCarrier = HeaderCarrier()
-          val result                     = await(connector.getBusinesses(idType, idNumber)(hc))
+          val result                     = await(connector.getBusinessDetails(idType, idNumber)(hc))
           result mustBe Left(SingleDownstreamError(errorStatus, SingleDownstreamErrorBody(invalidIdType, invalidReason)))
         }
 
@@ -108,7 +108,7 @@ class GetBusinessDetailsConnectorISpec extends WiremockSpec with IntegrationBase
           stubGetWithResponseBody(ifsUrl, OK, nonGetBusinessDataRequestBody.toString(), headersSentToIfs)
           auditStubs()
           implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-          val result                     = await(connector.getBusinesses(idType, idNumber)(hc))
+          val result                     = await(connector.getBusinessDetails(idType, idNumber)(hc))
           result mustBe Left(SingleDownstreamError(errorStatus, SingleDownstreamErrorBody(invalidIdType, invalidReason)))
         }
       }

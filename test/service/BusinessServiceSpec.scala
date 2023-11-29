@@ -103,7 +103,7 @@ class BusinessServiceSpec extends TestUtils {
 
   private def stubConnectorGetBusiness(expectedResult: GetBusinessesRequestResponse): Unit = {
     (mockBusinessConnector
-      .getBusinesses(_: IdType, _: String)(_: HeaderCarrier))
+      .getBusinessDetails(_: IdType, _: String)(_: HeaderCarrier))
       .expects(Nino, nino, *)
       .returning(Future.successful(expectedResult))
     ()
