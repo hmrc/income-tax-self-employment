@@ -20,10 +20,14 @@ import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import play.api.libs.json.Writes
 
 trait WiremockStubHelpers {
 
-  def stubGetWithResponseBody(url: String, status: Int, response: String, requestHeaders: Seq[HttpHeader] = Seq.empty): StubMapping = {
+  def stubGetWithResponseBody(url: String,
+                              expectedStatus: Int,
+                              expectedResponse: String,
+                              requestHeaders: Seq[HttpHeader] = Seq.empty): StubMapping = {
     val mappingWithHeaders: MappingBuilder = requestHeaders.foldLeft(get(urlMatching(url))) { (result, nxt) =>
       result.withHeader(nxt.key(), equalTo(nxt.firstValue()))
     }
@@ -32,24 +36,47 @@ trait WiremockStubHelpers {
       mappingWithHeaders
         .willReturn(
           aResponse()
-            .withStatus(status)
-            .withBody(response)
+            .withStatus(expectedStatus)
+            .withBody(expectedResponse)
             .withHeader("Content-Type", "application/json; charset=utf-8")))
   }
 
-  def stubGetWithoutResponseBody(url: String, status: Int): StubMapping =
+  def stubGetWithoutResponseBody(url: String, expectedStatus: Int): StubMapping =
     stubFor(
       get(urlMatching(url))
         .willReturn(aResponse()
-          .withStatus(status)))
+          .withStatus(expectedStatus)))
 
-  def stubPostWithoutResponseAndRequestBody(url: String, status: Int): StubMapping =
+  def stubPostWithoutResponseAndRequestBody(url: String, expectedStatus: Int): StubMapping =
     stubFor(
       post(urlEqualTo(url))
         .willReturn(
           aResponse()
-            .withStatus(status)
+            .withStatus(expectedStatus)
             .withHeader("Content-Type", "application/json; charset=utf-8")))
+
+  // TODO Reduce duplication in this trait.
+  def stubPostWithRequestAndResponseBody[T](url: String,
+                                            requestBody: T,
+                                            expectedResponse: String,
+                                            expectedStatus: Int,
+                                            requestHeaders: Seq[HttpHeader] = Seq.empty)(implicit writes: Writes[T]): StubMapping = {
+    val stringBody = writes.writes(requestBody).toString()
+
+    val mapping: MappingBuilder = requestHeaders
+      .foldLeft(post(urlMatching(url))) { (result, nxt) =>
+        result.withHeader(nxt.key(), equalTo(nxt.firstValue()))
+      }
+      .withRequestBody(equalTo(stringBody))
+
+    stubFor(
+      mapping
+        .willReturn(
+          aResponse()
+            .withStatus(expectedStatus)
+            .withBody(expectedResponse)
+            .withHeader("Content-Type", "application/json; charset=utf-8")))
+  }
 
   def auditStubs(): Unit = {
     val auditResponseCode = 204

@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package connectors.httpParsers
+package models.connector.api_1894.response
 
-class IFSParserSpec extends DownstreamParserBehaviours {
-  val downstreamApi = "IFS"
+import play.api.libs.json._
 
-  behave like parserShould()
+case class CreateSEPeriodSummaryResponse(ibdSubmissionPeriodId: String)
+
+object CreateSEPeriodSummaryResponse {
+  implicit val formats: OFormat[CreateSEPeriodSummaryResponse] = Json.format[CreateSEPeriodSummaryResponse]
 }

@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894
+package models.connector.api_1894.request
 
 import play.api.libs.json._
 
-/** Represents the Swagger definition for selfEmploymentDeductionsDetailType.
+/** Represents the Swagger definition for selfEmploymentDeductionsDetailPosNegType.
   * @param amount
-  *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
+  *   positive or negative money
   * @param disallowableAmount
-  *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
+  *   positive or negative money
   */
-case class SelfEmploymentDeductionsDetailType(
+case class SelfEmploymentDeductionsDetailPosNegType(
     amount: Option[BigDecimal],
     disallowableAmount: Option[BigDecimal]
 )
 
-object SelfEmploymentDeductionsDetailType {
+object SelfEmploymentDeductionsDetailPosNegType {
 
-  implicit lazy val selfEmploymentDeductionsDetailTypeJsonFormat: Format[SelfEmploymentDeductionsDetailType] =
-    Json.format[SelfEmploymentDeductionsDetailType]
+  implicit lazy val selfEmploymentDeductionsDetailPosNegTypeJsonFormat: Format[SelfEmploymentDeductionsDetailPosNegType] =
+    Json.format[SelfEmploymentDeductionsDetailPosNegType]
 
 }

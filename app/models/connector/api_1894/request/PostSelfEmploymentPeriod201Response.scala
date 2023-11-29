@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894
+package models.connector.api_1894.request
 
 import play.api.libs.json._
 

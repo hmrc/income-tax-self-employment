@@ -16,34 +16,33 @@
 
 package connectors
 
+import base.IntegrationBaseSpec
 import bulders.BusinessDataBuilder.aGetBusinessDataRequestStr
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import config.AppConfig
-import connectors.BusinessConnector.IdType.{MtdId, Nino}
-import connectors.BusinessConnector.businessUriPath
+import connectors.BusinessDetailsConnector.IdType.{MtdId, Nino}
+import connectors.BusinessDetailsConnector.businessUriPath
 import helpers.WiremockSpec
 import models.connector.api_1171.BusinessData.GetBusinessDataRequest
-import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
-import models.error.DownstreamErrorBody.SingleDownstreamErrorBody.{notFound, serverError, invalidMtdid, invalidNino, serviceUnavailable}
 import models.error.DownstreamError.SingleDownstreamError
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody.{invalidMtdid, invalidNino, notFound, serverError, serviceUnavailable}
 import play.api.Configuration
 import play.api.http.Status._
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpClient, SessionId}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
-class GetBusinessConnectorISpec extends WiremockSpec {
+class GetBusinessDetailsConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
 
-  lazy val connector: BusinessConnector = app.injector.instanceOf[BusinessConnector]
-  lazy val httpClient: HttpClient       = app.injector.instanceOf[HttpClient]
+  lazy val connector: BusinessDetailsConnector = app.injector.instanceOf[BusinessDetailsConnector]
 
   def appConfig(businessApiHost: String): AppConfig =
     new AppConfig(app.injector.instanceOf[Configuration], app.injector.instanceOf[ServicesConfig]) {
       override val ifsBaseUrl: String = s"http://$businessApiHost:$wireMockPort"
     }
 
-  val (nino, mtdId)             = ("123456789", "1234567890123456")
-  val (apiNinoUrl, apiMtdIdUrl) = (businessUriPath(Nino, nino), businessUriPath(MtdId, mtdId))
+  val (apiNinoUrl, apiMtdIdUrl) = (businessUriPath(Nino, nino.value), businessUriPath(MtdId, mtditid))
 
   val headersSentToIfs = Seq(
     new HttpHeader(HeaderNames.authorisation, "Bearer secret"),
@@ -52,7 +51,7 @@ class GetBusinessConnectorISpec extends WiremockSpec {
 
   ".getBusinesses" should {
 
-    for ((idType, idNumber, ifsUrl) <- Seq((Nino, nino, apiNinoUrl), (MtdId, mtdId, apiMtdIdUrl))) {
+    for ((idType, idNumber, ifsUrl) <- Seq((Nino, nino.value, apiNinoUrl), (MtdId, mtditid, apiMtdIdUrl))) {
 
       s"include internal headers - $ifsUrl" when {
         val internalHost         = "localhost"
@@ -67,7 +66,7 @@ class GetBusinessConnectorISpec extends WiremockSpec {
             auditStubs()
 
             implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
-            val result                     = await(new BusinessConnector(httpClient, appConfig(intExtHost)).getBusinesses(idType, idNumber)(hc))
+            val result = await(new BusinessDetailsConnector(httpClient, appConfig(intExtHost)).getBusinesses(idType, idNumber)(hc))
             result mustBe Right(expectedResult)
           }
       }

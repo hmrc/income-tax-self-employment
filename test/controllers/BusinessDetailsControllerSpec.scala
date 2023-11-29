@@ -17,7 +17,7 @@
 package controllers
 
 import bulders.BusinessDataBuilder._
-import controllers.BusinessControllerSpec.{stubGetBusiness, stubGetBusinessJourneyStates, stubGetBusinesses}
+import controllers.BusinessDetailsControllerSpec.{stubGetBusiness, stubGetBusinessJourneyStates, stubGetBusinesses}
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody.{notFound, serverError, invalidNino, serviceUnavailable}
 import models.error.ServiceError.DatabaseError.MongoError
 import models.error.DownstreamError.SingleDownstreamError
@@ -33,9 +33,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import java.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}
 
-class BusinessControllerSpec extends ControllerBehaviours {
+class BusinessDetailsControllerSpec extends ControllerBehaviours {
   val mockBusinessService = MockitoSugar.mock[BusinessService]
-  val underTest           = new BusinessController(mockBusinessService, mockAuthorisedAction, stubControllerComponents)
+  val underTest           = new BusinessDetailsController(mockBusinessService, mockAuthorisedAction, stubControllerComponents)
 
   val nino       = "FI290077A"
   val businessId = "SJPR05893938418"
@@ -116,7 +116,7 @@ class BusinessControllerSpec extends ControllerBehaviours {
 
 }
 
-object BusinessControllerSpec {
+object BusinessDetailsControllerSpec {
 
   def stubGetBusinesses(mockBusinessService: BusinessService, nino: String, expectedResult: GetBusinessResponse): Unit = {
     when(mockBusinessService.getBusinesses(meq(nino))(any[HeaderCarrier])) thenReturn Future.successful(expectedResult)

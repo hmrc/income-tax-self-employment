@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894
+package models.common
 
-import play.api.libs.json._
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import utils.BaseSpec
 
-/** Represents the Swagger definition for errorResponse_failures_inner.
-  * @param code
-  *   Keys for all the errors returned
-  * @param reason
-  *   A simple description for the failure
-  */
-case class ErrorResponseFailuresInner(
-    code: String,
-    reason: String
-)
+class TaxYearSpec extends BaseSpec {
 
-object ErrorResponseFailuresInner {
-  implicit lazy val errorResponseFailuresInnerJsonFormat: Format[ErrorResponseFailuresInner] = Json.format[ErrorResponseFailuresInner]
+  private val year = TaxYear(2024)
+
+  "getting start and end dates" must {
+    "get April 5th and 6th" in {
+      TaxYear.startDate(year) shouldBe "2023-04-06"
+      TaxYear.endDate(year) shouldBe "2024-04-05"
+    }
+  }
+  "get a TYS (YY-YY) format" in {
+    TaxYear.asTys(year) shouldBe "23-24"
+  }
+
 }
