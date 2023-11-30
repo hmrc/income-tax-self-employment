@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.frontend.journeys.expenses.goodsToSellOrUse
+package models.frontend.expenses
 
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json._

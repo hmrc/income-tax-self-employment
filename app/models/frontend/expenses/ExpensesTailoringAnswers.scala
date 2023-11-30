@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.frontend
+package models.frontend.expenses
 
 import play.api.libs.json.{Format, Json}
 

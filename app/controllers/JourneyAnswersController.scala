@@ -17,8 +17,10 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
+import models.common.JourneyName._
 import models.common.{BusinessId, JourneyName, Mtditid, TaxYear}
-import models.frontend.ExpensesTailoringAnswers
+import models.frontend.income.IncomeJourneyAnswers
+import models.frontend.expenses.{ExpensesTailoringAnswers, GoodsToSellOrUseJourneyAnswers}
 import play.api.Logger
 import play.api.libs.json.Format.GenericFormat
 import play.api.libs.json.JsObject
@@ -30,7 +32,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class JourneyAnswersController @Inject()(auth: AuthorisedAction, cc: ControllerComponents, service: JourneyService)(implicit ec: ExecutionContext)
+class JourneyAnswersController @Inject() (auth: AuthorisedAction, cc: ControllerComponents, service: JourneyService)(implicit ec: ExecutionContext)
     extends BackendController(cc) {
   private implicit val logger: Logger = Logger(this.getClass)
 
@@ -43,8 +45,19 @@ class JourneyAnswersController @Inject()(auth: AuthorisedAction, cc: ControllerC
   }
 
   def saveAnswers(taxYear: TaxYear, businessId: BusinessId, journey: JourneyName): Action[AnyContent] = auth.async { implicit user =>
-    getBody[ExpensesTailoringAnswers](user) { value =>
-      service.setAnswers(businessId, taxYear, Mtditid(user.mtditid), journey, value).map(_ => NoContent)
+    journey match {
+      case ExpensesTailoring =>
+        getBody[ExpensesTailoringAnswers](user) { value =>
+          service.setAnswers(businessId, taxYear, Mtditid(user.mtditid), journey, value).map(_ => NoContent)
+        }
+      case Income =>
+        getBody[IncomeJourneyAnswers](user) { value =>
+          service.setAnswers(businessId, taxYear, Mtditid(user.mtditid), journey, value).map(_ => NoContent)
+        }
+      case GoodsToSellOrUse =>
+        getBody[GoodsToSellOrUseJourneyAnswers](user) { value =>
+          service.setAnswers(businessId, taxYear, Mtditid(user.mtditid), journey, value).map(_ => NoContent)
+        }
     }
   }
 

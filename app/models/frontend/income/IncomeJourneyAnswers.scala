@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package models.frontend
+package models.frontend.income
 
-import enumeratum.{Enum, EnumEntry, PlayJsonEnum}
+import play.api.libs.json.{Json, OFormat}
 
 case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
                                 nonTurnoverIncomeAmount: Option[BigDecimal],
@@ -29,21 +29,6 @@ case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
                                 howMuchTradingAllowance: Option[HowMuchTradingAllowance],
                                 tradingAllowanceAmount: Option[BigDecimal])
 
-sealed abstract class TradingAllowance(override val entryName: String) extends EnumEntry
-
-object TradingAllowance extends Enum[TradingAllowance] with PlayJsonEnum[TradingAllowance] {
-
-  case object UseTradingAllowance extends TradingAllowance("useTradingAllowance")
-  case object DeclareExpenses     extends TradingAllowance("declareExpenses")
-
-  override def values: IndexedSeq[TradingAllowance] = findValues
-}
-
-sealed abstract class HowMuchTradingAllowance(override val entryName: String) extends EnumEntry
-
-object HowMuchTradingAllowance extends Enum[HowMuchTradingAllowance] with PlayJsonEnum[HowMuchTradingAllowance] {
-  case object Maximum  extends HowMuchTradingAllowance("maximum")
-  case object LessThan extends HowMuchTradingAllowance("lessThan")
-
-  override def values: IndexedSeq[HowMuchTradingAllowance] = findValues
+object IncomeJourneyAnswers {
+  implicit val formats: OFormat[IncomeJourneyAnswers] = Json.format[IncomeJourneyAnswers]
 }
