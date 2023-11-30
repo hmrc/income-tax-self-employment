@@ -18,7 +18,7 @@ package controllers
 
 import controllers.actions.AuthorisedAction
 import models.common.{BusinessId, JourneyName, Mtditid, TaxYear}
-import models.frontend.ExpensesTailoringJourneyAnswers
+import models.frontend.ExpensesTailoringAnswers
 import play.api.Logger
 import play.api.libs.json.Format.GenericFormat
 import play.api.libs.json.JsObject
@@ -43,7 +43,7 @@ class JourneyAnswersController @Inject()(auth: AuthorisedAction, cc: ControllerC
   }
 
   def saveAnswers(taxYear: TaxYear, businessId: BusinessId, journey: JourneyName): Action[AnyContent] = auth.async { implicit user =>
-    getBody[ExpensesTailoringJourneyAnswers](user) { value =>
+    getBody[ExpensesTailoringAnswers](user) { value =>
       service.setAnswers(businessId, taxYear, Mtditid(user.mtditid), journey, value).map(_ => NoContent)
     }
   }

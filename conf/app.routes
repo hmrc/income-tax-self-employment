@@ -11,8 +11,8 @@ GET         /completed-section/:businessId/:journey/:taxYear                    
 PUT         /completed-section/:businessId/:journey/:taxYear/:completed                            controllers.JourneyStateController.putJourneyState(businessId: String, journey: String, taxYear: Int, completed: Boolean)
 
 # Journey Answers
-GET         /:taxYear/:businessId/:journey                                                         controllers.JourneyAnswersController.getAnswers(taxYear: TaxYear, businessId: BusinessId, journey: JourneyName)
-POST        /:taxYear/:businessId/:journey                                                         controllers.JourneyAnswersController.saveAnswers(taxYear: TaxYear, businessId: BusinessId, journey: JourneyName)
+GET         /:taxYear/:businessId/:journey/answers                                                 controllers.JourneyAnswersController.getAnswers(taxYear: TaxYear, businessId: BusinessId, journey: JourneyName)
+POST        /:taxYear/:businessId/:journey/answers                                                 controllers.JourneyAnswersController.saveAnswers(taxYear: TaxYear, businessId: BusinessId, journey: JourneyName)
 
 # Expenses
 # Goods to sell or use
