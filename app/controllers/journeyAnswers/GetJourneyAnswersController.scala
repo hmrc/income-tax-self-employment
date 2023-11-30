@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package controllers
+package controllers.journeyAnswers
 
 import play.api.libs.json.Json
 import play.api.mvc._
+import services.journeyAnswers.GetJourneyAnswersResult._
 import services.journeyAnswers.GetJourneyAnswersService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import services.journeyAnswers.GetJourneyAnswersResult._
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
