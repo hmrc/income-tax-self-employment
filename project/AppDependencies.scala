@@ -36,7 +36,6 @@ object AppDependencies {
     "org.typelevel"                %% "cats-core"                 % "2.9.0",
     "com.beachape"                 %% "enumeratum"                % "1.7.3",
     "com.beachape"                 %% "enumeratum-play-json"      % "1.7.3" excludeAll (jacksonAndPlayExclusions *),
-    "org.typelevel"                %% "cats-core"                 % "2.9.0"
   )
 
   val test: Seq[ModuleID] = Seq(

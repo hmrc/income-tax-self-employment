@@ -25,8 +25,8 @@ object JourneyName extends Enum[JourneyName] {
   val values: IndexedSeq[JourneyName] = findValues
 
   case object ExpensesTailoring extends JourneyName("expenses-categories")
-  case object Income extends JourneyName("income")
-  case object GoodsToSellOrUse extends JourneyName("expenses-goods-to-sell-or-use")
+  case object Income            extends JourneyName("income")
+  case object GoodsToSellOrUse  extends JourneyName("expenses-goods-to-sell-or-use")
 
   implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[JourneyName] = new PathBindable[JourneyName] {
 

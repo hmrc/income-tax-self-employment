@@ -33,16 +33,15 @@ trait JourneyService {
   def setAnswers[A: Writes](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, data: A): ApiResultT[Unit]
 }
 
-@nowarn
+@nowarn // TODO remove when model is there SASS-6340
 @Singleton
 class JourneyServiceImpl @Inject() (repository: JourneyAnswersRepository)(implicit ec: ExecutionContext) extends JourneyService with Logging {
 
   def getAnswers[A: Writes](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName): ApiResultT[A] =
     ??? // TODO Implement when doing 'prior data' fetch
 
-  def setAnswers[A: Writes](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, data: A): ApiResultT[Unit] = {
+  def setAnswers[A: Writes](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, data: A): ApiResultT[Unit] =
     EitherT(
       Future.successful(Right(): Either[ServiceError, Unit])
     ) // TODO SASS-6340
-  }
 }
