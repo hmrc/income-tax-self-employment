@@ -29,7 +29,7 @@ class BusinessDetailsConnector @Inject() (val http: HttpClient, val appConfig: A
   private def businessIncomeSourceUri(idType: IdType, idNumber: String): String =
     appConfig.ifsBaseUrl + businessUriPath(idType, idNumber)
 
-  def getBusinessDetails(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier): Future[GetBusinessesRequestResponse] = {
+  def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier): Future[GetBusinessesRequestResponse] = {
     val incomeSourceUri: String = businessIncomeSourceUri(idType, idNumber)
 
     def apiCall(implicit hc: HeaderCarrier): Future[GetBusinessesRequestResponse] =
