@@ -53,11 +53,10 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
       )
     )
     with JourneyAnswersRepository {
-
   /*
    * Do we really want to keepAlive upon access of the journey answers?
    */
-  override def get(id: String): Future[Option[JourneyAnswers]] =
+  def get(id: String): Future[Option[JourneyAnswers]] =
     keepAlive(id).flatMap { _ =>
       collection
         .withReadPreference(ReadPreference.primaryPreferred())
@@ -65,7 +64,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
         .headOption()
     }
 
-  override def set(answers: JourneyAnswers): Future[Unit] = {
+  def set(answers: JourneyAnswers): Future[Unit] = {
     val updatedAnswers = answers.copy(lastUpdated = Instant.now(clock))
     collection
       .replaceOne(
@@ -77,7 +76,6 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
       .map(_ => ())
   }
 
-  // TODO We don't need keepalive as we will have 4 tax years
   private def keepAlive(id: String): Future[Unit] =
     collection
       .updateOne(
