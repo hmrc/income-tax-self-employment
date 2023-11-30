@@ -24,10 +24,13 @@ import scala.concurrent.duration.Duration
 
 @Singleton
 class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
-  val ifsEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
-  val ifsBaseUrl: String     = servicesConfig.baseUrl("integration-framework")
-  val cacheTtl: Int          = Duration(servicesConfig.getString("mongodb.timeToLive")).toDays.toInt // TODO Remove and use 4-tax-years
+  val authBaseUrl: String      = servicesConfig.baseUrl("auth")
+  val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
+  val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
 
+  val ifsEnvironment: String                     = config.get[String]("microservice.services.integration-framework.environment")
   def ifsAuthorisationToken(api: String): String = config.get[String](s"microservice.services.integration-framework.authorisation-token.$api")
+  val ifsBaseUrl: String                         = servicesConfig.baseUrl("integration-framework")
 
+  val cacheTtl: Int = Duration(servicesConfig.getString("mongodb.timeToLive")).toDays.toInt
 }
