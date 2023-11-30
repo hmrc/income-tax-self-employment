@@ -24,14 +24,12 @@ import models.frontend.income.IncomeJourneyAnswers
 import repositories.JourneyAnswersRepository
 
 import javax.inject.{Inject, Singleton}
-import scala.annotation.nowarn
 import scala.concurrent.{ExecutionContext, Future}
 
 trait IncomeAnswersService {
   def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: IncomeJourneyAnswers): ApiResultT[Unit]
 }
 
-@nowarn
 @Singleton
 class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository)(implicit ec: ExecutionContext) extends IncomeAnswersService {
 

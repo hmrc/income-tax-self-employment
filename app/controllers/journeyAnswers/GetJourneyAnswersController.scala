@@ -18,7 +18,7 @@ package controllers.journeyAnswers
 
 import play.api.libs.json.Json
 import play.api.mvc._
-import services.journeyAnswers.GetJourneyAnswersResult._
+import services.journeyAnswers.GetJourneyAnswersResult.{NoJourneyAnswersFound, JourneyAnswersFound}
 import services.journeyAnswers.GetJourneyAnswersService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
