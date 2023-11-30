@@ -40,8 +40,9 @@ class JourneyServiceImpl @Inject() (repository: JourneyAnswersRepository)(implic
   def getAnswers[A: Writes](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName): ApiResultT[A] =
     ??? // TODO Implement when doing 'prior data' fetch
 
-  def setAnswers[A: Writes](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, data: A): ApiResultT[Unit] =
+  def setAnswers[A: Writes](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, data: A): ApiResultT[Unit] = {
     EitherT(
       Future.successful(Right(): Either[ServiceError, Unit])
     ) // TODO SASS-6340
+  }
 }
