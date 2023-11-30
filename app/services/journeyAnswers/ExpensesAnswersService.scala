@@ -31,7 +31,7 @@ trait ExpensesAnswersService {
 }
 
 @Singleton
-class ExpensesAnswersServiceImpl @Inject()(implicit ec: ExecutionContext) extends ExpensesAnswersService {
+class ExpensesAnswersServiceImpl @Inject() (implicit ec: ExecutionContext) extends ExpensesAnswersService {
   def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: ExpensesTailoringAnswers): ApiResultT[Unit] =
     EitherT.right[ServiceError](Future.successful(()))
 
