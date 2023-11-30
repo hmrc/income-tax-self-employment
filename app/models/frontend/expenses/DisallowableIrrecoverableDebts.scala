@@ -30,7 +30,6 @@ object DisallowableIrrecoverableDebts extends Enumerable.Implicits {
     No
   )
 
-
   implicit val enumerable: Enumerable[DisallowableIrrecoverableDebts] =
     Enumerable(values.map(v => v.toString -> v): _*)
 
