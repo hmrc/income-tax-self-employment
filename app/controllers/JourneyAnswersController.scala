@@ -19,17 +19,17 @@ package controllers
 import controllers.actions.AuthorisedAction
 import models.common.JourneyName._
 import models.common.{BusinessId, JourneyName, Mtditid, TaxYear}
-import models.frontend.income.IncomeJourneyAnswers
 import models.frontend.expenses.{ExpensesTailoringAnswers, GoodsToSellOrUseJourneyAnswers}
+import models.frontend.income.IncomeJourneyAnswers
 import play.api.Logger
 import play.api.libs.json.Format.GenericFormat
-import play.api.libs.json.JsObject
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.libs.json.{Format, JsObject}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import services.JourneyService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class JourneyAnswersController @Inject() (auth: AuthorisedAction, cc: ControllerComponents, service: JourneyService)(implicit ec: ExecutionContext)
@@ -45,19 +45,15 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction, cc: Controller
   }
 
   def saveAnswers(taxYear: TaxYear, businessId: BusinessId, journey: JourneyName): Action[AnyContent] = auth.async { implicit user =>
+    def saveJourneyAnswers[A: Format]: Future[Result] =
+      getBody[A](user) { value =>
+        service.setAnswers(businessId, taxYear, Mtditid(user.mtditid), journey, value).map(_ => NoContent)
+      }
+
     journey match {
-      case ExpensesTailoring =>
-        getBody[ExpensesTailoringAnswers](user) { value =>
-          service.setAnswers(businessId, taxYear, Mtditid(user.mtditid), journey, value).map(_ => NoContent)
-        }
-      case Income =>
-        getBody[IncomeJourneyAnswers](user) { value =>
-          service.setAnswers(businessId, taxYear, Mtditid(user.mtditid), journey, value).map(_ => NoContent)
-        }
-      case GoodsToSellOrUse =>
-        getBody[GoodsToSellOrUseJourneyAnswers](user) { value =>
-          service.setAnswers(businessId, taxYear, Mtditid(user.mtditid), journey, value).map(_ => NoContent)
-        }
+      case Income            => saveJourneyAnswers[IncomeJourneyAnswers]
+      case ExpensesTailoring => saveJourneyAnswers[ExpensesTailoringAnswers]
+      case GoodsToSellOrUse  => saveJourneyAnswers[GoodsToSellOrUseJourneyAnswers]
     }
   }
 

@@ -20,7 +20,7 @@ import models.domain.ApiResultT
 import models.error.ServiceError
 import play.api.Logger
 import play.api.libs.json.Format.GenericFormat
-import play.api.libs.json.{JsError, JsSuccess, Json, Reads}
+import play.api.libs.json.{JsError, JsResult, JsSuccess, Json, Reads}
 import play.api.mvc.Results.{BadRequest, InternalServerError}
 import play.api.mvc.{AnyContent, Result}
 
@@ -39,8 +39,7 @@ package object controllers {
 
   def getBody[A: Reads](user: AuthorisedAction.User[AnyContent])(
       invokeBlock: A => ApiResultT[Result])(implicit ec: ExecutionContext, logger: Logger): Future[Result] =
-    user.body.asJson
-      .map(_.validate[A])
+    parseBody[A](user)
       .fold[Future[Result]](Future.successful(BadRequest)) {
         case JsSuccess(value, _) =>
           handleResultT(invokeBlock(value))
@@ -49,5 +48,8 @@ package object controllers {
             BadRequest(Json.obj("code" -> "RULE_INCORRECT_OR_EMPTY_BODY_SUBMITTED", "reason" -> "An empty or non-matching body was submitted")))
 
       }
+
+  private def parseBody[A: Reads](user: AuthorisedAction.User[AnyContent]): Option[JsResult[A]] =
+    user.body.asJson.map(_.validate[A])
 
 }
