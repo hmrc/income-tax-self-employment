@@ -17,6 +17,7 @@
 package controllers.actions
 
 import controllers.actions.AuthorisedAction.{EnrolmentIdentifiers, EnrolmentKeys, User}
+import models.common.Mtditid
 import play.api.Logger
 import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
@@ -138,7 +139,8 @@ class AuthorisedAction @Inject() ()(implicit
 
 object AuthorisedAction {
   case class User[T](mtditid: String, arn: Option[String])(implicit val request: Request[T]) extends WrappedRequest[T](request) {
-    def isAgent: Boolean = arn.nonEmpty
+    def isAgent: Boolean    = arn.nonEmpty
+    def getMtditid: Mtditid = Mtditid(mtditid)
   }
 
   object EnrolmentKeys {

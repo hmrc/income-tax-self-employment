@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers.journeyAnswers.expenses.goodsToSellOrUse
+package controllers
 
 import cats.data.EitherT
 import controllers.actions.AuthorisedAction

@@ -49,7 +49,7 @@ package object controllers {
 
       }
 
-  private def parseBody[A: Reads](user: AuthorisedAction.User[AnyContent]): Option[JsResult[A]] =
+  def parseBody[A: Reads](user: AuthorisedAction.User[AnyContent]): Option[JsResult[A]] =
     user.body.asJson.map(_.validate[A])
 
 }

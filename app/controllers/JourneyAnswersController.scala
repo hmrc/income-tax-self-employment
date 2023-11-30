@@ -17,44 +17,41 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
-import models.common.JourneyName._
-import models.common.{BusinessId, JourneyName, Mtditid, TaxYear}
+import models.common.{BusinessId, TaxYear}
 import models.frontend.expenses.{ExpensesTailoringAnswers, GoodsToSellOrUseJourneyAnswers}
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.Logger
 import play.api.libs.json.Format.GenericFormat
-import play.api.libs.json.{Format, JsObject}
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
-import services.JourneyService
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import services.journeyAnswers.{ExpensesAnswersService, IncomeAnswersService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class JourneyAnswersController @Inject() (auth: AuthorisedAction, cc: ControllerComponents, service: JourneyService)(implicit ec: ExecutionContext)
+class JourneyAnswersController @Inject() (auth: AuthorisedAction,
+                                          cc: ControllerComponents,
+                                          incomeService: IncomeAnswersService,
+                                          expensesService: ExpensesAnswersService)(implicit ec: ExecutionContext)
     extends BackendController(cc) {
   private implicit val logger: Logger = Logger(this.getClass)
 
-  def getAnswers(taxYear: TaxYear, businessId: BusinessId, journey: JourneyName): Action[AnyContent] = auth.async { implicit user =>
-    handleResultT(
-      service
-        .getAnswers[JsObject](businessId, taxYear, Mtditid(user.mtditid), journey)
-        .map(Ok(_))
-    )
-  }
-
-  def saveAnswers(taxYear: TaxYear, businessId: BusinessId, journey: JourneyName): Action[AnyContent] = auth.async { implicit user =>
-    def saveJourneyAnswers[A: Format]: Future[Result] =
-      getBody[A](user) { value =>
-        service.setAnswers(businessId, taxYear, Mtditid(user.mtditid), journey, value).map(_ => NoContent)
-      }
-
-    journey match {
-      case Income            => saveJourneyAnswers[IncomeJourneyAnswers]
-      case ExpensesTailoring => saveJourneyAnswers[ExpensesTailoringAnswers]
-      case GoodsToSellOrUse  => saveJourneyAnswers[GoodsToSellOrUseJourneyAnswers]
+  def saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+    getBody[IncomeJourneyAnswers](user) { value =>
+      incomeService.saveAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
     }
   }
 
+  def saveExpensesTailoringAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+    getBody[ExpensesTailoringAnswers](user) { value =>
+      expensesService.saveAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
+    }
+  }
+
+  def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+    getBody[GoodsToSellOrUseJourneyAnswers](user) { value =>
+      expensesService.saveAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
+    }
+  }
 }
