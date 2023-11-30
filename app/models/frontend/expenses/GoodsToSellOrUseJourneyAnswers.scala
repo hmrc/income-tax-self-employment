@@ -19,6 +19,7 @@ package models.frontend.expenses
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json._
 
+// TODO SASS-6363 Use GoodsToSellOrUseJourneyAnswers from FE model in goodsToSellOrUse package (just like FE)
 case class GoodsToSellOrUseJourneyAnswers(amount: BigDecimal, disallowableAmount: Option[BigDecimal])
 
 object GoodsToSellOrUseJourneyAnswers {

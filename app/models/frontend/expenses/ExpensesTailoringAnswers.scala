@@ -19,25 +19,25 @@ package models.frontend.expenses
 import play.api.libs.json.{Format, Json}
 
 final case class ExpensesTailoringAnswers(
-    officeSupplies: String,
-    taxiMinicabOrRoadHaulage: String,
-    goodsToSellOrUse: String,
-    repairsAndMaintenance: String,
-    workFromHome: String,
-    workFromBusinessPremises: String,
-    travelForWork: String,
-    advertisingOrMarketing: String,
-    entertainmentCosts: String,
-    professionalServiceExpenses: List[String],
-    financialExpenses: List[String],
-    depreciation: String,
-    otherExpenses: String,
-    disallowableInterest: Option[String],
-    disallowableOtherFinancialCharges: Option[String],
-    disallowableIrrecoverableDebts: Option[String],
-    disallowableStaffCosts: Option[String],
-    disallowableSubcontractorCosts: Option[String],
-    disallowableProfessionalFees: Option[String]
+    officeSupplies: OfficeSupplies,
+    taxiMinicabOrRoadHaulage: TaxiMinicabOrRoadHaulage,
+    goodsToSellOrUse: GoodsToSellOrUse,
+    repairsAndMaintenance: RepairsAndMaintenance,
+    workFromHome: WorkFromHome,
+    workFromBusinessPremises: WorkFromBusinessPremises,
+    travelForWork: TravelForWork,
+    advertisingOrMarketing: AdvertisingOrMarketing,
+    entertainmentCosts: EntertainmentCosts,
+    professionalServiceExpenses: List[ProfessionalServiceExpenses],
+    financialExpenses: List[FinancialExpenses],
+    depreciation: Depreciation,
+    otherExpenses: OtherExpenses,
+    disallowableInterest: Option[DisallowableInterest],
+    disallowableOtherFinancialCharges: Option[DisallowableOtherFinancialCharges],
+    disallowableIrrecoverableDebts: Option[DisallowableIrrecoverableDebts],
+    disallowableStaffCosts: Option[DisallowableStaffCosts],
+    disallowableSubcontractorCosts: Option[DisallowableSubcontractorCosts],
+    disallowableProfessionalFees: Option[DisallowableProfessionalFees]
 )
 
 object ExpensesTailoringAnswers {
