@@ -49,7 +49,7 @@ object ExpensesTailoringAnswersGen {
     workFromBusinessPremises          <- workFromBusinessPremisesGen
     travelForWork                     <- travelForWorkGen
     advertisingOrMarketing            <- advertisingOrMarketingGen
-    entertainmentCosts                <- entertainmentCostsGen
+    entertainmentCosts                <- Gen.option(entertainmentCostsGen)
     professionalServiceExpenses       <- Gen.listOfN(3, professionalServiceExpensesGen)
     financialExpenses                 <- Gen.listOfN(3, financialExpensesGen)
     depreciation                      <- depreciationGen

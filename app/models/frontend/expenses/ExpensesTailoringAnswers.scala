@@ -27,7 +27,7 @@ final case class ExpensesTailoringAnswers(
     workFromBusinessPremises: WorkFromBusinessPremises,
     travelForWork: TravelForWork,
     advertisingOrMarketing: AdvertisingOrMarketing,
-    entertainmentCosts: EntertainmentCosts,
+    entertainmentCosts: Option[EntertainmentCosts],
     professionalServiceExpenses: List[ProfessionalServiceExpenses],
     financialExpenses: List[FinancialExpenses],
     depreciation: Depreciation,
