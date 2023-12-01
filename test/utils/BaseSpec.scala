@@ -16,9 +16,10 @@
 
 package utils
 
-import models.common.{BusinessId, Nino, TaxYear}
+import models.common.{BusinessId, Mtditid, Nino, TaxYear}
 import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
 import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
+import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec
@@ -54,4 +55,13 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
       BAD_REQUEST,
       MultipleDownstreamErrorBody(Seq(SingleDownstreamErrorBody.invalidNino, SingleDownstreamErrorBody.invalidMtdid))
     )
+}
+
+object BaseSpec {
+  val currTaxYear: TaxYear = TaxYear(LocalDate.now().getYear)
+  val businessId: BusinessId = BusinessId("someBusinessId")
+
+  def anyBusinessId: BusinessId = BusinessId(any)
+  def anyTaxYear: TaxYear = TaxYear(any)
+  def anyMtditId: Mtditid = Mtditid(any)
 }
