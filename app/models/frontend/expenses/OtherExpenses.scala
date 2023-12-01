@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package models.common
+package models.frontend.expenses
 
-import play.api.mvc.PathBindable
+import models.common.{Enumerable, WithName}
 
-final case class BusinessId(value: String) extends AnyVal {
-  override def toString: String = value
-}
+sealed trait OtherExpenses
 
-object BusinessId {
+object OtherExpenses extends Enumerable.Implicits {
 
-  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[BusinessId] = new PathBindable[BusinessId] {
+  case object YesAllowable    extends WithName("yesAllowable") with OtherExpenses
+  case object YesDisallowable extends WithName("yesDisallowable") with OtherExpenses
+  case object No              extends WithName("no") with OtherExpenses
 
-    override def bind(key: String, value: String): Either[String, BusinessId] =
-      strBinder.bind(key, value).map(BusinessId.apply)
+  val values: Seq[OtherExpenses] = Seq(
+    YesAllowable,
+    YesDisallowable,
+    No
+  )
 
-    override def unbind(key: String, businessId: BusinessId): String =
-      strBinder.unbind(key, businessId.value)
-
-  }
-
+  implicit val enumerable: Enumerable[OtherExpenses] =
+    Enumerable(values.map(v => v.toString -> v): _*)
 }

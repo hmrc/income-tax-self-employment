@@ -20,7 +20,7 @@ import models.database.JourneyAnswers
 import org.mockito.MockitoSugar.when
 import org.mockito.stubbing.ScalaFirstStubbing
 import org.scalatestplus.mockito.MockitoSugar
-import repositories.{JourneyAnswersRepository, SetResult}
+import repositories.JourneyAnswersRepository
 
 import scala.concurrent.Future
 
@@ -32,7 +32,7 @@ trait MockJourneyAnswersRepository extends MockitoSugar {
     def get(id: String): ScalaFirstStubbing[Future[Option[JourneyAnswers]]] =
       when(mockJourneyAnswersRepository.get(id))
 
-    def set(answers: JourneyAnswers): ScalaFirstStubbing[Future[SetResult]] =
+    def set(answers: JourneyAnswers): ScalaFirstStubbing[Future[Unit]] =
       when(mockJourneyAnswersRepository.set(answers))
   }
 

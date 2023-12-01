@@ -14,19 +14,23 @@
  * limitations under the License.
  */
 
-package repositories
+package models.frontend.expenses
 
-import models.database.JourneyAnswers
-import scala.concurrent.Future
+import models.common.{Enumerable, WithName}
 
-sealed trait SetResult
+sealed trait EntertainmentCosts
 
-object SetResult {
-  case object JourneyAnswersCreated extends SetResult
-  case object JourneyAnswersUpdated extends SetResult
-}
+object EntertainmentCosts extends Enumerable.Implicits {
 
-trait JourneyAnswersRepository {
-  def get(id: String): Future[Option[JourneyAnswers]]
-  def set(answers: JourneyAnswers): Future[SetResult]
+  case object Yes extends WithName("yes") with EntertainmentCosts
+  case object No  extends WithName("no") with EntertainmentCosts
+
+  val values: Seq[EntertainmentCosts] = Seq(
+    Yes,
+    No
+  )
+
+  implicit val enumerable: Enumerable[EntertainmentCosts] =
+    Enumerable(values.map(v => v.toString -> v): _*)
+
 }

@@ -77,7 +77,7 @@ class MongoJourneyAnswersRepositoryISpec
     "setting journey answers" when {
       "no journey answers exist for the supplied id" must {
         "store them and update the `lastUpdated` field to now" in {
-          repository.set(someJourneyAnswers).futureValue shouldBe SetResult.JourneyAnswersCreated
+          repository.set(someJourneyAnswers).futureValue shouldBe ()
 
           withClue("lastUpdated was not updated to now") {
             lastUpdated(someJourneyAnswers.id) shouldBe Some(now)
@@ -86,12 +86,12 @@ class MongoJourneyAnswersRepositoryISpec
       }
       "journey answers exist for the supplied id" must {
         "update them " in {
-          await(repository.set(someJourneyAnswers)) shouldBe SetResult.JourneyAnswersCreated
+          await(repository.set(someJourneyAnswers)) shouldBe ()
 
           val updatedData           = Json.obj("field" -> "updatedValue")
           val updatedJourneyAnswers = someJourneyAnswers.copy(data = updatedData)
 
-          await(repository.set(updatedJourneyAnswers)) shouldBe SetResult.JourneyAnswersUpdated
+          await(repository.set(updatedJourneyAnswers)) shouldBe ()
 
           repository.get(id).futureValue.map(_.data) shouldBe Some(updatedData)
 
@@ -104,14 +104,14 @@ class MongoJourneyAnswersRepositoryISpec
     "getting journey answers" when {
       "no journey answers exist for that id" must {
         "not be able to retrieve it and not update the `lastUpdated` field" in {
-          await(repository.set(someJourneyAnswers)) shouldBe SetResult.JourneyAnswersCreated
+          await(repository.set(someJourneyAnswers)) shouldBe ()
 
           repository.get("some_other_id").futureValue shouldBe None
         }
       }
       "journey answers exist for the supplied id" must {
         "get them and update the `lastUpdated` field" in {
-          await(repository.set(someJourneyAnswers)) shouldBe SetResult.JourneyAnswersCreated
+          await(repository.set(someJourneyAnswers)) shouldBe ()
 
           val expectedJourneyAnswers = someJourneyAnswers.copy(lastUpdated = now)
 

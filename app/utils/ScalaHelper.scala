@@ -18,6 +18,7 @@ package utils
 
 import scala.concurrent.{ExecutionContext, Future}
 
+// TODO Remove this and Use EitherT
 object ScalaHelper {
   implicit class FutureEither[L, R](either: Either[L, Future[R]]) {
 

@@ -14,24 +14,12 @@
  * limitations under the License.
  */
 
-package models.common
+import org.scalacheck.Gen
 
-import play.api.mvc.PathBindable
+package object gens {
+  val booleanGen: Gen[Boolean] = Gen.oneOf(true, false)
 
-final case class BusinessId(value: String) extends AnyVal {
-  override def toString: String = value
-}
-
-object BusinessId {
-
-  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[BusinessId] = new PathBindable[BusinessId] {
-
-    override def bind(key: String, value: String): Either[String, BusinessId] =
-      strBinder.bind(key, value).map(BusinessId.apply)
-
-    override def unbind(key: String, businessId: BusinessId): String =
-      strBinder.unbind(key, businessId.value)
-
-  }
-
+  val bigDecimalGen: Gen[BigDecimal] = Gen
+    .chooseNum[BigDecimal](0, 10000)
+    .map(n => n.setScale(2, BigDecimal.RoundingMode.HALF_UP))
 }

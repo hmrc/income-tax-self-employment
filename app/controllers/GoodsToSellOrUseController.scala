@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package controllers.journeyAnswers.expenses.goodsToSellOrUse
+package controllers
 
 import cats.data.EitherT
 import controllers.actions.AuthorisedAction
@@ -23,7 +23,7 @@ import models.common.{BusinessId, Nino, TaxYear}
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType}
 import models.error.DownstreamError
 import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
-import models.frontend.journeys.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
+import models.frontend.expenses.GoodsToSellOrUseJourneyAnswers
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}

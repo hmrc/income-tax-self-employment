@@ -16,19 +16,43 @@
 
 package controllers
 
-import play.api.mvc.{Action, AnyContent}
+import play.api.libs.json.{Json, Writes}
+import play.api.mvc.{Action, AnyContent, AnyContentAsJson, Request}
+import play.api.test.FakeRequest
 import utils.TestUtils
 
 class ControllerBehaviours extends TestUtils {
 
-  def controllerSpec(resultStatus: Int, resultBody: String, stubs: () => Unit, methodBlock: () => Action[AnyContent], testName: String = ""): Unit =
-    s"$testName - return a $resultStatus response and a result value" in {
-      val result = {
-        mockAuth()
-        stubs()
-        methodBlock()(fakeRequest)
-      }
-      status(result) mustBe resultStatus
-      bodyOf(result) mustBe resultBody
+  def controllerSpec(expectedStatus: Int,
+                     expectedBody: String,
+                     stubs: () => Unit,
+                     methodBlock: () => Action[AnyContent],
+                     testName: String = ""): Unit =
+    s"$testName - return a $expectedStatus response and a result value" in {
+      runControllerSpec(fakeRequest, expectedStatus, expectedBody, stubs, methodBlock)
     }
+
+  def testRoute(expectedStatus: Int, expectedBody: String, methodBlock: () => Action[AnyContent], request: Request[AnyContent] = fakeRequest): Unit =
+    runControllerSpec(request, expectedStatus, expectedBody, () => (), methodBlock)
+
+  private def runControllerSpec(request: Request[AnyContent],
+                                expectedStatus: Int,
+                                expectedBody: String,
+                                stubs: () => Unit,
+                                methodBlock: () => Action[AnyContent]): Unit = {
+    val result = {
+      mockAuth()
+      stubs()
+      methodBlock()(request)
+    }
+    status(result) mustBe expectedStatus
+    bodyOf(result) mustBe expectedBody
+    ()
+  }
+}
+
+object ControllerBehaviours {
+  def buildRequest[A: Writes](body: A): FakeRequest[AnyContentAsJson] = FakeRequest()
+    .withHeaders("mtditid" -> "1234567890")
+    .withJsonBody(Json.toJson(body))
 }
