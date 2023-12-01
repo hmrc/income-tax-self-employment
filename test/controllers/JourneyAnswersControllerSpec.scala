@@ -61,4 +61,6 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
+
+  "JourneyAnswersController (unhappy path)" should {}
 }
