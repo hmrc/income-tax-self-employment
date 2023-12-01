@@ -19,6 +19,7 @@ import org.scalacheck.Gen
 package object gens {
   val booleanGen: Gen[Boolean] = Gen.oneOf(true, false)
 
-  val bigDecimalGen: Gen[BigDecimal] = Gen.chooseNum[BigDecimal](0, 10000)
+  val bigDecimalGen: Gen[BigDecimal] = Gen
+    .chooseNum[BigDecimal](0, 10000)
     .map(n => n.setScale(2, BigDecimal.RoundingMode.HALF_UP))
 }
