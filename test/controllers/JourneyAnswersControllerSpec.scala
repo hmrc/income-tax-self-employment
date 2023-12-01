@@ -33,8 +33,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     expensesService = StubExpensesAnswersService()
   )
 
-  "JourneyAnswersController" should {
-    s"return a $NO_CONTENT when saveIncomeAnswers" in forAll(incomeJourneyAnswersGen) { data =>
+  "saveIncomeAnswers" should {
+    s"return a $NO_CONTENT when successful" in forAll(incomeJourneyAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
@@ -42,8 +42,10 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => underTest.saveIncomeAnswers(currTaxYear, businessId)
       )
     }
+  }
 
-    s"return a $NO_CONTENT when saveExpensesTailoringAnswers" in forAll(expensesTailoringAnswersGen) { data =>
+  "saveExpensesTailoringAnswers" should {
+    s"return a $NO_CONTENT when successful" in forAll(expensesTailoringAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
@@ -51,8 +53,11 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => underTest.saveExpensesTailoringAnswers(currTaxYear, businessId)
       )
     }
+  }
 
-    s"return a $NO_CONTENT when saveGoodsToSellOrUse" in forAll(goodsToSellOrUseJourneyAnswersGen) { data =>
+  "saveGoodsToSellOrUse" should {
+
+    s"return a $NO_CONTENT when successful" in forAll(goodsToSellOrUseJourneyAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
@@ -61,6 +66,4 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
-
-  "JourneyAnswersController (unhappy path)" should {}
 }
