@@ -16,22 +16,4 @@
 
 package models.common
 
-import play.api.mvc.PathBindable
-
-final case class BusinessId(value: String) extends AnyVal {
-  override def toString: String = value
-}
-
-object BusinessId {
-
-  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[BusinessId] = new PathBindable[BusinessId] {
-
-    override def bind(key: String, value: String): Either[String, BusinessId] =
-      strBinder.bind(key, value).map(BusinessId.apply)
-
-    override def unbind(key: String, businessId: BusinessId): String =
-      strBinder.unbind(key, businessId.value)
-
-  }
-
-}
+final case class Mtditid(value: String) extends AnyVal

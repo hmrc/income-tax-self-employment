@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-package models.common
+package gens
 
-import play.api.mvc.PathBindable
+import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
+import org.scalacheck.Gen
 
-final case class BusinessId(value: String) extends AnyVal {
-  override def toString: String = value
-}
+object GoodsToSellOrUseJourneyAnswersGen {
 
-object BusinessId {
-
-  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[BusinessId] = new PathBindable[BusinessId] {
-
-    override def bind(key: String, value: String): Either[String, BusinessId] =
-      strBinder.bind(key, value).map(BusinessId.apply)
-
-    override def unbind(key: String, businessId: BusinessId): String =
-      strBinder.unbind(key, businessId.value)
-
-  }
+  val goodsToSellOrUseJourneyAnswersGen: Gen[GoodsToSellOrUseJourneyAnswers] = for {
+    goodsToSellOrUseAmount             <- bigDecimalGen
+    disallowableGoodsToSellOrUseAmount <- Gen.option(bigDecimalGen)
+  } yield GoodsToSellOrUseJourneyAnswers(
+    goodsToSellOrUseAmount,
+    disallowableGoodsToSellOrUseAmount
+  )
 
 }

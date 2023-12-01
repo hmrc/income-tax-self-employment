@@ -14,24 +14,13 @@
  * limitations under the License.
  */
 
-package mocks
+package models
 
-import models.database.JourneyAnswers
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaFirstStubbing
-import org.scalatestplus.mockito.MockitoSugar
-import services.journeyAnswers.SetJourneyAnswersService
+import cats.data.EitherT
+import models.error.ServiceError
 
 import scala.concurrent.Future
 
-trait MockSetJourneyAnswersService extends MockitoSugar {
-  val mockSetJourneyAnswersService: SetJourneyAnswersService = mock[SetJourneyAnswersService]
-
-  object MockSetJourneyAnswersService {
-
-    def setJourneyAnswers(answers: JourneyAnswers): ScalaFirstStubbing[Future[Unit]] =
-      when(mockSetJourneyAnswersService.setJourneyAnswers(answers))
-
-  }
-
+package object domain {
+  type ApiResultT[A] = EitherT[Future, ServiceError, A]
 }

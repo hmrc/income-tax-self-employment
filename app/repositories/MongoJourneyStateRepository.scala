@@ -29,6 +29,12 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+trait JourneyStateRepository {
+  def get(businessId: String, taxYear: Int): Future[Seq[JourneyState]]
+  def get(businessId: String, taxYear: Int, journey: String): Future[Option[JourneyState]]
+  def set(journeyState: JourneyState): Future[Unit]
+}
+
 @Singleton
 class MongoJourneyStateRepository @Inject() (mongoComponent: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[JourneyState](
@@ -60,7 +66,7 @@ class MongoJourneyStateRepository @Inject() (mongoComponent: MongoComponent, app
   /*
    * Do we really want to keepAlive upon access of the journey state?
    */
-  override def get(businessId: String, taxYear: Int): Future[Seq[JourneyState]] = {
+  def get(businessId: String, taxYear: Int): Future[Seq[JourneyState]] = {
     val queryFilters = buildFilters(businessId = Some(businessId), taxYear = Some(taxYear))
 
     keepAlive(queryFilters)
@@ -70,7 +76,7 @@ class MongoJourneyStateRepository @Inject() (mongoComponent: MongoComponent, app
           .toFuture())
   }
 
-  override def get(businessId: String, taxYear: Int, journey: String): Future[Option[JourneyState]] = {
+  def get(businessId: String, taxYear: Int, journey: String): Future[Option[JourneyState]] = {
     val queryFilters = buildFilters(businessId = Some(businessId), journey = Some(journey), taxYear = Some(taxYear))
 
     keepAlive(queryFilters)
@@ -89,7 +95,7 @@ class MongoJourneyStateRepository @Inject() (mongoComponent: MongoComponent, app
       .toFuture()
       .map(_ => ())
 
-  override def set(journeyState: JourneyState): Future[Unit] = {
+  def set(journeyState: JourneyState): Future[Unit] = {
     val updatedJourneyState = journeyState.copy(lastUpdated = LocalDate.now(clock))
     collection
       .replaceOne(

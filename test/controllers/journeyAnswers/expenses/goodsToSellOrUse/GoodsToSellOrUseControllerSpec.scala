@@ -17,6 +17,7 @@
 package controllers.journeyAnswers.expenses.goodsToSellOrUse
 
 import cats.implicits.catsSyntaxEitherId
+import controllers.GoodsToSellOrUseController
 import mocks.MockAuth
 import models.common.TaxYear
 import models.connector.api_1894.request._

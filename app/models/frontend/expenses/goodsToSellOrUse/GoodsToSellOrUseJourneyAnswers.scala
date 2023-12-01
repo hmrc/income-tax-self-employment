@@ -14,24 +14,16 @@
  * limitations under the License.
  */
 
-package models.common
+package models.frontend.expenses.goodsToSellOrUse
 
-import play.api.mvc.PathBindable
+import play.api.libs.json._
 
-final case class BusinessId(value: String) extends AnyVal {
-  override def toString: String = value
-}
+case class GoodsToSellOrUseJourneyAnswers(goodsToSellOrUseAmount: BigDecimal, disallowableGoodsToSellOrUseAmount: Option[BigDecimal])
 
-object BusinessId {
+object GoodsToSellOrUseJourneyAnswers {
+  implicit val reads: Reads[GoodsToSellOrUseJourneyAnswers] = Json.reads[GoodsToSellOrUseJourneyAnswers]
 
-  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[BusinessId] = new PathBindable[BusinessId] {
+  implicit val writes: OWrites[GoodsToSellOrUseJourneyAnswers] = Json.writes[GoodsToSellOrUseJourneyAnswers]
 
-    override def bind(key: String, value: String): Either[String, BusinessId] =
-      strBinder.bind(key, value).map(BusinessId.apply)
-
-    override def unbind(key: String, businessId: BusinessId): String =
-      strBinder.unbind(key, businessId.value)
-
-  }
-
+  implicit val formats: OFormat[GoodsToSellOrUseJourneyAnswers] = OFormat(reads, writes)
 }

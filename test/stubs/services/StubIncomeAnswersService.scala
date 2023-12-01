@@ -14,24 +14,15 @@
  * limitations under the License.
  */
 
-package models.common
+package stubs.services
 
-import play.api.mvc.PathBindable
+import models.common.{BusinessId, Mtditid, TaxYear}
+import models.domain.ApiResultT
+import models.frontend.income.IncomeJourneyAnswers
+import services.journeyAnswers.IncomeAnswersService
+import stubs.serviceUnitT
 
-final case class BusinessId(value: String) extends AnyVal {
-  override def toString: String = value
-}
-
-object BusinessId {
-
-  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[BusinessId] = new PathBindable[BusinessId] {
-
-    override def bind(key: String, value: String): Either[String, BusinessId] =
-      strBinder.bind(key, value).map(BusinessId.apply)
-
-    override def unbind(key: String, businessId: BusinessId): String =
-      strBinder.unbind(key, businessId.value)
-
-  }
-
+case class StubIncomeAnswersService(incomeJourneyAnswersRes: ApiResultT[Unit] = serviceUnitT) extends IncomeAnswersService {
+  def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: IncomeJourneyAnswers): ApiResultT[Unit] =
+    incomeJourneyAnswersRes
 }

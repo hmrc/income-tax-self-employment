@@ -14,13 +14,25 @@
  * limitations under the License.
  */
 
-package repositories
+package models.frontend.expenses
 
-import models.database.JourneyState
-import scala.concurrent.Future
+import models.common.{Enumerable, WithName}
 
-trait JourneyStateRepository {
-  def get(businessId: String, taxYear: Int): Future[Seq[JourneyState]]
-  def get(businessId: String, taxYear: Int, journey: String): Future[Option[JourneyState]]
-  def set(journeyState: JourneyState): Future[Unit]
+sealed trait OfficeSupplies
+
+object OfficeSupplies extends Enumerable.Implicits {
+
+  case object YesAllowable    extends WithName("yesAllowable") with OfficeSupplies
+  case object YesDisallowable extends WithName("yesDisallowable") with OfficeSupplies
+  case object No              extends WithName("no") with OfficeSupplies
+
+  val values: Seq[OfficeSupplies] = Seq(
+    YesAllowable,
+    YesDisallowable,
+    No
+  )
+
+  implicit val enumerable: Enumerable[OfficeSupplies] =
+    Enumerable(values.map(v => v.toString -> v): _*)
+
 }

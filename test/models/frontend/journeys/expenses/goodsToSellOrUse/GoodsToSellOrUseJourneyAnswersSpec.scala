@@ -16,7 +16,8 @@
 
 package models.frontend.journeys.expenses.goodsToSellOrUse
 
-import models.frontend.journeys.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers.{reads, writes}
+import models.frontend.expenses.GoodsToSellOrUseJourneyAnswers
+import GoodsToSellOrUseJourneyAnswers.{reads, writes}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsSuccess, Json}
