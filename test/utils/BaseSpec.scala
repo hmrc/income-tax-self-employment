@@ -60,6 +60,8 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
 object BaseSpec {
   val currTaxYear: TaxYear   = TaxYear(LocalDate.now().getYear)
   val businessId: BusinessId = BusinessId("someBusinessId")
+  val nino: Nino             = Nino("nino")
+  val mtditid: Mtditid       = Mtditid("1234567890")
 
   def anyBusinessId: BusinessId = BusinessId(any)
   def anyTaxYear: TaxYear       = TaxYear(any)

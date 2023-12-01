@@ -16,11 +16,13 @@
 
 package stubs.services
 
-import models.common.{BusinessId, Mtditid, TaxYear}
+import models.common.{BusinessId, Mtditid, Nino, TaxYear}
 import models.domain.ApiResultT
-import models.frontend.expenses.{ExpensesTailoringAnswers, GoodsToSellOrUseJourneyAnswers}
+import models.frontend.expenses.ExpensesTailoringAnswers
+import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import services.journeyAnswers.ExpensesAnswersService
 import stubs.serviceUnitT
+import uk.gov.hmrc.http.HeaderCarrier
 
 case class StubExpensesAnswersService(expensesTailoringAnswersRes: ApiResultT[Unit] = serviceUnitT,
                                       goodsToSellOrUseAnswersRes: ApiResultT[Unit] = serviceUnitT)
@@ -28,6 +30,6 @@ case class StubExpensesAnswersService(expensesTailoringAnswersRes: ApiResultT[Un
   def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: ExpensesTailoringAnswers): ApiResultT[Unit] =
     expensesTailoringAnswersRes
 
-  def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: GoodsToSellOrUseJourneyAnswers): ApiResultT[Unit] =
-    goodsToSellOrUseAnswersRes
+  def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, nino: Nino, answers: GoodsToSellOrUseJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] = goodsToSellOrUseAnswersRes
 }

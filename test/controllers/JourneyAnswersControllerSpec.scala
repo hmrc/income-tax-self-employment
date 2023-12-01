@@ -57,7 +57,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
         expectedBody = "",
-        methodBlock = () => underTest.saveGoodsToSellOrUse(currTaxYear, businessId)
+        methodBlock = () => underTest.saveGoodsToSellOrUse(currTaxYear, businessId, nino)
       )
     }
   }

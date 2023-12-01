@@ -22,10 +22,15 @@ import models.common.TaxYear.asTys
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-class SelfEmploymentBusinessConnector @Inject() (val http: HttpClient, appConfig: AppConfig) {
+trait SelfEmploymentBusinessConnector {
+  def createSEPeriodSummary(requestData: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response]
+}
+
+@Singleton
+class SelfEmploymentBusinessConnectorImpl @Inject() (val http: HttpClient, appConfig: AppConfig) extends SelfEmploymentBusinessConnector {
 
   def createSEPeriodSummary(
       requestData: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] =

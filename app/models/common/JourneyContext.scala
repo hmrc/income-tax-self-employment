@@ -16,6 +16,13 @@
 
 package models.common
 
-final case class Mtditid(value: String) extends AnyVal {
-  override def toString: String = value
+sealed trait JourneyContext {
+  val taxYear: TaxYear
+  val businessId: BusinessId
+  val mtditid: Mtditid
+  val journey: JourneyName
 }
+
+case class JourneyAnswersWithNino(taxYear: TaxYear, nino: Nino, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName) extends JourneyContext
+
+case class JourneyAnswersContext(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName) extends JourneyContext
