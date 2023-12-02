@@ -16,12 +16,19 @@
 
 package models.common
 
-import play.api.libs.json.{Format, Json}
+import enumeratum._
+import org.mongodb.scala.bson.{BsonString, BsonValue}
 
-final case class Mtditid(value: String) extends AnyVal {
-  override def toString: String = value
-}
+sealed abstract class JourneyStatus(override val entryName: String) extends EnumEntry
 
-object Mtditid {
-  implicit val format: Format[Mtditid] = Json.valueFormat[Mtditid]
+object JourneyStatus extends Enum[JourneyStatus] with utils.PlayJsonEnum[JourneyStatus] {
+
+  val values: IndexedSeq[JourneyStatus] = findValues
+
+  case object InProgress extends JourneyStatus("in-progress")
+  case object Completed  extends JourneyStatus("completed")
+
+  def toBson(status: JourneyStatus): BsonValue = new BsonString(status.entryName)
+
+  def fromBson(bson: BsonValue): JourneyStatus = withName(bson.asString().getValue)
 }

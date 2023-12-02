@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
-package mocks
+package utils
 
-import models.database.JourneyAnswers
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaFirstStubbing
-import org.scalatestplus.mockito.MockitoSugar
-import repositories.JourneyAnswersRepository
+import enumeratum._
+import play.api.libs.json._
 
-import scala.concurrent.Future
+trait PlayJsonEnum[A <: EnumEntry] { self: Enum[A] =>
+  implicit val keyWrites: KeyWrites[A] = EnumFormats.keyWrites(this)
 
-trait MockJourneyAnswersRepository extends MockitoSugar {
-  val mockJourneyAnswersRepository: JourneyAnswersRepository = mock[JourneyAnswersRepository]
+  implicit def contraKeyWrites[K <: A]: KeyWrites[K] = {
+    val w = this.keyWrites
 
-  object MockJourneyAnswersRepository {
-
-    def get(id: String): ScalaFirstStubbing[Future[Option[JourneyAnswers]]] =
-      when(mockJourneyAnswersRepository.get(id))
+    new KeyWrites[K] {
+      def writeKey(k: K) = w.writeKey(k)
+    }
   }
 
+  implicit val jsonFormat: Format[A]               = EnumFormats.formats(this)
+  implicit def contraJsonWrites[B <: A]: Writes[B] = jsonFormat.contramap[B](b => b: A)
 }

@@ -23,6 +23,7 @@ import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import stubs.connectors.StubSelfEmploymentBusinessConnector
+import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
@@ -30,12 +31,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
   val connector = StubSelfEmploymentBusinessConnector()
-  val underTest = new ExpensesAnswersServiceImpl(connector)
+  val repo      = StubJourneyAnswersRepository()
+  val underTest = new ExpensesAnswersServiceImpl(connector, repo)
 
   implicit val hc = HeaderCarrier()
 
   "save ExpensesTailoringAnswers" should {
-    // TODO add check in SASS-6340
     "store data successfully" in {
       val answers = expensesTailoringAnswersGen.sample.get
       val result  = underTest.saveAnswers(businessId, currTaxYear, mtditid, answers).value.futureValue

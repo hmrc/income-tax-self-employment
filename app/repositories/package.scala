@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-package mocks
+import play.api.libs.json.{JsNumber, Reads, Writes}
 
-import models.database.JourneyAnswers
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaFirstStubbing
-import org.scalatestplus.mockito.MockitoSugar
-import repositories.JourneyAnswersRepository
+import java.time.Instant
 
-import scala.concurrent.Future
-
-trait MockJourneyAnswersRepository extends MockitoSugar {
-  val mockJourneyAnswersRepository: JourneyAnswersRepository = mock[JourneyAnswersRepository]
-
-  object MockJourneyAnswersRepository {
-
-    def get(id: String): ScalaFirstStubbing[Future[Option[JourneyAnswers]]] =
-      when(mockJourneyAnswersRepository.get(id))
+package object repositories {
+  implicit val instantWrites: Writes[Instant] = Writes[Instant] { instant =>
+    JsNumber(instant.toEpochMilli)
   }
 
+  implicit val instantReads: Reads[Instant] = Reads[Instant] {
+    _.validate[Long].map(Instant.ofEpochMilli)
+  }
 }

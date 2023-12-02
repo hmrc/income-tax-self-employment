@@ -16,12 +16,16 @@
 
 package repositories
 
-import config.AppConfig
+import models.common._
 import models.database.JourneyAnswers
-import org.mongodb.scala.ReadPreference
 import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala.bson.{BsonDocument, _}
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model._
+import org.mongodb.scala.result.UpdateResult
+import org.mongodb.scala.{ReadPreference, _}
+import play.api.libs.json.{JsValue, Json}
+import repositories.ExpireAtCalculator.calculateExpireAt
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 
@@ -32,12 +36,16 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait JourneyAnswersRepository {
   def get(id: String): Future[Option[JourneyAnswers]]
-  def set(answers: JourneyAnswers): Future[Unit]
+
+  def get(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName): Future[Option[JourneyAnswers]]
+
+  def upsertData(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName, newData: JsValue): Future[UpdateResult]
+
+  def updateStatus(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName, status: JourneyStatus): Future[UpdateResult]
 }
 
-// Awaiting guidelines on how we are going to calculate the TTL. Default TTL implemented for time-being.
 @Singleton
-class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
+class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clock)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[JourneyAnswers](
       collectionName = "journey-answers",
       mongoComponent = mongo,
@@ -45,46 +53,82 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
       replaceIndexes = true,
       indexes = Seq(
         IndexModel(
-          Indexes.ascending("lastUpdated"),
+          Indexes.ascending("expireAt"),
           IndexOptions()
-            .name("journeyAnswersTTL")
-            .expireAfter(appConfig.cacheTtl, TimeUnit.DAYS)
+            .name("expireAt")
+            .expireAfter(0, TimeUnit.SECONDS)
+        ),
+        IndexModel(
+          Indexes.ascending("mtditid", "taxYear", "businessId", "journey"),
+          IndexOptions().name("mtditid_taxYear_businessId_journey")
+        ),
+        IndexModel(
+          Indexes.ascending("mtditid", "taxYear"),
+          IndexOptions().name("mtditid_taxYear")
         )
       )
     )
     with JourneyAnswersRepository {
-  /*
-   * Do we really want to keepAlive upon access of the journey answers?
-   */
+
+  private def filterJourney(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName) = Filters.and(
+    Filters.eq("mtditid", mtditid.value),
+    Filters.eq("taxYear", taxYear.endYear),
+    Filters.eq("businessId", businessId.value),
+    Filters.eq("journey", journey.entryName)
+  )
+
+  // TODO remove
   def get(id: String): Future[Option[JourneyAnswers]] =
-    keepAlive(id).flatMap { _ =>
-      collection
-        .withReadPreference(ReadPreference.primaryPreferred())
-        .find(filterByConstraint("_id", id))
-        .headOption()
-    }
-
-  def set(answers: JourneyAnswers): Future[Unit] = {
-    val updatedAnswers = answers.copy(lastUpdated = Instant.now(clock))
     collection
-      .replaceOne(
-        filter = filterByConstraint("_id", updatedAnswers.id),
-        replacement = updatedAnswers,
-        options = ReplaceOptions().upsert(true)
-      )
-      .toFuture()
-      .map(_ => ())
-  }
-
-  private def keepAlive(id: String): Future[Unit] =
-    collection
-      .updateOne(
-        filter = filterByConstraint("_id", id),
-        update = Updates.set("lastUpdated", Instant.now(clock))
-      )
-      .toFuture()
-      .map(_ => ())
+      .withReadPreference(ReadPreference.primaryPreferred())
+      .find(filterByConstraint("_id", id))
+      .headOption()
 
   private def filterByConstraint(field: String, value: String): Bson = equal(field, value)
+
+  def get(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName): Future[Option[JourneyAnswers]] = {
+    val filter = filterJourney(mtditid, taxYear, businessId, journey)
+    collection
+      .withReadPreference(ReadPreference.primaryPreferred())
+      .find(filter)
+      .headOption()
+  }
+
+  def upsertData(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName, newData: JsValue): Future[UpdateResult] = {
+    val filter  = filterJourney(mtditid, taxYear, businessId, journey)
+    val bson    = BsonDocument(Json.stringify(newData))
+    val update  = createUpsert(mtditid, taxYear, businessId, journey)("data", bson)
+    val options = new UpdateOptions().upsert(true)
+
+    collection.updateOne(filter, update, options).toFuture()
+  }
+
+  def updateStatus(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName, status: JourneyStatus): Future[UpdateResult] = {
+    val now    = Instant.now(clock)
+    val filter = filterJourney(mtditid, taxYear, businessId, journey)
+    val update = Updates.combine(
+      Updates.set("status", status.entryName),
+      Updates.set("updatedAt", now)
+    )
+    val options = new UpdateOptions().upsert(false)
+    collection.updateOne(filter, update, options).toFuture()
+  }
+
+  private def createUpsert(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName)(fieldName: String, value: BsonValue) = {
+    val now      = Instant.now(clock)
+    val expireAt = calculateExpireAt(now)
+
+    Updates.combine(
+      Updates.set(fieldName, value),
+      Updates.set("updatedAt", now),
+      Updates.setOnInsert("mtditid", mtditid.value),
+      Updates.setOnInsert("taxYear", taxYear.endYear),
+      Updates.setOnInsert("businessId", businessId.value),
+      Updates.setOnInsert("status", JourneyStatus.InProgress.entryName),
+      Updates.setOnInsert("journey", journey.entryName),
+      Updates.setOnInsert("createdAt", now),
+      Updates.setOnInsert("expireAt", expireAt)
+    )
+  }
 
 }

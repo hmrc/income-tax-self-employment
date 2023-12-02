@@ -29,7 +29,8 @@ import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, DefaultActionBuild
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.LocalDate
+import java.time.temporal.ChronoUnit
+import java.time.{Instant, LocalDate, ZoneOffset}
 import scala.concurrent.ExecutionContext
 
 trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar with ScalaFutures {
@@ -66,4 +67,8 @@ object BaseSpec {
   def anyBusinessId: BusinessId = BusinessId(any)
   def anyTaxYear: TaxYear       = TaxYear(any)
   def anyMtditId: Mtditid       = Mtditid(any)
+
+  def mkNow(): Instant                 = Instant.now().truncatedTo(ChronoUnit.SECONDS)
+  def mkClock(now: Instant): TestClock = TestClock(now, ZoneOffset.UTC)
+
 }

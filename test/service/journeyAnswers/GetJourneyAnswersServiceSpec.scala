@@ -17,13 +17,17 @@
 package service.journeyAnswers
 
 import mocks.MockJourneyAnswersRepository
+import models.common.{JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.libs.json.Json
 import services.journeyAnswers.GetJourneyAnswersResult.{JourneyAnswersFound, NoJourneyAnswersFound}
 import services.journeyAnswers.GetJourneyAnswersService
+import utils.BaseSpec._
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -31,8 +35,10 @@ class GetJourneyAnswersServiceSpec extends AnyWordSpec with MockJourneyAnswersRe
 
   private val service = new GetJourneyAnswersService(mockJourneyAnswersRepository)
 
-  private val id             = "some_id"
-  private val journeyAnswers = JourneyAnswers(id)
+  private val id  = "some_id"
+  private val now = Instant.now()
+  private val journeyAnswers =
+    JourneyAnswers(mtditid, businessId, currTaxYear, JourneyName.Income, JourneyStatus.InProgress, Json.obj(), now, now, now)
 
   "GetJourneyAnswersService" when {
     "getting journey answers tied to an id" when {

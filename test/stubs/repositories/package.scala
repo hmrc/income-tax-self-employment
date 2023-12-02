@@ -14,23 +14,11 @@
  * limitations under the License.
  */
 
-package mocks
+package stubs
 
-import models.database.JourneyAnswers
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaFirstStubbing
-import org.scalatestplus.mockito.MockitoSugar
-import repositories.JourneyAnswersRepository
+import com.mongodb.client.result.UpdateResult
+import org.mongodb.scala.bson.BsonObjectId
 
-import scala.concurrent.Future
-
-trait MockJourneyAnswersRepository extends MockitoSugar {
-  val mockJourneyAnswersRepository: JourneyAnswersRepository = mock[JourneyAnswersRepository]
-
-  object MockJourneyAnswersRepository {
-
-    def get(id: String): ScalaFirstStubbing[Future[Option[JourneyAnswers]]] =
-      when(mockJourneyAnswersRepository.get(id))
-  }
-
+package object repositories {
+  def updatedOne = UpdateResult.acknowledged(1L, 1L, new BsonObjectId())
 }

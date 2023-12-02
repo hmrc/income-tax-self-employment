@@ -17,24 +17,30 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
+import cats.implicits._
+import models.common.JourneyName.Income
 import models.common.{BusinessId, Mtditid, TaxYear}
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.income.IncomeJourneyAnswers
+import play.api.libs.json.Json
 import repositories.MongoJourneyAnswersRepository
 
 import javax.inject.{Inject, Singleton}
-import scala.annotation.nowarn
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 trait IncomeAnswersService {
   def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: IncomeJourneyAnswers): ApiResultT[Unit]
 }
 
-@nowarn // TODO SASS-6340
 @Singleton
 class IncomeAnswersServiceImpl @Inject() (repository: MongoJourneyAnswersRepository)(implicit ec: ExecutionContext) extends IncomeAnswersService {
 
   def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: IncomeJourneyAnswers): ApiResultT[Unit] =
-    EitherT.right[ServiceError](Future.successful(()))
+    EitherT
+      .right[ServiceError](
+        repository.upsertData(mtditid, taxYear, businessId, Income, Json.toJson(answers))
+      )
+      .void
+
 }
