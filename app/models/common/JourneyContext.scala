@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package utils
+package models.common
 
-import scala.concurrent.{ExecutionContext, Future}
+sealed trait JourneyContext {
+  val taxYear: TaxYear
+  val businessId: BusinessId
+  val mtditid: Mtditid
+  val journey: JourneyName
+}
 
-// TODO Remove this and Use EitherT
-object ScalaHelper {
-  implicit class FutureEither[L, R](either: Either[L, Future[R]]) {
+object JourneyContext {
+  case class JourneyContextWithNino(taxYear: TaxYear, nino: Nino, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName)
+      extends JourneyContext
 
-    def toFuture()(implicit ec: ExecutionContext): Future[Either[L, R]] =
-      Some(either).map {
-        case Left(s)  => Future.successful(Left(s))
-        case Right(f) => f.map(Right(_))
-      }.get
-  }
+  case class JourneyAnswersContext(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName) extends JourneyContext
 }

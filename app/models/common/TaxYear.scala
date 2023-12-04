@@ -16,6 +16,7 @@
 
 package models.common
 
+import play.api.libs.json.{Format, Json}
 import play.api.mvc.PathBindable
 
 import java.time.LocalDate
@@ -51,4 +52,7 @@ object TaxYear {
       intBinder.unbind(key, taxYear.endYear)
 
   }
+
+  implicit val format: Format[TaxYear] = Json.valueFormat[TaxYear]
+
 }

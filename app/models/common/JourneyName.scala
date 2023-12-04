@@ -21,11 +21,11 @@ import play.api.mvc.PathBindable
 
 sealed abstract class JourneyName(override val entryName: String) extends EnumEntry
 
-object JourneyName extends Enum[JourneyName] {
+object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName] {
   val values: IndexedSeq[JourneyName] = findValues
 
-  case object ExpensesTailoring extends JourneyName("expenses-categories")
   case object Income            extends JourneyName("income")
+  case object ExpensesTailoring extends JourneyName("expenses-categories")
   case object GoodsToSellOrUse  extends JourneyName("expenses-goods-to-sell-or-use")
 
   implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[JourneyName] = new PathBindable[JourneyName] {

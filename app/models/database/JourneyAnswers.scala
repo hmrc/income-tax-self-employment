@@ -16,27 +16,22 @@
 
 package models.database
 
-import play.api.libs.functional.syntax._
+import models.common._
 import play.api.libs.json._
-import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
 import java.time._
+import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 
-// TODO Refactor to the new model in SASS-6340
-case class JourneyAnswers(id: String, data: JsObject = Json.obj(), lastUpdated: Instant = Instant.now)
+case class JourneyAnswers(mtditid: Mtditid,
+                          businessId: BusinessId,
+                          taxYear: TaxYear,
+                          journey: JourneyName,
+                          status: JourneyStatus,
+                          data: JsObject,
+                          expireAt: Instant,
+                          createdAt: Instant,
+                          updatedAt: Instant)
 
-// TODO use case class and OFormat instead of manual reads and writes
-object JourneyAnswers {
-  val reads: Reads[JourneyAnswers] =
-    ((JsPath \ "_id").read[String] and
-      (JsPath \ "data").read[JsObject] and
-      (JsPath \ "lastUpdated").read(MongoJavatimeFormats.instantFormat))(JourneyAnswers.apply _)
-
-  val writes: OWrites[JourneyAnswers] =
-    ((JsPath \ "_id").write[String] and
-      (JsPath \ "data").write[JsObject] and
-      (JsPath \ "lastUpdated").write(MongoJavatimeFormats.instantFormat))(unlift(JourneyAnswers.unapply))
-
-  implicit val formats: OFormat[JourneyAnswers] = OFormat(reads, writes)
-
+object JourneyAnswers extends MongoJavatimeFormats.Implicits {
+  implicit val formats: OFormat[JourneyAnswers] = Json.format[JourneyAnswers]
 }

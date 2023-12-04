@@ -16,123 +16,102 @@
 
 package repositories
 
-import config.AppConfig
+import models.common.JourneyContext.JourneyAnswersContext
+import models.common.JourneyName
+import models.common.JourneyStatus._
 import models.database.JourneyAnswers
-import org.mongodb.scala.model.Filters
-import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{BeforeAndAfterEach, OptionValues}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Application
-import play.api.inject.bind
-import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import play.api.test.Injecting
 import support.MongoTestSupport
 import uk.gov.hmrc.mongo.test.MongoSupport
+import utils.BaseSpec._
 
-import java.time._
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration._
 
 class MongoJourneyAnswersRepositoryISpec
     extends AnyWordSpec
     with Matchers
     with MongoSupport
     with MongoTestSupport[JourneyAnswers]
-    with Injecting
     with BeforeAndAfterEach
-    with GuiceOneAppPerSuite {
+    with GuiceOneAppPerSuite
+    with OptionValues {
 
-  private val now   = Instant.parse("2022-01-01T22:02:03.000Z")
-  private val clock = Clock.fixed(now, ZoneOffset.UTC)
+  private val now   = mkNow()
+  private val clock = mkClock(now)
 
-  override lazy val app: Application = new GuiceApplicationBuilder()
-    .overrides(bind[Clock].to(clock))
-    .configure("mongodb.timeToLive" -> "2days")
-    .build()
-
-  private val appConfig   = inject[AppConfig]
-  override val repository = new MongoJourneyAnswersRepository(mongoComponent, appConfig, clock)
-
-  private val someOldTimestamp   = Instant.parse("2022-01-01T21:02:03.000Z")
-  private val id                 = "some_id"
-  private val someJourneyAnswers = JourneyAnswers(id, Json.obj("field" -> "value"), someOldTimestamp)
+  override val repository = new MongoJourneyAnswersRepository(mongoComponent, clock)
 
   override def beforeEach(): Unit = {
-    super.beforeEach()
-    await(removeAll())
+    clock.reset(now)
+    await(removeAll(repository.collection))
   }
 
-  "MongoJourneyAnswersRepository" when {
-    "initialised" must {
-      "include an TTL index for the `lastUpdated` field (where expiry is set through the app config)" in {
-        checkIndex(indexWithField("lastUpdated")) { indexModel =>
-          indexModel.getOptions.getExpireAfter(TimeUnit.DAYS) shouldBe 2
-        }
-      }
-    }
-    "setting journey answers" when {
-      "no journey answers exist for the supplied id" must {
-        "store them and update the `lastUpdated` field to now" in {
-          repository.set(someJourneyAnswers).futureValue shouldBe ()
+  "upsertData" should {
+    "insert a new journey answers in in-progress status and calculate dates" in {
+      val result = (for {
+        _        <- repository.upsertData(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
+        inserted <- repository.get(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income))
+      } yield inserted.value).futureValue
 
-          withClue("lastUpdated was not updated to now") {
-            lastUpdated(someJourneyAnswers.id) shouldBe Some(now)
-          }
-        }
-      }
-      "journey answers exist for the supplied id" must {
-        "update them " in {
-          await(repository.set(someJourneyAnswers)) shouldBe ()
-
-          val updatedData           = Json.obj("field" -> "updatedValue")
-          val updatedJourneyAnswers = someJourneyAnswers.copy(data = updatedData)
-
-          await(repository.set(updatedJourneyAnswers)) shouldBe ()
-
-          repository.get(id).futureValue.map(_.data) shouldBe Some(updatedData)
-
-          withClue("lastUpdated was not updated to now") {
-            lastUpdated(updatedJourneyAnswers.id) shouldBe Some(now)
-          }
-        }
-      }
-    }
-    "getting journey answers" when {
-      "no journey answers exist for that id" must {
-        "not be able to retrieve it and not update the `lastUpdated` field" in {
-          await(repository.set(someJourneyAnswers)) shouldBe ()
-
-          repository.get("some_other_id").futureValue shouldBe None
-        }
-      }
-      "journey answers exist for the supplied id" must {
-        "get them and update the `lastUpdated` field" in {
-          await(repository.set(someJourneyAnswers)) shouldBe ()
-
-          val expectedJourneyAnswers = someJourneyAnswers.copy(lastUpdated = now)
-
-          repository.get(id).futureValue shouldBe Some(expectedJourneyAnswers)
-        }
-      }
+      val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
+      result shouldBe JourneyAnswers(
+        mtditid,
+        businessId,
+        currTaxYear,
+        JourneyName.Income,
+        InProgress,
+        Json.obj("field" -> "value"),
+        expectedExpireAt,
+        now,
+        now)
     }
 
+    "update already existing answers (values, updateAt)" in {
+      val result = (for {
+        _ <- repository.upsertData(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
+        _ = clock.advanceBy(1.day)
+        updatedResult <- repository.upsertData(
+          JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income),
+          Json.obj("field" -> "updated"))
+        updated <- repository.get(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income))
+        _ = updatedResult.getModifiedCount shouldBe 1
+      } yield updated.value).futureValue
+
+      val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
+      result shouldBe JourneyAnswers(
+        mtditid,
+        businessId,
+        currTaxYear,
+        JourneyName.Income,
+        InProgress,
+        Json.obj("field" -> "updated"),
+        expectedExpireAt,
+        now,
+        now.plus(Duration.ofDays(1))
+      )
+    }
   }
 
-  private def lastUpdated(id: String): Option[Instant] =
-    repository.collection
-      .find[JourneyAnswers](Filters.equal("_id", id))
-      .headOption()
-      .map(maybeJourneyAnswers => maybeJourneyAnswers.map(_.lastUpdated))
-      .futureValue
+  "updateStatus" should {
+    "update status to a new one" in {
+      val result = (for {
+        _ <- repository.upsertData(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
+        _ = clock.advanceBy(2.day)
+        updatedResult <- repository.updateStatus(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income), Completed)
+        inserted      <- repository.get(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income))
+        _ = updatedResult.getModifiedCount shouldBe 1
+      } yield inserted.value).futureValue
 
-  private def removeAll(): Future[Unit] =
-    repository.collection
-      .deleteMany(Filters.empty())
-      .toFuture()
-      .map(_ => ())
+      result.status shouldBe Completed
+      result.updatedAt shouldBe now.plus(Duration.ofDays(2))
+    }
+  }
 
 }

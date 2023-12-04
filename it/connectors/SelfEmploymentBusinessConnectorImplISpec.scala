@@ -26,9 +26,9 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.CREATED
 import play.api.libs.json.{JsObject, Json}
 
-class SelfEmploymentBusinessConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
+class SelfEmploymentBusinessConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
-  private val connector = new SelfEmploymentBusinessConnector(httpClient, appConfig)
+  private val connector = new SelfEmploymentBusinessConnectorImpl(httpClient, appConfig)
 
   "downstream returns a success response" must {
     "return the submission id" in new Test {

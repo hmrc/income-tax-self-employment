@@ -16,6 +16,7 @@
 
 package models.common
 
+import play.api.libs.json.{Format, Json}
 import play.api.mvc.PathBindable
 
 final case class BusinessId(value: String) extends AnyVal {
@@ -31,7 +32,8 @@ object BusinessId {
 
     override def unbind(key: String, businessId: BusinessId): String =
       strBinder.unbind(key, businessId.value)
-
   }
+
+  implicit val format: Format[BusinessId] = Json.valueFormat[BusinessId]
 
 }
