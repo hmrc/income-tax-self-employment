@@ -29,14 +29,16 @@ case class StubJourneyAnswersRepository(
     upsertDateField: Future[UpdateResult] = Future.successful(updatedOne),
     upsertStatusField: Future[UpdateResult] = Future.successful(updatedOne)
 ) extends JourneyAnswersRepository {
+
   def get(id: String): Future[Option[JourneyAnswers]] = Future.successful(getAnswer)
 
-  def get(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName): Future[Option[JourneyAnswers]] =
+  def get(ctx: JourneyContext.JourneyAnswersContext): Future[Option[JourneyAnswers]] =
     Future.successful(getAnswer)
 
-  def upsertData(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName, newData: JsValue): Future[UpdateResult] =
+  def upsertData(ctx: JourneyContext.JourneyAnswersContext, newData: JsValue): Future[UpdateResult] =
     upsertDateField
 
-  def updateStatus(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName, status: JourneyStatus): Future[UpdateResult] =
+  def updateStatus(ctx: JourneyContext.JourneyAnswersContext, status: JourneyStatus): Future[UpdateResult] =
     upsertStatusField
+
 }

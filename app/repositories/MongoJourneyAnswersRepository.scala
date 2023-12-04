@@ -16,6 +16,7 @@
 
 package repositories
 
+import models.common.JourneyContext.JourneyAnswersContext
 import models.common._
 import models.database.JourneyAnswers
 import org.mongodb.scala.bson.conversions.Bson
@@ -37,11 +38,11 @@ import scala.concurrent.{ExecutionContext, Future}
 trait JourneyAnswersRepository {
   def get(id: String): Future[Option[JourneyAnswers]]
 
-  def get(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName): Future[Option[JourneyAnswers]]
+  def get(ctx: JourneyAnswersContext): Future[Option[JourneyAnswers]]
 
-  def upsertData(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName, newData: JsValue): Future[UpdateResult]
+  def upsertData(ctx: JourneyAnswersContext, newData: JsValue): Future[UpdateResult]
 
-  def updateStatus(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName, status: JourneyStatus): Future[UpdateResult]
+  def updateStatus(ctx: JourneyAnswersContext, status: JourneyStatus): Future[UpdateResult]
 }
 
 @Singleton
@@ -70,11 +71,11 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     )
     with JourneyAnswersRepository {
 
-  private def filterJourney(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName) = Filters.and(
-    Filters.eq("mtditid", mtditid.value),
-    Filters.eq("taxYear", taxYear.endYear),
-    Filters.eq("businessId", businessId.value),
-    Filters.eq("journey", journey.entryName)
+  private def filterJourney(ctx: JourneyAnswersContext) = Filters.and(
+    Filters.eq("mtditid", ctx.mtditid.value),
+    Filters.eq("taxYear", ctx.taxYear.endYear),
+    Filters.eq("businessId", ctx.businessId.value),
+    Filters.eq("journey", ctx.journey.entryName)
   )
 
   // TODO remove
@@ -86,26 +87,26 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
 
   private def filterByConstraint(field: String, value: String): Bson = equal(field, value)
 
-  def get(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName): Future[Option[JourneyAnswers]] = {
-    val filter = filterJourney(mtditid, taxYear, businessId, journey)
+  def get(ctx: JourneyAnswersContext): Future[Option[JourneyAnswers]] = {
+    val filter = filterJourney(ctx)
     collection
       .withReadPreference(ReadPreference.primaryPreferred())
       .find(filter)
       .headOption()
   }
 
-  def upsertData(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName, newData: JsValue): Future[UpdateResult] = {
-    val filter  = filterJourney(mtditid, taxYear, businessId, journey)
+  def upsertData(ctx: JourneyAnswersContext, newData: JsValue): Future[UpdateResult] = {
+    val filter  = filterJourney(ctx)
     val bson    = BsonDocument(Json.stringify(newData))
-    val update  = createUpsert(mtditid, taxYear, businessId, journey)("data", bson)
+    val update  = createUpsert(ctx)("data", bson)
     val options = new UpdateOptions().upsert(true)
 
     collection.updateOne(filter, update, options).toFuture()
   }
 
-  def updateStatus(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName, status: JourneyStatus): Future[UpdateResult] = {
+  def updateStatus(ctx: JourneyAnswersContext, status: JourneyStatus): Future[UpdateResult] = {
     val now    = Instant.now(clock)
-    val filter = filterJourney(mtditid, taxYear, businessId, journey)
+    val filter = filterJourney(ctx)
     val update = Updates.combine(
       Updates.set("status", status.entryName),
       Updates.set("updatedAt", now)
@@ -114,18 +115,18 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     collection.updateOne(filter, update, options).toFuture()
   }
 
-  private def createUpsert(mtditid: Mtditid, taxYear: TaxYear, businessId: BusinessId, journey: JourneyName)(fieldName: String, value: BsonValue) = {
+  private def createUpsert(ctx: JourneyAnswersContext)(fieldName: String, value: BsonValue) = {
     val now      = Instant.now(clock)
     val expireAt = calculateExpireAt(now)
 
     Updates.combine(
       Updates.set(fieldName, value),
       Updates.set("updatedAt", now),
-      Updates.setOnInsert("mtditid", mtditid.value),
-      Updates.setOnInsert("taxYear", taxYear.endYear),
-      Updates.setOnInsert("businessId", businessId.value),
+      Updates.setOnInsert("mtditid", ctx.mtditid.value),
+      Updates.setOnInsert("taxYear", ctx.taxYear.endYear),
+      Updates.setOnInsert("businessId", ctx.businessId.value),
       Updates.setOnInsert("status", JourneyStatus.InProgress.entryName),
-      Updates.setOnInsert("journey", journey.entryName),
+      Updates.setOnInsert("journey", ctx.journey.entryName),
       Updates.setOnInsert("createdAt", now),
       Updates.setOnInsert("expireAt", expireAt)
     )

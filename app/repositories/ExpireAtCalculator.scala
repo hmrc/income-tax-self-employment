@@ -22,6 +22,7 @@ import java.time.{Instant, Month, ZoneOffset}
 object ExpireAtCalculator {
   private val StartTaxYearDayOfMonth = 6
   private val HowManyTaxYearsToStore = 4
+  private val TaxYearStartMonth      = Month.APRIL
   private val zoneId                 = ZoneOffset.UTC
 
   def calculateExpireAt(nowInstant: Instant): Instant = {
@@ -29,7 +30,7 @@ object ExpireAtCalculator {
     val currentYear = now.getYear
 
     val startOfThisTaxYear =
-      if (now.getMonthValue < Month.APRIL.getValue || (now.getMonthValue == Month.APRIL.getValue && now.getDayOfMonth < StartTaxYearDayOfMonth)) {
+      if (now.getMonthValue < TaxYearStartMonth.getValue || (now.getMonthValue == TaxYearStartMonth.getValue && now.getDayOfMonth < StartTaxYearDayOfMonth)) {
         now.withYear(currentYear - 1).withMonth(Month.APRIL.getValue).withDayOfMonth(StartTaxYearDayOfMonth)
       } else {
         now.withMonth(Month.APRIL.getValue).withDayOfMonth(StartTaxYearDayOfMonth)

@@ -17,7 +17,6 @@
 package models.common
 
 import enumeratum._
-import org.mongodb.scala.bson.{BsonString, BsonValue}
 import play.api.mvc.PathBindable
 
 sealed abstract class JourneyName(override val entryName: String) extends EnumEntry
@@ -42,9 +41,5 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
     override def unbind(key: String, journeyName: JourneyName): String =
       strBinder.unbind(key, journeyName.entryName)
   }
-
-  def toBson(name: JourneyName): BsonValue = new BsonString(name.entryName)
-
-  def fromBson(bson: BsonValue): JourneyName = withName(bson.asString().getValue)
 
 }

@@ -18,6 +18,7 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
+import models.common.JourneyContext.JourneyAnswersContext
 import models.common.JourneyName.Income
 import models.common.{BusinessId, Mtditid, TaxYear}
 import models.domain.ApiResultT
@@ -39,7 +40,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: MongoJourneyAnswersReposit
   def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: IncomeJourneyAnswers): ApiResultT[Unit] =
     EitherT
       .right[ServiceError](
-        repository.upsertData(mtditid, taxYear, businessId, Income, Json.toJson(answers))
+        repository.upsertData(JourneyAnswersContext(taxYear, businessId, mtditid, Income), Json.toJson(answers))
       )
       .void
 

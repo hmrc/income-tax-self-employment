@@ -16,6 +16,7 @@
 
 package repositories
 
+import models.common.JourneyContext.JourneyAnswersContext
 import models.common.JourneyName
 import models.common.JourneyStatus._
 import models.database.JourneyAnswers
@@ -55,8 +56,8 @@ class MongoJourneyAnswersRepositoryISpec
   "upsertData" should {
     "insert a new journey answers in in-progress status and calculate dates" in {
       val result = (for {
-        _        <- repository.upsertData(mtditid, currTaxYear, businessId, JourneyName.Income, Json.obj("field" -> "value"))
-        inserted <- repository.get(mtditid, currTaxYear, businessId, JourneyName.Income)
+        _        <- repository.upsertData(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
+        inserted <- repository.get(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income))
       } yield inserted.value).futureValue
 
       val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
@@ -74,10 +75,13 @@ class MongoJourneyAnswersRepositoryISpec
 
     "update already existing answers (values, updateAt)" in {
       val result = (for {
-        _ <- repository.upsertData(mtditid, currTaxYear, businessId, JourneyName.Income, Json.obj("field" -> "value"))
+        _ <- repository.upsertData(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
         _ = clock.advanceBy(1.day)
-        _       <- repository.upsertData(mtditid, currTaxYear, businessId, JourneyName.Income, Json.obj("field" -> "updated"))
-        updated <- repository.get(mtditid, currTaxYear, businessId, JourneyName.Income)
+        updatedResult <- repository.upsertData(
+          JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income),
+          Json.obj("field" -> "updated"))
+        updated <- repository.get(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income))
+        _ = updatedResult.getModifiedCount shouldBe 1
       } yield updated.value).futureValue
 
       val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
@@ -98,10 +102,11 @@ class MongoJourneyAnswersRepositoryISpec
   "updateStatus" should {
     "update status to a new one" in {
       val result = (for {
-        _ <- repository.upsertData(mtditid, currTaxYear, businessId, JourneyName.Income, Json.obj("field" -> "value"))
+        _ <- repository.upsertData(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
         _ = clock.advanceBy(2.day)
-        _        <- repository.updateStatus(mtditid, currTaxYear, businessId, JourneyName.Income, Completed)
-        inserted <- repository.get(mtditid, currTaxYear, businessId, JourneyName.Income)
+        updatedResult <- repository.updateStatus(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income), Completed)
+        inserted      <- repository.get(JourneyAnswersContext(currTaxYear, businessId, mtditid, JourneyName.Income))
+        _ = updatedResult.getModifiedCount shouldBe 1
       } yield inserted.value).futureValue
 
       result.status shouldBe Completed

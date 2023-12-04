@@ -19,6 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.SelfEmploymentBusinessConnector
+import models.common.JourneyContext.JourneyAnswersContext
 import models.common.JourneyName.{ExpensesTailoring, GoodsToSellOrUse}
 import models.common.TaxYear.{endDate, startDate}
 import models.common._
@@ -48,19 +49,17 @@ class ExpensesAnswersServiceImpl @Inject() (
     extends ExpensesAnswersService {
   def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: ExpensesTailoringAnswers): ApiResultT[Unit] =
     EitherT
-      .right[ServiceError](
-        repository.upsertData(mtditid, taxYear, businessId, ExpensesTailoring, Json.toJson(answers))
-      )
+      .right[ServiceError](repository.upsertData(JourneyAnswersContext(taxYear, businessId, mtditid, ExpensesTailoring), Json.toJson(answers)))
       .void
 
   def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, nino: Nino, answers: GoodsToSellOrUseJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
-    val financials  = Json.toJson(answers).as[FinancialsType]
+    val financials  = FinancialsType.fromFrontendModel(answers)
     val body        = CreateSEPeriodSummaryRequestBody(startDate(taxYear), endDate(taxYear), Some(financials))
     val requestData = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, body)
 
     val result = for {
-      _ <- repository.upsertData(mtditid, taxYear, businessId, GoodsToSellOrUse, Json.toJson(answers))
+      _ <- repository.upsertData(JourneyAnswersContext(taxYear, businessId, mtditid, GoodsToSellOrUse), Json.toJson(answers))
       _ <- businessConnector.createSEPeriodSummary(requestData).map(_ => ())
     } yield ()
 
