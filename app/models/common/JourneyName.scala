@@ -27,6 +27,7 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
   case object Income            extends JourneyName("income")
   case object ExpensesTailoring extends JourneyName("expenses-categories")
   case object GoodsToSellOrUse  extends JourneyName("expenses-goods-to-sell-or-use")
+  case object OfficeSupplies    extends JourneyName("expenses-office-supplies")
 
   implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[JourneyName] = new PathBindable[JourneyName] {
 

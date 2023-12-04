@@ -14,24 +14,16 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894.request
+package models.frontend.expenses.officeSupplies
 
-import cats.implicits.catsSyntaxOptionId
 import play.api.libs.json._
-import utils.DeductionsBuilder
 
-/** Represents the Swagger definition for financialsType.
-  */
-case class FinancialsType(
-    incomes: Option[IncomesType],
-    deductions: Option[DeductionsType]
-)
+case class OfficeSuppliesJourneyAnswers(officeSuppliesAmount: BigDecimal, officeSuppliesDisallowableAmount: Option[BigDecimal])
 
-object FinancialsType {
-  implicit lazy val financialsTypeJsonFormat: Format[FinancialsType] = Json.format[FinancialsType]
+object OfficeSuppliesJourneyAnswers {
+  implicit val reads: Reads[OfficeSuppliesJourneyAnswers] = Json.reads[OfficeSuppliesJourneyAnswers]
 
-  def fromFrontEndModel[A: DeductionsBuilder](answers: A): FinancialsType = {
-    val builder = implicitly[DeductionsBuilder[A]]
-    FinancialsType(None, builder.buildDeductions(answers).some)
-  }
+  implicit val writes: OWrites[OfficeSuppliesJourneyAnswers] = Json.writes[OfficeSuppliesJourneyAnswers]
+
+  implicit val formats: OFormat[OfficeSuppliesJourneyAnswers] = OFormat(reads, writes)
 }
