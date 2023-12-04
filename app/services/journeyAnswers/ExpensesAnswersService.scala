@@ -53,7 +53,7 @@ class ExpensesAnswersServiceImpl @Inject() (businessConnector: SelfEmploymentBus
 
   def saveAnswers[A: DeductionsBuilder: Writes](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, nino: Nino, answers: A)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
-    val financials  = FinancialsType.fromFrontEndModel(answers)
+    val financials  = FinancialsType.fromFrontendModel(answers)
     val body        = CreateSEPeriodSummaryRequestBody(startDate(taxYear), endDate(taxYear), Some(financials))
     val requestData = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, body)
 

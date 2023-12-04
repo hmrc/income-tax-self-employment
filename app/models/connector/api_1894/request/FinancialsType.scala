@@ -30,7 +30,7 @@ case class FinancialsType(
 object FinancialsType {
   implicit lazy val financialsTypeJsonFormat: Format[FinancialsType] = Json.format[FinancialsType]
 
-  def fromFrontEndModel[A: DeductionsBuilder](answers: A): FinancialsType = {
+  def fromFrontendModel[A: DeductionsBuilder](answers: A): FinancialsType = {
     val builder = implicitly[DeductionsBuilder[A]]
     FinancialsType(None, builder.buildDeductions(answers).some)
   }
