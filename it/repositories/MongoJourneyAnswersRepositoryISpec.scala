@@ -25,7 +25,6 @@ import org.scalatest.{BeforeAndAfterEach, OptionValues}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import play.api.test.Injecting
 import support.MongoTestSupport
 import uk.gov.hmrc.mongo.test.MongoSupport
 import utils.BaseSpec._
