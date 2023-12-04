@@ -16,7 +16,8 @@
 
 package stubs.services
 
-import models.common.{BusinessId, Mtditid, Nino, TaxYear}
+import models.common.JourneyAnswersContext.JourneyContextWithNino
+import models.common.{BusinessId, Mtditid, TaxYear}
 import models.domain.ApiResultT
 import models.frontend.expenses.ExpensesTailoringAnswers
 import play.api.libs.json.Writes
@@ -32,6 +33,6 @@ case class StubExpensesAnswersService(expensesTailoringAnswersRes: ApiResultT[Un
   def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: ExpensesTailoringAnswers): ApiResultT[Unit] =
     expensesTailoringAnswersRes
 
-  def saveAnswers[A: DeductionsBuilder: Writes](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, nino: Nino, answers: A)(implicit
-      hc: HeaderCarrier): ApiResultT[Unit] = expensesAnswersRes
+  def saveAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    expensesAnswersRes
 }

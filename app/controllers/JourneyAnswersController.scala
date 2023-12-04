@@ -17,6 +17,8 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
+import models.common.JourneyAnswersContext.JourneyContextWithNino
+import models.common.JourneyName.{GoodsToSellOrUse, OfficeSupplies}
 import models.common.{BusinessId, Nino, TaxYear}
 import models.frontend.expenses.ExpensesTailoringAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
@@ -53,13 +55,15 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[GoodsToSellOrUseJourneyAnswers](user) { value =>
-      expensesService.saveAnswers(businessId, taxYear, user.getMtditid, nino, value).map(_ => NoContent)
+      val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino, GoodsToSellOrUse)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 
   def saveOfficeSupplies(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[OfficeSuppliesJourneyAnswers](user) { value =>
-      expensesService.saveAnswers(businessId, taxYear, user.getMtditid, nino, value).map(_ => NoContent)
+      val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino, OfficeSupplies)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 }
