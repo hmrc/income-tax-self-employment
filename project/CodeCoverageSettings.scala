@@ -24,6 +24,8 @@ object CodeCoverageSettings {
     "uk.gov.hmrc.BuildInfo",
     "app.*",
     "prod.*",
+    "models.common.*",    // common case classes without logic
+    "models.connector.*", // simple case classes representing external services model
     ".*Routes.*",
     "testOnly.*",
     "testOnlyDoNotUseInAppConf.*"

@@ -16,13 +16,13 @@
 
 package repositories
 
-import java.time.{Instant, Month, ZoneId}
+import java.time.temporal.ChronoUnit
+import java.time.{Instant, Month, ZoneOffset}
 
-// TODO Add test
 object ExpireAtCalculator {
   private val StartTaxYearDayOfMonth = 6
   private val HowManyTaxYearsToStore = 4
-  private val zoneId                 = ZoneId.of("Europe/London")
+  private val zoneId                 = ZoneOffset.UTC
 
   def calculateExpireAt(nowInstant: Instant): Instant = {
     val now         = nowInstant.atZone(zoneId)
@@ -35,7 +35,11 @@ object ExpireAtCalculator {
         now.withMonth(Month.APRIL.getValue).withDayOfMonth(StartTaxYearDayOfMonth)
       }
 
-    val startOfTaxYearFourYearsFromNow = startOfThisTaxYear.plusYears(HowManyTaxYearsToStore).withHour(0).withMinute(0).withSecond(0)
+    val startOfTaxYearFourYearsFromNow = startOfThisTaxYear
+      .plusYears(HowManyTaxYearsToStore)
+      .withDayOfMonth(StartTaxYearDayOfMonth)
+      .truncatedTo(ChronoUnit.DAYS)
+
     startOfTaxYearFourYearsFromNow.toInstant
   }
 }
