@@ -16,6 +16,7 @@
 
 package models.connector.api_1894.request
 
+import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import play.api.libs.json._
 
 /** Represents the Swagger definition for financialsType.
@@ -27,4 +28,16 @@ case class FinancialsType(
 
 object FinancialsType {
   implicit lazy val financialsTypeJsonFormat: Format[FinancialsType] = Json.format[FinancialsType]
+
+  def fromFrontendModel(answers: GoodsToSellOrUseJourneyAnswers): FinancialsType =
+    FinancialsType(
+      None,
+      Some(
+        DeductionsType.empty.copy(
+          costOfGoods = Some(
+            SelfEmploymentDeductionsDetailPosNegType(Some(answers.goodsToSellOrUseAmount), answers.disallowableGoodsToSellOrUseAmount)
+          )
+        ))
+    )
+
 }

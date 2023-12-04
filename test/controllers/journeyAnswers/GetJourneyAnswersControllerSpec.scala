@@ -17,6 +17,7 @@
 package controllers.journeyAnswers
 
 import mocks.MockGetJourneyAnswersService
+import models.common.{JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpec
@@ -25,16 +26,20 @@ import play.api.libs.json.Json
 import play.api.mvc.Result
 import play.api.test.Helpers._
 import services.journeyAnswers.GetJourneyAnswersResult.{JourneyAnswersFound, NoJourneyAnswersFound}
+import utils.BaseSpec._
 import utils.TestUtils
 
+import java.time.Instant
 import scala.concurrent.Future
 
 class GetJourneyAnswersControllerSpec extends AnyWordSpec with MockGetJourneyAnswersService with TestUtils {
 
   private val controller = new GetJourneyAnswersController(stubControllerComponents, mockGetJourneyAnswersService)
 
-  private val id             = "some_id"
-  private val journeyAnswers = JourneyAnswers(id)
+  private val id  = "some_id"
+  private val now = Instant.now()
+  private val journeyAnswers =
+    JourneyAnswers(mtditid, businessId, currTaxYear, JourneyName.Income, JourneyStatus.InProgress, Json.obj(), now, now, now)
 
   "GetJourneyAnswersController" when {
     "handling a valid request with an id" when {

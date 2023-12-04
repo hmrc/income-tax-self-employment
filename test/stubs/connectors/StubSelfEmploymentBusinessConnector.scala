@@ -14,22 +14,27 @@
  * limitations under the License.
  */
 
-package services.journeyAnswers.expenses.goodsToSellOrUse
+package stubs.connectors
 
 import cats.implicits.catsSyntaxEitherId
 import connectors.SelfEmploymentBusinessConnector
+import connectors.httpParsers.CreateSEPeriodSummaryHttpParser.Api1894Response
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
-import models.error.DownstreamError
+import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
+import stubs.connectors.StubSelfEmploymentBusinessConnector.emptyApi1894Response
 import uk.gov.hmrc.http.HeaderCarrier
 
-import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class SelfEmploymentBusinessService @Inject() (connector: SelfEmploymentBusinessConnector)(implicit ec: ExecutionContext) {
+case class StubSelfEmploymentBusinessConnector(
+    createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(emptyApi1894Response.asRight)
+) extends SelfEmploymentBusinessConnector {
 
-  def createSEPeriodSummary(requestData: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier): Future[Either[DownstreamError, Unit]] =
-    connector.createSEPeriodSummary(requestData).map {
-      case Right(_)              => ().asRight
-      case Left(downstreamError) => downstreamError.asLeft
-    }
+  def createSEPeriodSummary(
+      requestData: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] =
+    createSEPeriodSummaryResult
+}
+
+object StubSelfEmploymentBusinessConnector {
+  val emptyApi1894Response: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("id")
 }
