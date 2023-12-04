@@ -22,7 +22,6 @@ import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 
 trait DeductionsBuilder[A] {
   def buildDeductions(answers: A): DeductionsType
-
 }
 
 object DeductionsBuilder {

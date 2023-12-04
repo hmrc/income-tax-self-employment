@@ -77,10 +77,8 @@ class MongoJourneyAnswersRepositoryISpec
       val result = (for {
         _ <- repository.upsertData(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
         _ = clock.advanceBy(1.day)
-        updatedResult <- repository.upsertData(
-          JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income),
-          Json.obj("field" -> "updated"))
-        updated <- repository.get(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income))
+        updatedResult <- repository.upsertData(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "updated"))
+        updated       <- repository.get(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income))
         _ = updatedResult.getModifiedCount shouldBe 1
       } yield updated.value).futureValue
 
