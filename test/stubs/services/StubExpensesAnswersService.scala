@@ -16,20 +16,23 @@
 
 package stubs.services
 
-import models.common.{BusinessId, Mtditid, Nino, TaxYear}
+import models.common.JourneyAnswersContext.JourneyContextWithNino
+import models.common.{BusinessId, Mtditid, TaxYear}
 import models.domain.ApiResultT
 import models.frontend.expenses.ExpensesTailoringAnswers
-import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
+import play.api.libs.json.Writes
 import services.journeyAnswers.ExpensesAnswersService
 import stubs.serviceUnitT
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.DeductionsBuilder
 
 case class StubExpensesAnswersService(expensesTailoringAnswersRes: ApiResultT[Unit] = serviceUnitT,
-                                      goodsToSellOrUseAnswersRes: ApiResultT[Unit] = serviceUnitT)
+                                      expensesAnswersRes: ApiResultT[Unit] = serviceUnitT)
     extends ExpensesAnswersService {
+
   def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: ExpensesTailoringAnswers): ApiResultT[Unit] =
     expensesTailoringAnswersRes
 
-  def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, nino: Nino, answers: GoodsToSellOrUseJourneyAnswers)(implicit
-      hc: HeaderCarrier): ApiResultT[Unit] = goodsToSellOrUseAnswersRes
+  def saveAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    expensesAnswersRes
 }
