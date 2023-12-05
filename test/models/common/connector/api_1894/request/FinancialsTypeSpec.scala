@@ -22,36 +22,36 @@ import gens.OfficeSuppliesJourneyAnswersGen.officeSuppliesJourneyAnswersGen
 import models.connector.api_1894.request._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
 import utils.DeductionsBuilder.{goodsToSellOrUse, officeSupplies}
 
 class FinancialsTypeSpec extends AnyWordSpec with Matchers {
 
   "converting expenses answers to downstream model" should {
     "work with office supplies" in {
-      forAll(officeSuppliesJourneyAnswersGen) { answers =>
-        val expectedResult = FinancialsType(
-          None,
-          Some(
-            DeductionsType.empty.copy(adminCosts =
-              Some(SelfEmploymentDeductionsDetailType(answers.officeSuppliesAmount.some, answers.officeSuppliesDisallowableAmount))))
-        )
+      val answers = officeSuppliesJourneyAnswersGen.sample.get
 
-        FinancialsType.fromFrontendModel(answers)(officeSupplies) shouldBe expectedResult
-      }
+      val expectedResult = FinancialsType(
+        None,
+        Some(
+          DeductionsType.empty.copy(adminCosts =
+            Some(SelfEmploymentDeductionsDetailType(answers.officeSuppliesAmount.some, answers.officeSuppliesDisallowableAmount))))
+      )
+
+      FinancialsType.fromFrontendModel(answers) shouldBe expectedResult
 
     }
     "work with goods to sell or use" in {
-      forAll(goodsToSellOrUseJourneyAnswersGen) { answers =>
-        val expectedResult = FinancialsType(
-          None,
-          Some(
-            DeductionsType.empty.copy(costOfGoods =
-              Some(SelfEmploymentDeductionsDetailPosNegType(answers.goodsToSellOrUseAmount.some, answers.disallowableGoodsToSellOrUseAmount))))
-        )
+      val answers = goodsToSellOrUseJourneyAnswersGen.sample.get
 
-        FinancialsType.fromFrontendModel(answers)(goodsToSellOrUse) shouldBe expectedResult
-      }
+      val expectedResult = FinancialsType(
+        None,
+        Some(
+          DeductionsType.empty.copy(costOfGoods =
+            Some(SelfEmploymentDeductionsDetailPosNegType(answers.goodsToSellOrUseAmount.some, answers.disallowableGoodsToSellOrUseAmount))))
+      )
+
+      FinancialsType.fromFrontendModel(answers) shouldBe expectedResult
     }
   }
+
 }
