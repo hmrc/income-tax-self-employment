@@ -24,9 +24,6 @@ object GoodsToSellOrUseJourneyAnswersGen {
   val goodsToSellOrUseJourneyAnswersGen: Gen[GoodsToSellOrUseJourneyAnswers] = for {
     goodsToSellOrUseAmount             <- bigDecimalGen
     disallowableGoodsToSellOrUseAmount <- Gen.option(bigDecimalGen)
-  } yield GoodsToSellOrUseJourneyAnswers(
-    goodsToSellOrUseAmount,
-    disallowableGoodsToSellOrUseAmount
-  )
+  } yield GoodsToSellOrUseJourneyAnswers(goodsToSellOrUseAmount, disallowableGoodsToSellOrUseAmount)
 
 }

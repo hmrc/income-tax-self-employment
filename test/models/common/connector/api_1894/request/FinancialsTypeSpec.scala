@@ -1,0 +1,57 @@
+/*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package models.common.connector.api_1894.request
+
+import cats.implicits.catsSyntaxOptionId
+import gens.GoodsToSellOrUseJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
+import gens.OfficeSuppliesJourneyAnswersGen.officeSuppliesJourneyAnswersGen
+import models.connector.api_1894.request._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks.forAll
+import utils.DeductionsBuilder.{goodsToSellOrUse, officeSupplies}
+
+class FinancialsTypeSpec extends AnyWordSpec with Matchers {
+
+  "converting expenses answers to downstream model" should {
+    "work with office supplies" in {
+      forAll(officeSuppliesJourneyAnswersGen) { answers =>
+        val expectedResult = FinancialsType(
+          None,
+          Some(
+            DeductionsType.empty.copy(adminCosts =
+              Some(SelfEmploymentDeductionsDetailType(answers.officeSuppliesAmount.some, answers.officeSuppliesDisallowableAmount))))
+        )
+
+        FinancialsType.fromFrontendModel(answers)(officeSupplies) shouldBe expectedResult
+      }
+
+    }
+    "work with goods to sell or use" in {
+      forAll(goodsToSellOrUseJourneyAnswersGen) { answers =>
+        val expectedResult = FinancialsType(
+          None,
+          Some(
+            DeductionsType.empty.copy(costOfGoods =
+              Some(SelfEmploymentDeductionsDetailPosNegType(answers.goodsToSellOrUseAmount.some, answers.disallowableGoodsToSellOrUseAmount))))
+        )
+
+        FinancialsType.fromFrontendModel(answers)(goodsToSellOrUse) shouldBe expectedResult
+      }
+    }
+  }
+}

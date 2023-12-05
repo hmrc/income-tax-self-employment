@@ -22,10 +22,7 @@ import utils.DeductionsBuilder
 
 /** Represents the Swagger definition for financialsType.
   */
-case class FinancialsType(
-    incomes: Option[IncomesType],
-    deductions: Option[DeductionsType]
-)
+case class FinancialsType(incomes: Option[IncomesType], deductions: Option[DeductionsType])
 
 object FinancialsType {
   implicit lazy val financialsTypeJsonFormat: Format[FinancialsType] = Json.format[FinancialsType]
