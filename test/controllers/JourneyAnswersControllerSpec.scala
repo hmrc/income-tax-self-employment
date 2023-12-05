@@ -20,6 +20,7 @@ import controllers.ControllerBehaviours.buildRequest
 import gens.ExpensesTailoringAnswersGen.expensesTailoringAnswersGen
 import gens.GoodsToSellOrUseJourneyAnswersGen._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
+import gens.OfficeSuppliesJourneyAnswersGen.officeSuppliesJourneyAnswersGen
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.NO_CONTENT
 import stubs.services.{StubExpensesAnswersService, StubIncomeAnswersService}
@@ -63,6 +64,17 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         expectedStatus = NO_CONTENT,
         expectedBody = "",
         methodBlock = () => underTest.saveGoodsToSellOrUse(currTaxYear, businessId, nino)
+      )
+    }
+  }
+  "officeSupplies" should {
+
+    s"return a $NO_CONTENT when successful" in forAll(officeSuppliesJourneyAnswersGen) { data =>
+      behave like testRoute(
+        request = buildRequest(data),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.saveOfficeSupplies(currTaxYear, businessId, nino)
       )
     }
   }

@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package models.common
+package gens
 
-sealed trait JourneyContext {
-  val taxYear: TaxYear
-  val businessId: BusinessId
-  val mtditid: Mtditid
-  val journey: JourneyName
-}
+import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import org.scalacheck.Gen
 
-object JourneyContext {
-  case class JourneyContextWithNino(taxYear: TaxYear, nino: Nino, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName)
-      extends JourneyContext
+object OfficeSuppliesJourneyAnswersGen {
 
-  case class JourneyAnswersContext(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName) extends JourneyContext
+  val officeSuppliesJourneyAnswersGen: Gen[OfficeSuppliesJourneyAnswers] = for {
+    amount             <- bigDecimalGen
+    disallowableAmount <- Gen.option(bigDecimalGen)
+  } yield OfficeSuppliesJourneyAnswers(amount, disallowableAmount)
+
 }

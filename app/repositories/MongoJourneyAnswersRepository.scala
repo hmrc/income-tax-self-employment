@@ -16,15 +16,15 @@
 
 package repositories
 
-import models.common.JourneyContext.JourneyAnswersContext
+import models.common.JourneyAnswersContext.JourneyContext
 import models.common._
 import models.database.JourneyAnswers
 import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.bson.{BsonDocument, _}
+import org.mongodb.scala.bson._
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model._
 import org.mongodb.scala.result.UpdateResult
-import org.mongodb.scala.{ReadPreference, _}
+import org.mongodb.scala._
 import play.api.libs.json.{JsValue, Json}
 import repositories.ExpireAtCalculator.calculateExpireAt
 import uk.gov.hmrc.mongo.MongoComponent
@@ -38,11 +38,11 @@ import scala.concurrent.{ExecutionContext, Future}
 trait JourneyAnswersRepository {
   def get(id: String): Future[Option[JourneyAnswers]]
 
-  def get(ctx: JourneyAnswersContext): Future[Option[JourneyAnswers]]
+  def get(ctx: JourneyContext): Future[Option[JourneyAnswers]]
 
-  def upsertData(ctx: JourneyAnswersContext, newData: JsValue): Future[UpdateResult]
+  def upsertData(ctx: JourneyContext, newData: JsValue): Future[UpdateResult]
 
-  def updateStatus(ctx: JourneyAnswersContext, status: JourneyStatus): Future[UpdateResult]
+  def updateStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult]
 }
 
 @Singleton
@@ -71,7 +71,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     )
     with JourneyAnswersRepository {
 
-  private def filterJourney(ctx: JourneyAnswersContext) = Filters.and(
+  private def filterJourney(ctx: JourneyContext) = Filters.and(
     Filters.eq("mtditid", ctx.mtditid.value),
     Filters.eq("taxYear", ctx.taxYear.endYear),
     Filters.eq("businessId", ctx.businessId.value),
@@ -87,7 +87,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
 
   private def filterByConstraint(field: String, value: String): Bson = equal(field, value)
 
-  def get(ctx: JourneyAnswersContext): Future[Option[JourneyAnswers]] = {
+  def get(ctx: JourneyContext): Future[Option[JourneyAnswers]] = {
     val filter = filterJourney(ctx)
     collection
       .withReadPreference(ReadPreference.primaryPreferred())
@@ -95,7 +95,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
       .headOption()
   }
 
-  def upsertData(ctx: JourneyAnswersContext, newData: JsValue): Future[UpdateResult] = {
+  def upsertData(ctx: JourneyContext, newData: JsValue): Future[UpdateResult] = {
     val filter  = filterJourney(ctx)
     val bson    = BsonDocument(Json.stringify(newData))
     val update  = createUpsert(ctx)("data", bson)
@@ -104,7 +104,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     collection.updateOne(filter, update, options).toFuture()
   }
 
-  def updateStatus(ctx: JourneyAnswersContext, status: JourneyStatus): Future[UpdateResult] = {
+  def updateStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
     val now    = Instant.now(clock)
     val filter = filterJourney(ctx)
     val update = Updates.combine(
@@ -115,7 +115,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     collection.updateOne(filter, update, options).toFuture()
   }
 
-  private def createUpsert(ctx: JourneyAnswersContext)(fieldName: String, value: BsonValue) = {
+  private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue) = {
     val now      = Instant.now(clock)
     val expireAt = calculateExpireAt(now)
 

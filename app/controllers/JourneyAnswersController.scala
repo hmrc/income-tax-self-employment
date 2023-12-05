@@ -17,15 +17,18 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
+import models.common.JourneyAnswersContext.JourneyContextWithNino
+import models.common.JourneyName.{GoodsToSellOrUse, OfficeSupplies}
 import models.common.{BusinessId, Nino, TaxYear}
 import models.frontend.expenses.ExpensesTailoringAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
+import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.income.IncomeJourneyAnswers
-import play.api.Logger
 import play.api.libs.json.Format.GenericFormat
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.journeyAnswers.{ExpensesAnswersService, IncomeAnswersService}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import utils.Logging
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -35,8 +38,8 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
                                           cc: ControllerComponents,
                                           incomeService: IncomeAnswersService,
                                           expensesService: ExpensesAnswersService)(implicit ec: ExecutionContext)
-    extends BackendController(cc) {
-  private implicit val logger: Logger = Logger(this.getClass)
+    extends BackendController(cc)
+    with Logging {
 
   def saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
     getBody[IncomeJourneyAnswers](user) { value =>
@@ -52,7 +55,15 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[GoodsToSellOrUseJourneyAnswers](user) { value =>
-      expensesService.saveAnswers(businessId, taxYear, user.getMtditid, nino, value).map(_ => NoContent)
+      val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino, GoodsToSellOrUse)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+    }
+  }
+
+  def saveOfficeSupplies(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBody[OfficeSuppliesJourneyAnswers](user) { value =>
+      val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino, OfficeSupplies)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 }

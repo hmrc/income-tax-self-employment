@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-package gens
+package utils
 
-import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
-import org.scalacheck.Gen
+import play.api.Logger
 
-object GoodsToSellOrUseJourneyAnswersGen {
-
-  val goodsToSellOrUseJourneyAnswersGen: Gen[GoodsToSellOrUseJourneyAnswers] = for {
-    goodsToSellOrUseAmount             <- bigDecimalGen
-    disallowableGoodsToSellOrUseAmount <- Gen.option(bigDecimalGen)
-  } yield GoodsToSellOrUseJourneyAnswers(goodsToSellOrUseAmount, disallowableGoodsToSellOrUseAmount)
-
+trait Logging {
+  implicit lazy val logger: Logger = Logger(this.getClass)
 }
