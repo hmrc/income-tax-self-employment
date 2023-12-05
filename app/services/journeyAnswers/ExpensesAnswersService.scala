@@ -55,10 +55,9 @@ class ExpensesAnswersServiceImpl @Inject() (businessConnector: SelfEmploymentBus
     val body        = CreateSEPeriodSummaryRequestBody(startDate(ctx.taxYear), endDate(ctx.taxYear), Some(financials))
     val requestData = CreateSEPeriodSummaryRequestData(ctx.taxYear, ctx.businessId, ctx.nino, body)
 
-    val result = for {
-      _ <- repository.upsertData(JourneyContext(ctx.taxYear, ctx.businessId, ctx.mtditid, ctx.journey), Json.toJson(answers))
-      _ <- businessConnector.createSEPeriodSummary(requestData).map(_ => ())
-    } yield ()
+    val result = businessConnector
+      .createSEPeriodSummary(requestData)
+      .map(_ => ())
 
     EitherT.right[ServiceError](result)
   }
