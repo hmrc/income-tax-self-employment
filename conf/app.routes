@@ -1,19 +1,20 @@
 # microservice specific routes
 
 # Business
-GET         /individuals/business/details/:nino/list                                              controllers.BusinessDetailsController.getBusinesses(nino: String)
-GET         /individuals/business/details/:nino/:businessId                                       controllers.BusinessDetailsController.getBusiness(nino: String, businessId: String)
-GET         /individuals/business/journey-states/:nino/:taxYear                                   controllers.BusinessDetailsController.getBusinessJourneyStates(nino: String, taxYear: Int)
+GET         /individuals/business/details/:nino/list                                                                    controllers.BusinessDetailsController.getBusinesses(nino: String)
+GET         /individuals/business/details/:nino/:businessId                                                             controllers.BusinessDetailsController.getBusiness(nino: String, businessId: String)
+GET         /individuals/business/journey-states/:nino/:taxYear                                                         controllers.BusinessDetailsController.getBusinessJourneyStates(nino: String, taxYear: Int)
 
 # Journey State
-GET         /completed-section/:nino/:taxYear                                                     controllers.JourneyStateController.getJourneyStateSeq(nino: String, taxYear: Int)
-GET         /completed-section/:businessId/:journey/:taxYear                                      controllers.JourneyStateController.getJourneyState(businessId: String, journey: String, taxYear: Int)
-PUT         /completed-section/:businessId/:journey/:taxYear/:completed                           controllers.JourneyStateController.putJourneyState(businessId: String, journey: String, taxYear: Int, completed: Boolean)
+GET         /completed-section/:nino/:taxYear                                                                           controllers.JourneyStateController.getJourneyStateSeq(nino: String, taxYear: Int)
+GET         /completed-section/:businessId/:journey/:taxYear                                                            controllers.JourneyStateController.getJourneyState(businessId: String, journey: String, taxYear: Int)
+PUT         /completed-section/:businessId/:journey/:taxYear/:completed                                                 controllers.JourneyStateController.putJourneyState(businessId: String, journey: String, taxYear: Int, completed: Boolean)
 
 # Journey Answers
-GET         /check-your-answers/get/:id                                                           controllers.journeyAnswers.GetJourneyAnswersController.handleRequest(id: String)
+GET         /check-your-answers/get/:id                                                                                 controllers.journeyAnswers.GetJourneyAnswersController.handleRequest(id: String)
 
-POST        /:taxYear/:businessId/income/answers                                                  controllers.JourneyAnswersController.saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId)
-POST        /:taxYear/:businessId/expenses-categories/answers                                     controllers.JourneyAnswersController.saveExpensesTailoringAnswers(taxYear: TaxYear, businessId: BusinessId)
-POST        /:taxYear/:businessId/expenses-goods-to-sell-or-use/:nino/answers                     controllers.JourneyAnswersController.saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
-POST        /:taxYear/:businessId/expenses-office-supplies/:nino/answers                          controllers.JourneyAnswersController.saveOfficeSupplies(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/:businessId/income/answers                                                                        controllers.JourneyAnswersController.saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId)
+POST        /:taxYear/:businessId/expenses-categories/answers                                                           controllers.JourneyAnswersController.saveExpensesTailoringAnswers(taxYear: TaxYear, businessId: BusinessId)
+POST        /:taxYear/:businessId/expenses-goods-to-sell-or-use/:nino/answers                                           controllers.JourneyAnswersController.saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/:businessId/expenses-office-supplies/:nino/answers                                                controllers.JourneyAnswersController.saveOfficeSupplies(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/:businessId/expenses-repairs-and-maintenance/:nino/answers                                        controllers.JourneyAnswersController.saveRepairsAndMaintenanceCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

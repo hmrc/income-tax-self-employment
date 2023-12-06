@@ -17,8 +17,8 @@
 package models.common.connector.api_1894.request
 
 import cats.implicits.catsSyntaxOptionId
-import gens.GoodsToSellOrUseJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
-import gens.OfficeSuppliesJourneyAnswersGen.officeSuppliesJourneyAnswersGen
+import gens.ExpensesJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
+import .officeSuppliesJourneyAnswersGen
 import models.connector.api_1894.request._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

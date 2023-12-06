@@ -24,11 +24,13 @@ sealed abstract class JourneyName(override val entryName: String) extends EnumEn
 object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName] {
   val values: IndexedSeq[JourneyName] = findValues
 
-  case object Income            extends JourneyName("income")
-  case object ExpensesTailoring extends JourneyName("expenses-categories")
-  case object GoodsToSellOrUse  extends JourneyName("expenses-goods-to-sell-or-use")
-  case object OfficeSupplies    extends JourneyName("expenses-office-supplies")
+  case object Income                     extends JourneyName("income")
+  case object ExpensesTailoring          extends JourneyName("expenses-categories")
+  case object GoodsToSellOrUse           extends JourneyName("expenses-goods-to-sell-or-use")
+  case object OfficeSupplies             extends JourneyName("expenses-office-supplies")
+  case object RepairsAndMaintenanceCosts extends JourneyName("expenses-repairs-and-maintenance")
 
+  // Are we using this code? Should we be if not?
   implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[JourneyName] = new PathBindable[JourneyName] {
 
     override def bind(key: String, value: String): Either[String, JourneyName] =
