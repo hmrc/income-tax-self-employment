@@ -18,7 +18,7 @@ package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
 import gens.ExpensesTailoringAnswersGen.expensesTailoringAnswersGen
-import gens.GoodsToSellOrUseJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
+import gens.ExpensesJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
 import models.common.JourneyAnswersContext.JourneyContextWithNino
 import models.common.JourneyName.GoodsToSellOrUse
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture

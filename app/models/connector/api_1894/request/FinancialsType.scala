@@ -29,6 +29,6 @@ object FinancialsType {
 
   def fromFrontendModel[A: DeductionsBuilder](answers: A): FinancialsType = {
     val builder = implicitly[DeductionsBuilder[A]]
-    FinancialsType(None, builder.buildDeductions(answers).some)
+    FinancialsType(None, builder.build(answers).some)
   }
 }

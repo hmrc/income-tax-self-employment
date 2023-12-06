@@ -16,14 +16,26 @@
 
 package gens
 
+import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import org.scalacheck.Gen
 
-object OfficeSuppliesJourneyAnswersGen {
+object ExpensesJourneyAnswersGen {
+
+  val goodsToSellOrUseJourneyAnswersGen: Gen[GoodsToSellOrUseJourneyAnswers] = for {
+    amount             <- bigDecimalGen
+    disallowableAmount <- Gen.option(bigDecimalGen)
+  } yield GoodsToSellOrUseJourneyAnswers(amount, disallowableAmount)
 
   val officeSuppliesJourneyAnswersGen: Gen[OfficeSuppliesJourneyAnswers] = for {
     amount             <- bigDecimalGen
     disallowableAmount <- Gen.option(bigDecimalGen)
   } yield OfficeSuppliesJourneyAnswers(amount, disallowableAmount)
+
+  val repairsAndMaintenanceCostsJourneyAnswersGen: Gen[RepairsAndMaintenanceCostsJourneyAnswers] = for {
+    amount             <- bigDecimalGen
+    disallowableAmount <- Gen.option(bigDecimalGen)
+  } yield RepairsAndMaintenanceCostsJourneyAnswers(amount, disallowableAmount)
 
 }

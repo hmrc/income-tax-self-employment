@@ -17,8 +17,7 @@
 package models.common.connector.api_1894.request
 
 import cats.implicits.catsSyntaxOptionId
-import gens.GoodsToSellOrUseJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
-import gens.OfficeSuppliesJourneyAnswersGen.officeSuppliesJourneyAnswersGen
+import gens.ExpensesJourneyAnswersGen._
 import models.connector.api_1894.request._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -48,6 +47,19 @@ class FinancialsTypeSpec extends AnyWordSpec with Matchers {
         Some(
           DeductionsType.empty.copy(costOfGoods =
             Some(SelfEmploymentDeductionsDetailPosNegType(answers.goodsToSellOrUseAmount.some, answers.disallowableGoodsToSellOrUseAmount))))
+      )
+
+      FinancialsType.fromFrontendModel(answers) shouldBe expectedResult
+    }
+    "work with repairs and maintenance" in {
+      val answers = repairsAndMaintenanceCostsJourneyAnswersGen.sample.get
+
+      val expectedResult = FinancialsType(
+        None,
+        Some(
+          DeductionsType.empty.copy(maintenanceCosts = Some(
+            SelfEmploymentDeductionsDetailPosNegType(Some(answers.repairsAndMaintenanceAmount), answers.repairsAndMaintenanceDisallowableAmount)
+          )))
       )
 
       FinancialsType.fromFrontendModel(answers) shouldBe expectedResult
