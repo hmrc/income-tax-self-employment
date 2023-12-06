@@ -23,7 +23,6 @@ import org.scalacheck.Gen
 
 object ExpensesJourneyAnswersGen {
 
-  // Can we abstract this?
   val goodsToSellOrUseJourneyAnswersGen: Gen[GoodsToSellOrUseJourneyAnswers] = for {
     amount             <- bigDecimalGen
     disallowableAmount <- Gen.option(bigDecimalGen)
