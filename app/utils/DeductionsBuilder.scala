@@ -22,7 +22,7 @@ import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 
 trait DeductionsBuilder[A] {
-  def buildDeductions(answers: A): DeductionsType
+  def build(answers: A): DeductionsType
 }
 
 object DeductionsBuilder {
