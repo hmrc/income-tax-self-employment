@@ -19,26 +19,32 @@ package utils
 import models.connector.api_1894.request.{DeductionsType, SelfEmploymentDeductionsDetailPosNegType, SelfEmploymentDeductionsDetailType}
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 
 trait DeductionsBuilder[A] {
-  def buildDeductions(answers: A): DeductionsType
+  def build(answers: A): DeductionsType
 }
 
 object DeductionsBuilder {
-  implicit val officeSupplies: DeductionsBuilder[OfficeSuppliesJourneyAnswers] = new DeductionsBuilder[OfficeSuppliesJourneyAnswers] {
-    override def buildDeductions(answers: OfficeSuppliesJourneyAnswers): DeductionsType =
+  implicit val officeSupplies: DeductionsBuilder[OfficeSuppliesJourneyAnswers] = (answers: OfficeSuppliesJourneyAnswers) =>
+    DeductionsType.empty.copy(
+      adminCosts = Some(
+        SelfEmploymentDeductionsDetailType(Some(answers.officeSuppliesAmount), answers.officeSuppliesDisallowableAmount)
+      )
+    )
+
+  implicit val goodsToSellOrUse: DeductionsBuilder[GoodsToSellOrUseJourneyAnswers] = (answers: GoodsToSellOrUseJourneyAnswers) =>
+    DeductionsType.empty.copy(
+      costOfGoods = Some(
+        SelfEmploymentDeductionsDetailPosNegType(Some(answers.goodsToSellOrUseAmount), answers.disallowableGoodsToSellOrUseAmount)
+      )
+    )
+
+  implicit val repairsAndMaintenanceCosts: DeductionsBuilder[RepairsAndMaintenanceCostsJourneyAnswers] =
+    (answers: RepairsAndMaintenanceCostsJourneyAnswers) =>
       DeductionsType.empty.copy(
-        adminCosts = Some(
-          SelfEmploymentDeductionsDetailType(Some(answers.officeSuppliesAmount), answers.officeSuppliesDisallowableAmount)
+        maintenanceCosts = Some(
+          SelfEmploymentDeductionsDetailPosNegType(Some(answers.repairsAndMaintenanceAmount), answers.repairsAndMaintenanceDisallowableAmount)
         )
       )
-  }
-  implicit val goodsToSellOrUse: DeductionsBuilder[GoodsToSellOrUseJourneyAnswers] = new DeductionsBuilder[GoodsToSellOrUseJourneyAnswers] {
-    override def buildDeductions(answers: GoodsToSellOrUseJourneyAnswers): DeductionsType =
-      DeductionsType.empty.copy(
-        costOfGoods = Some(
-          SelfEmploymentDeductionsDetailPosNegType(Some(answers.goodsToSellOrUseAmount), answers.disallowableGoodsToSellOrUseAmount)
-        )
-      )
-  }
 }
