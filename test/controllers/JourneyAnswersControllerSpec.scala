@@ -95,4 +95,14 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
+  "saveEntertainmentCosts" should {
+    s"return a $NO_CONTENT when successful" in forAll(entertainmentCostsJourneyAnswersGen) { data =>
+      behave like testRoute(
+        request = buildRequest(data),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.saveEntertainmentCosts(currTaxYear, businessId, nino)
+      )
+    }
+  }
 }

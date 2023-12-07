@@ -16,7 +16,9 @@
 
 package utils
 
-import models.connector.api_1894.request.{DeductionsType, SelfEmploymentDeductionsDetailPosNegType, SelfEmploymentDeductionsDetailType}
+import cats.implicits.catsSyntaxOptionId
+import models.connector.api_1894.request._
+import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
@@ -56,6 +58,14 @@ object DeductionsBuilder {
       DeductionsType.empty.copy(
         staffCosts = Some(
           SelfEmploymentDeductionsDetailType(Some(answers.staffCostsAmount), answers.staffCostsDisallowableAmount)
+        )
+      )
+
+  implicit val entertainmentCosts: DeductionsBuilder[EntertainmentJourneyAnswers] =
+    (answers: EntertainmentJourneyAnswers) =>
+      DeductionsType.empty.copy(
+        businessEntertainmentCosts = Some(
+          SelfEmploymentDeductionsDetailType(None, answers.entertainmentAmount.some)
         )
       )
 }

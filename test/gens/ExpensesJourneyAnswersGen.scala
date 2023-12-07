@@ -16,6 +16,7 @@
 
 package gens
 
+import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
@@ -43,5 +44,9 @@ object ExpensesJourneyAnswersGen {
     amount             <- bigDecimalGen
     disallowableAmount <- Gen.option(bigDecimalGen)
   } yield StaffCostsJourneyAnswers(amount, disallowableAmount)
+
+  val entertainmentCostsJourneyAnswersGen: Gen[EntertainmentJourneyAnswers] = for {
+    disallowableAmount <- bigDecimalGen
+  } yield EntertainmentJourneyAnswers(disallowableAmount)
 
 }
