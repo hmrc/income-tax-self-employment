@@ -16,7 +16,6 @@
 
 package utils
 
-import cats.implicits.catsSyntaxOptionId
 import models.connector.api_1894.request._
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
@@ -65,7 +64,7 @@ object DeductionsBuilder {
     (answers: EntertainmentJourneyAnswers) =>
       DeductionsType.empty.copy(
         businessEntertainmentCosts = Some(
-          SelfEmploymentDeductionsDetailType(None, answers.entertainmentAmount.some)
+          SelfEmploymentDeductionsDetailType(None, Some(answers.entertainmentAmount))
         )
       )
 }

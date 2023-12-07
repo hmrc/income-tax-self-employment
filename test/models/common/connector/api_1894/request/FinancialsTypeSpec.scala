@@ -84,7 +84,7 @@ class FinancialsTypeSpec extends AnyWordSpec with Matchers {
         None,
         Some(
           DeductionsType.empty.copy(businessEntertainmentCosts = Some(
-            SelfEmploymentDeductionsDetailType(None, answers.entertainmentAmount.some)
+            SelfEmploymentDeductionsDetailType(None, Some(answers.entertainmentAmount))
           )))
       )
 
