@@ -18,12 +18,13 @@ package controllers
 
 import controllers.actions.AuthorisedAction
 import models.common.JourneyAnswersContext.JourneyContextWithNino
-import models.common.JourneyName.{GoodsToSellOrUse, OfficeSupplies, RepairsAndMaintenanceCosts}
+import models.common.JourneyName.{GoodsToSellOrUse, OfficeSupplies, RepairsAndMaintenanceCosts, StaffCosts}
 import models.common.{BusinessId, Nino, TaxYear}
 import models.frontend.expenses.ExpensesTailoringAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
+import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Format.GenericFormat
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -71,6 +72,13 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveRepairsAndMaintenanceCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[RepairsAndMaintenanceCostsJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino, RepairsAndMaintenanceCosts)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+    }
+  }
+
+  def saveStaffCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBody[StaffCostsJourneyAnswers](user) { value =>
+      val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino, StaffCosts)
       expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }

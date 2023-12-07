@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package models.frontend.expenses.officeSupplies
+package models.frontend.expenses.staffcosts
 
 import play.api.libs.json._
 
-case class OfficeSuppliesJourneyAnswers(officeSuppliesAmount: BigDecimal, officeSuppliesDisallowableAmount: Option[BigDecimal])
+case class StaffCostsJourneyAnswers(staffCostsAmount: BigDecimal, staffCostsDisallowableAmount: Option[BigDecimal])
 
-object OfficeSuppliesJourneyAnswers {
-  implicit val formats: OFormat[OfficeSuppliesJourneyAnswers] = Json.format[OfficeSuppliesJourneyAnswers]
+object StaffCostsJourneyAnswers {
+  implicit val formats: OFormat[StaffCostsJourneyAnswers] = Json.format[StaffCostsJourneyAnswers]
 }
