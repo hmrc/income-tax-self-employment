@@ -20,31 +20,42 @@ import models.connector.api_1894.request.{DeductionsType, SelfEmploymentDeductio
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
+import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 
 trait DeductionsBuilder[A] {
   def build(answers: A): DeductionsType
 }
 
 object DeductionsBuilder {
-  implicit val officeSupplies: DeductionsBuilder[OfficeSuppliesJourneyAnswers] = (answers: OfficeSuppliesJourneyAnswers) =>
-    DeductionsType.empty.copy(
-      adminCosts = Some(
-        SelfEmploymentDeductionsDetailType(Some(answers.officeSuppliesAmount), answers.officeSuppliesDisallowableAmount)
+  implicit val officeSupplies: DeductionsBuilder[OfficeSuppliesJourneyAnswers] =
+    (answers: OfficeSuppliesJourneyAnswers) =>
+      DeductionsType.empty.copy(
+        adminCosts = Some(
+          SelfEmploymentDeductionsDetailType(Some(answers.officeSuppliesAmount), answers.officeSuppliesDisallowableAmount)
+        )
       )
-    )
 
-  implicit val goodsToSellOrUse: DeductionsBuilder[GoodsToSellOrUseJourneyAnswers] = (answers: GoodsToSellOrUseJourneyAnswers) =>
-    DeductionsType.empty.copy(
-      costOfGoods = Some(
-        SelfEmploymentDeductionsDetailPosNegType(Some(answers.goodsToSellOrUseAmount), answers.disallowableGoodsToSellOrUseAmount)
+  implicit val goodsToSellOrUse: DeductionsBuilder[GoodsToSellOrUseJourneyAnswers] =
+    (answers: GoodsToSellOrUseJourneyAnswers) =>
+      DeductionsType.empty.copy(
+        costOfGoods = Some(
+          SelfEmploymentDeductionsDetailPosNegType(Some(answers.goodsToSellOrUseAmount), answers.disallowableGoodsToSellOrUseAmount)
+        )
       )
-    )
 
   implicit val repairsAndMaintenanceCosts: DeductionsBuilder[RepairsAndMaintenanceCostsJourneyAnswers] =
     (answers: RepairsAndMaintenanceCostsJourneyAnswers) =>
       DeductionsType.empty.copy(
         maintenanceCosts = Some(
           SelfEmploymentDeductionsDetailPosNegType(Some(answers.repairsAndMaintenanceAmount), answers.repairsAndMaintenanceDisallowableAmount)
+        )
+      )
+
+  implicit val staffCosts: DeductionsBuilder[StaffCostsJourneyAnswers] =
+    (answers: StaffCostsJourneyAnswers) =>
+      DeductionsType.empty.copy(
+        staffCosts = Some(
+          SelfEmploymentDeductionsDetailType(Some(answers.staffCostsAmount), answers.staffCostsDisallowableAmount)
         )
       )
 }

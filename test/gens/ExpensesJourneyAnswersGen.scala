@@ -19,6 +19,7 @@ package gens
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
+import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import org.scalacheck.Gen
 
 object ExpensesJourneyAnswersGen {
@@ -37,5 +38,10 @@ object ExpensesJourneyAnswersGen {
     amount             <- bigDecimalGen
     disallowableAmount <- Gen.option(bigDecimalGen)
   } yield RepairsAndMaintenanceCostsJourneyAnswers(amount, disallowableAmount)
+
+  val staffCostsJourneyAnswersGen: Gen[StaffCostsJourneyAnswers] = for {
+    amount             <- bigDecimalGen
+    disallowableAmount <- Gen.option(bigDecimalGen)
+  } yield StaffCostsJourneyAnswers(amount, disallowableAmount)
 
 }
