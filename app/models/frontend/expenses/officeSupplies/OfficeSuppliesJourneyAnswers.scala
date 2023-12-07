@@ -21,9 +21,5 @@ import play.api.libs.json._
 case class OfficeSuppliesJourneyAnswers(officeSuppliesAmount: BigDecimal, officeSuppliesDisallowableAmount: Option[BigDecimal])
 
 object OfficeSuppliesJourneyAnswers {
-  implicit val reads: Reads[OfficeSuppliesJourneyAnswers] = Json.reads[OfficeSuppliesJourneyAnswers]
-
-  implicit val writes: OWrites[OfficeSuppliesJourneyAnswers] = Json.writes[OfficeSuppliesJourneyAnswers]
-
-  implicit val formats: OFormat[OfficeSuppliesJourneyAnswers] = OFormat(reads, writes)
+  implicit val formats: OFormat[OfficeSuppliesJourneyAnswers] = Json.format[OfficeSuppliesJourneyAnswers]
 }

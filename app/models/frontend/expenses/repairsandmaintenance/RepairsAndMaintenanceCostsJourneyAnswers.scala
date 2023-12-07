@@ -22,9 +22,5 @@ case class RepairsAndMaintenanceCostsJourneyAnswers(repairsAndMaintenanceAmount:
                                                     repairsAndMaintenanceDisallowableAmount: Option[BigDecimal])
 
 object RepairsAndMaintenanceCostsJourneyAnswers {
-  implicit val reads: Reads[RepairsAndMaintenanceCostsJourneyAnswers] = Json.reads[RepairsAndMaintenanceCostsJourneyAnswers]
-
-  implicit val writes: OWrites[RepairsAndMaintenanceCostsJourneyAnswers] = Json.writes[RepairsAndMaintenanceCostsJourneyAnswers]
-
-  implicit val formats: OFormat[RepairsAndMaintenanceCostsJourneyAnswers] = OFormat(reads, writes)
+  implicit val reads: Reads[RepairsAndMaintenanceCostsJourneyAnswers] = Json.format[RepairsAndMaintenanceCostsJourneyAnswers]
 }
