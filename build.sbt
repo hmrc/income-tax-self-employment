@@ -16,8 +16,9 @@
 
 import play.sbt.routes.RoutesKeys
 
+val additionalScalacOptions = if (sys.props.getOrElse("PLAY_ENV", "") == "Dev") Seq() else Seq("-Xfatal-warnings")
+
 lazy val compileOpts = Seq(
-  "-Xfatal-warnings",
   "-feature",
   "-unchecked",
   "-Ywarn-unused:implicits",
@@ -28,7 +29,7 @@ lazy val compileOpts = Seq(
   "-Ywarn-unused:privates",
   "-Ywarn-value-discard",
   "-Wconf:src=routes/.*:s"
-)
+) ++ additionalScalacOptions
 
 lazy val microservice = Project("income-tax-self-employment", file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)

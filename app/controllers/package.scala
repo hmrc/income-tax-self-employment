@@ -16,19 +16,25 @@
 
 import cats.data.EitherT
 import controllers.actions.AuthorisedAction
+import models.common.JourneyAnswersContext
 import models.domain.ApiResultT
 import models.error.ServiceError
 import play.api.Logger
 import play.api.libs.json.Format.GenericFormat
-import play.api.libs.json.{JsError, JsResult, JsSuccess, Json, Reads}
-import play.api.mvc.Results.{BadRequest, InternalServerError}
+import play.api.libs.json._
+import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Result}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 package object controllers {
 
-  def handleResultT(result: EitherT[Future, ServiceError, Result])(implicit ec: ExecutionContext, logger: Logger): Future[Result] =
+  def handleResultAsOk[A: Writes](result: ApiResultT[A])(implicit ec: ExecutionContext, logger: Logger): Future[Result] = {
+    val resultT = result.map(r => Ok(Json.toJson(r)))
+    handleResultT(resultT)
+  }
+
+  def handleResultT(result: ApiResultT[Result])(implicit ec: ExecutionContext, logger: Logger): Future[Result] =
     result.leftMap { error =>
       logger.error(s"HttpError encountered: ${error.errorMessage}")
       handleError(error)
