@@ -18,9 +18,10 @@ package controllers
 
 import controllers.actions.AuthorisedAction
 import models.common.JourneyAnswersContext.JourneyContextWithNino
-import models.common.JourneyName.{GoodsToSellOrUse, OfficeSupplies, RepairsAndMaintenanceCosts, StaffCosts}
-import models.common.{BusinessId, Nino, TaxYear}
+import models.common.JourneyName._
+import models.common._
 import models.frontend.expenses.ExpensesTailoringAnswers
+import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
@@ -28,7 +29,7 @@ import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Format.GenericFormat
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import services.journeyAnswers.{ExpensesAnswersService, IncomeAnswersService}
+import services.journeyAnswers._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.Logging
 
@@ -79,6 +80,13 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveStaffCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[StaffCostsJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino, StaffCosts)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+    }
+  }
+
+  def saveEntertainmentCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBody[EntertainmentJourneyAnswers](user) { value =>
+      val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino, Entertainment)
       expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }

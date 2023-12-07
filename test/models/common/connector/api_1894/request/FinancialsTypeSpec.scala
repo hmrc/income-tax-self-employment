@@ -77,6 +77,19 @@ class FinancialsTypeSpec extends AnyWordSpec with Matchers {
 
       FinancialsType.fromFrontendModel(answers) shouldBe expectedResult
     }
+    "work with entertainment costs" in {
+      val answers = entertainmentCostsJourneyAnswersGen.sample.get
+
+      val expectedResult = FinancialsType(
+        None,
+        Some(
+          DeductionsType.empty.copy(businessEntertainmentCosts = Some(
+            SelfEmploymentDeductionsDetailType(None, Some(answers.entertainmentAmount))
+          )))
+      )
+
+      FinancialsType.fromFrontendModel(answers) shouldBe expectedResult
+    }
   }
 
 }
