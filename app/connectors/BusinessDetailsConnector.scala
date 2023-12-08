@@ -18,7 +18,7 @@ package connectors
 
 import config.AppConfig
 import connectors.BusinessDetailsConnector.{BusinessesBaseApi, IdType, businessUriPath}
-import connectors.httpParsers.GetBusinessesHttpParser._
+import connectors.httpParsers.api_1171.GetBusinessesHttpParser._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject

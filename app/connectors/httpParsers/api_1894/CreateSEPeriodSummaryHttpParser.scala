@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package connectors.httpParsers
+package connectors.httpParsers.api_1894
 
+import connectors.httpParsers.DownstreamParser
 import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
 import models.error.DownstreamError
 import play.api.http.Status.CREATED
-import play.api.libs.json.Reads
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 object CreateSEPeriodSummaryHttpParser extends DownstreamParser {
@@ -29,17 +29,17 @@ object CreateSEPeriodSummaryHttpParser extends DownstreamParser {
   override val parserName: String        = "CreateSEPeriodSummaryHttpParser"
   override val downstreamService: String = "Self Employment Business API"
 
-  def createSEPeriodSummaryHttpReads(implicit reads: Reads[CreateSEPeriodSummaryResponse]): HttpReads[Api1894Response] =
-    new HttpReads[Api1894Response] {
-      override def read(method: String, url: String, response: HttpResponse): Api1894Response =
-        response.status match {
-          case CREATED =>
-            response.json
-              .validate[CreateSEPeriodSummaryResponse]
-              .fold[Api1894Response](_ => Left(invalidJsonError), parsedModel => Right(parsedModel))
+  // Make these vals?
+  implicit val createSEPeriodSummaryHttpReads: HttpReads[Api1894Response] = new HttpReads[Api1894Response] {
+    override def read(method: String, url: String, response: HttpResponse): Api1894Response =
+      response.status match {
+        case CREATED =>
+          response.json
+            .validate[CreateSEPeriodSummaryResponse]
+            .fold[Api1894Response](_ => Left(invalidJsonError), parsedModel => Right(parsedModel))
 
-          case _ => Left(pagerDutyError(response))
-        }
-    }
+        case _ => Left(pagerDutyError(response))
+      }
+  }
 
 }

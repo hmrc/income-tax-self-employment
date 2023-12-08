@@ -24,11 +24,8 @@ import play.api.libs.json._
   * @param other
   *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   */
-case class IncomesType(
-    turnover: Option[BigDecimal],
-    other: Option[BigDecimal]
-)
+case class IncomesType(turnover: Option[BigDecimal], other: Option[BigDecimal])
 
 object IncomesType {
-  implicit lazy val incomesTypeJsonFormat: Format[IncomesType] = Json.format[IncomesType]
+  implicit lazy val formats: Format[IncomesType] = Json.format[IncomesType]
 }

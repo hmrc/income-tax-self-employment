@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package models.connector.api_1802
+package models.connector.api_1802.response
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
 
-case class CreateAmendSelfEmploymentAnnualSubmission(annualAdjustments: Option[AnnualAdjustments],
-                                                     annualAllowances: Option[AnnualAllowances],
-                                                     annualNonFinancials: Option[AnnualNonFinancials])
+case class CreateAmendSEAnnualSubmissionResponse(transactionReference: String)
 
-object CreateAmendSelfEmploymentAnnualSubmission {
-  implicit val format: OFormat[CreateAmendSelfEmploymentAnnualSubmission] = Json.format[CreateAmendSelfEmploymentAnnualSubmission]
+object CreateAmendSEAnnualSubmissionResponse {
+  implicit val formats: OFormat[CreateAmendSEAnnualSubmissionResponse] = Json.format[CreateAmendSEAnnualSubmissionResponse]
 }

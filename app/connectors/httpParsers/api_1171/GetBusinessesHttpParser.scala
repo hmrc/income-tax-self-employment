@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package connectors.httpParsers
+package connectors.httpParsers.api_1171
 
+import connectors.httpParsers.DownstreamParser
 import models.connector.api_1171.BusinessData.GetBusinessDataRequest
 import models.error.DownstreamError
 import play.api.http.Status._

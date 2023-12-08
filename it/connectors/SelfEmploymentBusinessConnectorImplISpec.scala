@@ -19,119 +19,145 @@ package connectors
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
 import helpers.WiremockSpec
-import models.common.TaxYear
+import models.common.JourneyAnswersContext.JourneyContextWithNino
+import models.common.JourneyName.Income
+import models.common.Mtditid
+import models.common.TaxYear.{asTys, endDate, startDate}
+import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
 import models.connector.api_1894.request._
 import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
+import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
+import models.connector.api_1895.response.AmendSEPeriodSummaryResponse
+import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import play.api.http.Status.CREATED
-import play.api.libs.json.{JsObject, Json}
+import play.api.http.Status.{CREATED, OK}
+import play.api.libs.json.Json
 
 class SelfEmploymentBusinessConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
   private val connector = new SelfEmploymentBusinessConnectorImpl(httpClient, appConfig)
 
-  "downstream returns a success response" must {
-    "return the submission id" in new Test {
-      stubPostWithRequestAndResponseBody(
-        url = downstreamUrl,
-        requestBody = expectedRequestBody,
-        expectedResponse = downstreamSuccessResponse.toString,
-        expectedStatus = CREATED)
+  "creating period summaries" when {
+    "downstream returns a success response" must {
+      "return the submission id" in new Api1894Test {
+        stubPostWithRequestAndResponseBody(
+          url = downstreamUrl,
+          requestBody = requestBody,
+          expectedResponse = downstreamSuccessResponse,
+          expectedStatus = CREATED)
 
-      val expectedResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("someId")
+        val expectedResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("someId")
 
-      connector.createSEPeriodSummary(data).futureValue shouldBe expectedResponse.asRight
+        connector.createSEPeriodSummary(data).futureValue shouldBe expectedResponse.asRight
+
+      }
     }
-    // FIXME - Reinstate tests when we know what our IFS response will look like - currently what is in our `DownstreamParser` for error handling looks wrong.
-    //
-    //  "Downstream returns a single error" must {
-    //    "return the error" in {
-    //      stubPostWithRequestAndResponseBody(
-    //        url = downstreamUrl,
-    //        requestBody = someJourneyAnswers,
-    //        expectedResponse = downstreamSingleFailureResponse.toString,
-    //        expectedStatus = BAD_REQUEST)
-    //
-    //      val expectedError = SingleDownstreamError(BAD_REQUEST, SingleDownstreamErrorBody.parsingError)
-    //
-    //      connector.createSEPeriodSummary(requestData, someJourneyAnswers).futureValue shouldBe expectedError.asLeft
-    //    }
-    //  }
-    //  "Downstream returns multiple errors" must {
-    //    "return them" in {
-    //      stubPostWithRequestAndResponseBody(
-    //        url = downstreamUrl,
-    //        requestBody = someJourneyAnswers,
-    //        expectedResponse = downstreamMultipleFailuresResponse.toString,
-    //        expectedStatus = BAD_REQUEST)
-    //
-    //      val expectedError = MultipleDownstreamErrors(BAD_REQUEST, MultipleDownstreamErrorBody(Seq(SingleDownstreamErrorBody.parsingError)))
-    //
-    //      connector.createSEPeriodSummary(requestData, someJourneyAnswers).futureValue shouldBe expectedError.asLeft
-    //    }
-    //  }
+  }
+  "amending period summaries" when {
+    "downstream returns a success response" must {
+      "return the submission id" in new Api1895Test {
+        stubPutWithRequestAndResponseBody(
+          url = downstreamUrl,
+          requestBody = requestBody,
+          expectedResponse = downstreamSuccessResponse,
+          expectedStatus = OK)
 
+        val expectedResponse: AmendSEPeriodSummaryResponse = AmendSEPeriodSummaryResponse("someId")
+
+        connector.amendSEPeriodSummary(data).futureValue shouldBe expectedResponse.asRight
+
+      }
+    }
   }
 
-  trait Test {
-    protected val downstreamSuccessResponse: JsObject = Json.obj("ibdSubmissionPeriodId" -> "someId")
+  "upserting annual submissions" when {
+    "downstream returns a success response" must {
+      "return the transaction reference" in new Api1802Test {
+        stubPutWithRequestAndResponseBody(
+          url = downstreamUrl,
+          requestBody = requestBody,
+          expectedResponse = downstreamSuccessResponse,
+          expectedStatus = OK)
 
-    protected val expectedRequestBody: CreateSEPeriodSummaryRequestBody = CreateSEPeriodSummaryRequestBody(
-      "someFromDate",
-      "someToDate",
+        val expectedResponse: CreateAmendSEAnnualSubmissionResponse = CreateAmendSEAnnualSubmissionResponse("someId")
+
+        connector.createAmendSEAnnualSubmission(data).futureValue shouldBe expectedResponse.asRight
+      }
+    }
+  }
+  "listing periodic submissions" when {
+    "downstream returns a success response" must {
+      "return the transaction reference" in new Api1965Test {
+        stubGetWithResponseBody(
+          url = downstreamUrl,
+          expectedStatus = OK,
+          expectedResponse = downstreamSuccessResponse
+        )
+
+        val expectedResponse: ListSEPeriodSummariesResponse =
+          ListSEPeriodSummariesResponse(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None)))
+
+        connector.listSEPeriodSummary(ctx).futureValue shouldBe expectedResponse.asRight
+      }
+    }
+  }
+
+  trait Api1802Test {
+    val downstreamSuccessResponse: String                     = Json.stringify(Json.obj("transactionReference" -> "someId"))
+    val requestBody: CreateAmendSEAnnualSubmissionRequestBody = CreateAmendSEAnnualSubmissionRequestBody(None, None, None)
+    val data: CreateAmendSEAnnualSubmissionRequestData        = CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, requestBody)
+
+    val downstreamUrl =
+      s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/annual-summaries"
+  }
+
+  trait Api1965Test {
+    val downstreamSuccessResponse: String = Json.stringify(
+      Json
+        .parse(s"""
+                 |{
+                 |  "periods": [
+                 |    {
+                 |      "from": "2023-04-06",
+                 |      "to": "2024-04-05"
+                 |    }
+                 |  ]
+                 |}
+                 |""".stripMargin))
+
+    val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, Mtditid(mtditid), nino, Income)
+
+    val downstreamUrl =
+      s"/income-tax/${asTys(ctx.taxYear)}/${ctx.nino.value}/self-employments/${ctx.businessId.value}/periodic-summaries"
+  }
+
+  trait Api1894Test {
+    val downstreamSuccessResponse: String = Json.stringify(Json.obj("ibdSubmissionPeriodId" -> "someId"))
+
+    val requestBody: CreateSEPeriodSummaryRequestBody = CreateSEPeriodSummaryRequestBody(
+      "2023-04-06",
+      "2024-04-05",
       Some(
-        FinancialsType(
-          None,
-          Some(
-            DeductionsType(
-              Some(SelfEmploymentDeductionsDetailPosNegType(Some(100.00), Some(100.00))),
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None,
-              None))
-        ))
+        FinancialsType(None, Some(Deductions.empty.copy(costOfGoods = Some(SelfEmploymentDeductionsDetailPosNegType(Some(100.00), Some(100.00)))))))
     )
 
-    protected val data: CreateSEPeriodSummaryRequestData = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, expectedRequestBody)
+    val data: CreateSEPeriodSummaryRequestData = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, requestBody)
 
-    protected val downstreamUrl =
-      s"/income-tax/${TaxYear.asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries"
-
-    //  private val downstreamSingleFailureResponse = Json.parse(s"""
-    //       |{
-    //       |  "failures": [
-    //       |    {
-    //       |      "code": "SOME_CODE",
-    //       |      "reason": "Some reason."
-    //       |    }
-    //       |  ]
-    //       |}
-    //       |""".stripMargin)
-
-    //  private val downstreamMultipleFailuresResponse = Json.parse(s"""
-    //       |{
-    //       |  "failures": [
-    //       |    {
-    //       |      "code": "SOME_CODE",
-    //       |      "reason": "Some reason."
-    //       |    },
-    //       |    {
-    //       |      "code": "SOME_OTHER_CODE",
-    //       |      "reason": "Some other reason."
-    //       |    }
-    //       |  ]
-    //       |}
-    //       |""".stripMargin)
+    val downstreamUrl =
+      s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries"
   }
+
+  trait Api1895Test {
+    val downstreamSuccessResponse: String = Json.stringify(Json.obj("periodId" -> "someId"))
+
+    val requestBody: AmendSEPeriodSummaryRequestBody = AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), None)
+
+    val data: AmendSEPeriodSummaryRequestData = AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, requestBody)
+
+    val downstreamUrl =
+      s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries\\?from=${startDate(
+          data.taxYear)}&to=${endDate(data.taxYear)}"
+  }
+
 }

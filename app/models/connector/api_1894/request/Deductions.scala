@@ -22,7 +22,7 @@ import play.api.libs.json._
   * @param simplifiedExpenses
   *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   */
-case class DeductionsType(
+case class Deductions(
     costOfGoods: Option[SelfEmploymentDeductionsDetailPosNegType],
     constructionIndustryScheme: Option[SelfEmploymentDeductionsDetailType],
     staffCosts: Option[SelfEmploymentDeductionsDetailType],
@@ -41,8 +41,8 @@ case class DeductionsType(
     simplifiedExpenses: Option[BigDecimal]
 )
 
-object DeductionsType {
-  implicit lazy val deductionsTypeJsonFormat: Format[DeductionsType] = Json.format[DeductionsType]
+object Deductions {
+  implicit lazy val deductionsTypeJsonFormat: Format[Deductions] = Json.format[Deductions]
 
-  val empty: DeductionsType = DeductionsType(None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
+  val empty: Deductions = Deductions(None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
 }

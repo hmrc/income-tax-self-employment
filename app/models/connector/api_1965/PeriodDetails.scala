@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package models.connector.api_1802
+package models.connector.api_1965
 
 import play.api.libs.json.{Json, OFormat}
 
-case class Building(name: Option[String], number: Option[String], postCode: String)
+case class PeriodDetails(transactionReference: Option[String], from: Option[String], to: Option[String], periodCreationDate: Option[String])
 
-object Building {
-  implicit val format: OFormat[Building] = Json.format[Building]
+object PeriodDetails {
+  implicit val formats: OFormat[PeriodDetails] = Json.format[PeriodDetails]
 }

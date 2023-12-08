@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.connector.api_1895
+package models.connector.api_1895.request
 
 import play.api.libs.json.{Format, Json}
 

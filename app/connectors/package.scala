@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package models.connector.api_1802
+import play.api.libs.json.Writes
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 
-import play.api.libs.json.{Json, OFormat}
+import scala.concurrent.{ExecutionContext, Future}
 
-case class BuildingAllowance(amount: BigDecimal, firstYear: Option[FirstYear], building: Building)
+package object connectors {
 
-object BuildingAllowance {
-  implicit val format: OFormat[BuildingAllowance] = Json.format[BuildingAllowance]
+  def httpPost[Request: Writes, Response: HttpReads](http: HttpClient, url: String, body: Request)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): Future[Response] =
+    http.POST[Request, Response](url, body)
+
 }

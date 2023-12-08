@@ -22,6 +22,7 @@ import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import play.api.libs.json.Writes
 
+// TODO Reduce duplication in this trait.
 trait WiremockStubHelpers {
 
   def stubGetWithResponseBody(url: String,
@@ -55,7 +56,6 @@ trait WiremockStubHelpers {
             .withStatus(expectedStatus)
             .withHeader("Content-Type", "application/json; charset=utf-8")))
 
-  // TODO Reduce duplication in this trait.
   def stubPostWithRequestAndResponseBody[T](url: String,
                                             requestBody: T,
                                             expectedResponse: String,
@@ -65,6 +65,28 @@ trait WiremockStubHelpers {
 
     val mapping: MappingBuilder = requestHeaders
       .foldLeft(post(urlMatching(url))) { (result, nxt) =>
+        result.withHeader(nxt.key(), equalTo(nxt.firstValue()))
+      }
+      .withRequestBody(equalTo(stringBody))
+
+    stubFor(
+      mapping
+        .willReturn(
+          aResponse()
+            .withStatus(expectedStatus)
+            .withBody(expectedResponse)
+            .withHeader("Content-Type", "application/json; charset=utf-8")))
+  }
+
+  def stubPutWithRequestAndResponseBody[T](url: String,
+                                           requestBody: T,
+                                           expectedResponse: String,
+                                           expectedStatus: Int,
+                                           requestHeaders: Seq[HttpHeader] = Seq.empty)(implicit writes: Writes[T]): StubMapping = {
+    val stringBody = writes.writes(requestBody).toString()
+
+    val mapping: MappingBuilder = requestHeaders
+      .foldLeft(put(urlMatching(url))) { (result, nxt) =>
         result.withHeader(nxt.key(), equalTo(nxt.firstValue()))
       }
       .withRequestBody(equalTo(stringBody))

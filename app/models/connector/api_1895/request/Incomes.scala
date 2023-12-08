@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
-package models.connector.api_1895
+package models.connector.api_1895.request
 
 import play.api.libs.json.{Format, Json}
 
-/** Represents the Swagger definition for selfEmploymentDeductionsDetailType.
-  *
-  * @param amount
+/** Represents the Swagger definition for incomesType.
+  * @param turnover
   *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
-  * @param disallowableAmount
+  * @param other
+  *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
+  * @param taxTakenOffTradingIncome
   *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   */
-case class SelfEmploymentDeductionsDetailType(amount: BigDecimal, disallowableAmount: Option[BigDecimal])
 
-object SelfEmploymentDeductionsDetailType {
+case class Incomes(turnover: Option[BigDecimal], other: Option[BigDecimal], taxTakenOffTradingIncome: Option[BigDecimal])
 
-  implicit lazy val selfEmploymentDeductionsDetailTypeJsonFormat: Format[SelfEmploymentDeductionsDetailType] =
-    Json.format[SelfEmploymentDeductionsDetailType]
-
+object Incomes {
+  implicit lazy val incomesTypeJsonFormat: Format[Incomes] = Json.format[Incomes]
 }

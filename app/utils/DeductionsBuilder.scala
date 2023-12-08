@@ -24,13 +24,13 @@ import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCosts
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 
 trait DeductionsBuilder[A] {
-  def build(answers: A): DeductionsType
+  def build(answers: A): Deductions
 }
 
 object DeductionsBuilder {
   implicit val officeSupplies: DeductionsBuilder[OfficeSuppliesJourneyAnswers] =
     (answers: OfficeSuppliesJourneyAnswers) =>
-      DeductionsType.empty.copy(
+      Deductions.empty.copy(
         adminCosts = Some(
           SelfEmploymentDeductionsDetailType(Some(answers.officeSuppliesAmount), answers.officeSuppliesDisallowableAmount)
         )
@@ -38,7 +38,7 @@ object DeductionsBuilder {
 
   implicit val goodsToSellOrUse: DeductionsBuilder[GoodsToSellOrUseJourneyAnswers] =
     (answers: GoodsToSellOrUseJourneyAnswers) =>
-      DeductionsType.empty.copy(
+      Deductions.empty.copy(
         costOfGoods = Some(
           SelfEmploymentDeductionsDetailPosNegType(Some(answers.goodsToSellOrUseAmount), answers.disallowableGoodsToSellOrUseAmount)
         )
@@ -46,7 +46,7 @@ object DeductionsBuilder {
 
   implicit val repairsAndMaintenanceCosts: DeductionsBuilder[RepairsAndMaintenanceCostsJourneyAnswers] =
     (answers: RepairsAndMaintenanceCostsJourneyAnswers) =>
-      DeductionsType.empty.copy(
+      Deductions.empty.copy(
         maintenanceCosts = Some(
           SelfEmploymentDeductionsDetailPosNegType(Some(answers.repairsAndMaintenanceAmount), answers.repairsAndMaintenanceDisallowableAmount)
         )
@@ -54,7 +54,7 @@ object DeductionsBuilder {
 
   implicit val staffCosts: DeductionsBuilder[StaffCostsJourneyAnswers] =
     (answers: StaffCostsJourneyAnswers) =>
-      DeductionsType.empty.copy(
+      Deductions.empty.copy(
         staffCosts = Some(
           SelfEmploymentDeductionsDetailType(Some(answers.staffCostsAmount), answers.staffCostsDisallowableAmount)
         )
@@ -62,7 +62,7 @@ object DeductionsBuilder {
 
   implicit val entertainmentCosts: DeductionsBuilder[EntertainmentJourneyAnswers] =
     (answers: EntertainmentJourneyAnswers) =>
-      DeductionsType.empty.copy(
+      Deductions.empty.copy(
         businessEntertainmentCosts = Some(
           SelfEmploymentDeductionsDetailType(None, Some(answers.entertainmentAmount))
         )

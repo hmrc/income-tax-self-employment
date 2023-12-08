@@ -44,9 +44,11 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     extends BackendController(cc)
     with Logging {
 
-  def saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+  def saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[IncomeJourneyAnswers](user) { value =>
-      incomeService.saveAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
+      println("***" + user.request.body.asJson)
+      val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino, Income)
+      incomeService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 

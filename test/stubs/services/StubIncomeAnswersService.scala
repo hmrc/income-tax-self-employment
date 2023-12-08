@@ -16,13 +16,14 @@
 
 package stubs.services
 
-import models.common.{BusinessId, Mtditid, TaxYear}
+import models.common.JourneyAnswersContext.JourneyContextWithNino
 import models.domain.ApiResultT
 import models.frontend.income.IncomeJourneyAnswers
 import services.journeyAnswers.IncomeAnswersService
 import stubs.serviceUnitT
+import uk.gov.hmrc.http.HeaderCarrier
 
 case class StubIncomeAnswersService(incomeJourneyAnswersRes: ApiResultT[Unit] = serviceUnitT) extends IncomeAnswersService {
-  def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: IncomeJourneyAnswers): ApiResultT[Unit] =
+  override def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     incomeJourneyAnswersRes
 }

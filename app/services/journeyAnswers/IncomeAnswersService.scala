@@ -18,30 +18,67 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
-import models.common.JourneyAnswersContext.JourneyContext
-import models.common.JourneyName.Income
-import models.common.{BusinessId, Mtditid, TaxYear}
+import connectors.SelfEmploymentBusinessConnector
+import models.common.JourneyAnswersContext.{JourneyContext, JourneyContextWithNino}
+import models.common.TaxYear.{endDate, startDate}
+import models.connector.api_1802.request.{
+  AnnualAdjustments,
+  AnnualAllowances,
+  CreateAmendSEAnnualSubmissionRequestBody,
+  CreateAmendSEAnnualSubmissionRequestData
+}
+import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
+import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
+import models.connector.api_1965.ListSEPeriodSummariesResponse
 import models.domain.ApiResultT
-import models.error.ServiceError
+import models.error.DownstreamError
 import models.frontend.income.IncomeJourneyAnswers
-import play.api.libs.json.Json
-import repositories.MongoJourneyAnswersRepository
+import play.api.libs.json.{JsArray, Json}
+import repositories.JourneyAnswersRepository
+import services.mapDownstreamErrors
+import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 trait IncomeAnswersService {
-  def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: IncomeJourneyAnswers): ApiResultT[Unit]
+  def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
 @Singleton
-class IncomeAnswersServiceImpl @Inject() (repository: MongoJourneyAnswersRepository)(implicit ec: ExecutionContext) extends IncomeAnswersService {
+class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, connector: SelfEmploymentBusinessConnector)(implicit
+    ec: ExecutionContext)
+    extends IncomeAnswersService {
 
-  def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: IncomeJourneyAnswers): ApiResultT[Unit] =
-    EitherT
-      .right[ServiceError](
-        repository.upsertData(JourneyContext(taxYear, businessId, mtditid, Income), Json.toJson(answers))
-      )
-      .void
+  def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+    import ctx._
+    val createIncome = IncomesType(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount)
+    val createBody   = CreateSEPeriodSummaryRequestBody(startDate(taxYear), endDate(taxYear), Some(FinancialsType(createIncome.some, None)))
+    val createData   = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, createBody)
+
+    val amendIncome = Incomes(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount, None)
+    val amendBody   = AmendSEPeriodSummaryRequestBody(amendIncome.some, None)
+    val amendData   = AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, amendBody)
+
+    val upsertBody = CreateAmendSEAnnualSubmissionRequestBody(
+      Some(AnnualAdjustments.empty.copy(includedNonTaxableProfits = answers.notTaxableAmount, outstandingBusinessIncome = answers.otherIncomeAmount)),
+      Some(AnnualAllowances.empty.copy(tradingIncomeAllowance = answers.tradingAllowanceAmount)),
+      None
+    )
+    val upsertData = CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, upsertBody)
+
+    val result = for {
+      _        <- EitherT.right[DownstreamError](repository.upsertData(JourneyContext(taxYear, businessId, mtditid, journey), Json.toJson(answers)))
+      response <- EitherT(connector.listSEPeriodSummary(ctx))
+      _ <-
+        if (submissionExists(response)) EitherT(connector.amendSEPeriodSummary(amendData)) else EitherT(connector.createSEPeriodSummary(createData))
+      _ <- EitherT(connector.createAmendSEAnnualSubmission(upsertData))
+    } yield ()
+
+    result.leftMap(mapDownstreamErrors)
+  }
+
+  private def submissionExists(response: ListSEPeriodSummariesResponse) =
+    (Json.toJson(response) \ "periods").as[JsArray].value.isEmpty
 
 }
