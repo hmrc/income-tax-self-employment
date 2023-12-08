@@ -24,7 +24,7 @@ sealed trait JourneyAnswersContext {
 }
 
 object JourneyAnswersContext {
-  // Don't actually use the JourneyName?
+  // Don't actually use the JourneyName. Do we need it?
   case class JourneyContextWithNino(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino, journey: JourneyName)
       extends JourneyAnswersContext
 

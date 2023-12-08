@@ -46,7 +46,6 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[IncomeJourneyAnswers](user) { value =>
-      println("***" + user.request.body.asJson)
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino, Income)
       incomeService.saveAnswers(ctx, value).map(_ => NoContent)
     }

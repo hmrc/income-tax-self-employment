@@ -18,8 +18,7 @@ package models.connector.api_1965
 
 import play.api.libs.json.{Json, OFormat}
 
-// Should periods be optional?
-case class ListSEPeriodSummariesResponse(periods: List[PeriodDetails])
+case class ListSEPeriodSummariesResponse(periods: Option[List[PeriodDetails]])
 
 object ListSEPeriodSummariesResponse {
   implicit val formats: OFormat[ListSEPeriodSummariesResponse] = Json.format[ListSEPeriodSummariesResponse]

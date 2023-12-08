@@ -42,31 +42,29 @@ trait SelfEmploymentBusinessConnector {
 @Singleton
 class SelfEmploymentBusinessConnectorImpl @Inject() (val http: HttpClient, appConfig: AppConfig) extends SelfEmploymentBusinessConnector {
 
-  // Do we need .value in the urls?
   // Pull out common parts of the URLs as too much copy/paste
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {
-    val url = buildUrl(s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries")
+    val url = buildUrl(s"/income-tax/${asTys(data.taxYear)}/${data.nino}/self-employments/${data.businessId}/periodic-summaries")
 
     http.POST[CreateSEPeriodSummaryRequestBody, Api1894Response](url, data.body)
   }
 
   def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] = {
-    val url = buildUrl(
-      s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries?from=${startDate(
-          data.taxYear)}&to=${endDate(data.taxYear)}")
+    val url = buildUrl(s"/income-tax/${asTys(data.taxYear)}/${data.nino}/self-employments/${data.businessId}/periodic-summaries?from=${startDate(
+        data.taxYear)}&to=${endDate(data.taxYear)}")
 
     http.PUT[AmendSEPeriodSummaryRequestBody, Api1895Response](url, data.body)
   }
 
   def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response] = {
-    val url = buildUrl(s"/income-tax/${asTys(ctx.taxYear)}/${ctx.nino.value}/self-employments/${ctx.businessId.value}/periodic-summaries")
+    val url = buildUrl(s"/income-tax/${asTys(ctx.taxYear)}/${ctx.nino}/self-employments/${ctx.businessId}/periodic-summaries")
 
     http.GET[Api1965Response](url)
   }
 
   def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
-    val url = buildUrl(s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/annual-summaries")
+    val url = buildUrl(s"/income-tax/${asTys(data.taxYear)}/${data.nino}/self-employments/${data.businessId}/annual-summaries")
 
     http.PUT[CreateAmendSEAnnualSubmissionRequestBody, Api1802Response](url, data.body)
   }

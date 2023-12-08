@@ -29,7 +29,6 @@ object CreateSEPeriodSummaryHttpParser extends DownstreamParser {
   override val parserName: String        = "CreateSEPeriodSummaryHttpParser"
   override val downstreamService: String = "Self Employment Business API"
 
-  // Make these vals?
   implicit val createSEPeriodSummaryHttpReads: HttpReads[Api1894Response] = new HttpReads[Api1894Response] {
     override def read(method: String, url: String, response: HttpResponse): Api1894Response =
       response.status match {
