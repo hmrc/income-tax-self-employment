@@ -20,8 +20,8 @@ import cats.data.EitherT
 import cats.implicits._
 import connectors.SelfEmploymentBusinessConnector
 import models.common.JourneyName.Income
-import models.common.{JourneyContext, JourneyContextWithNino}
 import models.common.TaxYear.{endDate, startDate}
+import models.common.{JourneyContext, JourneyContextWithNino}
 import models.connector.api_1802.request._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
@@ -75,6 +75,6 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
   }
 
   private def noSubmissionExists(response: ListSEPeriodSummariesResponse) =
-    response.periods.contains(List.empty)
+    response.periods.forall(_.isEmpty)
 
 }
