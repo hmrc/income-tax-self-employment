@@ -50,7 +50,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def getIncomeAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    handleResultAsOk(incomeService.getAnswers(businessId, taxYear, user.getMtditid))
+    handleOptionalApiResult(incomeService.getAnswers(businessId, taxYear, user.getMtditid))
   }
 
   def saveExpensesTailoringNoExpensesAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>

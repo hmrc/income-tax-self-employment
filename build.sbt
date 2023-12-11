@@ -45,12 +45,9 @@ lazy val microservice = Project("income-tax-self-employment", file("."))
     RoutesKeys.routesImport ++= Seq(
       "models.common._",
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
-    ),
-    // sbt-wartremover is adding this, and it causes problem with sbt doc step in pipeline
-    Compile / scalacOptions -= "utf8"
+    )
   )
   .settings(inConfig(IntegrationTest)(itSettings): _*)
-  .settings(wartremoverErrors ++= WartRemoverSettings.warts)
   .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
   .configs(IntegrationTest extend Test)

@@ -16,14 +16,23 @@
 
 package stubs.services
 
+import cats.data.EitherT
+import models.common.{BusinessId, Mtditid, TaxYear}
 import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
+import models.error.ServiceError
 import models.frontend.income.IncomeJourneyAnswers
 import services.journeyAnswers.IncomeAnswersService
 import stubs.serviceUnitT
 import uk.gov.hmrc.http.HeaderCarrier
 
-case class StubIncomeAnswersService(incomeJourneyAnswersRes: ApiResultT[Unit] = serviceUnitT) extends IncomeAnswersService {
+case class StubIncomeAnswersService(incomeJourneyAnswersRes: ApiResultT[Unit] = serviceUnitT,
+                                    getAnswersRes: Either[ServiceError, Option[IncomeJourneyAnswers]] = Right(None)) extends IncomeAnswersService {
+  implicit val ec: ExecutionContext = ExecutionContext.global
+
   override def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     incomeJourneyAnswersRes
+
+  def getAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid): ApiResultT[Option[IncomeJourneyAnswers]] =
+    EitherT.fromEither[Future](getAnswersRes)
 }
