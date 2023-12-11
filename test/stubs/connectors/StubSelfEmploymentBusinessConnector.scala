@@ -72,5 +72,5 @@ object StubSelfEmploymentBusinessConnector {
   val api1802SuccessResponse: CreateAmendSEAnnualSubmissionResponse = CreateAmendSEAnnualSubmissionResponse("id")
 
   val api1965SuccessResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(
-    List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None)))
+    Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None))))
 }
