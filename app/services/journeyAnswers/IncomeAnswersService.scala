@@ -33,7 +33,7 @@ import models.connector.api_1965.ListSEPeriodSummariesResponse
 import models.domain.ApiResultT
 import models.error.DownstreamError
 import models.frontend.income.IncomeJourneyAnswers
-import play.api.libs.json.{JsArray, Json}
+import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import services.mapDownstreamErrors
 import uk.gov.hmrc.http.HeaderCarrier
@@ -79,6 +79,6 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
   }
 
   private def noSubmissionExists(response: ListSEPeriodSummariesResponse) =
-    (Json.toJson(response) \ "periods").as[JsArray].value.isEmpty
+    response.periods.contains(List.empty)
 
 }
