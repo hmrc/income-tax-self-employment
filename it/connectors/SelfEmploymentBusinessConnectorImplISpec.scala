@@ -86,7 +86,7 @@ class SelfEmploymentBusinessConnectorImplISpec extends WiremockSpec with Integra
   }
   "listing periodic submissions" when {
     "downstream returns a success response" must {
-      "return the transaction reference" in new Api1965Test {
+      "return the submissions" in new Api1965Test {
         stubGetWithResponseBody(
           url = downstreamUrl,
           expectedStatus = OK,
