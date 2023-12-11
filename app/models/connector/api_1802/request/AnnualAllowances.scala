@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package models.connector.api_1802
+package models.connector.api_1802.request
 
 import play.api.libs.json.{Json, OFormat}
 
+// The `tradingIncomeAllowance` cannot be present with other allowances. It has a min value of 0, max of 1000 (2 dp).
 case class AnnualAllowances(annualInvestmentAllowance: Option[BigDecimal],
                             capitalAllowanceMainPool: Option[BigDecimal],
                             capitalAllowanceSpecialRatePool: Option[BigDecimal],
@@ -25,9 +26,15 @@ case class AnnualAllowances(annualInvestmentAllowance: Option[BigDecimal],
                             businessPremisesRenovationAllowance: Option[BigDecimal],
                             enhanceCapitalAllowance: Option[BigDecimal],
                             allowanceOnSales: Option[BigDecimal],
+                            capitalAllowanceSingleAssetPool: Option[BigDecimal],
+                            electricChargePointAllowance: Option[BigDecimal],
                             structuredBuildingAllowance: Option[List[BuildingAllowance]],
-                            enhancedStructuredBuildingAllowance: Option[List[BuildingAllowance]])
+                            enhancedStructuredBuildingAllowance: Option[List[BuildingAllowance]],
+                            zeroEmissionsCarAllowance: Option[BigDecimal],
+                            tradingIncomeAllowance: Option[BigDecimal])
 
 object AnnualAllowances {
   implicit val format: OFormat[AnnualAllowances] = Json.format[AnnualAllowances]
+
+  val empty: AnnualAllowances = AnnualAllowances(None, None, None, None, None, None, None, None, None, None, None, None, None)
 }

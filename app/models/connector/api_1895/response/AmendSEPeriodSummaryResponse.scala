@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package models.connector.api_1895
+package models.connector.api_1895.response
 
 import play.api.libs.json.{Json, OFormat}
 
-case class AmendSelfEmploymentPeriodSummary(incomes: Option[Incomes], deductions: Option[Deductions])
+case class AmendSEPeriodSummaryResponse(periodId: String)
 
-object AmendSelfEmploymentPeriodSummary {
-  implicit val formats: OFormat[AmendSelfEmploymentPeriodSummary] = Json.format[AmendSelfEmploymentPeriodSummary]
-
+object AmendSEPeriodSummaryResponse {
+  implicit val formats: OFormat[AmendSEPeriodSummaryResponse] = Json.format[AmendSEPeriodSummaryResponse]
 }

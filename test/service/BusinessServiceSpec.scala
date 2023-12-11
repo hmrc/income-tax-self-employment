@@ -21,7 +21,7 @@ import bulders.JourneyStateDataBuilder.aJourneyState
 import connectors.BusinessDetailsConnector
 import connectors.BusinessDetailsConnector.IdType
 import connectors.BusinessDetailsConnector.IdType.Nino
-import connectors.httpParsers.GetBusinessesHttpParser.GetBusinessesRequestResponse
+import connectors.httpParsers.api_1171.GetBusinessesHttpParser.GetBusinessesRequestResponse
 import models.database.JourneyState
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError

@@ -19,7 +19,6 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.SelfEmploymentBusinessConnector
-import models.common.JourneyAnswersContext.{JourneyContext, JourneyContextWithNino}
 import models.common.JourneyName.ExpensesTailoring
 import models.common.TaxYear.{endDate, startDate}
 import models.common._

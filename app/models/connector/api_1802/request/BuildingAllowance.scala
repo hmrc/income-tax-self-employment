@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package models.connector.api_1802
+package models.connector.api_1802.request
 
 import play.api.libs.json.{Json, OFormat}
 
-case class AnnualNonFinancials(businessDetailsChangedRecently: Boolean,
-                               exemptFromPayingClass4Nics: Boolean,
-                               class4NicsExemptionReason: Option[String])
+case class BuildingAllowance(amount: BigDecimal, firstYear: Option[FirstYear], building: Building)
 
-object AnnualNonFinancials {
-  implicit val format: OFormat[AnnualNonFinancials] = Json.format[AnnualNonFinancials]
+object BuildingAllowance {
+  implicit val format: OFormat[BuildingAllowance] = Json.format[BuildingAllowance]
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.connector.api_1802
+package models.connector.api_1802.request
 
 import play.api.libs.json.{Json, OFormat}
 
@@ -31,4 +31,6 @@ case class AnnualAdjustments(includedNonTaxableProfits: Option[BigDecimal],
 
 object AnnualAdjustments {
   implicit val format: OFormat[AnnualAdjustments] = Json.format[AnnualAdjustments]
+
+  val empty: AnnualAdjustments = AnnualAdjustments(None, None, None, None, None, None, None, None, None, None)
 }

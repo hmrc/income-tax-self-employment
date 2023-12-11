@@ -13,7 +13,7 @@ PUT         /completed-section/:businessId/:journey/:taxYear/:completed         
 # Journey Answers
 GET         /check-your-answers/get/:id                                                                                 controllers.journeyAnswers.GetJourneyAnswersController.handleRequest(id: String)
 
-POST        /:taxYear/:businessId/income/answers                                                                        controllers.JourneyAnswersController.saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId)
+POST        /:taxYear/:businessId/income/:nino/answers                                                                  controllers.JourneyAnswersController.saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 POST        /:taxYear/:businessId/expenses-categories/answers                                                           controllers.JourneyAnswersController.saveExpensesTailoringAnswers(taxYear: TaxYear, businessId: BusinessId)
 POST        /:taxYear/:businessId/expenses-goods-to-sell-or-use/:nino/answers                                           controllers.JourneyAnswersController.saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 POST        /:taxYear/:businessId/expenses-office-supplies/:nino/answers                                                controllers.JourneyAnswersController.saveOfficeSupplies(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

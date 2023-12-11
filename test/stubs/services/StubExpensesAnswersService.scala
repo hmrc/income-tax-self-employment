@@ -16,8 +16,7 @@
 
 package stubs.services
 
-import models.common.JourneyAnswersContext.JourneyContextWithNino
-import models.common.{BusinessId, Mtditid, TaxYear}
+import models.common.{BusinessId, JourneyContextWithNino, Mtditid, TaxYear}
 import models.domain.ApiResultT
 import models.frontend.expenses.ExpensesTailoringAnswers
 import play.api.libs.json.Writes

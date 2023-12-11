@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package models.connector.api_1802
+package models.connector.api_1895.request
 
 import play.api.libs.json.{Json, OFormat}
 
-case class FirstYear(qualifyingDate: String, qualifyingAmountExpenditure: BigDecimal)
+case class AmendSEPeriodSummaryRequestBody(incomes: Option[Incomes], deductions: Option[Deductions])
 
-object FirstYear {
-  implicit val format: OFormat[FirstYear] = Json.format[FirstYear]
+object AmendSEPeriodSummaryRequestBody {
+  implicit val formats: OFormat[AmendSEPeriodSummaryRequestBody] = Json.format[AmendSEPeriodSummaryRequestBody]
+
 }

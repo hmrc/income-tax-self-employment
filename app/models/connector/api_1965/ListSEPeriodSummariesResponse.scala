@@ -14,21 +14,12 @@
  * limitations under the License.
  */
 
-package models.connector.api_1894.request
+package models.connector.api_1965
 
-import cats.implicits.catsSyntaxOptionId
-import play.api.libs.json._
-import utils.DeductionsBuilder
+import play.api.libs.json.{Json, OFormat}
 
-/** Represents the Swagger definition for financialsType.
-  */
-case class FinancialsType(incomes: Option[IncomesType], deductions: Option[Deductions])
+case class ListSEPeriodSummariesResponse(periods: Option[List[PeriodDetails]])
 
-object FinancialsType {
-  implicit lazy val financialsTypeJsonFormat: Format[FinancialsType] = Json.format[FinancialsType]
-
-  def fromFrontendModel[A: DeductionsBuilder](answers: A): FinancialsType = {
-    val builder = implicitly[DeductionsBuilder[A]]
-    FinancialsType(None, builder.build(answers).some)
-  }
+object ListSEPeriodSummariesResponse {
+  implicit val formats: OFormat[ListSEPeriodSummariesResponse] = Json.format[ListSEPeriodSummariesResponse]
 }

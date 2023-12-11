@@ -32,7 +32,7 @@ class FinancialsTypeSpec extends AnyWordSpec with Matchers {
       val expectedResult = FinancialsType(
         None,
         Some(
-          DeductionsType.empty.copy(adminCosts =
+          Deductions.empty.copy(adminCosts =
             Some(SelfEmploymentDeductionsDetailType(answers.officeSuppliesAmount.some, answers.officeSuppliesDisallowableAmount))))
       )
 
@@ -45,7 +45,7 @@ class FinancialsTypeSpec extends AnyWordSpec with Matchers {
       val expectedResult = FinancialsType(
         None,
         Some(
-          DeductionsType.empty.copy(costOfGoods =
+          Deductions.empty.copy(costOfGoods =
             Some(SelfEmploymentDeductionsDetailPosNegType(answers.goodsToSellOrUseAmount.some, answers.disallowableGoodsToSellOrUseAmount))))
       )
 
@@ -57,7 +57,7 @@ class FinancialsTypeSpec extends AnyWordSpec with Matchers {
       val expectedResult = FinancialsType(
         None,
         Some(
-          DeductionsType.empty.copy(maintenanceCosts = Some(
+          Deductions.empty.copy(maintenanceCosts = Some(
             SelfEmploymentDeductionsDetailPosNegType(Some(answers.repairsAndMaintenanceAmount), answers.repairsAndMaintenanceDisallowableAmount)
           )))
       )
@@ -70,7 +70,7 @@ class FinancialsTypeSpec extends AnyWordSpec with Matchers {
       val expectedResult = FinancialsType(
         None,
         Some(
-          DeductionsType.empty.copy(staffCosts = Some(
+          Deductions.empty.copy(staffCosts = Some(
             SelfEmploymentDeductionsDetailType(Some(answers.staffCostsAmount), answers.staffCostsDisallowableAmount)
           )))
       )
@@ -83,7 +83,7 @@ class FinancialsTypeSpec extends AnyWordSpec with Matchers {
       val expectedResult = FinancialsType(
         None,
         Some(
-          DeductionsType.empty.copy(businessEntertainmentCosts = Some(
+          Deductions.empty.copy(businessEntertainmentCosts = Some(
             SelfEmploymentDeductionsDetailType(None, Some(answers.entertainmentAmount))
           )))
       )

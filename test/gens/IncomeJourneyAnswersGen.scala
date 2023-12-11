@@ -20,8 +20,8 @@ import models.frontend.income.{HowMuchTradingAllowance, IncomeJourneyAnswers, Tr
 import org.scalacheck.Gen
 
 object IncomeJourneyAnswersGen {
-  val tradingAllowanceGen: Gen[TradingAllowance]               = Gen.oneOf(TradingAllowance.values)
-  val howMuchTradingAllowanceGen: Gen[HowMuchTradingAllowance] = Gen.oneOf(HowMuchTradingAllowance.values)
+  private val tradingAllowanceGen: Gen[TradingAllowance]               = Gen.oneOf(TradingAllowance.values)
+  private val howMuchTradingAllowanceGen: Gen[HowMuchTradingAllowance] = Gen.oneOf(HowMuchTradingAllowance.values)
 
   val incomeJourneyAnswersGen: Gen[IncomeJourneyAnswers] = for {
     incomeNotCountedAsTurnover <- booleanGen
