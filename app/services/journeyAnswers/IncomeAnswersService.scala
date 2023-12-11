@@ -21,12 +21,7 @@ import cats.implicits._
 import connectors.SelfEmploymentBusinessConnector
 import models.common.JourneyAnswersContext.{JourneyContext, JourneyContextWithNino}
 import models.common.TaxYear.{endDate, startDate}
-import models.connector.api_1802.request.{
-  AnnualAdjustments,
-  AnnualAllowances,
-  CreateAmendSEAnnualSubmissionRequestBody,
-  CreateAmendSEAnnualSubmissionRequestData
-}
+import models.connector.api_1802.request._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
 import models.connector.api_1965.ListSEPeriodSummariesResponse
