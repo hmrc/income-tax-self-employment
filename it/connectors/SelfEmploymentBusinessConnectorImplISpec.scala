@@ -96,7 +96,7 @@ class SelfEmploymentBusinessConnectorImplISpec extends WiremockSpec with Integra
         )
 
         val expectedResponse: ListSEPeriodSummariesResponse =
-          ListSEPeriodSummariesResponse(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None)))
+          ListSEPeriodSummariesResponse(Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None))))
 
         connector.listSEPeriodSummary(ctx).futureValue shouldBe expectedResponse.asRight
       }

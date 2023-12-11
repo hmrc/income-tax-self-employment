@@ -42,7 +42,6 @@ trait SelfEmploymentBusinessConnector {
 @Singleton
 class SelfEmploymentBusinessConnectorImpl @Inject() (val http: HttpClient, appConfig: AppConfig) extends SelfEmploymentBusinessConnector {
 
-  // Pull out common parts of the URLs as too much copy/paste
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {
     val url = buildUrl(s"/income-tax/${asTys(data.taxYear)}/${data.nino}/self-employments/${data.businessId}/periodic-summaries")
 
