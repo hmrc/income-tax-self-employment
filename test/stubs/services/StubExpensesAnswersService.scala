@@ -18,7 +18,6 @@ package stubs.services
 
 import models.common.{BusinessId, JourneyContextWithNino, Mtditid, TaxYear}
 import models.domain.ApiResultT
-import models.frontend.expenses.ExpensesTailoringAnswers
 import play.api.libs.json.Writes
 import services.journeyAnswers.ExpensesAnswersService
 import stubs.serviceUnitT
@@ -29,7 +28,7 @@ case class StubExpensesAnswersService(expensesTailoringAnswersRes: ApiResultT[Un
                                       expensesAnswersRes: ApiResultT[Unit] = serviceUnitT)
     extends ExpensesAnswersService {
 
-  def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: ExpensesTailoringAnswers): ApiResultT[Unit] =
+  def saveAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =
     expensesTailoringAnswersRes
 
   def saveAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =

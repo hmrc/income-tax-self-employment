@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package models.frontend.expenses
+package models.frontend.expenses.tailoring
 
-import models.common.{Enumerable, WithName}
+import play.api.libs.json.{Json, OFormat, OWrites, Reads}
 
-sealed trait Depreciation
+final case class ExpensesTailoringNoExpensesAnswers(expensesCategories: ExpensesCategories)
 
-object Depreciation extends Enumerable.Implicits {
+object ExpensesTailoringNoExpensesAnswers {
+  implicit val reads: Reads[ExpensesTailoringNoExpensesAnswers] = Json.reads[ExpensesTailoringNoExpensesAnswers]
 
-  case object Yes extends WithName("yes") with Depreciation
-  case object No  extends WithName("no") with Depreciation
+  implicit val writes: OWrites[ExpensesTailoringNoExpensesAnswers] = Json.writes[ExpensesTailoringNoExpensesAnswers]
 
-  val values: Seq[Depreciation] = Seq(
-    Yes,
-    No
-  )
-
-  implicit val enumerable: Enumerable[Depreciation] =
-    Enumerable(values.map(v => v.toString -> v): _*)
+  implicit val formats: OFormat[ExpensesTailoringNoExpensesAnswers] = OFormat(reads, writes)
 }

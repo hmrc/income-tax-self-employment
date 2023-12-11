@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-package models.frontend.expenses
+package models.frontend.expenses.tailoring
 
-import models.common.{Enumerable, WithName}
+import play.api.libs.json.{Json, OFormat, OWrites, Reads}
 
-sealed trait WorkFromHome
+final case class ExpensesTailoringTotalAmountAnswers(expensesCategories: ExpensesCategories, totalAmount: BigDecimal)
 
-object WorkFromHome extends Enumerable.Implicits {
+object ExpensesTailoringTotalAmountAnswers {
+  implicit val reads: Reads[ExpensesTailoringTotalAmountAnswers] = Json.reads[ExpensesTailoringTotalAmountAnswers]
 
-  case object Yes extends WithName("yes") with WorkFromHome
-  case object No  extends WithName("no") with WorkFromHome
+  implicit val writes: OWrites[ExpensesTailoringTotalAmountAnswers] = Json.writes[ExpensesTailoringTotalAmountAnswers]
 
-  val values: Seq[WorkFromHome] = Seq(
-    Yes,
-    No
-  )
-
-  implicit val enumerable: Enumerable[WorkFromHome] =
-    Enumerable(values.map(v => v.toString -> v): _*)
-
+  implicit val formats: OFormat[ExpensesTailoringTotalAmountAnswers] = OFormat(reads, writes)
 }

@@ -14,23 +14,25 @@
  * limitations under the License.
  */
 
-package models.frontend.expenses
+package models.frontend.expenses.tailoring.individualCategories
 
 import models.common.{Enumerable, WithName}
 
-sealed trait DisallowableProfessionalFees
+sealed trait AdvertisingOrMarketing
 
-object DisallowableProfessionalFees extends Enumerable.Implicits {
+object AdvertisingOrMarketing extends Enumerable.Implicits {
 
-  case object Yes extends WithName("yes") with DisallowableProfessionalFees
-  case object No  extends WithName("no") with DisallowableProfessionalFees
+  case object YesAllowable    extends WithName("yesAllowable") with AdvertisingOrMarketing
+  case object YesDisallowable extends WithName("yesDisallowable") with AdvertisingOrMarketing
+  case object No              extends WithName("no") with AdvertisingOrMarketing
 
-  val values: Seq[DisallowableProfessionalFees] = Seq(
-    Yes,
+  val values: Seq[AdvertisingOrMarketing] = Seq(
+    YesAllowable,
+    YesDisallowable,
     No
   )
 
-  implicit val enumerable: Enumerable[DisallowableProfessionalFees] =
+  implicit val enumerable: Enumerable[AdvertisingOrMarketing] =
     Enumerable(values.map(v => v.toString -> v): _*)
 
 }

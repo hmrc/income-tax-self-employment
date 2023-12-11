@@ -25,7 +25,6 @@ import models.common._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType}
 import models.domain.ApiResultT
 import models.error.ServiceError
-import models.frontend.expenses.ExpensesTailoringAnswers
 import play.api.libs.json.{Json, Writes}
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -35,7 +34,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 trait ExpensesAnswersService {
-  def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: ExpensesTailoringAnswers): ApiResultT[Unit]
+  def saveAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit]
   def saveAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
@@ -44,7 +43,7 @@ class ExpensesAnswersServiceImpl @Inject() (businessConnector: SelfEmploymentBus
     ec: ExecutionContext)
     extends ExpensesAnswersService {
 
-  def saveAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: ExpensesTailoringAnswers): ApiResultT[Unit] =
+  def saveAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =
     EitherT
       .right[ServiceError](repository.upsertData(JourneyContext(taxYear, businessId, mtditid, ExpensesTailoring), Json.toJson(answers)))
       .void

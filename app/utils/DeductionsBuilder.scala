@@ -22,12 +22,20 @@ import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
+import models.frontend.expenses.tailoring.ExpensesTailoringTotalAmountAnswers
 
 trait DeductionsBuilder[A] {
   def build(answers: A): Deductions
 }
 
 object DeductionsBuilder {
+
+  implicit val expensesTotalAmount: DeductionsBuilder[ExpensesTailoringTotalAmountAnswers] =
+    (answers: ExpensesTailoringTotalAmountAnswers) =>
+      Deductions.empty.copy(
+        simplifiedExpenses = Some(answers.totalAmount)
+      )
+
   implicit val officeSupplies: DeductionsBuilder[OfficeSuppliesJourneyAnswers] =
     (answers: OfficeSuppliesJourneyAnswers) =>
       Deductions.empty.copy(

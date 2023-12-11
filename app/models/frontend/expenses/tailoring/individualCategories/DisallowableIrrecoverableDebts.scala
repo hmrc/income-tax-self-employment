@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 
-package models.frontend.expenses
+package models.frontend.expenses.tailoring.individualCategories
 
 import models.common.{Enumerable, WithName}
 
-sealed trait DisallowableInterest
+sealed trait DisallowableIrrecoverableDebts
 
-object DisallowableInterest extends Enumerable.Implicits {
+object DisallowableIrrecoverableDebts extends Enumerable.Implicits {
 
-  case object Yes extends WithName("yes") with DisallowableInterest
-  case object No  extends WithName("no") with DisallowableInterest
+  case object Yes extends WithName("yes") with DisallowableIrrecoverableDebts
+  case object No  extends WithName("no") with DisallowableIrrecoverableDebts
 
-  val values: Seq[DisallowableInterest] = Seq(
+  val values: Seq[DisallowableIrrecoverableDebts] = Seq(
     Yes,
     No
   )
 
-  implicit val enumerable: Enumerable[DisallowableInterest] =
+  implicit val enumerable: Enumerable[DisallowableIrrecoverableDebts] =
     Enumerable(values.map(v => v.toString -> v): _*)
 
 }
