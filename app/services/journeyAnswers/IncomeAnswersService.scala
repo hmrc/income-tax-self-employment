@@ -71,14 +71,14 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       _        <- EitherT.right[DownstreamError](repository.upsertData(JourneyContext(taxYear, businessId, mtditid, journey), Json.toJson(answers)))
       response <- EitherT(connector.listSEPeriodSummary(ctx))
       _ <-
-        if (submissionExists(response)) EitherT(connector.amendSEPeriodSummary(amendData)) else EitherT(connector.createSEPeriodSummary(createData))
+        if (noSubmissionExists(response)) EitherT(connector.createSEPeriodSummary(createData)) else EitherT(connector.amendSEPeriodSummary(amendData))
       _ <- EitherT(connector.createAmendSEAnnualSubmission(upsertData))
     } yield ()
 
     result.leftMap(mapDownstreamErrors)
   }
 
-  private def submissionExists(response: ListSEPeriodSummariesResponse) =
+  private def noSubmissionExists(response: ListSEPeriodSummariesResponse) =
     (Json.toJson(response) \ "periods").as[JsArray].value.isEmpty
 
 }

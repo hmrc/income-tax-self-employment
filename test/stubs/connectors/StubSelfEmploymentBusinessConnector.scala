@@ -34,7 +34,7 @@ import stubs.connectors.StubSelfEmploymentBusinessConnector.{
   api1802SuccessResponse,
   api1894SuccessResponse,
   api1895SuccessResponse,
-  api1965SuccessResponse
+  api1965MatchedResponse
 }
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -44,7 +44,7 @@ case class StubSelfEmploymentBusinessConnector(
     createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(api1894SuccessResponse.asRight),
     amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(api1895SuccessResponse.asRight),
     createAmendSEAnnualSubmissionResult: Future[Api1802Response] = Future.successful(api1802SuccessResponse.asRight),
-    listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965SuccessResponse.asRight)
+    listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight)
 ) extends SelfEmploymentBusinessConnector {
 
   override def createSEPeriodSummary(
@@ -71,6 +71,8 @@ object StubSelfEmploymentBusinessConnector {
 
   val api1802SuccessResponse: CreateAmendSEAnnualSubmissionResponse = CreateAmendSEAnnualSubmissionResponse("id")
 
-  val api1965SuccessResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(
+  val api1965MatchedResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(
     Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None))))
+
+  val api1965EmptyResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(Some(List.empty))
 }
