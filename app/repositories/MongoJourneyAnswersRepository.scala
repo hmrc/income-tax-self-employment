@@ -16,15 +16,14 @@
 
 package repositories
 
-import models.common.JourneyAnswersContext.JourneyContext
 import models.common._
 import models.database.JourneyAnswers
-import org.mongodb.scala.bson.conversions.Bson
+import org.mongodb.scala._
 import org.mongodb.scala.bson._
+import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model._
 import org.mongodb.scala.result.UpdateResult
-import org.mongodb.scala._
 import play.api.libs.json.{JsValue, Json}
 import repositories.ExpireAtCalculator.calculateExpireAt
 import uk.gov.hmrc.mongo.MongoComponent

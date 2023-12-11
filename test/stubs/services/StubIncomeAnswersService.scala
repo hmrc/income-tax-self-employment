@@ -16,7 +16,7 @@
 
 package stubs.services
 
-import models.common.JourneyAnswersContext.JourneyContextWithNino
+import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
 import models.frontend.income.IncomeJourneyAnswers
 import services.journeyAnswers.IncomeAnswersService

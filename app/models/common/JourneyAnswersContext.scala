@@ -16,17 +16,6 @@
 
 package models.common
 
-sealed trait JourneyAnswersContext {
-  val taxYear: TaxYear
-  val businessId: BusinessId
-  val mtditid: Mtditid
-  val journey: JourneyName
-}
+case class JourneyContextWithNino(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)
 
-object JourneyAnswersContext {
-  // Don't actually use the JourneyName. Do we need it?
-  case class JourneyContextWithNino(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino, journey: JourneyName)
-      extends JourneyAnswersContext
-
-  case class JourneyContext(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName) extends JourneyAnswersContext
-}
+case class JourneyContext(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName)

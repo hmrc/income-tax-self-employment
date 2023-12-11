@@ -17,10 +17,9 @@
 package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
-import gens.ExpensesTailoringAnswersGen.expensesTailoringAnswersGen
 import gens.ExpensesJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
-import models.common.JourneyAnswersContext.JourneyContextWithNino
-import models.common.JourneyName.GoodsToSellOrUse
+import gens.ExpensesTailoringAnswersGen.expensesTailoringAnswersGen
+import models.common.JourneyContextWithNino
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -48,8 +47,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "save expenses journey answers" should {
     "store data successfully" in {
-      val someExpensesJourney = GoodsToSellOrUse
-      val ctx                 = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino, someExpensesJourney)
+      val ctx                 = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
       val someExpensesAnswers = goodsToSellOrUseJourneyAnswersGen.sample.get
       val result              = underTest.saveAnswers(ctx, someExpensesAnswers).value.futureValue
       result shouldBe ().asRight

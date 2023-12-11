@@ -19,8 +19,7 @@ package services.journeyAnswers
 import cats.implicits.catsSyntaxEitherId
 import connectors.SelfEmploymentBusinessConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
-import models.common.JourneyAnswersContext.JourneyContextWithNino
-import models.common.JourneyName.Income
+import models.common.JourneyContextWithNino
 import models.frontend.income.IncomeJourneyAnswers
 import org.mockito.IdiomaticMockito.StubbingOps
 import org.mockito.Mockito.times
@@ -57,7 +56,7 @@ class IncomeAnswersServiceSpec extends BaseSpec {
           Future.successful(api1802SuccessResponse.asRight)
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
-        val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino, Income)
+        val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
 
         await(service.saveAnswers(ctx, answers).value) shouldBe ().asRight
 
@@ -77,7 +76,7 @@ class IncomeAnswersServiceSpec extends BaseSpec {
           Future.successful(api1802SuccessResponse.asRight)
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
-        val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino, Income)
+        val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
 
         await(service.saveAnswers(ctx, answers).value) shouldBe ().asRight
 

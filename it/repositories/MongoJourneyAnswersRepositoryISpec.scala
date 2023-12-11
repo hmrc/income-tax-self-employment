@@ -16,8 +16,7 @@
 
 package repositories
 
-import models.common.JourneyAnswersContext.JourneyContext
-import models.common.JourneyName
+import models.common.{JourneyContext, JourneyName}
 import models.common.JourneyStatus._
 import models.database.JourneyAnswers
 import org.scalatest.matchers.should.Matchers

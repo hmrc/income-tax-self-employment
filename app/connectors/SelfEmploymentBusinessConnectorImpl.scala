@@ -21,7 +21,7 @@ import connectors.httpParsers.api_1802.CreateAmendSEAnnualSubmissionHttpParser.{
 import connectors.httpParsers.api_1894.CreateSEPeriodSummaryHttpParser.{Api1894Response, createSEPeriodSummaryHttpReads}
 import connectors.httpParsers.api_1895.AmendSEPeriodSummaryHttpParser.{Api1895Response, amendSEPeriodSummaryHttpReads}
 import connectors.httpParsers.api_1965.ListSEPeriodSummariesHttpParser.{Api1965Response, listSEPeriodSummariesHttpReads}
-import models.common.JourneyAnswersContext.JourneyContextWithNino
+import models.common.JourneyContextWithNino
 import models.common.TaxYear.{asTys, endDate, startDate}
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData}

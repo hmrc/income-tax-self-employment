@@ -19,7 +19,8 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.SelfEmploymentBusinessConnector
-import models.common.JourneyAnswersContext.{JourneyContext, JourneyContextWithNino}
+import models.common.JourneyName.Income
+import models.common.{JourneyContext, JourneyContextWithNino}
 import models.common.TaxYear.{endDate, startDate}
 import models.connector.api_1802.request._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
@@ -63,7 +64,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
     val upsertData = CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, upsertBody)
 
     val result = for {
-      _        <- EitherT.right[DownstreamError](repository.upsertData(JourneyContext(taxYear, businessId, mtditid, journey), Json.toJson(answers)))
+      _        <- EitherT.right[DownstreamError](repository.upsertData(JourneyContext(taxYear, businessId, mtditid, Income), Json.toJson(answers)))
       response <- EitherT(connector.listSEPeriodSummary(ctx))
       _ <-
         if (noSubmissionExists(response)) EitherT(connector.createSEPeriodSummary(createData)) else EitherT(connector.amendSEPeriodSummary(amendData))

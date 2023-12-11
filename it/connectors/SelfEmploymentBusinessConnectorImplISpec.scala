@@ -19,10 +19,8 @@ package connectors
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
 import helpers.WiremockSpec
-import models.common.JourneyAnswersContext.JourneyContextWithNino
-import models.common.JourneyName.Income
-import models.common.Mtditid
 import models.common.TaxYear.{asTys, endDate, startDate}
+import models.common.{JourneyContextWithNino, Mtditid}
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
 import models.connector.api_1894.request._
@@ -126,7 +124,7 @@ class SelfEmploymentBusinessConnectorImplISpec extends WiremockSpec with Integra
                  |}
                  |""".stripMargin))
 
-    val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, Mtditid(mtditid), nino, Income)
+    val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, Mtditid(mtditid), nino)
 
     val downstreamUrl =
       s"/income-tax/${asTys(ctx.taxYear)}/${ctx.nino.value}/self-employments/${ctx.businessId.value}/periodic-summaries"

@@ -22,7 +22,7 @@ import connectors.httpParsers.api_1802.CreateAmendSEAnnualSubmissionHttpParser.A
 import connectors.httpParsers.api_1894.CreateSEPeriodSummaryHttpParser.Api1894Response
 import connectors.httpParsers.api_1895.AmendSEPeriodSummaryHttpParser.Api1895Response
 import connectors.httpParsers.api_1965.ListSEPeriodSummariesHttpParser.Api1965Response
-import models.common.JourneyAnswersContext
+import models.common.JourneyContextWithNino
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
@@ -55,8 +55,7 @@ case class StubSelfEmploymentBusinessConnector(
       data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] =
     amendSEPeriodSummaryResult
 
-  override def listSEPeriodSummary(
-      ctx: JourneyAnswersContext.JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response] =
+  override def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response] =
     listSEPeriodSummariesResult
 
   override def createAmendSEAnnualSubmission(
