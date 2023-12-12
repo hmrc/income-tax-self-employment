@@ -16,8 +16,8 @@
 
 package models
 
-import connectors.httpParsers.DownstreamParser
-import connectors.httpParsers.DownstreamParser.CommonDownstreamParser
+import connectors.DownstreamParser
+import DownstreamParser.CommonDownstreamParser
 import models.error.DownstreamError
 import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json._
@@ -31,7 +31,10 @@ package object connector {
       case OK | CREATED =>
         response.json
           .validate[A]
-          .fold[Either[DownstreamError, A]](_ => Left(createCommonErrorParser(url).reportInvalidJsonError()), parsedModel => Right(parsedModel))
+          .fold[Either[DownstreamError, A]](
+            errors => Left(createCommonErrorParser(url).reportInvalidJsonError(errors.toList)),
+            parsedModel => Right(parsedModel)
+          )
 
       case _ => Left(createCommonErrorParser(url).pagerDutyError(response))
     }

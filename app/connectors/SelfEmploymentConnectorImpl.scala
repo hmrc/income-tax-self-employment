@@ -58,17 +58,17 @@ class SelfEmploymentConnectorImpl @Inject() (val http: HttpClient, val appConfig
 
   private def buildUrl(path: String): String = appConfig.ifsBaseUrl + path
 
+  def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response] = {
+    val url     = buildUrl(s"/registration/business-details/$idType/$idNumber")
+    val context = ifsHeader(IFSApiName.Api1171, url)
+    get[Api1171Response](http, context)
+  }
+
   def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
     val url     = buildUrl(s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId}/annual-summaries")
     val context = ifsHeader(IFSApiName.Api1802, url)
     put[CreateAmendSEAnnualSubmissionRequestBody, Api1802Response](http, context, data.body)
-  }
-
-  def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response] = {
-    val url     = buildUrl(s"/registration/business-details/$idType/$idNumber")
-    val context = ifsHeader(IFSApiName.Api1171, url)
-    get[Api1171Response](http, context)
   }
 
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {

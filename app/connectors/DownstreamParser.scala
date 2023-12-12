@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package connectors.httpParsers
+package connectors
 
 import models.error.DownstreamError
 import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
 import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, SERVICE_UNAVAILABLE}
+import play.api.libs.json.{JsPath, JsonValidationError}
 import uk.gov.hmrc.http.HttpResponse
 import utils.PagerDutyHelper.PagerDutyKeys._
 import utils.PagerDutyHelper.{getCorrelationId, pagerDutyLog}
@@ -33,9 +34,22 @@ trait DownstreamParser {
   def logMessage(response: HttpResponse): String =
     s"[$parserName][read] Received ${response.status} from $downstreamService. Body:${response.body} ${getCorrelationId(response)}"
 
-  def reportInvalidJsonError(): SingleDownstreamError = {
-    pagerDutyLog(BAD_SUCCESS_JSON_FROM_API, s"[$parserName][read] Invalid Json from $downstreamService.")
+  def reportInvalidJsonError(errors: List[(JsPath, scala.collection.Seq[JsonValidationError])]): SingleDownstreamError = {
+    pagerDutyLog(BAD_SUCCESS_JSON_FROM_API, s"[$parserName][read] Invalid Json from $downstreamService: ${formatJsonErrors(errors)}")
     SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
+  }
+
+  private def formatJsonErrors(errors: List[(JsPath, scala.collection.Seq[JsonValidationError])]): String = {
+    val errorMessages = errors.flatMap { case (path, validationErrors) =>
+      validationErrors.map { error =>
+        val pathString   = path.toJsonString
+        val errorMessage = error.message
+        val args         = error.args.mkString(", ")
+        s"Error at path $pathString: $errorMessage [args: $args]"
+      }
+    }
+
+    errorMessages.mkString("\n")
   }
 
   // FIXME - I don't think this code does what it should.
@@ -79,7 +93,7 @@ trait DownstreamParser {
 
 object DownstreamParser {
   case class CommonDownstreamParser(url: String) extends DownstreamParser {
-    val parserName: String        = "CommonParser"
+    val parserName: String        = "CommonDownstreamParser"
     val downstreamService: String = url
   }
 }

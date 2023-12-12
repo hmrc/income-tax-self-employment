@@ -17,12 +17,11 @@
 package models.connector.api_1171
 
 import play.api.libs.json._
-import java.time.OffsetDateTime
 
 /** Represents the Swagger definition for successResponseSchema.
   */
 case class SuccessResponseSchema(
-    processingDate: OffsetDateTime,
+    processingDate: String,
     taxPayerDisplayResponse: ResponseType
 )
 
