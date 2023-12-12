@@ -18,20 +18,18 @@ package models.connector.api_1171
 
 import play.api.libs.json._
 
-/**
-  * Represents the Swagger definition for response_type.
+/** Represents the Swagger definition for response_type.
   */
 case class ResponseType(
-  safeId: String,
-  nino: String,
-  mtdId: String,
-  yearOfMigration: Option[String],
-  propertyIncome: Boolean,
-  businessData: Option[List[BusinessDataDetails]],
-  propertyData: Option[List[PropertyDataDetails]]
+    safeId: String,
+    nino: String,
+    mtdId: String,
+    yearOfMigration: Option[String],
+    propertyIncome: Boolean,
+    businessData: Option[List[BusinessDataDetails]],
+    propertyData: Option[List[PropertyDataDetails]]
 )
 
 object ResponseType {
   implicit lazy val responseTypeJsonFormat: Format[ResponseType] = Json.format[ResponseType]
 }
-

@@ -39,8 +39,8 @@ trait ExpensesAnswersService {
 }
 
 @Singleton
-class ExpensesAnswersServiceImpl @Inject()(businessConnector: SelfEmploymentConnector, repository: JourneyAnswersRepository)(implicit
-                                                                                                                             ec: ExecutionContext)
+class ExpensesAnswersServiceImpl @Inject() (businessConnector: SelfEmploymentConnector, repository: JourneyAnswersRepository)(implicit
+    ec: ExecutionContext)
     extends ExpensesAnswersService {
 
   def saveAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =

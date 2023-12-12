@@ -18,17 +18,17 @@ package models.connector.api_1171
 
 import play.api.libs.json._
 
-/**
-  * Represents the Swagger definition for failureResponse_failures_inner.
-  * @param code Keys for all the errors returned
-  * @param reason A simple description for the failure
+/** Represents the Swagger definition for failureResponse_failures_inner.
+  * @param code
+  *   Keys for all the errors returned
+  * @param reason
+  *   A simple description for the failure
   */
 case class FailureResponseFailuresInner(
-  code: String,
-  reason: String
+    code: String,
+    reason: String
 )
 
 object FailureResponseFailuresInner {
   implicit lazy val failureResponseFailuresInnerJsonFormat: Format[FailureResponseFailuresInner] = Json.format[FailureResponseFailuresInner]
 }
-

@@ -19,14 +19,12 @@ package models.connector.api_1171
 import play.api.libs.json._
 import scala.collection.immutable.Set
 
-/**
-  * Represents the Swagger definition for failureResponse.
+/** Represents the Swagger definition for failureResponse.
   */
 case class FailureResponse(
-  failures: Set[FailureResponseFailuresInner]
+    failures: Set[FailureResponseFailuresInner]
 )
 
 object FailureResponse {
   implicit lazy val failureResponseJsonFormat: Format[FailureResponse] = Json.format[FailureResponse]
 }
-

@@ -19,15 +19,13 @@ package models.connector.api_1171
 import play.api.libs.json._
 import java.time.OffsetDateTime
 
-/**
-  * Represents the Swagger definition for successResponseSchema.
+/** Represents the Swagger definition for successResponseSchema.
   */
 case class SuccessResponseSchema(
-  processingDate: OffsetDateTime,
-  taxPayerDisplayResponse: ResponseType
+    processingDate: OffsetDateTime,
+    taxPayerDisplayResponse: ResponseType
 )
 
 object SuccessResponseSchema {
   implicit lazy val successResponseSchemaJsonFormat: Format[SuccessResponseSchema] = Json.format[SuccessResponseSchema]
 }
-

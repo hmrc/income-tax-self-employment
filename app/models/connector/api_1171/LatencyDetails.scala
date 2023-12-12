@@ -18,15 +18,14 @@ package models.connector.api_1171
 
 import play.api.libs.json._
 
-/**
-  * Represents the Swagger definition for latency_details.
+/** Represents the Swagger definition for latency_details.
   */
 case class LatencyDetails(
-  latencyEndDate: String,
-  taxYear1: String,
-  latencyIndicator1: LatencyDetails.LatencyIndicator1.Value,
-  taxYear2: String,
-  latencyIndicator2: LatencyDetails.LatencyIndicator2.Value
+    latencyEndDate: String,
+    taxYear1: String,
+    latencyIndicator1: LatencyDetails.LatencyIndicator1.Value,
+    taxYear2: String,
+    latencyIndicator2: LatencyDetails.LatencyIndicator2.Value
 )
 
 object LatencyDetails {
@@ -50,4 +49,3 @@ object LatencyDetails {
     implicit lazy val LatencyIndicator2JsonFormat: Format[Value] = Format(Reads.enumNameReads(this), Writes.enumNameWrites[this.type])
   }
 }
-

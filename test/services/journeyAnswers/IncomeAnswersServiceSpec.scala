@@ -36,8 +36,8 @@ import scala.concurrent.Future
 class IncomeAnswersServiceSpec extends BaseSpec {
 
   trait Test {
-    val mockConnector: SelfEmploymentConnector = mock[SelfEmploymentConnector]
-    val repository: StubJourneyAnswersRepository       = StubJourneyAnswersRepository()
+    val mockConnector: SelfEmploymentConnector   = mock[SelfEmploymentConnector]
+    val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository()
 
     val service = new IncomeAnswersServiceImpl(repository, mockConnector)
 

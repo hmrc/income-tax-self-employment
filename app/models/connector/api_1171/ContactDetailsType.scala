@@ -18,18 +18,17 @@ package models.connector.api_1171
 
 import play.api.libs.json._
 
-/**
-  * Represents the Swagger definition for contact_details_type.
-  * @param email email id
+/** Represents the Swagger definition for contact_details_type.
+  * @param email
+  *   email id
   */
 case class ContactDetailsType(
-  telephone: Option[String],
-  mobileNo: Option[String],
-  faxNo: Option[String],
-  email: Option[String]
+    telephone: Option[String],
+    mobileNo: Option[String],
+    faxNo: Option[String],
+    email: Option[String]
 )
 
 object ContactDetailsType {
   implicit lazy val contactDetailsTypeJsonFormat: Format[ContactDetailsType] = Json.format[ContactDetailsType]
 }
-

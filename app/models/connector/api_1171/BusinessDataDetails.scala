@@ -18,33 +18,35 @@ package models.connector.api_1171
 
 import play.api.libs.json._
 
-/**
-  * Represents the Swagger definition for business_data_details.
-  * @param incomeSourceId incomeSourceId
-  * @param cashOrAccruals Cash Or Accruals, true for Accruals, false for Cash
-  * @param seasonal When true indicates is a seasonal business. For example, ski material rental
-  * @param paperLess PaperLess
+/** Represents the Swagger definition for business_data_details.
+  * @param incomeSourceId
+  *   incomeSourceId
+  * @param cashOrAccruals
+  *   Cash Or Accruals, true for Accruals, false for Cash
+  * @param seasonal
+  *   When true indicates is a seasonal business. For example, ski material rental
+  * @param paperLess
+  *   PaperLess
   */
 case class BusinessDataDetails(
-  incomeSourceId: String,
-  incomeSource: Option[String],
-  accountingPeriodStartDate: String,
-  accountingPeriodEndDate: String,
-  tradingName: Option[String],
-  businessAddressDetails: Option[BusinessDataDetailsBusinessAddressDetails],
-  businessContactDetails: Option[ContactDetailsType],
-  tradingStartDate: Option[String],
-  cashOrAccruals: Option[Boolean],
-  seasonal: Option[Boolean],
-  cessationDate: Option[String],
-  paperLess: Option[Boolean],
-  incomeSourceStartDate: Option[String],
-  firstAccountingPeriodStartDate: Option[String],
-  firstAccountingPeriodEndDate: Option[String],
-  latencyDetails: Option[LatencyDetails]
+    incomeSourceId: String,
+    incomeSource: Option[String],
+    accountingPeriodStartDate: String,
+    accountingPeriodEndDate: String,
+    tradingName: Option[String],
+    businessAddressDetails: Option[BusinessDataDetailsBusinessAddressDetails],
+    businessContactDetails: Option[ContactDetailsType],
+    tradingStartDate: Option[String],
+    cashOrAccruals: Option[Boolean],
+    seasonal: Option[Boolean],
+    cessationDate: Option[String],
+    paperLess: Option[Boolean],
+    incomeSourceStartDate: Option[String],
+    firstAccountingPeriodStartDate: Option[String],
+    firstAccountingPeriodEndDate: Option[String],
+    latencyDetails: Option[LatencyDetails]
 )
 
 object BusinessDataDetails {
   implicit lazy val businessDataDetailsJsonFormat: Format[BusinessDataDetails] = Json.format[BusinessDataDetails]
 }
-
