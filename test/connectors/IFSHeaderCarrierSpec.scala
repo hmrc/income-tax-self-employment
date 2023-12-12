@@ -20,22 +20,21 @@ import models.connector.IFSApiName
 import models.connector.IntegrationContext.IFSHeaderCarrier
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.http.HeaderCarrier.Config
-import utils.TestUtils
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
+import utils.TestUtils.mockAppConfig
 
 class IFSHeaderCarrierSpec extends AnyWordSpecLike with Matchers {
-  private val ec = scala.concurrent.ExecutionContext.Implicits.global
 
   "IFSHeaderCarrier" should {
     val internalHost        = "http://localhost"
     val hc                  = HeaderCarrier()
-    val mockApiConfig       = TestUtils.mockAppConfig
+    val mockApiConfig       = mockAppConfig
     val headerCarrierConfig = Config()
 
     "enrich header carrier with bearer and environment" in {
-      val context = IFSHeaderCarrier(headerCarrierConfig, mockApiConfig, IFSApiName.Api1965, internalHost)(hc, ec)
-      val result  = context.hc
+      val context = IFSHeaderCarrier(headerCarrierConfig, mockApiConfig, IFSApiName.Api1965, internalHost)
+      val result  = context.enrichedHeaderCarrier(hc)
 
       result.authorization shouldBe Some(Authorization(s"Bearer secret"))
       result.extraHeaders should contain("Environment" -> "test")

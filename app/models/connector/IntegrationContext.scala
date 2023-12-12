@@ -18,27 +18,21 @@ package models.connector
 
 import config.AppConfig
 import connectors.ApiConnector
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.http.HeaderCarrier.Config
-
-import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
 sealed trait IntegrationContext {
   val url: String
-  val hc: HeaderCarrier
-  val ec: ExecutionContext
+
+  def enrichedHeaderCarrier(implicit headerCarrier: HeaderCarrier): HeaderCarrier
 }
 
 object IntegrationContext {
-  final case class IFSHeaderCarrier(headerCarrierConfig: Config, appConfig: AppConfig, api: IFSApiName, url: String)(implicit
-      headerCarrier: HeaderCarrier,
-      executionContext: ExecutionContext)
-      extends IntegrationContext {
-    val hc: HeaderCarrier = {
+
+  final case class IFSHeaderCarrier(headerCarrierConfig: Config, appConfig: AppConfig, api: IFSApiName, url: String) extends IntegrationContext {
+    def enrichedHeaderCarrier(implicit headerCarrier: HeaderCarrier): HeaderCarrier = {
       val hcWithAuth = headerCarrier.copy(authorization = Some(Authorization(s"Bearer ${appConfig.ifsAuthorisationToken(api.entryName)}")))
       ApiConnector.apiHeaderCarrier(headerCarrierConfig, url, hcWithAuth, "Environment" -> appConfig.ifsEnvironment)
     }
-
-    val ec: ExecutionContext = executionContext
   }
 }

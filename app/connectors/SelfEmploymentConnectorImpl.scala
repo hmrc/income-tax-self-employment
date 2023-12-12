@@ -32,14 +32,15 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-// TODO Rename to IFSConnector
+/** Keep the methods sorted by API number // TODO Rename to IFSConnector
+  */
 trait SelfEmploymentConnector {
   def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response]
+  def createAmendSEAnnualSubmission(
+      data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response]
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response]
   def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response]
   def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response]
-  def createAmendSEAnnualSubmission(
-      data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response]
 }
 
 object SelfEmploymentConnector {
@@ -53,26 +54,35 @@ object SelfEmploymentConnector {
 @Singleton
 class SelfEmploymentConnectorImpl @Inject() (val http: HttpClient, val appConfig: AppConfig) extends SelfEmploymentConnector {
   private val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
+  private val ifsHeader                   = IFSHeaderCarrier(headerCarrierConfig, appConfig, _, _)
 
   private def buildUrl(path: String): String = appConfig.ifsBaseUrl + path
 
+  def createAmendSEAnnualSubmission(
+      data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
+    val url     = buildUrl(s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId}/annual-summaries")
+    val context = ifsHeader(IFSApiName.Api1802, url)
+    put[CreateAmendSEAnnualSubmissionRequestBody, Api1802Response](http, context, data.body)
+  }
+
   def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response] = {
     val url     = buildUrl(s"/registration/business-details/$idType/$idNumber")
-    val context = IFSHeaderCarrier(headerCarrierConfig, appConfig, IFSApiName.Api1171, url)
+    val context = ifsHeader(IFSApiName.Api1171, url)
     get[Api1171Response](http, context)
   }
 
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {
-    val url = buildUrl(s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId}/periodic-summaries")
-    post[CreateSEPeriodSummaryRequestBody, Api1894Response](http, url, data.body)
+    val url     = buildUrl(s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId}/periodic-summaries")
+    val context = ifsHeader(IFSApiName.Api1894, url)
+    post[CreateSEPeriodSummaryRequestBody, Api1894Response](http, context, data.body)
   }
 
   def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] = {
     val url = buildUrl(
       s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId}/periodic-summaries?from=${startDate(
           data.taxYear)}&to=${endDate(data.taxYear)}")
-
-    put[AmendSEPeriodSummaryRequestBody, Api1895Response](http, url, data.body)
+    val context = ifsHeader(IFSApiName.Api1895, url)
+    put[AmendSEPeriodSummaryRequestBody, Api1895Response](http, context, data.body)
   }
 
   def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response] = {
@@ -80,11 +90,4 @@ class SelfEmploymentConnectorImpl @Inject() (val http: HttpClient, val appConfig
     val context = IFSHeaderCarrier(headerCarrierConfig, appConfig, IFSApiName.Api1965, url)
     get[Api1965Response](http, context)
   }
-
-  def createAmendSEAnnualSubmission(
-      data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
-    val url = buildUrl(s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId}/annual-summaries")
-    put[CreateAmendSEAnnualSubmissionRequestBody, Api1802Response](http, url, data.body)
-  }
-
 }

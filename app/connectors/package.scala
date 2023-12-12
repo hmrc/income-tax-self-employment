@@ -22,20 +22,24 @@ import scala.concurrent.{ExecutionContext, Future}
 
 package object connectors {
 
-  def get[Resp: HttpReads](http: HttpClient, context: IntegrationContext): Future[Resp] = {
+  def get[Resp: HttpReads](http: HttpClient, context: IntegrationContext)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Resp] = {
     val reads = implicitly[HttpReads[Resp]]
-    http.GET[Resp](context.url)(reads, context.hc, context.ec)
+    http.GET[Resp](context.url)(reads, context.enrichedHeaderCarrier, ec)
   }
 
-  def post[Req: Writes, Resp: HttpReads](http: HttpClient, url: String, body: Req)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Resp] = {
+  def post[Req: Writes, Resp: HttpReads](http: HttpClient, context: IntegrationContext, body: Req)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): Future[Resp] = {
     val reads  = implicitly[HttpReads[Resp]]
     val writes = implicitly[Writes[Req]]
-    http.POST[Req, Resp](url, body)(writes, reads, hc, ec)
+    http.POST[Req, Resp](context.url, body)(writes, reads, context.enrichedHeaderCarrier, ec)
   }
 
-  def put[Req: Writes, Resp: HttpReads](http: HttpClient, url: String, body: Req)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Resp] = {
+  def put[Req: Writes, Resp: HttpReads](http: HttpClient, context: IntegrationContext, body: Req)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): Future[Resp] = {
     val reads  = implicitly[HttpReads[Resp]]
     val writes = implicitly[Writes[Req]]
-    http.PUT[Req, Resp](url, body)(writes, reads, hc, ec)
+    http.PUT[Req, Resp](context.url, body)(writes, reads, context.enrichedHeaderCarrier, ec)
   }
 }
