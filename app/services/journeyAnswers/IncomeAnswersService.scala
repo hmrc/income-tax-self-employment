@@ -18,7 +18,7 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
-import connectors.SelfEmploymentBusinessConnector
+import connectors.SelfEmploymentConnector
 import models.common.JourneyName.Income
 import models.common.TaxYear.{endDate, startDate}
 import models.common._
@@ -45,8 +45,7 @@ trait IncomeAnswersService {
 }
 
 @Singleton
-class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, connector: SelfEmploymentBusinessConnector)(implicit
-    ec: ExecutionContext)
+class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, connector: SelfEmploymentConnector)(implicit ec: ExecutionContext)
     extends IncomeAnswersService {
 
   def getAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid): ApiResultT[Option[IncomeJourneyAnswers]] =

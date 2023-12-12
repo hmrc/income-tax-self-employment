@@ -120,3 +120,5 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
       .returning(Future.failed(exception))
 
 }
+
+object TestUtils extends TestUtils

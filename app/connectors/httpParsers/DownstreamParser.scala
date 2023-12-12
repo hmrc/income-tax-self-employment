@@ -33,7 +33,7 @@ trait DownstreamParser {
   def logMessage(response: HttpResponse): String =
     s"[$parserName][read] Received ${response.status} from $downstreamService. Body:${response.body} ${getCorrelationId(response)}"
 
-  lazy val invalidJsonError: SingleDownstreamError = {
+  def reportInvalidJsonError(): SingleDownstreamError = {
     pagerDutyLog(BAD_SUCCESS_JSON_FROM_API, s"[$parserName][read] Invalid Json from $downstreamService.")
     SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
   }
@@ -75,4 +75,11 @@ trait DownstreamParser {
         pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, logMessage(response))
         handleDownstreamError(response, Some(INTERNAL_SERVER_ERROR))
     }
+}
+
+object DownstreamParser {
+  case class CommonDownstreamParser(url: String) extends DownstreamParser {
+    val parserName: String        = "CommonParser"
+    val downstreamService: String = url
+  }
 }

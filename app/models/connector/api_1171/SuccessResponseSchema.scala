@@ -16,16 +16,18 @@
 
 package models.connector.api_1171
 
-import models.domain.Business.LatencyDetails
+import play.api.libs.json._
+import java.time.OffsetDateTime
 
-trait IncomeSource {
-  val incomeSourceId: String
-  val accountingPeriodStartDate: String
-  val accountingPeriodEndDate: String
-  val firstAccountingPeriodStartDate: Option[String]
-  val firstAccountingPeriodEndDate: Option[String]
-  val latencyDetails: Option[LatencyDetails]
-  val tradingStartDate: Option[String]
-  val cashOrAccruals: Option[Boolean]
-  val cessationDate: Option[String]
+/**
+  * Represents the Swagger definition for successResponseSchema.
+  */
+case class SuccessResponseSchema(
+  processingDate: OffsetDateTime,
+  taxPayerDisplayResponse: ResponseType
+)
+
+object SuccessResponseSchema {
+  implicit lazy val successResponseSchemaJsonFormat: Format[SuccessResponseSchema] = Json.format[SuccessResponseSchema]
 }
+

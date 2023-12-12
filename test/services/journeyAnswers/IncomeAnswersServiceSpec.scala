@@ -17,7 +17,7 @@
 package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
-import connectors.SelfEmploymentBusinessConnector
+import connectors.SelfEmploymentConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import models.common.JourneyContextWithNino
 import models.frontend.income.IncomeJourneyAnswers
@@ -26,7 +26,7 @@ import org.mockito.Mockito.times
 import org.mockito.MockitoSugar.{never, verify}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import stubs.connectors.StubSelfEmploymentBusinessConnector._
+import stubs.connectors.StubSelfEmploymentConnector._
 import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec
 import utils.BaseSpec._
@@ -36,7 +36,7 @@ import scala.concurrent.Future
 class IncomeAnswersServiceSpec extends BaseSpec {
 
   trait Test {
-    val mockConnector: SelfEmploymentBusinessConnector = mock[SelfEmploymentBusinessConnector]
+    val mockConnector: SelfEmploymentConnector = mock[SelfEmploymentConnector]
     val repository: StubJourneyAnswersRepository       = StubJourneyAnswersRepository()
 
     val service = new IncomeAnswersServiceImpl(repository, mockConnector)

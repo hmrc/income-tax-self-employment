@@ -23,7 +23,7 @@ import models.common.JourneyContextWithNino
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import stubs.connectors.StubSelfEmploymentBusinessConnector
+import stubs.connectors.StubSelfEmploymentConnector
 import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
@@ -31,7 +31,7 @@ import utils.BaseSpec._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
-  val connector = StubSelfEmploymentBusinessConnector()
+  val connector = StubSelfEmploymentConnector()
   val repo      = StubJourneyAnswersRepository()
   val underTest = new ExpensesAnswersServiceImpl(connector, repo)
 

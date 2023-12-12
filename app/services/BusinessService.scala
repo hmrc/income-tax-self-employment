@@ -16,10 +16,10 @@
 
 package services
 
-import connectors.BusinessDetailsConnector
-import connectors.BusinessDetailsConnector.IdType.Nino
-import models.error.{ServiceError, DownstreamError}
+import connectors.SelfEmploymentConnector
+import models.common.IdType
 import models.domain.{Business, TradesJourneyStatuses}
+import models.error.{DownstreamError, ServiceError}
 import repositories.JourneyStateRepository
 import services.BusinessService.{GetBusinessJourneyStatesResponse, GetBusinessResponse}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -30,15 +30,16 @@ import utils.ScalaHelper.FutureEither
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class BusinessService @Inject() (businessConnector: BusinessDetailsConnector, journeyStateRepository: JourneyStateRepository)(implicit
+class BusinessService @Inject() (businessConnector: SelfEmploymentConnector, journeyStateRepository: JourneyStateRepository)(implicit
     ec: ExecutionContext) {
 
   def getBusinesses(nino: String)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
     businessConnector
-      .getBusinesses(Nino, nino)
+      .getBusinesses(IdType.Nino, nino)
       .map(
         _.map(_.taxPayerDisplayResponse)
-          .map(taxPayerDisplayResponse => taxPayerDisplayResponse.businessData.map(_.toBusiness(taxPayerDisplayResponse))))
+          .map(taxPayerDisplayResponse =>
+            taxPayerDisplayResponse.businessData.getOrElse(Nil).map(details => Business.mkBusiness(details, taxPayerDisplayResponse))))
 
   def getBusiness(nino: String, businessId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[GetBusinessResponse] =
     getBusinesses(nino).map(_.map(_.filter(_.businessId == businessId)))
