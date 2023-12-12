@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.frontend.expenses
+package models.frontend.expenses.tailoring.individualCategories
 
 import models.common.{Enumerable, WithName}
 

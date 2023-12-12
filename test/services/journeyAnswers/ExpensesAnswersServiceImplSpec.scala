@@ -18,7 +18,7 @@ package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
 import gens.ExpensesJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
-import gens.ExpensesTailoringAnswersGen.expensesTailoringAnswersGen
+import gens.ExpensesTailoringAnswersGen.{expensesTailoringIndividualCategoriesAnswersGen, expensesTailoringNoExpensesAnswersGen}
 import models.common.JourneyContextWithNino
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
@@ -37,9 +37,17 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   implicit val hc = HeaderCarrier()
 
-  "save ExpensesTailoringAnswers" should {
+  "save ExpensesTailoringNoExpensesAnswers" should {
     "store data successfully" in {
-      val answers = expensesTailoringAnswersGen.sample.get
+      val answers = expensesTailoringNoExpensesAnswersGen.sample.get
+      val result  = underTest.saveAnswers(businessId, currTaxYear, mtditid, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+  }
+
+  "save ExpensesTailoringIndividualCategoriesAnswers" should {
+    "store data successfully" in {
+      val answers = expensesTailoringIndividualCategoriesAnswersGen.sample.get
       val result  = underTest.saveAnswers(businessId, currTaxYear, mtditid, answers).value.futureValue
       result shouldBe ().asRight
     }

@@ -18,7 +18,7 @@ package controllers
 
 import controllers.ControllerBehaviours.buildRequest
 import gens.ExpensesJourneyAnswersGen._
-import gens.ExpensesTailoringAnswersGen.expensesTailoringAnswersGen
+import gens.ExpensesTailoringAnswersGen.{expensesTailoringIndividualCategoriesAnswersGen, expensesTailoringNoExpensesAnswersGen}
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status.NO_CONTENT
@@ -44,13 +44,24 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
-  "saveExpensesTailoringAnswers" should {
-    s"return a $NO_CONTENT when successful" in forAll(expensesTailoringAnswersGen) { data =>
+  "saveExpensesTailoringNoExpensesAnswers" should {
+    s"return a $NO_CONTENT when successful" in forAll(expensesTailoringNoExpensesAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
         expectedBody = "",
-        methodBlock = () => underTest.saveExpensesTailoringAnswers(currTaxYear, businessId)
+        methodBlock = () => underTest.saveExpensesTailoringNoExpensesAnswers(currTaxYear, businessId)
+      )
+    }
+  }
+
+  "saveExpensesTailoringIndividualCategoriesAnswers" should {
+    s"return a $NO_CONTENT when successful" in forAll(expensesTailoringIndividualCategoriesAnswersGen) { data =>
+      behave like testRoute(
+        request = buildRequest(data),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.saveExpensesTailoringIndividualCategoriesAnswers(currTaxYear, businessId)
       )
     }
   }

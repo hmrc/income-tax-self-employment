@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
-package models.frontend.expenses
+package models.frontend.expenses.tailoring.individualCategories
 
 import models.common.{Enumerable, WithName}
 
-sealed trait OtherExpenses
+sealed trait RepairsAndMaintenance
 
-object OtherExpenses extends Enumerable.Implicits {
+object RepairsAndMaintenance extends Enumerable.Implicits {
 
-  case object YesAllowable    extends WithName("yesAllowable") with OtherExpenses
-  case object YesDisallowable extends WithName("yesDisallowable") with OtherExpenses
-  case object No              extends WithName("no") with OtherExpenses
+  case object YesAllowable    extends WithName("yesAllowable") with RepairsAndMaintenance
+  case object YesDisallowable extends WithName("yesDisallowable") with RepairsAndMaintenance
+  case object No              extends WithName("no") with RepairsAndMaintenance
 
-  val values: Seq[OtherExpenses] = Seq(
+  val values: Seq[RepairsAndMaintenance] = Seq(
     YesAllowable,
     YesDisallowable,
     No
   )
 
-  implicit val enumerable: Enumerable[OtherExpenses] =
+  implicit val enumerable: Enumerable[RepairsAndMaintenance] =
     Enumerable(values.map(v => v.toString -> v): _*)
+
 }

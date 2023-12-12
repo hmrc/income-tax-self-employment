@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-package models.frontend.expenses
+package models.connector.api_1894.request
 
-import models.common.{Enumerable, WithName}
+import play.api.libs.json._
 
-sealed trait DisallowableSubcontractorCosts
+case class ExpensesTotalAmount(
+    amount: Option[BigDecimal]
+)
 
-object DisallowableSubcontractorCosts extends Enumerable.Implicits {
-
-  case object Yes extends WithName("yes") with DisallowableSubcontractorCosts
-  case object No  extends WithName("no") with DisallowableSubcontractorCosts
-
-  val values: Seq[DisallowableSubcontractorCosts] = Seq(
-    Yes,
-    No
-  )
-
-  implicit val enumerable: Enumerable[DisallowableSubcontractorCosts] =
-    Enumerable(values.map(v => v.toString -> v): _*)
+object ExpensesTotalAmount {
+  implicit lazy val expensesTotalAmountJsonFormat: Format[ExpensesTotalAmount] =
+    Json.format[ExpensesTotalAmount]
 
 }

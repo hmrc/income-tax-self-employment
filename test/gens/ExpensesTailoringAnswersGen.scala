@@ -16,10 +16,12 @@
 
 package gens
 
-import models.frontend.expenses._
+import models.frontend.expenses.tailoring.individualCategories._
+import models.frontend.expenses.tailoring.{ExpensesCategories, ExpensesTailoringIndividualCategoriesAnswers, ExpensesTailoringNoExpensesAnswers}
 import org.scalacheck.Gen
 
 object ExpensesTailoringAnswersGen {
+  val expensesCategoriesGen: Gen[ExpensesCategories]                               = Gen.oneOf(ExpensesCategories.values)
   val officeSuppliesGen: Gen[OfficeSupplies]                                       = Gen.oneOf(OfficeSupplies.values)
   val taxiMinicabOrRoadHaulageGen: Gen[TaxiMinicabOrRoadHaulage]                   = Gen.oneOf(TaxiMinicabOrRoadHaulage.values)
   val goodsToSellOrUseGen: Gen[GoodsToSellOrUse]                                   = Gen.oneOf(GoodsToSellOrUse.values)
@@ -40,7 +42,14 @@ object ExpensesTailoringAnswersGen {
   val disallowableSubcontractorCostsGen: Gen[DisallowableSubcontractorCosts]       = Gen.oneOf(DisallowableSubcontractorCosts.values)
   val disallowableProfessionalFeesGen: Gen[DisallowableProfessionalFees]           = Gen.oneOf(DisallowableProfessionalFees.values)
 
-  val expensesTailoringAnswersGen: Gen[ExpensesTailoringAnswers] = for {
+  val expensesTailoringNoExpensesAnswersGen: Gen[ExpensesTailoringNoExpensesAnswers] = for {
+    expensesCategories <- expensesCategoriesGen
+  } yield ExpensesTailoringNoExpensesAnswers(
+    expensesCategories
+  )
+
+  val expensesTailoringIndividualCategoriesAnswersGen: Gen[ExpensesTailoringIndividualCategoriesAnswers] = for {
+    expensesCategories                <- expensesCategoriesGen
     officeSupplies                    <- officeSuppliesGen
     taxiMinicabOrRoadHaulage          <- taxiMinicabOrRoadHaulageGen
     goodsToSellOrUse                  <- goodsToSellOrUseGen
@@ -60,7 +69,8 @@ object ExpensesTailoringAnswersGen {
     disallowableStaffCosts            <- Gen.option(disallowableStaffCostsGen)
     disallowableSubcontractorCosts    <- Gen.option(disallowableSubcontractorCostsGen)
     disallowableProfessionalFees      <- Gen.option(disallowableProfessionalFeesGen)
-  } yield ExpensesTailoringAnswers(
+  } yield ExpensesTailoringIndividualCategoriesAnswers(
+    expensesCategories,
     officeSupplies,
     taxiMinicabOrRoadHaulage,
     goodsToSellOrUse,

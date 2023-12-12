@@ -17,14 +17,13 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
-import models.common.JourneyName._
 import models.common._
-import models.frontend.expenses.ExpensesTailoringAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
+import models.frontend.expenses.tailoring.{ExpensesTailoringIndividualCategoriesAnswers, ExpensesTailoringNoExpensesAnswers}
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Format.GenericFormat
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -50,8 +49,14 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     }
   }
 
-  def saveExpensesTailoringAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    getBody[ExpensesTailoringAnswers](user) { value =>
+  def saveExpensesTailoringNoExpensesAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+    getBody[ExpensesTailoringNoExpensesAnswers](user) { value =>
+      expensesService.saveAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
+    }
+  }
+
+  def saveExpensesTailoringIndividualCategoriesAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+    getBody[ExpensesTailoringIndividualCategoriesAnswers](user) { value =>
       expensesService.saveAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
     }
   }
