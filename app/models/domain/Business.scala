@@ -16,6 +16,7 @@
 
 package models.domain
 
+import models.connector.api_1171.{BusinessDataDetails, ResponseType}
 import models.domain.Business.{AccountingPeriod, LatencyDetails}
 import play.api.libs.json.{Json, OFormat}
 
@@ -40,6 +41,7 @@ case class Business(
 )
 
 object Business {
+
   implicit val businessFormat: OFormat[Business] = Json.format[Business]
 
   case class AccountingPeriod(start: String, end: String)
@@ -51,4 +53,39 @@ object Business {
   object LatencyDetails {
     implicit val latencyDetailsFormat: OFormat[LatencyDetails] = Json.format[LatencyDetails]
   }
+
+  private val typeOfBusiness                         = "self-employment"
+  private val latencyIndicatorType: String => String = latencyIndicator => if (latencyIndicator == "Q") "Quarterly" else "Annual"
+
+  def mkBusiness(details: BusinessDataDetails, taxPDR: ResponseType) =
+    Business(
+      businessId = details.incomeSourceId,
+      typeOfBusiness,
+      details.tradingName,
+      taxPDR.yearOfMigration,
+      accountingPeriods = Seq(
+        AccountingPeriod(
+          details.accountingPeriodStartDate,
+          details.accountingPeriodEndDate
+        )),
+      details.firstAccountingPeriodStartDate,
+      details.firstAccountingPeriodEndDate,
+      details.latencyDetails.map(ld =>
+        LatencyDetails(
+          ld.latencyEndDate,
+          ld.taxYear1,
+          latencyIndicatorType(ld.latencyIndicator1.toString),
+          ld.taxYear2,
+          latencyIndicatorType(ld.latencyIndicator2.toString)
+        )),
+      accountingType = details.cashOrAccruals.map(if (_) "ACCRUAL" else "CASH"),
+      commencementDate = details.tradingStartDate,
+      details.cessationDate,
+      businessAddressLineOne = details.businessAddressDetails.map(_.addressLine1),
+      businessAddressLineTwo = details.businessAddressDetails.flatMap(_.addressLine2),
+      businessAddressLineThree = details.businessAddressDetails.flatMap(_.addressLine3),
+      businessAddressLineFour = details.businessAddressDetails.flatMap(_.addressLine4),
+      businessAddressPostcode = details.businessAddressDetails.map(_.postalCode),
+      businessAddressCountryCode = details.businessAddressDetails.map(_.countryCode)
+    )
 }

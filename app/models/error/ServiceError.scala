@@ -23,6 +23,7 @@ trait ServiceError {
 }
 
 object ServiceError {
+  type JsonErrorWithPath = List[(JsPath, scala.collection.Seq[JsonValidationError])]
 
   implicit val formats: Format[ServiceError] =
     Format(
@@ -49,6 +50,14 @@ object ServiceError {
 
   object ServiceUnavailableError {
     implicit val formats: OFormat[ServiceUnavailableError] = Json.format[ServiceUnavailableError]
+  }
+
+  final case class CannotReadJsonError(details: JsonErrorWithPath) extends ServiceError {
+    val errorMessage: String = s"Cannot read JSON: ${details.toString}"
+  }
+
+  final case class CannotParseJsonError(details: Throwable) extends ServiceError {
+    val errorMessage: String = s"Cannot parse JSON: ${details.getMessage}"
   }
 
   sealed trait DatabaseError extends ServiceError

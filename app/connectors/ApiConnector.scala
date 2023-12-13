@@ -16,36 +16,23 @@
 
 package connectors
 
-import com.typesafe.config.ConfigFactory
-import config.AppConfig
 import connectors.HeaderCarrierSyntax.HeaderCarrierOps
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HeaderCarrier.Config
-import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
 import java.net.URL
 
-trait ApiConnector {
+object ApiConnector {
 
-  val appConfig: AppConfig
-
-  val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
-
-  private[connectors] def ifsHeaderCarrier(api: String)(url: String)(hc: HeaderCarrier): HeaderCarrier = {
-    val hcWithAuth = hc.copy(authorization = Some(Authorization(s"Bearer ${appConfig.ifsAuthorisationToken(api)}")))
-    apiHeaderCarrier(url, hcWithAuth, "Environment" -> appConfig.ifsEnvironment)
-  }
-
-  private def apiHeaderCarrier(url: String, hcWithAuth: HeaderCarrier, headers: (String, String)) = {
+  // TODO I'm not sure what is happening here. Review the logic below: SASS-6247
+  def apiHeaderCarrier(headerCarrierConfig: Config, url: String, hc: HeaderCarrier, headers: (String, String)*): HeaderCarrier = {
     val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
+
     if (isInternalHost) {
-      hcWithAuth.withExtraHeaders(headers)
+      hc.withExtraHeaders(headers: _*)
     } else {
-      hcWithAuth.withExtraHeaders(headers +: hcWithAuth.toExplicitHeaders: _*)
+      val updatedHeaders = headers ++ hc.toExplicitHeaders
+      hc.withExtraHeaders(updatedHeaders: _*)
     }
   }
-}
-
-object ApiConnector {
-  sealed trait ApiType
-  case object IFS extends ApiType
 }

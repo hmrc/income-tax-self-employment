@@ -17,23 +17,24 @@
 package bulders
 
 import bulders.JourneyStateDataBuilder.aJourneyAndState
-import models.connector.api_1171.BusinessData.GetBusinessDataRequest
+import models.connector.api_1171.SuccessResponseSchema
+import models.domain.Business.mkBusiness
 import models.domain.TradesJourneyStatuses
 import play.api.libs.json.Json
 
 object BusinessDataBuilder {
-  lazy val aGetBusinessDataRequest      = Json.parse(aGetBusinessDataRequestStr).as[GetBusinessDataRequest]
-  lazy val aGetBusinessDataEmptyRequest = aGetBusinessDataRequest.copy(taxPayerDisplayResponse = aTaxPayerDisplayResponse.copy(businessData = Seq()))
-  lazy val aTaxPayerDisplayResponse     = aGetBusinessDataRequest.taxPayerDisplayResponse
-  lazy val aBusinessData                = aGetBusinessDataRequest.taxPayerDisplayResponse.businessData
-  lazy val aBusinesses                  = aBusinessData.map(_.toBusiness(aGetBusinessDataRequest.taxPayerDisplayResponse))
-  lazy val aBusiness                    = aBusinesses.head
-  lazy val aBusinessIdAndName           = (aBusiness.businessId, aBusiness.tradingName)
-  lazy val aBusinessJourneyStateSeq     = Seq((aBusiness.businessId, aBusiness.tradingName, Seq(aJourneyAndState)))
-  lazy val aTradesJourneyStatusesSeq    = aBusinessJourneyStateSeq.map(TradesJourneyStatuses(_))
+  lazy val aGetBusinessDataResponse     = Json.parse(aGetBusinessDataResponseStr).as[SuccessResponseSchema]
+  lazy val aGetBusinessDataEmptyRequest = aGetBusinessDataResponse.copy(taxPayerDisplayResponse = aTaxPayerDisplayResponse.copy(businessData = None))
+  lazy val aTaxPayerDisplayResponse     = aGetBusinessDataResponse.taxPayerDisplayResponse
+  lazy val aBusinessData                = aGetBusinessDataResponse.taxPayerDisplayResponse.businessData
+  lazy val aBusinesses               = aBusinessData.map(_.map(a => mkBusiness(a, aGetBusinessDataResponse.taxPayerDisplayResponse))).getOrElse(Nil)
+  lazy val aBusiness                 = aBusinesses.head
+  lazy val aBusinessIdAndName        = (aBusiness.businessId, aBusiness.tradingName)
+  lazy val aBusinessJourneyStateSeq  = Seq((aBusiness.businessId, aBusiness.tradingName, Seq(aJourneyAndState)))
+  lazy val aTradesJourneyStatusesSeq = aBusinessJourneyStateSeq.map(TradesJourneyStatuses(_))
 
   // Note our models use a subset of all the data pulled back by the API which is included here
-  lazy val aGetBusinessDataRequestStr: String =
+  lazy val aGetBusinessDataResponseStr: String =
     """
       |{
       |  "processingDate": "2023-07-05T09:16:58.655Z",

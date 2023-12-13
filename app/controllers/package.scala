@@ -17,13 +17,16 @@
 import controllers.actions.AuthorisedAction
 import models.domain.ApiResultT
 import models.error.ServiceError
+import models.error.ServiceError.{CannotParseJsonError, CannotReadJsonError}
 import play.api.Logger
+import play.api.http.Status.BAD_REQUEST
 import play.api.libs.json.Format.GenericFormat
 import play.api.libs.json._
 import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Result}
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 package object controllers {
 
@@ -45,17 +48,21 @@ package object controllers {
 
   def getBody[A: Reads](user: AuthorisedAction.User[AnyContent])(
       invokeBlock: A => ApiResultT[Result])(implicit ec: ExecutionContext, logger: Logger): Future[Result] =
-    parseBody[A](user)
-      .fold[Future[Result]](Future.successful(BadRequest)) {
-        case JsSuccess(value, _) =>
-          handleResultT(invokeBlock(value))
-        case JsError(_) =>
-          Future.successful(
-            BadRequest(Json.obj("code" -> "RULE_INCORRECT_OR_EMPTY_BODY_SUBMITTED", "reason" -> "An empty or non-matching body was submitted")))
+    parseBody[A](user) match {
+      case Success(validatedRes) =>
+        validatedRes.fold[Future[Result]](Future.successful(BadRequest)) {
+          case JsSuccess(value, _) => handleResultT(invokeBlock(value))
+          case JsError(err)        => Future.successful(toBadRequest(CannotReadJsonError(err.toList)))
+        }
+      case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
+    }
 
-      }
+  private def parseBody[A: Reads](user: AuthorisedAction.User[AnyContent]): Try[Option[JsResult[A]]] =
+    Try(user.body.asJson.map(_.validate[A]))
 
-  def parseBody[A: Reads](user: AuthorisedAction.User[AnyContent]): Option[JsResult[A]] =
-    user.body.asJson.map(_.validate[A])
+  private def toBadRequest(error: ServiceError)(implicit logger: Logger): Result = {
+    logger.error(s"Bad Request: ${error.errorMessage}")
+    BadRequest(Json.obj("code" -> BAD_REQUEST, "reason" -> error.errorMessage))
+  }
 
 }

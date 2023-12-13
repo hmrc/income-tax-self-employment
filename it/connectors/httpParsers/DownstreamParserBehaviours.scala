@@ -16,6 +16,7 @@
 
 package connectors.httpParsers
 
+import connectors.DownstreamParser
 import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
 import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
 import play.api.http.Status.INTERNAL_SERVER_ERROR

@@ -32,9 +32,9 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json.Json
 
-class SelfEmploymentBusinessConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
+class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
-  private val connector = new SelfEmploymentBusinessConnectorImpl(httpClient, appConfig)
+  private val connector = new SelfEmploymentConnectorImpl(httpClient, appConfig)
 
   "creating period summaries" when {
     "downstream returns a success response" must {
