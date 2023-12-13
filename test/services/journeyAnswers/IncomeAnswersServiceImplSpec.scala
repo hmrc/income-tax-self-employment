@@ -16,26 +16,26 @@
 
 package services.journeyAnswers
 
-import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-import services.journeyAnswers.IncomeAnswersServiceImplSpec._
-import stubs.repositories.StubJourneyAnswersRepository
-import utils.BaseSpec._
-
-import scala.concurrent.ExecutionContext.Implicits.global
 import cats.implicits._
+import connectors.SelfEmploymentConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import models.common.{JourneyContextWithNino, JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import models.error.ServiceError.DatabaseError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
-import play.api.libs.json.{JsObject, Json}
 import org.scalatest.EitherValues._
-import stubs.connectors.StubSelfEmploymentBusinessConnector
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import play.api.libs.json.{JsObject, Json}
+import services.journeyAnswers.IncomeAnswersServiceImplSpec._
+import stubs.connectors.StubSelfEmploymentConnector
+import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.BaseSpec._
 
 import java.time.Instant
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
   implicit val hc = HeaderCarrier()
@@ -73,7 +73,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
 object IncomeAnswersServiceImplSpec {
   abstract class TestCase(repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(),
-                          connector: StubSelfEmploymentBusinessConnector = StubSelfEmploymentBusinessConnector()) {
+                          connector: SelfEmploymentConnector = StubSelfEmploymentConnector()) {
     val service = new IncomeAnswersServiceImpl(repo, connector)
   }
 
