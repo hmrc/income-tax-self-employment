@@ -17,7 +17,12 @@
 package gens
 
 import models.frontend.expenses.tailoring.individualCategories._
-import models.frontend.expenses.tailoring.{ExpensesCategories, ExpensesTailoringIndividualCategoriesAnswers, ExpensesTailoringNoExpensesAnswers}
+import models.frontend.expenses.tailoring.{
+  ExpensesCategories,
+  ExpensesTailoringIndividualCategoriesAnswers,
+  ExpensesTailoringNoExpensesAnswers,
+  ExpensesTailoringTotalAmountAnswers
+}
 import org.scalacheck.Gen
 
 object ExpensesTailoringAnswersGen {
@@ -90,5 +95,13 @@ object ExpensesTailoringAnswersGen {
     disallowableStaffCosts,
     disallowableSubcontractorCosts,
     disallowableProfessionalFees
+  )
+
+  val expensesTailoringTotalAmountAnswersGen: Gen[ExpensesTailoringTotalAmountAnswers] = for {
+    expensesCategories <- expensesCategoriesGen
+    totalAmount        <- bigDecimalGen
+  } yield ExpensesTailoringTotalAmountAnswers(
+    expensesCategories,
+    totalAmount
   )
 }

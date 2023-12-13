@@ -23,7 +23,11 @@ import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
-import models.frontend.expenses.tailoring.{ExpensesTailoringIndividualCategoriesAnswers, ExpensesTailoringNoExpensesAnswers}
+import models.frontend.expenses.tailoring.{
+  ExpensesTailoringIndividualCategoriesAnswers,
+  ExpensesTailoringNoExpensesAnswers,
+  ExpensesTailoringTotalAmountAnswers
+}
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Format.GenericFormat
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -63,6 +67,14 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     getBody[ExpensesTailoringIndividualCategoriesAnswers](user) { value =>
       expensesService.saveAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
     }
+  }
+
+  def saveExpensesTailoringTotalAmountAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async {
+    implicit user =>
+      getBody[ExpensesTailoringTotalAmountAnswers](user) { value =>
+        val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
+        expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      }
   }
 
   def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
