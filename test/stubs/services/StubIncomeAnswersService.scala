@@ -26,8 +26,11 @@ import services.journeyAnswers.IncomeAnswersService
 import stubs.serviceUnitT
 import uk.gov.hmrc.http.HeaderCarrier
 
+import scala.concurrent.{ExecutionContext, Future}
+
 case class StubIncomeAnswersService(incomeJourneyAnswersRes: ApiResultT[Unit] = serviceUnitT,
-                                    getAnswersRes: Either[ServiceError, Option[IncomeJourneyAnswers]] = Right(None)) extends IncomeAnswersService {
+                                    getAnswersRes: Either[ServiceError, Option[IncomeJourneyAnswers]] = Right(None))
+    extends IncomeAnswersService {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   override def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =

@@ -21,17 +21,16 @@ import cats.implicits._
 import connectors.SelfEmploymentBusinessConnector
 import models.common.JourneyName.Income
 import models.common.TaxYear.{endDate, startDate}
-import models.common.{JourneyContext, JourneyContextWithNino}
+import models.common._
 import models.connector.api_1802.request._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
 import models.connector.api_1965.ListSEPeriodSummariesResponse
 import models.domain.ApiResultT
-import models.error.DownstreamError
+import models.error.{DownstreamError, ServiceError}
 import models.frontend.income.IncomeJourneyAnswers
 import models.frontend.income.IncomeJourneyAnswers.fromJourneyAnswers
 import play.api.libs.json.Json
-import repositories.{JourneyAnswersRepository, MongoJourneyAnswersRepository}
 import repositories.JourneyAnswersRepository
 import services.mapDownstreamErrors
 import uk.gov.hmrc.http.HeaderCarrier

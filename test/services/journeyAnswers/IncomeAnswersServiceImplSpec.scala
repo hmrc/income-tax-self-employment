@@ -26,16 +26,19 @@ import utils.BaseSpec._
 import scala.concurrent.ExecutionContext.Implicits.global
 import cats.implicits._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
-import models.common.{JourneyName, JourneyStatus}
+import models.common.{JourneyContextWithNino, JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import models.error.ServiceError.DatabaseError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.{JsObject, Json}
 import org.scalatest.EitherValues._
+import stubs.connectors.StubSelfEmploymentBusinessConnector
+import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.Instant
 
 class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
+  implicit val hc = HeaderCarrier()
 
   "getAnswers" should {
     "return empty answers if there is no answers submitted" in new TestCase() {
@@ -60,14 +63,18 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "saveAnswers" should {
     "save data in the repository" in new TestCase() {
-      service.saveAnswers(businessId, currTaxYear, mtditid, incomeJourneyAnswersData).value.futureValue shouldBe ().asRight
+      service
+        .saveAnswers(JourneyContextWithNino(currTaxYear, businessId, mtditid, nino), incomeJourneyAnswersData)
+        .value
+        .futureValue shouldBe ().asRight
     }
   }
 }
 
 object IncomeAnswersServiceImplSpec {
-  abstract class TestCase(repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository()) {
-    val service = new IncomeAnswersServiceImpl(repo)
+  abstract class TestCase(repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(),
+                          connector: StubSelfEmploymentBusinessConnector = StubSelfEmploymentBusinessConnector()) {
+    val service = new IncomeAnswersServiceImpl(repo, connector)
   }
 
   val brokenJourneyAnswers: JourneyAnswers = JourneyAnswers(
