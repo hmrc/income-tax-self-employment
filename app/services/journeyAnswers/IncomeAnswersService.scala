@@ -26,6 +26,7 @@ import models.connector.api_1802.request._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
 import models.connector.api_1965.ListSEPeriodSummariesResponse
+import models.database.income.IncomeStorageAnswers
 import models.domain.ApiResultT
 import models.error.DownstreamError
 import models.frontend.income.IncomeJourneyAnswers
@@ -48,6 +49,8 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
 
   def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     import ctx._
+    val storageAnswers = IncomeStorageAnswers.fromJourneyAnswers(answers)
+
     val createIncome = IncomesType(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount)
     val createBody   = CreateSEPeriodSummaryRequestBody(startDate(taxYear), endDate(taxYear), Some(FinancialsType(createIncome.some, None)))
     val createData   = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, createBody)
@@ -64,7 +67,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
     val upsertData = CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, upsertBody)
 
     val result = for {
-      _        <- EitherT.right[DownstreamError](repository.upsertData(JourneyContext(taxYear, businessId, mtditid, Income), Json.toJson(answers)))
+      _ <- EitherT.right[DownstreamError](repository.upsertData(JourneyContext(taxYear, businessId, mtditid, Income), Json.toJson(storageAnswers)))
       response <- EitherT(connector.listSEPeriodSummary(ctx))
       _ <-
         if (noSubmissionExists(response)) EitherT(connector.createSEPeriodSummary(createData)) else EitherT(connector.amendSEPeriodSummary(amendData))
