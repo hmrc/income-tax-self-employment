@@ -14,28 +14,34 @@
  * limitations under the License.
  */
 
-import cats.data.EitherT
 import controllers.actions.AuthorisedAction
 import models.domain.ApiResultT
 import models.error.ServiceError
 import play.api.Logger
 import play.api.libs.json.Format.GenericFormat
-import play.api.libs.json.{JsError, JsResult, JsSuccess, Json, Reads}
-import play.api.mvc.Results.{BadRequest, InternalServerError}
+import play.api.libs.json._
+import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Result}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 package object controllers {
 
-  def handleResultT(result: EitherT[Future, ServiceError, Result])(implicit ec: ExecutionContext, logger: Logger): Future[Result] =
+  def handleOptionalApiResult[A: Writes](result: ApiResultT[Option[A]])(implicit ec: ExecutionContext, logger: Logger): Future[Result] = {
+    val resultT = result.map(r => r.fold(NoContent)(_ => Ok(Json.toJson(r))))
+    handleResultT(resultT)
+  }
+
+  def handleResultT(result: ApiResultT[Result])(implicit ec: ExecutionContext, logger: Logger): Future[Result] =
     result.leftMap { error =>
-      logger.error(s"HttpError encountered: ${error.errorMessage}")
       handleError(error)
     }.merge
 
-  private def handleError(error: ServiceError) =
-    InternalServerError(error.errorMessage) // TODO Implement proper error handling
+  // TODO Implement proper error handling
+  private def handleError(error: ServiceError)(implicit logger: Logger) = {
+    logger.error(s"HttpError encountered: ${error.errorMessage}")
+    InternalServerError(error.errorMessage)
+  }
 
   def getBody[A: Reads](user: AuthorisedAction.User[AnyContent])(
       invokeBlock: A => ApiResultT[Result])(implicit ec: ExecutionContext, logger: Logger): Future[Result] =

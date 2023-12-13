@@ -16,7 +16,11 @@
 
 package models.frontend.income
 
+import models.database.JourneyAnswers
+import models.error.ServiceError
 import play.api.libs.json.{Json, OFormat}
+import cats.implicits._
+import models.error.ServiceError.DatabaseError.InvalidJsonFormatError
 
 case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
                                 nonTurnoverIncomeAmount: Option[BigDecimal],
@@ -31,4 +35,16 @@ case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
 
 object IncomeJourneyAnswers {
   implicit val formats: OFormat[IncomeJourneyAnswers] = Json.format[IncomeJourneyAnswers]
+
+  def fromJourneyAnswers(maybeRow: Option[JourneyAnswers]): Either[ServiceError, Option[IncomeJourneyAnswers]] =
+    maybeRow.fold[Either[ServiceError, Option[IncomeJourneyAnswers]]](
+      None.asRight
+    )(r =>
+      r.data
+        .validate[IncomeJourneyAnswers]
+        .asEither
+        .fold(
+          err => InvalidJsonFormatError(s"Cannot create IncomeJourneyAnswers from JSON: ${err.toString}").asLeft,
+          answers => answers.some.asRight
+        ))
 }

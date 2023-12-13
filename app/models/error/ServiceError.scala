@@ -55,6 +55,8 @@ object ServiceError {
 
   object DatabaseError {
 
+    case class InvalidJsonFormatError(errorMessage: String) extends DatabaseError
+
     case object DataNotUpdated extends DatabaseError {
       val errorMessage: String = "User data was not updated due to mongo exception"
     }

@@ -16,14 +16,17 @@
 
 package controllers
 
-import controllers.ControllerBehaviours.buildRequest
+import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.{expensesTailoringIndividualCategoriesAnswersGen, expensesTailoringNoExpensesAnswersGen}
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import play.api.http.Status.NO_CONTENT
+import play.api.http.Status._
 import stubs.services.{StubExpensesAnswersService, StubIncomeAnswersService}
 import utils.BaseSpec._
+import cats.implicits._
+import gens.genOne
+import play.api.libs.json.Json
 
 class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckPropertyChecks {
   val underTest = new JourneyAnswersController(
@@ -40,6 +43,34 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         expectedStatus = NO_CONTENT,
         expectedBody = "",
         methodBlock = () => underTest.saveIncomeAnswers(currTaxYear, businessId, nino)
+      )
+    }
+  }
+
+  "getIncomeAnswers" should {
+    s"return $NO_CONTENT if there is no answers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.getIncomeAnswers(currTaxYear, businessId)
+      )
+    }
+
+    s"return answers" in {
+      val answers = genOne(incomeJourneyAnswersGen)
+      val underTest = new JourneyAnswersController(
+        auth = mockAuthorisedAction,
+        cc = stubControllerComponents,
+        incomeService = StubIncomeAnswersService(getAnswersRes = Some(answers).asRight),
+        expensesService = StubExpensesAnswersService()
+      )
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.toJson(answers).toString(),
+        methodBlock = () => underTest.getIncomeAnswers(currTaxYear, businessId)
       )
     }
   }

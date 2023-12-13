@@ -35,7 +35,8 @@ object AppDependencies {
     "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.14.2",
     "org.typelevel"                %% "cats-core"                 % "2.9.0",
     "com.beachape"                 %% "enumeratum"                % "1.7.3",
-    "com.beachape"                 %% "enumeratum-play-json"      % "1.7.3" excludeAll (jacksonAndPlayExclusions *)
+    "com.beachape"                 %% "enumeratum-play-json"      % "1.7.3" excludeAll (jacksonAndPlayExclusions *),
+    "org.codehaus.janino"           % "janino"                    % "3.1.11" // it's required by logback for conditional logging
   )
 
   val test: Seq[ModuleID] = Seq(

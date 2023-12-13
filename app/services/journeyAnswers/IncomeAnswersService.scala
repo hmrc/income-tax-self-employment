@@ -21,24 +21,26 @@ import cats.implicits._
 import connectors.SelfEmploymentBusinessConnector
 import models.common.JourneyName.Income
 import models.common.TaxYear.{endDate, startDate}
-import models.common.{JourneyContext, JourneyContextWithNino}
+import models.common._
 import models.connector.api_1802.request._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
 import models.connector.api_1965.ListSEPeriodSummariesResponse
 import models.database.income.IncomeStorageAnswers
 import models.domain.ApiResultT
-import models.error.DownstreamError
+import models.error.{DownstreamError, ServiceError}
 import models.frontend.income.IncomeJourneyAnswers
+import models.frontend.income.IncomeJourneyAnswers.fromJourneyAnswers
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import services.mapDownstreamErrors
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 trait IncomeAnswersService {
+  def getAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid): ApiResultT[Option[IncomeJourneyAnswers]]
   def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
@@ -46,6 +48,12 @@ trait IncomeAnswersService {
 class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, connector: SelfEmploymentBusinessConnector)(implicit
     ec: ExecutionContext)
     extends IncomeAnswersService {
+
+  def getAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid): ApiResultT[Option[IncomeJourneyAnswers]] =
+    for {
+      row     <- EitherT.right[ServiceError](repository.get(JourneyContext(taxYear, businessId, mtditid, Income)))
+      answers <- EitherT.fromEither[Future](fromJourneyAnswers(row))
+    } yield answers
 
   def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     import ctx._

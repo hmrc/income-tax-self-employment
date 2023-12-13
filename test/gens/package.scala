@@ -16,10 +16,17 @@
 
 import org.scalacheck.Gen
 
+import scala.util.{Success, Try}
+
 package object gens {
   val booleanGen: Gen[Boolean] = Gen.oneOf(true, false)
 
   val bigDecimalGen: Gen[BigDecimal] = Gen
     .chooseNum[BigDecimal](0, 10000)
     .map(n => n.setScale(2, BigDecimal.RoundingMode.HALF_UP))
+
+  /** gen.sample.get - can fail as generator may return None. Use this method for safely generate one instance of A
+    */
+  def genOne[A](gen: Gen[A]): A =
+    LazyList.continually(Try(gen.sample)).collect { case Success(Some(value)) => value }.head
 }

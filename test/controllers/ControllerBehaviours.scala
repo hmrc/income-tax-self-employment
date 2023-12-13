@@ -17,7 +17,7 @@
 package controllers
 
 import play.api.libs.json.{Json, Writes}
-import play.api.mvc.{Action, AnyContent, AnyContentAsJson, Request}
+import play.api.mvc._
 import play.api.test.FakeRequest
 import utils.TestUtils
 
@@ -55,4 +55,8 @@ object ControllerBehaviours {
   def buildRequest[A: Writes](body: A): FakeRequest[AnyContentAsJson] = FakeRequest()
     .withHeaders("mtditid" -> "1234567890")
     .withJsonBody(Json.toJson(body))
+
+  def buildRequestNoContent: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
+    .withHeaders("mtditid" -> "1234567890")
+
 }
