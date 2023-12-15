@@ -17,7 +17,7 @@
 package models.database.income
 
 import models.frontend.income._
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
 
 case class IncomeStorageAnswers(incomeNotCountedAsTurnover: Boolean,
                                 anyOtherIncome: Boolean,
