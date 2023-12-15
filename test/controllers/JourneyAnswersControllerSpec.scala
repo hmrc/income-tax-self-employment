@@ -53,7 +53,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         request = buildRequestNoContent,
         expectedStatus = NO_CONTENT,
         expectedBody = "",
-        methodBlock = () => underTest.getIncomeAnswers(currTaxYear, businessId)
+        methodBlock = () => underTest.getIncomeAnswers(currTaxYear, businessId, nino)
       )
     }
 
@@ -70,7 +70,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         request = buildRequestNoContent,
         expectedStatus = OK,
         expectedBody = Json.toJson(answers).toString(),
-        methodBlock = () => underTest.getIncomeAnswers(currTaxYear, businessId)
+        methodBlock = () => underTest.getIncomeAnswers(currTaxYear, businessId, nino)
       )
     }
   }

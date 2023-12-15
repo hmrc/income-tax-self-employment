@@ -25,6 +25,7 @@ trait ServiceError {
 object ServiceError {
   type JsonErrorWithPath = List[(JsPath, scala.collection.Seq[JsonValidationError])]
 
+  // TODO We need just one common case class which we always are going to return to the caller in an error scenario
   implicit val formats: Format[ServiceError] =
     Format(
       Reads((jsValue: JsValue) =>
@@ -38,11 +39,13 @@ object ServiceError {
         case se: ServiceUnavailableError => ServiceUnavailableError.formats.writes(se)
         case de: DownstreamError         => DownstreamError.formats.writes(de)
         case eb: DownstreamErrorBody     => DownstreamErrorBody.formats.writes(eb)
-        case _                           => throw new Exception("Unexpected service error type")
-        // FIXME - Shouldn't get here (to _ case) but as trait is not sealed, build fails if match not exhaustive.
-        // A redesign of these error classes should be done when we have learned more about the integration with IFS.
+        case error                       => Json.obj("errorMessage" -> error.errorMessage)
       }
     )
+
+  case class InvalidJsonFormatError(expectedCaseClassName: String, rawJson: String, error: JsonErrorWithPath) extends ServiceError {
+    val errorMessage: String = s"Cannot convert JSON to a case class: $expectedCaseClassName. Error: ${error.toString}. JSON:\n$rawJson"
+  }
 
   case class ServiceUnavailableError(error: String) extends ServiceError {
     val errorMessage: String = s"Unavailable Service exception occurred. Exception: $error"
@@ -63,8 +66,6 @@ object ServiceError {
   sealed trait DatabaseError extends ServiceError
 
   object DatabaseError {
-
-    case class InvalidJsonFormatError(errorMessage: String) extends DatabaseError
 
     case object DataNotUpdated extends DatabaseError {
       val errorMessage: String = "User data was not updated due to mongo exception"

@@ -14,23 +14,19 @@
  * limitations under the License.
  */
 
-package models.common
+import cats.implicits._
+import models.error.ServiceError.InvalidJsonFormatError
+import play.api.libs.json.{JsObject, Reads}
 
-import play.api.mvc.PathBindable
+import scala.reflect.ClassTag
 
-final case class Nino(value: String) extends AnyVal {
-  override def toString: String = value
-}
-
-object Nino {
-
-  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[Nino] = new PathBindable[Nino] {
-
-    override def bind(key: String, value: String): Either[String, Nino] =
-      strBinder.bind(key, value).map(Nino.apply)
-
-    override def unbind(key: String, nino: Nino): String =
-      strBinder.unbind(key, nino.value)
-
-  }
+package object models {
+  def jsonAs[A: Reads](jsObj: JsObject)(implicit ct: ClassTag[A]): Either[InvalidJsonFormatError, A] =
+    jsObj
+      .validate[A]
+      .asEither
+      .fold(
+        err => InvalidJsonFormatError(ct.runtimeClass.getName, jsObj.toString(), err.toList).asLeft,
+        answers => answers.asRight
+      )
 }

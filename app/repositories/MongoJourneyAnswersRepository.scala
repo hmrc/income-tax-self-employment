@@ -37,7 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait JourneyAnswersRepository {
   def get(id: String): Future[Option[JourneyAnswers]]
 
-  def get(ctx: JourneyContext): Future[Option[JourneyAnswers]]
+  def get(ctx: JourneyContextWithNino, journeyName: JourneyName): Future[Option[JourneyAnswers]]
 
   def upsertData(ctx: JourneyContext, newData: JsValue): Future[UpdateResult]
 
@@ -86,8 +86,8 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
 
   private def filterByConstraint(field: String, value: String): Bson = equal(field, value)
 
-  def get(ctx: JourneyContext): Future[Option[JourneyAnswers]] = {
-    val filter = filterJourney(ctx)
+  def get(ctx: JourneyContextWithNino, journeyName: JourneyName): Future[Option[JourneyAnswers]] = {
+    val filter = filterJourney(ctx.toJourneyContext(journeyName))
     collection
       .withReadPreference(ReadPreference.primaryPreferred())
       .find(filter)

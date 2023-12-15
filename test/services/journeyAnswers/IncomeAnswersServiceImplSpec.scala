@@ -19,11 +19,13 @@ package services.journeyAnswers
 import cats.implicits._
 import connectors.SelfEmploymentConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
-import models.common.{JourneyContextWithNino, JourneyName, JourneyStatus}
+import models.common.{JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
-import models.error.ServiceError.DatabaseError.InvalidJsonFormatError
+import models.database.income.IncomeStorageAnswers
+import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
 import org.scalatest.EitherValues._
+import org.scalatest.OptionValues._
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -42,29 +44,42 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "getAnswers" should {
     "return empty answers if there is no answers submitted" in new TestCase() {
-      service.getAnswers(businessId, currTaxYear, mtditid).value.futureValue shouldBe None.asRight
+      service.getAnswers(journeyCtxWithNino).value.futureValue shouldBe None.asRight
     }
 
     "return error if cannot read IncomeJourneyAnswers" in new TestCase(
       repo = StubJourneyAnswersRepository(getAnswer = Some(brokenJourneyAnswers))
     ) {
-      val result = service.getAnswers(businessId, currTaxYear, mtditid).value.futureValue
+      val result = service.getAnswers(journeyCtxWithNino).value.futureValue
       val error  = result.left.value
       error shouldBe a[InvalidJsonFormatError]
     }
 
     "return IncomeJourneyAnswers" in new TestCase(
-      repo = StubJourneyAnswersRepository(getAnswer = Some(incomeJourneyAnswers))
+      repo = StubJourneyAnswersRepository(getAnswer = Some(sampleIncomeJourneyAnswers))
     ) {
-      val result = service.getAnswers(businessId, currTaxYear, mtditid).value.futureValue
-      result.value shouldBe incomeJourneyAnswersData.some
+      val incomeStorageAnswers = repo.getAnswer.value.data.as[IncomeStorageAnswers]
+      val result               = service.getAnswers(journeyCtxWithNino).value.futureValue
+      result.value shouldBe Some(
+        IncomeJourneyAnswers(
+          incomeStorageAnswers.incomeNotCountedAsTurnover,
+          None,
+          BigDecimal("0"),
+          incomeStorageAnswers.anyOtherIncome,
+          None,
+          incomeStorageAnswers.turnoverNotTaxable,
+          None,
+          incomeStorageAnswers.tradingAllowance,
+          incomeStorageAnswers.howMuchTradingAllowance,
+          None
+        ))
     }
   }
 
   "saveAnswers" should {
     "save data in the repository" in new TestCase() {
       service
-        .saveAnswers(JourneyContextWithNino(currTaxYear, businessId, mtditid, nino), incomeJourneyAnswersData)
+        .saveAnswers(journeyCtxWithNino, sampleIncomeJourneyAnswersData)
         .value
         .futureValue shouldBe ().asRight
     }
@@ -72,7 +87,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 }
 
 object IncomeAnswersServiceImplSpec {
-  abstract class TestCase(repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(),
+  abstract class TestCase(val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(),
                           connector: SelfEmploymentConnector = StubSelfEmploymentConnector()) {
     val service = new IncomeAnswersServiceImpl(repo, connector)
   }
@@ -89,10 +104,10 @@ object IncomeAnswersServiceImplSpec {
     Instant.now()
   )
 
-  val incomeJourneyAnswersData: IncomeJourneyAnswers = gens.genOne(incomeJourneyAnswersGen)
+  val sampleIncomeJourneyAnswersData: IncomeJourneyAnswers = gens.genOne(incomeJourneyAnswersGen)
 
-  val incomeJourneyAnswers: JourneyAnswers = brokenJourneyAnswers.copy(
-    data = Json.toJson(incomeJourneyAnswersData).as[JsObject]
+  val sampleIncomeJourneyAnswers: JourneyAnswers = brokenJourneyAnswers.copy(
+    data = Json.toJson(sampleIncomeJourneyAnswersData).as[JsObject]
   )
 
 }

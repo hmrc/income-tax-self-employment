@@ -36,4 +36,5 @@ object IncomeStorageAnswers {
       answers.tradingAllowance,
       answers.howMuchTradingAllowance
     )
+
 }

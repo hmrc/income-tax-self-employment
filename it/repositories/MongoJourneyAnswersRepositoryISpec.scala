@@ -16,8 +16,8 @@
 
 package repositories
 
-import models.common.{JourneyContext, JourneyName}
 import models.common.JourneyStatus._
+import models.common.{JourneyContext, JourneyName}
 import models.database.JourneyAnswers
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -56,7 +56,7 @@ class MongoJourneyAnswersRepositoryISpec
     "insert a new journey answers in in-progress status and calculate dates" in {
       val result = (for {
         _        <- repository.upsertData(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
-        inserted <- repository.get(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income))
+        inserted <- repository.get(journeyCtxWithNino, JourneyName.Income)
       } yield inserted.value).futureValue
 
       val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
@@ -77,7 +77,7 @@ class MongoJourneyAnswersRepositoryISpec
         _ <- repository.upsertData(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
         _ = clock.advanceBy(1.day)
         updatedResult <- repository.upsertData(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "updated"))
-        updated       <- repository.get(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income))
+        updated       <- repository.get(journeyCtxWithNino, JourneyName.Income)
         _ = updatedResult.getModifiedCount shouldBe 1
       } yield updated.value).futureValue
 
@@ -102,7 +102,7 @@ class MongoJourneyAnswersRepositoryISpec
         _ <- repository.upsertData(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
         _ = clock.advanceBy(2.day)
         updatedResult <- repository.updateStatus(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Completed)
-        inserted      <- repository.get(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income))
+        inserted      <- repository.get(journeyCtxWithNino, JourneyName.Income)
         _ = updatedResult.getModifiedCount shouldBe 1
       } yield inserted.value).futureValue
 

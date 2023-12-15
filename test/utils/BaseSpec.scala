@@ -16,10 +16,9 @@
 
 package utils
 
-import models.common.{BusinessId, Mtditid, Nino, TaxYear}
+import models.common._
 import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
 import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
-import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec
@@ -59,15 +58,23 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
 }
 
 object BaseSpec {
-  val currTaxYear: TaxYear   = TaxYear(LocalDate.now().getYear)
+  // static data
+  val taxYear: TaxYear       = TaxYear(2023)
+  val fromTaxYearStr: String = s"${taxYear.endYear - 1}-04-06"
+  val toTaxYearStr: String   = s"${taxYear.endYear}-04-05"
   val businessId: BusinessId = BusinessId("someBusinessId")
   val nino: Nino             = Nino("nino")
   val mtditid: Mtditid       = Mtditid("1234567890")
 
-  def anyBusinessId: BusinessId = BusinessId(any)
-  def anyTaxYear: TaxYear       = TaxYear(any)
-  def anyMtditId: Mtditid       = Mtditid(any)
+  // dynamic & generated data
+  val currTaxYear: TaxYear         = TaxYear(LocalDate.now().getYear)
+  val sampleFromTaxYearStr: String = s"${currTaxYear.endYear - 1}-04-06"
+  val sampleToTaxYearStr: String   = s"${currTaxYear.endYear}-04-05"
 
+  // more complex data
+  val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
+
+  // operations
   def mkNow(): Instant                 = Instant.now().truncatedTo(ChronoUnit.SECONDS)
   def mkClock(now: Instant): TestClock = TestClock(now, ZoneOffset.UTC)
 
