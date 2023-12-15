@@ -14,23 +14,6 @@
  * limitations under the License.
  */
 
-package models.common
+package models
 
-import play.api.mvc.PathBindable
-
-final case class Nino(value: String) extends AnyVal {
-  override def toString: String = value
-}
-
-object Nino {
-
-  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[Nino] = new PathBindable[Nino] {
-
-    override def bind(key: String, value: String): Either[String, Nino] =
-      strBinder.bind(key, value).map(Nino.apply)
-
-    override def unbind(key: String, nino: Nino): String =
-      strBinder.unbind(key, nino.value)
-
-  }
-}
+package object database {}

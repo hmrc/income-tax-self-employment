@@ -16,7 +16,7 @@
 
 package utils
 
-import models.common.{BusinessId, Mtditid, Nino, TaxYear}
+import models.common.{BusinessId, JourneyContextWithNino, Mtditid, Nino, TaxYear}
 import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
 import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
 import org.mockito.ArgumentMatchers.any
@@ -59,10 +59,13 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
 }
 
 object BaseSpec {
-  val currTaxYear: TaxYear   = TaxYear(LocalDate.now().getYear)
-  val businessId: BusinessId = BusinessId("someBusinessId")
-  val nino: Nino             = Nino("nino")
-  val mtditid: Mtditid       = Mtditid("1234567890")
+  val currTaxYear: TaxYear                       = TaxYear(LocalDate.now().getYear)
+  val businessId: BusinessId                     = BusinessId("someBusinessId")
+  val nino: Nino                                 = Nino("nino")
+  val mtditid: Mtditid                           = Mtditid("1234567890")
+  val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
+  val fromTaxYearStr: String                     = "2023-04-06"
+  val toTaxYearStr: String                       = "2024-04-05"
 
   def anyBusinessId: BusinessId = BusinessId(any)
   def anyTaxYear: TaxYear       = TaxYear(any)

@@ -19,7 +19,7 @@ package services.journeyAnswers
 import cats.implicits._
 import connectors.SelfEmploymentConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
-import models.common.{JourneyContextWithNino, JourneyName, JourneyStatus}
+import models.common.{JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import models.error.ServiceError.DatabaseError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
@@ -42,13 +42,13 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "getAnswers" should {
     "return empty answers if there is no answers submitted" in new TestCase() {
-      service.getAnswers(businessId, currTaxYear, mtditid).value.futureValue shouldBe None.asRight
+      service.getAnswers(journeyCtxWithNino).value.futureValue shouldBe None.asRight
     }
 
     "return error if cannot read IncomeJourneyAnswers" in new TestCase(
       repo = StubJourneyAnswersRepository(getAnswer = Some(brokenJourneyAnswers))
     ) {
-      val result = service.getAnswers(businessId, currTaxYear, mtditid).value.futureValue
+      val result = service.getAnswers(journeyCtxWithNino).value.futureValue
       val error  = result.left.value
       error shouldBe a[InvalidJsonFormatError]
     }
@@ -56,7 +56,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
     "return IncomeJourneyAnswers" in new TestCase(
       repo = StubJourneyAnswersRepository(getAnswer = Some(incomeJourneyAnswers))
     ) {
-      val result = service.getAnswers(businessId, currTaxYear, mtditid).value.futureValue
+      val result = service.getAnswers(journeyCtxWithNino).value.futureValue
       result.value shouldBe incomeJourneyAnswersData.some
     }
   }
@@ -64,7 +64,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
   "saveAnswers" should {
     "save data in the repository" in new TestCase() {
       service
-        .saveAnswers(JourneyContextWithNino(currTaxYear, businessId, mtditid, nino), incomeJourneyAnswersData)
+        .saveAnswers(journeyCtxWithNino, incomeJourneyAnswersData)
         .value
         .futureValue shouldBe ().asRight
     }
