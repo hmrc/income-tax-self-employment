@@ -58,14 +58,23 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
 }
 
 object BaseSpec {
-  val currTaxYear: TaxYear                       = TaxYear(LocalDate.now().getYear)
-  val businessId: BusinessId                     = BusinessId("someBusinessId")
-  val nino: Nino                                 = Nino("nino")
-  val mtditid: Mtditid                           = Mtditid("1234567890")
-  val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
-  val sampleFromTaxYearStr: String               = s"${currTaxYear.endYear}-04-06"
-  val sampleToTaxYearStr: String                 = s"${currTaxYear.endYear + 1}-04-05"
+  // static data
+  val taxYear: TaxYear       = TaxYear(2023)
+  val fromTaxYearStr: String = s"${taxYear.endYear - 1}-04-06"
+  val toTaxYearStr: String   = s"${taxYear.endYear}-04-05"
+  val businessId: BusinessId = BusinessId("someBusinessId")
+  val nino: Nino             = Nino("nino")
+  val mtditid: Mtditid       = Mtditid("1234567890")
 
+  // dynamic & generated data
+  val currTaxYear: TaxYear         = TaxYear(LocalDate.now().getYear)
+  val sampleFromTaxYearStr: String = s"${currTaxYear.endYear - 1}-04-06"
+  val sampleToTaxYearStr: String   = s"${currTaxYear.endYear}-04-05"
+
+  // more complex data
+  val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
+
+  // operations
   def mkNow(): Instant                 = Instant.now().truncatedTo(ChronoUnit.SECONDS)
   def mkClock(now: Instant): TestClock = TestClock(now, ZoneOffset.UTC)
 
