@@ -20,13 +20,12 @@ import com.typesafe.config.ConfigFactory
 import config.AppConfig
 import connectors.SelfEmploymentConnector._
 import models.common.TaxYear.{asTys, endDate, startDate}
-import models.common.{BusinessId, IdType, JourneyContextWithNino, Nino, TaxYear}
+import models.common._
 import models.connector.IntegrationContext.IFSHeaderCarrier
+import models.connector._
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
-import models.connector._
-import uk.gov.hmrc.http.HeaderCarrier.Config
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.{Inject, Singleton}
@@ -36,13 +35,13 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 trait SelfEmploymentConnector {
   def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response]
+  def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response]
   def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response]
+  def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response]
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response]
   def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response]
   def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response]
-  def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response]
-  def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response]
 }
 
 object SelfEmploymentConnector {
@@ -56,9 +55,9 @@ object SelfEmploymentConnector {
 }
 
 @Singleton
-class SelfEmploymentConnectorImpl @Inject() (val http: HttpClient, val appConfig: AppConfig) extends SelfEmploymentConnector {
-  private val headerCarrierConfig: Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
-  private val mkIFSMetadata               = IFSHeaderCarrier(headerCarrierConfig, appConfig, _, _)
+class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends SelfEmploymentConnector {
+  private val headerCarrierConfig = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
+  private val mkIFSMetadata       = IFSHeaderCarrier(headerCarrierConfig, appConfig, _, _)
 
   // TODO Move to GetBusinessDetailsConnector
   private def api1171BusinessDetailsUrl(idType: IdType, idNumber: String) = s"${appConfig.ifsBaseUrl}/registration/business-details/$idType/$idNumber"
@@ -75,6 +74,7 @@ class SelfEmploymentConnectorImpl @Inject() (val http: HttpClient, val appConfig
   private def periodicSummaryDetailUrl(nino: Nino, incomeSourceId: BusinessId, taxYear: TaxYear) =
     s"${baseUrl(nino, incomeSourceId, taxYear)}/periodic-summary-detail?from=${startDate(taxYear)}&to=${endDate(taxYear)}"
 
+  // TODO Move to GetBusinessDetailsConnector
   def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response] = {
     val context = mkIFSMetadata(IFSApiName.Api1171, api1171BusinessDetailsUrl(idType, idNumber))
     get[Api1171Response](http, context)

@@ -22,9 +22,10 @@ import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import models.common.{JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import models.database.income.IncomeStorageAnswers
-import models.error.ServiceError.DatabaseError.InvalidJsonFormatError
-import models.frontend.income.{HowMuchTradingAllowance, IncomeJourneyAnswers, TradingAllowance}
+import models.error.ServiceError.InvalidJsonFormatError
+import models.frontend.income.IncomeJourneyAnswers
 import org.scalatest.EitherValues._
+import org.scalatest.OptionValues._
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -34,7 +35,6 @@ import stubs.connectors.StubSelfEmploymentConnector
 import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
-import org.scalatest.OptionValues._
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -69,8 +69,8 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
           None,
           incomeStorageAnswers.turnoverNotTaxable,
           None,
-          TradingAllowance.UseTradingAllowance,
-          HowMuchTradingAllowance.LessThan.some,
+          incomeStorageAnswers.tradingAllowance,
+          incomeStorageAnswers.howMuchTradingAllowance,
           None
         ))
     }

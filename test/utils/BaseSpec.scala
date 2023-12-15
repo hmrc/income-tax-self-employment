@@ -16,10 +16,9 @@
 
 package utils
 
-import models.common.{BusinessId, JourneyContextWithNino, Mtditid, Nino, TaxYear}
+import models.common._
 import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
 import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
-import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec
@@ -64,12 +63,8 @@ object BaseSpec {
   val nino: Nino                                 = Nino("nino")
   val mtditid: Mtditid                           = Mtditid("1234567890")
   val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
-  val fromTaxYearStr: String                     = "2023-04-06"
-  val toTaxYearStr: String                       = "2024-04-05"
-
-  def anyBusinessId: BusinessId = BusinessId(any)
-  def anyTaxYear: TaxYear       = TaxYear(any)
-  def anyMtditId: Mtditid       = Mtditid(any)
+  val sampleFromTaxYearStr: String               = s"${currTaxYear.endYear}-04-06"
+  val sampleToTaxYearStr: String                 = s"${currTaxYear.endYear + 1}-04-05"
 
   def mkNow(): Instant                 = Instant.now().truncatedTo(ChronoUnit.SECONDS)
   def mkClock(now: Instant): TestClock = TestClock(now, ZoneOffset.UTC)

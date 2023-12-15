@@ -83,8 +83,8 @@ object StubSelfEmploymentConnector {
     Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None))))
 
   val api1786SuccessResponse: api_1786.SuccessResponseSchema = api_1786.SuccessResponseSchema(
-    fromTaxYearStr,
-    toTaxYearStr,
+    sampleFromTaxYearStr,
+    sampleToTaxYearStr,
     api_1786.FinancialsType(None, None)
   )
 

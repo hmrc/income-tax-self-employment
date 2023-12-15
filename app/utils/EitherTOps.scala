@@ -22,6 +22,8 @@ import cats.data.EitherT
 object EitherTOps {
 
   implicit class EitherTExtensions[F[_]: Functor, A, B](val eitherT: EitherT[F, A, B]) {
+
+    /** Allow to use eitherT.leftAs[ServiceError] notation */
     def leftAs[T >: A]: EitherT[F, T, B] =
       eitherT.leftMap(a => a: T)
   }

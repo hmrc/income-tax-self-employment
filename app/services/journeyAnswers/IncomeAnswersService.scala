@@ -28,7 +28,7 @@ import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, Amend
 import models.connector.api_1965.ListSEPeriodSummariesResponse
 import models.database.income.IncomeStorageAnswers
 import models.domain.ApiResultT
-import models.error.ServiceError.DatabaseError.InvalidJsonFormatError
+import models.error.ServiceError.InvalidJsonFormatError
 import models.error.{DownstreamError, ServiceError}
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Json
