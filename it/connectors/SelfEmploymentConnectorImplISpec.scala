@@ -18,9 +18,10 @@ package connectors
 
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
+import connectors.data.{Api1786Test, Api1803Test}
 import helpers.WiremockSpec
+import models.common.JourneyContextWithNino
 import models.common.TaxYear.{asTys, endDate, startDate}
-import models.common.{JourneyContextWithNino, Mtditid}
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
 import models.connector.api_1894.request._
@@ -31,73 +32,93 @@ import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json.Json
+import utils.BaseSpec._
 
 class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
-  private val connector = new SelfEmploymentConnectorImpl(httpClient, appConfig)
+  private val connector           = new SelfEmploymentConnectorImpl(httpClient, appConfig)
+  val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
 
-  "creating period summaries" when {
-    "downstream returns a success response" must {
-      "return the submission id" in new Api1894Test {
-        stubPostWithRequestAndResponseBody(
-          url = downstreamUrl,
-          requestBody = requestBody,
-          expectedResponse = downstreamSuccessResponse,
-          expectedStatus = CREATED)
-
-        val expectedResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("someId")
-
-        connector.createSEPeriodSummary(data).futureValue shouldBe expectedResponse.asRight
-
-      }
-    }
-  }
-  "amending period summaries" when {
-    "downstream returns a success response" must {
-      "return the submission id" in new Api1895Test {
-        stubPutWithRequestAndResponseBody(
-          url = downstreamUrl,
-          requestBody = requestBody,
-          expectedResponse = downstreamSuccessResponse,
-          expectedStatus = OK)
-
-        val expectedResponse: AmendSEPeriodSummaryResponse = AmendSEPeriodSummaryResponse("someId")
-
-        connector.amendSEPeriodSummary(data).futureValue shouldBe expectedResponse.asRight
-
-      }
+  "getPeriodicSummaryDetail" must {
+    "return successful response" in new Api1786Test {
+      stubGetWithResponseBody(
+        url = downstreamUrl,
+        expectedResponse = successResponseRaw,
+        expectedStatus = OK
+      )
+      connector.getPeriodicSummaryDetail(ctx).futureValue shouldBe successResponse.asRight
     }
   }
 
-  "upserting annual submissions" when {
-    "downstream returns a success response" must {
-      "return the transaction reference" in new Api1802Test {
-        stubPutWithRequestAndResponseBody(
-          url = downstreamUrl,
-          requestBody = requestBody,
-          expectedResponse = downstreamSuccessResponse,
-          expectedStatus = OK)
+  "createAmendSEAnnualSubmission" must {
+    "return the transaction reference" in new Api1802Test {
+      stubPutWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = downstreamSuccessResponse,
+        expectedStatus = OK)
 
-        val expectedResponse: CreateAmendSEAnnualSubmissionResponse = CreateAmendSEAnnualSubmissionResponse("someId")
+      val expectedResponse: CreateAmendSEAnnualSubmissionResponse = CreateAmendSEAnnualSubmissionResponse("someId")
 
-        connector.createAmendSEAnnualSubmission(data).futureValue shouldBe expectedResponse.asRight
-      }
+      connector.createAmendSEAnnualSubmission(data).futureValue shouldBe expectedResponse.asRight
     }
   }
-  "listing periodic submissions" when {
-    "downstream returns a success response" must {
-      "return the submissions" in new Api1965Test {
-        stubGetWithResponseBody(
-          url = downstreamUrl,
-          expectedStatus = OK,
-          expectedResponse = downstreamSuccessResponse
-        )
 
-        val expectedResponse: ListSEPeriodSummariesResponse =
-          ListSEPeriodSummariesResponse(Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None))))
+  "getAnnualSummaries" must {
+    "return the annual summaries" in new Api1803Test {
+      stubGetWithResponseBody(
+        url = downstreamUrl,
+        expectedResponse = successResponseRaw,
+        expectedStatus = OK
+      )
 
-        connector.listSEPeriodSummary(ctx).futureValue shouldBe expectedResponse.asRight
-      }
+      connector.getAnnualSummaries(ctx).futureValue shouldBe successResponse.asRight
+    }
+  }
+
+  "createSEPeriodSummary" must {
+    "return the submission id" in new Api1894Test {
+      stubPostWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = downstreamSuccessResponse,
+        expectedStatus = CREATED)
+
+      val expectedResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("someId")
+
+      connector.createSEPeriodSummary(data).futureValue shouldBe expectedResponse.asRight
+
+    }
+  }
+
+  "amendSEPeriodSummary" must {
+    "return the submission id" in new Api1895Test {
+      stubPutWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = downstreamSuccessResponse,
+        expectedStatus = OK)
+
+      val expectedResponse: AmendSEPeriodSummaryResponse = AmendSEPeriodSummaryResponse("someId")
+
+      connector.amendSEPeriodSummary(data).futureValue shouldBe expectedResponse.asRight
+
+    }
+  }
+
+  "listSEPeriodSummary" must {
+    "return the submissions" in new Api1965Test {
+      stubGetWithResponseBody(
+        url = downstreamUrl,
+        expectedStatus = OK,
+        expectedResponse = downstreamSuccessResponse
+      )
+
+      val expectedResponse: ListSEPeriodSummariesResponse =
+        ListSEPeriodSummariesResponse(Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None))))
+
+      connector.listSEPeriodSummary(ctx).futureValue shouldBe expectedResponse.asRight
+
     }
   }
 
@@ -123,8 +144,6 @@ class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBase
                  |  ]
                  |}
                  |""".stripMargin))
-
-    val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, Mtditid(mtditid), nino)
 
     val downstreamUrl =
       s"/income-tax/${asTys(ctx.taxYear)}/${ctx.nino.value}/self-employments/${ctx.businessId.value}/periodic-summaries"

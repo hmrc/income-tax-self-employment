@@ -17,7 +17,6 @@
 package stubs.services
 
 import cats.data.EitherT
-import models.common.{BusinessId, Mtditid, TaxYear}
 import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
 import models.error.ServiceError
@@ -36,6 +35,7 @@ case class StubIncomeAnswersService(incomeJourneyAnswersRes: ApiResultT[Unit] = 
   override def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     incomeJourneyAnswersRes
 
-  def getAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid): ApiResultT[Option[IncomeJourneyAnswers]] =
+  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[IncomeJourneyAnswers]] =
     EitherT.fromEither[Future](getAnswersRes)
+
 }

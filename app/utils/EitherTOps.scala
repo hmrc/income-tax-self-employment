@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-package models.common
+package utils
 
-import play.api.mvc.PathBindable
+import cats.Functor
+import cats.data.EitherT
 
-final case class Nino(value: String) extends AnyVal {
-  override def toString: String = value
-}
+object EitherTOps {
 
-object Nino {
+  implicit class EitherTExtensions[F[_]: Functor, A, B](val eitherT: EitherT[F, A, B]) {
 
-  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[Nino] = new PathBindable[Nino] {
-
-    override def bind(key: String, value: String): Either[String, Nino] =
-      strBinder.bind(key, value).map(Nino.apply)
-
-    override def unbind(key: String, nino: Nino): String =
-      strBinder.unbind(key, nino.value)
-
+    /** Allow to use eitherT.leftAs[ServiceError] notation */
+    def leftAs[T >: A]: EitherT[F, T, B] =
+      eitherT.leftMap(a => a: T)
   }
 }

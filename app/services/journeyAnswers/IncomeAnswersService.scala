@@ -28,19 +28,20 @@ import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, Amend
 import models.connector.api_1965.ListSEPeriodSummariesResponse
 import models.database.income.IncomeStorageAnswers
 import models.domain.ApiResultT
+import models.error.ServiceError.InvalidJsonFormatError
 import models.error.{DownstreamError, ServiceError}
 import models.frontend.income.IncomeJourneyAnswers
-import models.frontend.income.IncomeJourneyAnswers.fromJourneyAnswers
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import services.mapDownstreamErrors
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.EitherTOps._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait IncomeAnswersService {
-  def getAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid): ApiResultT[Option[IncomeJourneyAnswers]]
+  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[IncomeJourneyAnswers]]
   def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
@@ -48,11 +49,25 @@ trait IncomeAnswersService {
 class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, connector: SelfEmploymentConnector)(implicit ec: ExecutionContext)
     extends IncomeAnswersService {
 
-  def getAnswers(businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid): ApiResultT[Option[IncomeJourneyAnswers]] =
+  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[IncomeJourneyAnswers]] =
     for {
-      row     <- EitherT.right[ServiceError](repository.get(JourneyContext(taxYear, businessId, mtditid, Income)))
-      answers <- EitherT.fromEither[Future](fromJourneyAnswers(row))
-    } yield answers
+      maybeDbAnswers <- getDbAnswers(ctx)
+      incomeAnswers <- maybeDbAnswers.traverse { journeyAnswers =>
+        for {
+          periodicSummaryDetails <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
+          annualSummaries        <- EitherT(connector.getAnnualSummaries(ctx)).leftAs[ServiceError]
+        } yield IncomeJourneyAnswers(journeyAnswers, periodicSummaryDetails, annualSummaries)
+      }
+    } yield incomeAnswers
+
+  private def getDbAnswers(ctx: JourneyContextWithNino): EitherT[Future, InvalidJsonFormatError, Option[IncomeStorageAnswers]] = {
+    val res = for {
+      row <- repository.get(ctx, Income)
+      maybeDbAnswers = row.map(_.toStorageAnswers[IncomeStorageAnswers]).traverse(identity)
+    } yield maybeDbAnswers
+
+    EitherT(res)
+  }
 
   def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     import ctx._

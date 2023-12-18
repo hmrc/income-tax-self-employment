@@ -28,9 +28,12 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
 
-  val ifsEnvironment: String                     = config.get[String]("microservice.services.integration-framework.environment")
+  val ifsEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
+
+  // TODO This is not good. It means that the app will fail on missing config only on first request, not on bootstrap
   def ifsAuthorisationToken(api: String): String = config.get[String](s"microservice.services.integration-framework.authorisation-token.$api")
-  val ifsBaseUrl: String                         = servicesConfig.baseUrl("integration-framework")
+
+  val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
 
   val cacheTtl: Int = Duration(servicesConfig.getString("mongodb.timeToLive")).toDays.toInt
 }

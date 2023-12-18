@@ -20,9 +20,9 @@ import cats.implicits.catsSyntaxEitherId
 import connectors.SelfEmploymentConnector
 import connectors.SelfEmploymentConnector._
 import models.common.{IdType, JourneyContextWithNino}
-import models.connector.api_1171.{ResponseType, SuccessResponseSchema}
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
+import models.connector.{api_1171, api_1786, api_1803}
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
@@ -30,6 +30,7 @@ import models.connector.api_1895.response.AmendSEPeriodSummaryResponse
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import stubs.connectors.StubSelfEmploymentConnector._
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.BaseSpec._
 
 import java.time.OffsetDateTime
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,7 +40,9 @@ case class StubSelfEmploymentConnector(
     createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(api1894SuccessResponse.asRight),
     amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(api1895SuccessResponse.asRight),
     createAmendSEAnnualSubmissionResult: Future[Api1802Response] = Future.successful(api1802SuccessResponse.asRight),
-    listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight)
+    listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
+    getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786SuccessResponse.asRight),
+    getAnnualSummariesResult: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight)
 ) extends SelfEmploymentConnector {
 
   override def createSEPeriodSummary(
@@ -58,11 +61,17 @@ case class StubSelfEmploymentConnector(
     createAmendSEAnnualSubmissionResult
 
   def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response] = ???
+
+  def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response] =
+    Future.successful(api1786SuccessResponse.asRight)
+
+  def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] =
+    Future.successful(api1803SuccessResponse.asRight)
 }
 
 object StubSelfEmploymentConnector {
-  val api1171EmptyResponse: SuccessResponseSchema =
-    SuccessResponseSchema(OffsetDateTime.now().toString, ResponseType("safeId", "nino", "mtdid", None, false, None, None))
+  val api1171EmptyResponse: api_1171.SuccessResponseSchema =
+    api_1171.SuccessResponseSchema(OffsetDateTime.now().toString, api_1171.ResponseType("safeId", "nino", "mtdid", None, false, None, None))
 
   val api1894SuccessResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("id")
 
@@ -72,6 +81,14 @@ object StubSelfEmploymentConnector {
 
   val api1965MatchedResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(
     Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None))))
+
+  val api1786SuccessResponse: api_1786.SuccessResponseSchema = api_1786.SuccessResponseSchema(
+    sampleFromTaxYearStr,
+    sampleToTaxYearStr,
+    api_1786.FinancialsType(None, None)
+  )
+
+  val api1803SuccessResponse: api_1803.SuccessResponseSchema = api_1803.SuccessResponseSchema(None, None, None)
 
   val api1965EmptyResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(Some(List.empty))
 }

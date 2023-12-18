@@ -14,7 +14,7 @@ PUT         /completed-section/:businessId/:journey/:taxYear/:completed         
 GET         /check-your-answers/get/:id                                                                                 controllers.journeyAnswers.GetJourneyAnswersController.handleRequest(id: String)
 
 POST        /:taxYear/:businessId/income/:nino/answers                                                                  controllers.JourneyAnswersController.saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
-GET         /:taxYear/:businessId/income/answers                                                                        controllers.JourneyAnswersController.getIncomeAnswers(taxYear: TaxYear, businessId: BusinessId)
+GET         /:taxYear/:businessId/income/:nino/answers                                                                  controllers.JourneyAnswersController.getIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 POST        /:taxYear/:businessId/expenses-categories/none/answers                                                      controllers.JourneyAnswersController.saveExpensesTailoringNoExpensesAnswers(taxYear: TaxYear, businessId: BusinessId)
 POST        /:taxYear/:businessId/expenses-categories/categories/answers                                                controllers.JourneyAnswersController.saveExpensesTailoringIndividualCategoriesAnswers(taxYear: TaxYear, businessId: BusinessId)
 POST        /:taxYear/:businessId/expenses-categories/total/:nino/answers                                               controllers.JourneyAnswersController.saveExpensesTailoringTotalAmountAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

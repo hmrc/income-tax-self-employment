@@ -16,11 +16,10 @@
 
 package models.frontend.income
 
-import models.database.JourneyAnswers
-import models.error.ServiceError
+import models.connector.api_1803
+import models.connector.api_1786
+import models.database.income.IncomeStorageAnswers
 import play.api.libs.json.{Json, OFormat}
-import cats.implicits._
-import models.error.ServiceError.DatabaseError.InvalidJsonFormatError
 
 case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
                                 nonTurnoverIncomeAmount: Option[BigDecimal],
@@ -36,15 +35,19 @@ case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
 object IncomeJourneyAnswers {
   implicit val formats: OFormat[IncomeJourneyAnswers] = Json.format[IncomeJourneyAnswers]
 
-  def fromJourneyAnswers(maybeRow: Option[JourneyAnswers]): Either[ServiceError, Option[IncomeJourneyAnswers]] =
-    maybeRow.fold[Either[ServiceError, Option[IncomeJourneyAnswers]]](
-      None.asRight
-    )(r =>
-      r.data
-        .validate[IncomeJourneyAnswers]
-        .asEither
-        .fold(
-          err => InvalidJsonFormatError(s"Cannot create IncomeJourneyAnswers from JSON: ${err.toString}").asLeft,
-          answers => answers.some.asRight
-        ))
+  def apply(journeyAnswers: IncomeStorageAnswers,
+            periodicSummaryDetails: api_1786.SuccessResponseSchema,
+            annualSummaries: api_1803.SuccessResponseSchema): IncomeJourneyAnswers =
+    IncomeJourneyAnswers(
+      incomeNotCountedAsTurnover = journeyAnswers.incomeNotCountedAsTurnover,
+      anyOtherIncome = journeyAnswers.anyOtherIncome,
+      turnoverNotTaxable = journeyAnswers.turnoverNotTaxable,
+      tradingAllowance = journeyAnswers.tradingAllowance,
+      howMuchTradingAllowance = journeyAnswers.howMuchTradingAllowance,
+      nonTurnoverIncomeAmount = periodicSummaryDetails.financials.incomes.flatMap(_.other),
+      turnoverIncomeAmount = periodicSummaryDetails.financials.incomes.flatMap(_.turnover).getOrElse(BigDecimal(0)), // TODO What if it's None?
+      otherIncomeAmount = annualSummaries.annualAdjustments.flatMap(_.outstandingBusinessIncome),
+      notTaxableAmount = annualSummaries.annualAdjustments.flatMap(_.includedNonTaxableProfits),
+      tradingAllowanceAmount = annualSummaries.annualAllowances.flatMap(_.annualInvestmentAllowance)
+    )
 }
