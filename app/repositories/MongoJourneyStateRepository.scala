@@ -18,6 +18,7 @@ package repositories
 
 import config.AppConfig
 import models.database.JourneyState
+import org.bson.Document
 import org.bson.conversions.Bson
 import org.mongodb.scala.model.Indexes.compoundIndex
 import org.mongodb.scala.model._
@@ -28,11 +29,13 @@ import java.time.{Clock, LocalDate}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import cats.implicits._
 
 trait JourneyStateRepository {
   def get(businessId: String, taxYear: Int): Future[Seq[JourneyState]]
   def get(businessId: String, taxYear: Int, journey: String): Future[Option[JourneyState]]
   def set(journeyState: JourneyState): Future[Unit]
+  def testOnlyClearAllData(): Future[Unit]
 }
 
 @Singleton
@@ -62,6 +65,14 @@ class MongoJourneyStateRepository @Inject() (mongoComponent: MongoComponent, app
       )
     )
     with JourneyStateRepository {
+
+  /** Used only for the UI tests
+    */
+  def testOnlyClearAllData(): Future[Unit] =
+    collection
+      .deleteMany(new Document())
+      .toFuture()
+      .void
 
   /*
    * Do we really want to keepAlive upon access of the journey state?

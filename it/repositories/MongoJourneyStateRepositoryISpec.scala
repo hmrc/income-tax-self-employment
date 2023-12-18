@@ -21,6 +21,7 @@ import models.database.JourneyState
 import JourneyState.JourneyStateData
 import org.mongodb.scala.model.Filters
 import org.scalatest.BeforeAndAfterEach
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -36,6 +37,7 @@ import java.time._
 import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import org.scalatest.time.{Span, Seconds, Millis}
 
 class MongoJourneyStateRepositoryISpec
     extends AnyWordSpec
@@ -44,11 +46,16 @@ class MongoJourneyStateRepositoryISpec
     with MongoTestSupport[JourneyState]
     with Injecting
     with BeforeAndAfterEach
-    with GuiceOneAppPerSuite {
-
+    with GuiceOneAppPerSuite
+    with ScalaFutures {
   private val timestampNow = Instant.parse("2022-01-01T22:02:03.000Z")
   private val localDateNow = LocalDate.of(2022, 1, 1)
   private val clock        = Clock.fixed(timestampNow, ZoneOffset.UTC)
+
+  implicit override val patienceConfig: PatienceConfig = PatienceConfig(
+    timeout = Span(5, Seconds),
+    interval = Span(500, Millis)
+  )
 
   override lazy val app: Application = new GuiceApplicationBuilder()
     .overrides(bind[Clock].toInstance(clock))
@@ -151,6 +158,18 @@ class MongoJourneyStateRepositoryISpec
             repository.get(businessId, taxYear).futureValue shouldBe Seq(expectedJourneyState)
           }
         }
+      }
+    }
+
+    "testOnlyClearAllData" must {
+      "clear all the data" in {
+        val res = (for {
+          _   <- repository.set(someJourneyState)
+          _   <- repository.testOnlyClearAllData()
+          res <- repository.get(businessId, taxYear)
+        } yield res).futureValue
+
+        res shouldBe Nil
       }
     }
 
