@@ -34,7 +34,6 @@ import java.time.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-
 class MongoJourneyAnswersRepositoryISpec
     extends AnyWordSpec
     with Matchers
