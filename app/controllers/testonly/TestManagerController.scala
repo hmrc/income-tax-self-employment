@@ -16,9 +16,6 @@
 
 package controllers.testonly
 
-import cats.data.EitherT
-import controllers.handleResultT
-import models.error.ServiceError
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.{JourneyAnswersRepository, JourneyStateRepository}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -38,12 +35,10 @@ class TestManagerController @Inject() (journeyStateRepository: JourneyStateRepos
   }
 
   def clearAllData(): Action[AnyContent] = Action.async {
-    val result = for {
-      _ <- EitherT.right[ServiceError](journeyStateRepository.testOnlyClearAllData())
-      _ <- EitherT.right[ServiceError](journeyAnswersRepository.testOnlyClearAllData())
+    for {
+      _ <- journeyStateRepository.testOnlyClearAllData()
+      _ <- journeyAnswersRepository.testOnlyClearAllData()
     } yield NoContent
-
-    handleResultT(result)
   }
 
 }
