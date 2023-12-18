@@ -20,6 +20,7 @@ import models.common.JourneyStatus._
 import models.common.{JourneyContext, JourneyName}
 import models.database.JourneyAnswers
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterEach, OptionValues}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -33,6 +34,7 @@ import java.time.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
+
 class MongoJourneyAnswersRepositoryISpec
     extends AnyWordSpec
     with Matchers
@@ -44,6 +46,11 @@ class MongoJourneyAnswersRepositoryISpec
 
   private val now   = mkNow()
   private val clock = mkClock(now)
+
+  implicit override val patienceConfig: PatienceConfig = PatienceConfig(
+    timeout = Span(5, Seconds),
+    interval = Span(500, Millis)
+  )
 
   override val repository = new MongoJourneyAnswersRepository(mongoComponent, clock)
 
@@ -108,6 +115,18 @@ class MongoJourneyAnswersRepositoryISpec
 
       result.status shouldBe Completed
       result.updatedAt shouldBe now.plus(Duration.ofDays(2))
+    }
+  }
+
+  "testOnlyClearAllData" should {
+    "clear all the data" in {
+      val res = (for {
+        _        <- repository.upsertData(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
+        _        <- repository.testOnlyClearAllData()
+        inserted <- repository.get(journeyCtxWithNino, JourneyName.Income)
+      } yield inserted).futureValue
+
+      res shouldBe None
     }
   }
 
