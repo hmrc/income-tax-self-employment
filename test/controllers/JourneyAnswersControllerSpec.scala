@@ -127,7 +127,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => underTest.saveGoodsToSellOrUse(currTaxYear, businessId, nino)
       )
     }
-    "getGoodsToSellOrUse" should {
+    "getGoodsToSellOrUseAnswers" should {
       s"return a $OK and answers as json when successful" in new GetExpensesTest {
         val someAnswers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
 
