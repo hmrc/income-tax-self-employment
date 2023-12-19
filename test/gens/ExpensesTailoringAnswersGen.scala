@@ -20,7 +20,7 @@ import models.frontend.expenses.tailoring.individualCategories._
 import models.frontend.expenses.tailoring.{
   ExpensesCategories,
   ExpensesTailoringIndividualCategoriesAnswers,
-  ExpensesTailoringNoExpensesAnswers,
+  ExpensesTailoringCategoryTypeAnswer,
   ExpensesTailoringTotalAmountAnswers
 }
 import org.scalacheck.Gen
@@ -47,9 +47,9 @@ object ExpensesTailoringAnswersGen {
   val disallowableSubcontractorCostsGen: Gen[DisallowableSubcontractorCosts]       = Gen.oneOf(DisallowableSubcontractorCosts.values)
   val disallowableProfessionalFeesGen: Gen[DisallowableProfessionalFees]           = Gen.oneOf(DisallowableProfessionalFees.values)
 
-  val expensesTailoringNoExpensesAnswersGen: Gen[ExpensesTailoringNoExpensesAnswers] = for {
+  val expensesTailoringNoExpensesAnswersGen: Gen[ExpensesTailoringCategoryTypeAnswer] = for {
     expensesCategories <- expensesCategoriesGen
-  } yield ExpensesTailoringNoExpensesAnswers(
+  } yield ExpensesTailoringCategoryTypeAnswer(
     expensesCategories
   )
 

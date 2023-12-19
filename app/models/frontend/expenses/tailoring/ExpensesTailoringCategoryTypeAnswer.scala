@@ -18,12 +18,12 @@ package models.frontend.expenses.tailoring
 
 import play.api.libs.json.{Json, OFormat, OWrites, Reads}
 
-final case class ExpensesTailoringNoExpensesAnswers(expensesCategories: ExpensesCategories)
+final case class ExpensesTailoringCategoryTypeAnswer(expensesCategories: ExpensesCategories)
 
-object ExpensesTailoringNoExpensesAnswers {
-  implicit val reads: Reads[ExpensesTailoringNoExpensesAnswers] = Json.reads[ExpensesTailoringNoExpensesAnswers]
+object ExpensesTailoringCategoryTypeAnswer {
+  implicit val reads: Reads[ExpensesTailoringCategoryTypeAnswer] = Json.reads[ExpensesTailoringCategoryTypeAnswer]
 
-  implicit val writes: OWrites[ExpensesTailoringNoExpensesAnswers] = Json.writes[ExpensesTailoringNoExpensesAnswers]
+  implicit val writes: OWrites[ExpensesTailoringCategoryTypeAnswer] = Json.writes[ExpensesTailoringCategoryTypeAnswer]
 
-  implicit val formats: OFormat[ExpensesTailoringNoExpensesAnswers] = OFormat(reads, writes)
+  implicit val formats: OFormat[ExpensesTailoringCategoryTypeAnswer] = OFormat(reads, writes)
 }
