@@ -35,6 +35,11 @@ package object controllers {
     handleResultT(resultT)
   }
 
+  def handleApiResult[A: Writes](result: ApiResultT[A])(implicit ec: ExecutionContext, logger: Logger): Future[Result] = {
+    val resultT = result.map(r => Ok(Json.toJson(r)))
+    handleResultT(resultT)
+  }
+
   def handleResultT(result: ApiResultT[Result])(implicit ec: ExecutionContext, logger: Logger): Future[Result] =
     result.leftMap { error =>
       handleError(error)

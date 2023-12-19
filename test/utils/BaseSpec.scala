@@ -17,13 +17,10 @@
 package utils
 
 import models.common._
-import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
-import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
 import org.mockito.ArgumentMatchersSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
-import play.api.http.Status.BAD_REQUEST
 import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, DefaultActionBuilder}
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -37,7 +34,6 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
   protected implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
   protected implicit val hc: HeaderCarrier    = HeaderCarrier()
 
-  protected val taxYear: TaxYear       = TaxYear(LocalDate.now().getYear)
   protected val businessId: BusinessId = BusinessId("someBusinessId")
   protected val nino: Nino             = Nino("someNino")
 
@@ -46,30 +42,21 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
   protected val defaultActionBuilder: DefaultActionBuilder = DefaultActionBuilder(stubControllerComponents.parsers.default)
 
   protected val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders("mtditid" -> "1234567890")
-
-  protected val singleDownstreamError: SingleDownstreamError =
-    SingleDownstreamError(BAD_REQUEST, SingleDownstreamErrorBody.invalidNino)
-
-  protected val multipleDownstreamErrors: MultipleDownstreamErrors =
-    MultipleDownstreamErrors(
-      BAD_REQUEST,
-      MultipleDownstreamErrorBody(Seq(SingleDownstreamErrorBody.invalidNino, SingleDownstreamErrorBody.invalidMtdid))
-    )
 }
 
 object BaseSpec {
   // static data
   val taxYear: TaxYear       = TaxYear(2023)
-  val fromTaxYearStr: String = s"${taxYear.endYear - 1}-04-06"
-  val toTaxYearStr: String   = s"${taxYear.endYear}-04-05"
+  val taxYearStart: String   = TaxYear.startDate(taxYear)
+  val taxYearEnd: String     = TaxYear.endDate(taxYear)
   val businessId: BusinessId = BusinessId("someBusinessId")
   val nino: Nino             = Nino("nino")
   val mtditid: Mtditid       = Mtditid("1234567890")
 
   // dynamic & generated data
-  val currTaxYear: TaxYear         = TaxYear(LocalDate.now().getYear)
-  val sampleFromTaxYearStr: String = s"${currTaxYear.endYear - 1}-04-06"
-  val sampleToTaxYearStr: String   = s"${currTaxYear.endYear}-04-05"
+  val currTaxYear: TaxYear     = TaxYear(LocalDate.now().getYear)
+  val currTaxYearStart: String = TaxYear.startDate(currTaxYear)
+  val currTaxYearEnd: String   = TaxYear.endDate(currTaxYear)
 
   // more complex data
   val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)

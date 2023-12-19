@@ -14,22 +14,8 @@
  * limitations under the License.
  */
 
-package models.connector.api_1786
+package utils
 
-import play.api.libs.json._
-
-/** Represents the Swagger definition for successResponseSchema.
-  * @param from
-  *   Defines a date in the format YYYY-MM-DD
-  * @param to
-  *   Defines a date in the format YYYY-MM-DD
-  */
-case class SuccessResponseSchema(
-    from: String,
-    to: String,
-    financials: FinancialsType
-)
-
-object SuccessResponseSchema {
-  implicit lazy val format: Format[SuccessResponseSchema] = Json.format[SuccessResponseSchema]
+trait ResponseParser[ApiResponse, Result] {
+  def parse(response: ApiResponse): Result
 }

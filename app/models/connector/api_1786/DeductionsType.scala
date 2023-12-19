@@ -43,4 +43,6 @@ case class DeductionsType(
 
 object DeductionsType {
   implicit lazy val deductionsTypeJsonFormat: Format[DeductionsType] = Json.format[DeductionsType]
+
+  val empty: DeductionsType = DeductionsType(None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None)
 }

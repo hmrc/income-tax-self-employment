@@ -19,11 +19,15 @@ package services.journeyAnswers
 import cats.implicits._
 import connectors.SelfEmploymentConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
-import models.common.{JourneyName, JourneyStatus}
+import models.common.{JourneyContextWithNino, JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import models.database.income.IncomeStorageAnswers
 import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
+import org.mockito.IdiomaticMockito.StubbingOps
+import org.mockito.Mockito.times
+import org.mockito.MockitoSugar.{mock, never, verify}
+import org.mockito.matchers.MacroBasedMatchers
 import org.scalatest.EitherValues._
 import org.scalatest.OptionValues._
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
@@ -32,14 +36,16 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsObject, Json}
 import services.journeyAnswers.IncomeAnswersServiceImplSpec._
 import stubs.connectors.StubSelfEmploymentConnector
+import stubs.connectors.StubSelfEmploymentConnector._
 import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
+class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers {
   implicit val hc = HeaderCarrier()
 
   "getAnswers" should {
@@ -76,6 +82,49 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
     }
   }
 
+  "saving income answers" when {
+    "no period summary submission exists" must {
+      "successfully store data and create the period summary" in new TestCase(connector = mock[SelfEmploymentConnector]) {
+        connector.listSEPeriodSummary(*)(*, *) returns
+          Future.successful(api1965EmptyResponse.asRight)
+
+        connector.createSEPeriodSummary(*)(*, *) returns
+          Future.successful(api1894SuccessResponse.asRight)
+
+        connector.createAmendSEAnnualSubmission(*)(*, *) returns
+          Future.successful(api1802SuccessResponse.asRight)
+
+        val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
+        val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
+
+        service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
+
+        verify(connector, times(1)).createSEPeriodSummary(*)(*, *)
+        verify(connector, never).amendSEPeriodSummary(*)(*, *)
+      }
+    }
+    "a submission exists" must {
+      "successfully store data and amend the period summary" in new TestCase(connector = mock[SelfEmploymentConnector]) {
+        connector.listSEPeriodSummary(*)(*, *) returns
+          Future.successful(api1965MatchedResponse.asRight)
+
+        connector.amendSEPeriodSummary(*)(*, *) returns
+          Future.successful(api1895SuccessResponse.asRight)
+
+        connector.createAmendSEAnnualSubmission(*)(*, *) returns
+          Future.successful(api1802SuccessResponse.asRight)
+
+        val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
+        val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
+
+        service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
+
+        verify(connector, times(1)).amendSEPeriodSummary(*)(*, *)
+        verify(connector, never).createSEPeriodSummary(*)(*, *)
+      }
+    }
+  }
+
   "saveAnswers" should {
     "save data in the repository" in new TestCase() {
       service
@@ -88,7 +137,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
 object IncomeAnswersServiceImplSpec {
   abstract class TestCase(val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(),
-                          connector: SelfEmploymentConnector = StubSelfEmploymentConnector()) {
+                          val connector: SelfEmploymentConnector = StubSelfEmploymentConnector()) {
     val service = new IncomeAnswersServiceImpl(repo, connector)
   }
 
