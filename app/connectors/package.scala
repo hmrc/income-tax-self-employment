@@ -15,6 +15,7 @@
  */
 
 import models.connector.IntegrationContext
+import play.api.Logger
 import play.api.libs.json.Writes
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 
@@ -22,24 +23,32 @@ import scala.concurrent.{ExecutionContext, Future}
 
 package object connectors {
 
-  def get[Resp: HttpReads](http: HttpClient, context: IntegrationContext)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Resp] = {
+  def get[Resp: HttpReads](http: HttpClient, context: IntegrationContext)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext,
+      logger: Logger): Future[Resp] = {
     val reads = implicitly[HttpReads[Resp]]
+    logger.info(s"GET ${context.url}")
     http.GET[Resp](context.url)(reads, context.enrichedHeaderCarrier, ec)
   }
 
   def post[Req: Writes, Resp: HttpReads](http: HttpClient, context: IntegrationContext, body: Req)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): Future[Resp] = {
+      ec: ExecutionContext,
+      logger: Logger): Future[Resp] = {
     val reads  = implicitly[HttpReads[Resp]]
     val writes = implicitly[Writes[Req]]
+    logger.info(s"POST ${context.url}")
     http.POST[Req, Resp](context.url, body)(writes, reads, context.enrichedHeaderCarrier, ec)
   }
 
   def put[Req: Writes, Resp: HttpReads](http: HttpClient, context: IntegrationContext, body: Req)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): Future[Resp] = {
+      ec: ExecutionContext,
+      logger: Logger): Future[Resp] = {
     val reads  = implicitly[HttpReads[Resp]]
     val writes = implicitly[Writes[Req]]
+    logger.info(s"PUT ${context.url}")
     http.PUT[Req, Resp](context.url, body)(writes, reads, context.enrichedHeaderCarrier, ec)
   }
 }

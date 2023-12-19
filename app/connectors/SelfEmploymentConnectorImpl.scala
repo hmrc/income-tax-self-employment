@@ -27,6 +27,7 @@ import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBo
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import utils.Logging
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -55,7 +56,7 @@ object SelfEmploymentConnector {
 }
 
 @Singleton
-class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends SelfEmploymentConnector {
+class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends SelfEmploymentConnector with Logging {
   private val headerCarrierConfig = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
   private val mkIFSMetadata       = IFSHeaderCarrier(headerCarrierConfig, appConfig, _, _)
 
