@@ -24,8 +24,11 @@ import gens.ExpensesTailoringAnswersGen._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import gens.genOne
 import models.common.JourneyContextWithNino
+import models.domain.ApiResultT
 import models.error.ServiceError
+import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
+import org.scalamock.handlers.CallHandler3
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import parsers.expenses.ExpensesResponseParser
 import play.api.http.Status._
@@ -127,22 +130,18 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => underTest.saveGoodsToSellOrUse(currTaxYear, businessId, nino)
       )
     }
-    "getGoodsToSellOrUseAnswers" should {
-      s"return a $OK and answers as json when successful" in new GetExpensesTest {
-        val someAnswers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
+  }
+  "getGoodsToSellOrUseAnswers" should {
+    s"return a $OK and answers as json when successful" in new GetExpensesTest[GoodsToSellOrUseJourneyAnswers] {
+      override val journeyAnswers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
+      mockExpensesService()
 
-        (expensesService
-          .getAnswers(_: JourneyContextWithNino)(_: ExpensesResponseParser[GoodsToSellOrUseJourneyAnswers], _: HeaderCarrier))
-          .expects(*, *, *)
-          .returns(EitherT.right[ServiceError](Future.successful(someAnswers)))
-
-        behave like testRoute(
-          request = buildRequestNoContent,
-          expectedStatus = OK,
-          expectedBody = Json.stringify(Json.toJson(someAnswers)),
-          methodBlock = () => controller.getGoodsToSellOrUseAnswers(currTaxYear, businessId, nino)
-        )
-      }
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
+        methodBlock = () => controller.getGoodsToSellOrUseAnswers(currTaxYear, businessId, nino)
+      )
     }
   }
   "saveOfficeSupplies" should {
@@ -185,9 +184,23 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
+  "getEntertainmentCosts" should {
+    s"return a $OK and answers as json when successful" in new GetExpensesTest[EntertainmentJourneyAnswers] {
+      override val journeyAnswers: EntertainmentJourneyAnswers = genOne(entertainmentCostsJourneyAnswersGen)
+      mockExpensesService()
 
-  trait GetExpensesTest {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
+        methodBlock = () => controller.getEntertainmentCostsAnswers(currTaxYear, businessId, nino)
+      )
+    }
+  }
+
+  trait GetExpensesTest[T] {
     val expensesService: ExpensesAnswersService = mock[ExpensesAnswersService]
+    val journeyAnswers: T
 
     val controller = new JourneyAnswersController(
       auth = mockAuthorisedAction,
@@ -195,5 +208,11 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       incomeService = StubIncomeAnswersService(),
       expensesService = expensesService
     )
+
+    def mockExpensesService(): CallHandler3[JourneyContextWithNino, ExpensesResponseParser[T], HeaderCarrier, ApiResultT[T]] =
+      (expensesService
+        .getAnswers(_: JourneyContextWithNino)(_: ExpensesResponseParser[T], _: HeaderCarrier))
+        .expects(*, *, *)
+        .returns(EitherT.right[ServiceError](Future.successful(journeyAnswers)))
   }
 }
