@@ -24,8 +24,8 @@ import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.{
+  ExpensesTailoringCategoryTypeAnswer,
   ExpensesTailoringIndividualCategoriesAnswers,
-  ExpensesTailoringNoExpensesAnswers,
   ExpensesTailoringTotalAmountAnswers
 }
 import models.frontend.income.IncomeJourneyAnswers
@@ -57,8 +57,8 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     handleOptionalApiResult(incomeService.getAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
-  def saveExpensesTailoringNoExpensesAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    getBody[ExpensesTailoringNoExpensesAnswers](user) { value =>
+  def saveExpensesTailoringCategoryTypeAnswer(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+    getBody[ExpensesTailoringCategoryTypeAnswer](user) { value =>
       expensesService.saveAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
     }
   }
@@ -71,10 +71,17 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveExpensesTailoringTotalAmountAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async {
     implicit user =>
-      getBody[ExpensesTailoringTotalAmountAnswers](user) { value =>
+      val submitTotalAmountToApi = getBody[ExpensesTailoringTotalAmountAnswers](user) { value =>
         val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
         expensesService.saveAnswers(ctx, value).map(_ => NoContent)
       }
+      val storeTailoringTypeInDatabase = getBody[ExpensesTailoringCategoryTypeAnswer](user) { value =>
+        expensesService.saveAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
+      }
+      for {
+        _      <- submitTotalAmountToApi
+        result <- storeTailoringTypeInDatabase
+      } yield result
   }
 
   def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>

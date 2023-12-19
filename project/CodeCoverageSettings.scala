@@ -28,7 +28,8 @@ object CodeCoverageSettings {
     "models.connector.*", // simple case classes representing external services model
     ".*Routes.*",
     "testOnly.*",
-    "testOnlyDoNotUseInAppConf.*"
+    "testOnlyDoNotUseInAppConf.*",
+    "controllers.testonly.*"
   )
 
   val settings: Seq[Setting[_]] = Seq(

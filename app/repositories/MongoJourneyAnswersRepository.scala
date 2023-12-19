@@ -33,6 +33,7 @@ import java.time.{Clock, Instant}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import cats.implicits._
 
 trait JourneyAnswersRepository {
   def get(id: String): Future[Option[JourneyAnswers]]
@@ -42,6 +43,8 @@ trait JourneyAnswersRepository {
   def upsertData(ctx: JourneyContext, newData: JsValue): Future[UpdateResult]
 
   def updateStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult]
+
+  def testOnlyClearAllData(): Future[Unit]
 }
 
 @Singleton
@@ -69,6 +72,12 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
       )
     )
     with JourneyAnswersRepository {
+
+  def testOnlyClearAllData(): Future[Unit] =
+    collection
+      .deleteMany(new org.bson.Document())
+      .toFuture()
+      .void
 
   private def filterJourney(ctx: JourneyContext) = Filters.and(
     Filters.eq("mtditid", ctx.mtditid.value),

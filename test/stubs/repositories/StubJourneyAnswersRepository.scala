@@ -41,4 +41,5 @@ case class StubJourneyAnswersRepository(
   def updateStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] =
     upsertStatusField
 
+  def testOnlyClearAllData(): Future[Unit] = ???
 }
