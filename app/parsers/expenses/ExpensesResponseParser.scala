@@ -19,6 +19,7 @@ package parsers.expenses
 import models.connector._
 import models.connector.api_1786.SuccessResponseSchema
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
+import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import utils.ResponseParser
 
 trait ExpensesResponseParser[Result] extends ResponseParser[api_1786.SuccessResponseSchema, Result] {
@@ -31,5 +32,12 @@ object ExpensesResponseParser {
       GoodsToSellOrUseJourneyAnswers(
         goodsToSellOrUseAmount = response.financials.deductions.flatMap(_.costOfGoods.map(_.amount)).getOrElse(0), // TODO: What if it's None?
         disallowableGoodsToSellOrUseAmount = response.financials.deductions.flatMap(_.costOfGoods.flatMap(_.disallowableAmount))
+      )
+
+  implicit val officeSuppliesParser: ExpensesResponseParser[OfficeSuppliesJourneyAnswers] =
+    (response: SuccessResponseSchema) =>
+      OfficeSuppliesJourneyAnswers(
+        officeSuppliesAmount = response.financials.deductions.flatMap(_.adminCosts.map(_.amount)).getOrElse(0), // TODO: What if it's None?
+        officeSuppliesDisallowableAmount = response.financials.deductions.flatMap(_.adminCosts.flatMap(_.disallowableAmount))
       )
 }
