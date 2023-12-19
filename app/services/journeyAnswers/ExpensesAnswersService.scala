@@ -25,10 +25,12 @@ import models.common._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType}
 import models.domain.ApiResultT
 import models.error.ServiceError
+import parsers.expenses.ExpensesResponseParser
 import play.api.libs.json.{Json, Writes}
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.DeductionsBuilder
+import utils.EitherTOps.EitherTExtensions
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -36,11 +38,11 @@ import scala.concurrent.ExecutionContext
 trait ExpensesAnswersService {
   def saveAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit]
   def saveAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def getAnswers[A: ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A]
 }
 
 @Singleton
-class ExpensesAnswersServiceImpl @Inject() (businessConnector: SelfEmploymentConnector, repository: JourneyAnswersRepository)(implicit
-    ec: ExecutionContext)
+class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends ExpensesAnswersService {
 
   def saveAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =
@@ -53,11 +55,19 @@ class ExpensesAnswersServiceImpl @Inject() (businessConnector: SelfEmploymentCon
     val body        = CreateSEPeriodSummaryRequestBody(startDate(ctx.taxYear), endDate(ctx.taxYear), Some(financials))
     val requestData = CreateSEPeriodSummaryRequestData(ctx.taxYear, ctx.businessId, ctx.nino, body)
 
-    val result = businessConnector
+    val result = connector
       .createSEPeriodSummary(requestData)
       .map(_ => ())
 
     EitherT.right[ServiceError](result)
   }
 
+  def getAnswers[A: ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A] = {
+    val parser = implicitly[ExpensesResponseParser[A]]
+    for {
+      successResponse <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
+      result = parser.parse(successResponse)
+    } yield result
+
+  }
 }

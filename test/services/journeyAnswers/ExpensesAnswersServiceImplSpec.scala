@@ -19,46 +19,71 @@ package services.journeyAnswers
 import cats.implicits.catsSyntaxEitherId
 import gens.ExpensesJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
 import gens.ExpensesTailoringAnswersGen.{expensesTailoringIndividualCategoriesAnswersGen, expensesTailoringNoExpensesAnswersGen}
-import models.common.JourneyContextWithNino
+import gens.genOne
+import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import parsers.expenses.ExpensesResponseParser
 import stubs.connectors.StubSelfEmploymentConnector
+import stubs.connectors.StubSelfEmploymentConnector.api1786DeductionsSuccessResponse
+import ExpensesResponseParser.goodsToSellOrUseParser
 import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
-  val connector = StubSelfEmploymentConnector()
-  val repo      = StubJourneyAnswersRepository()
-  val underTest = new ExpensesAnswersServiceImpl(connector, repo)
 
-  implicit val hc = HeaderCarrier()
+  trait Test {
+    val connector: StubSelfEmploymentConnector
+
+    val repo           = StubJourneyAnswersRepository()
+    lazy val underTest = new ExpensesAnswersServiceImpl(connector, repo)
+
+    implicit val hc = HeaderCarrier()
+  }
 
   "save ExpensesTailoringNoExpensesAnswers" should {
-    "store data successfully" in {
-      val answers = expensesTailoringNoExpensesAnswersGen.sample.get
+    "store data successfully" in new Test {
+      override val connector = StubSelfEmploymentConnector()
+
+      val answers = genOne(expensesTailoringNoExpensesAnswersGen)
       val result  = underTest.saveAnswers(businessId, currTaxYear, mtditid, answers).value.futureValue
       result shouldBe ().asRight
     }
   }
 
   "save ExpensesTailoringIndividualCategoriesAnswers" should {
-    "store data successfully" in {
-      val answers = expensesTailoringIndividualCategoriesAnswersGen.sample.get
+    "store data successfully" in new Test {
+      override val connector = StubSelfEmploymentConnector()
+
+      val answers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
       val result  = underTest.saveAnswers(businessId, currTaxYear, mtditid, answers).value.futureValue
       result shouldBe ().asRight
     }
   }
 
   "save expenses journey answers" should {
-    "store data successfully" in {
-      val ctx                 = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
-      val someExpensesAnswers = goodsToSellOrUseJourneyAnswersGen.sample.get
-      val result              = underTest.saveAnswers(ctx, someExpensesAnswers).value.futureValue
+    "store data successfully" in new Test {
+      override val connector = StubSelfEmploymentConnector()
+
+      val someExpensesAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
+      val result              = underTest.saveAnswers(journeyCtxWithNino, someExpensesAnswers).value.futureValue
       result shouldBe ().asRight
     }
+  }
+  "get journey answers" in new Test {
+    override val connector =
+      StubSelfEmploymentConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
+
+    val result = underTest.getAnswers(journeyCtxWithNino)(goodsToSellOrUseParser, hc).value.futureValue
+
+    val expectedResult = GoodsToSellOrUseJourneyAnswers(100.0, Some(100.0))
+
+    result shouldBe expectedResult.asRight
+
   }
 }

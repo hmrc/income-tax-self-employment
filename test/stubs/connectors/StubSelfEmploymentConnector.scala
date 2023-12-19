@@ -16,18 +16,19 @@
 
 package stubs.connectors
 
-import cats.implicits.catsSyntaxEitherId
+import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.SelfEmploymentConnector
 import connectors.SelfEmploymentConnector._
 import models.common.{IdType, JourneyContextWithNino}
+import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
-import models.connector.{api_1171, api_1786, api_1803}
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1895.response.AmendSEPeriodSummaryResponse
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
+import models.connector.{api_1171, api_1786, api_1803}
 import stubs.connectors.StubSelfEmploymentConnector._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
@@ -41,7 +42,7 @@ case class StubSelfEmploymentConnector(
     amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(api1895SuccessResponse.asRight),
     createAmendSEAnnualSubmissionResult: Future[Api1802Response] = Future.successful(api1802SuccessResponse.asRight),
     listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
-    getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786SuccessResponse.asRight),
+    getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight),
     getAnnualSummariesResult: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight)
 ) extends SelfEmploymentConnector {
 
@@ -63,7 +64,7 @@ case class StubSelfEmploymentConnector(
   def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response] = ???
 
   def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response] =
-    Future.successful(api1786SuccessResponse.asRight)
+    getPeriodicSummaryDetailResult
 
   def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] =
     Future.successful(api1803SuccessResponse.asRight)
@@ -82,11 +83,20 @@ object StubSelfEmploymentConnector {
   val api1965MatchedResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(
     Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None))))
 
-  val api1786SuccessResponse: api_1786.SuccessResponseSchema = api_1786.SuccessResponseSchema(
-    sampleFromTaxYearStr,
-    sampleToTaxYearStr,
-    api_1786.FinancialsType(None, None)
-  )
+  val api1786EmptySuccessResponse: api_1786.SuccessResponseSchema =
+    api_1786.SuccessResponseSchema(currTaxYearStart, currTaxYearEnd, api_1786.FinancialsType(None, None))
+
+  val api1786DeductionsSuccessResponse: api_1786.SuccessResponseSchema =
+    api_1786.SuccessResponseSchema(
+      currTaxYearStart,
+      currTaxYearEnd,
+      api_1786.FinancialsType(
+        Some(
+          DeductionsType.empty.copy(costOfGoods =
+            Some(SelfEmploymentDeductionsDetailTypePosNeg(amount = BigDecimal(100.00), disallowableAmount = BigDecimal(100.00).some)))),
+        None
+      )
+    )
 
   val api1803SuccessResponse: api_1803.SuccessResponseSchema = api_1803.SuccessResponseSchema(None, None, None)
 
