@@ -27,6 +27,7 @@ import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
+import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import org.scalamock.handlers.CallHandler3
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -151,6 +152,19 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         expectedStatus = NO_CONTENT,
         expectedBody = "",
         methodBlock = () => underTest.saveOfficeSupplies(currTaxYear, businessId, nino)
+      )
+    }
+  }
+  "getOfficeSuppliesAnswers" should {
+    s"return a $OK and answers as json when successful" in new GetExpensesTest[OfficeSuppliesJourneyAnswers] {
+      override val journeyAnswers: OfficeSuppliesJourneyAnswers = genOne(officeSuppliesJourneyAnswersGen)
+      mockExpensesService()
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
+        methodBlock = () => controller.getOfficeSuppliesAnswers(currTaxYear, businessId, nino)
       )
     }
   }
