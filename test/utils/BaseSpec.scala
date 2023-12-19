@@ -47,8 +47,8 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
 object BaseSpec {
   // static data
   val taxYear: TaxYear       = TaxYear(2023)
-  val fromTaxYearStr: String = s"${taxYear.endYear - 1}-04-06"
-  val toTaxYearStr: String   = s"${taxYear.endYear}-04-05"
+  val taxYearStart: String   = TaxYear.startDate(taxYear)
+  val taxYearEnd: String     = TaxYear.endDate(taxYear)
   val businessId: BusinessId = BusinessId("someBusinessId")
   val nino: Nino             = Nino("nino")
   val mtditid: Mtditid       = Mtditid("1234567890")
