@@ -39,17 +39,6 @@ import scala.concurrent.Future
 
 class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckPropertyChecks {
 
-  trait GetExpensesTest {
-    val expensesService: ExpensesAnswersService = mock[ExpensesAnswersService]
-
-    val controller = new JourneyAnswersController(
-      auth = mockAuthorisedAction,
-      cc = stubControllerComponents,
-      incomeService = StubIncomeAnswersService(),
-      expensesService = expensesService
-    )
-  }
-
   val underTest = new JourneyAnswersController(
     auth = mockAuthorisedAction,
     cc = stubControllerComponents,
@@ -195,5 +184,16 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => underTest.saveEntertainmentCosts(currTaxYear, businessId, nino)
       )
     }
+  }
+
+  trait GetExpensesTest {
+    val expensesService: ExpensesAnswersService = mock[ExpensesAnswersService]
+
+    val controller = new JourneyAnswersController(
+      auth = mockAuthorisedAction,
+      cc = stubControllerComponents,
+      incomeService = StubIncomeAnswersService(),
+      expensesService = expensesService
+    )
   }
 }
