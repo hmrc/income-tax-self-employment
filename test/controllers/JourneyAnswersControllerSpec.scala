@@ -16,19 +16,40 @@
 
 package controllers
 
+import cats.data.EitherT
 import cats.implicits._
 import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import gens.genOne
+import models.common.JourneyContextWithNino
+import models.error.ServiceError
+import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
+import parsers.expenses.ExpensesResponseParser
 import play.api.http.Status._
 import play.api.libs.json.Json
+import services.journeyAnswers.ExpensesAnswersService
 import stubs.services.{StubExpensesAnswersService, StubIncomeAnswersService}
+import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
+import scala.concurrent.Future
+
 class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckPropertyChecks {
+
+  trait GetExpensesTest {
+    val expensesService: ExpensesAnswersService = mock[ExpensesAnswersService]
+
+    val controller = new JourneyAnswersController(
+      auth = mockAuthorisedAction,
+      cc = stubControllerComponents,
+      incomeService = StubIncomeAnswersService(),
+      expensesService = expensesService
+    )
+  }
+
   val underTest = new JourneyAnswersController(
     auth = mockAuthorisedAction,
     cc = stubControllerComponents,
@@ -116,6 +137,23 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         expectedBody = "",
         methodBlock = () => underTest.saveGoodsToSellOrUse(currTaxYear, businessId, nino)
       )
+    }
+    "getGoodsToSellOrUse" should {
+      s"return a $OK and answers as json when successful" in new GetExpensesTest {
+        val someAnswers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
+
+        (expensesService
+          .getAnswers(_: JourneyContextWithNino)(_: ExpensesResponseParser[GoodsToSellOrUseJourneyAnswers], _: HeaderCarrier))
+          .expects(*, *, *)
+          .returns(EitherT.right[ServiceError](Future.successful(someAnswers)))
+
+        behave like testRoute(
+          request = buildRequestNoContent,
+          expectedStatus = OK,
+          expectedBody = Json.stringify(Json.toJson(someAnswers)),
+          methodBlock = () => controller.getGoodsToSellOrUseAnswers(currTaxYear, businessId, nino)
+        )
+      }
     }
   }
   "saveOfficeSupplies" should {
