@@ -18,6 +18,7 @@ package utils
 
 import models.connector.api_1894.request._
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
+import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
@@ -37,14 +38,6 @@ object DeductionsBuilder {
         simplifiedExpenses = Some(answers.totalAmount)
       )
 
-  implicit val officeSupplies: DeductionsBuilder[OfficeSuppliesJourneyAnswers] =
-    (answers: OfficeSuppliesJourneyAnswers) =>
-      Deductions.empty.copy(
-        adminCosts = Some(
-          SelfEmploymentDeductionsDetailType(Some(answers.officeSuppliesAmount), answers.officeSuppliesDisallowableAmount)
-        )
-      )
-
   implicit val goodsToSellOrUse: DeductionsBuilder[GoodsToSellOrUseJourneyAnswers] =
     (answers: GoodsToSellOrUseJourneyAnswers) =>
       Deductions.empty.copy(
@@ -61,14 +54,6 @@ object DeductionsBuilder {
         )
       )
 
-  implicit val staffCosts: DeductionsBuilder[StaffCostsJourneyAnswers] =
-    (answers: StaffCostsJourneyAnswers) =>
-      Deductions.empty.copy(
-        staffCosts = Some(
-          SelfEmploymentDeductionsDetailType(Some(answers.staffCostsAmount), answers.staffCostsDisallowableAmount)
-        )
-      )
-
   implicit val advertisingOrMarketingCosts: DeductionsBuilder[AdvertisingOrMarketingJourneyAnswers] =
     (answers: AdvertisingOrMarketingJourneyAnswers) =>
       Deductions.empty.copy(
@@ -77,11 +62,35 @@ object DeductionsBuilder {
         )
       )
 
+  implicit val officeSupplies: DeductionsBuilder[OfficeSuppliesJourneyAnswers] =
+    (answers: OfficeSuppliesJourneyAnswers) =>
+      Deductions.empty.copy(
+        adminCosts = Some(
+          SelfEmploymentDeductionsDetailType(Some(answers.officeSuppliesAmount), answers.officeSuppliesDisallowableAmount)
+        )
+      )
+
   implicit val entertainmentCosts: DeductionsBuilder[EntertainmentJourneyAnswers] =
     (answers: EntertainmentJourneyAnswers) =>
       Deductions.empty.copy(
         businessEntertainmentCosts = Some(
           SelfEmploymentDeductionsDetailType(None, Some(answers.entertainmentAmount))
+        )
+      )
+
+  implicit val staffCosts: DeductionsBuilder[StaffCostsJourneyAnswers] =
+    (answers: StaffCostsJourneyAnswers) =>
+      Deductions.empty.copy(
+        staffCosts = Some(
+          SelfEmploymentDeductionsDetailType(Some(answers.staffCostsAmount), answers.staffCostsDisallowableAmount)
+        )
+      )
+
+  implicit val construction: DeductionsBuilder[ConstructionJourneyAnswers] =
+    (answers: ConstructionJourneyAnswers) =>
+      Deductions.empty.copy(
+        constructionIndustryScheme = Some(
+          SelfEmploymentDeductionsDetailType(None, Some(answers.constructionAmount))
         )
       )
 }
