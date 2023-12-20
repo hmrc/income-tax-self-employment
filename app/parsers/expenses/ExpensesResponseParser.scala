@@ -18,6 +18,7 @@ package parsers.expenses
 
 import models.connector._
 import models.connector.api_1786.SuccessResponseSchema
+import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
@@ -41,6 +42,12 @@ object ExpensesResponseParser {
           response.financials.deductions.flatMap(_.maintenanceCosts.map(_.amount)).getOrElse(0), // TODO: What if it's None?
         repairsAndMaintenanceDisallowableAmount = response.financials.deductions.flatMap(_.maintenanceCosts.flatMap(_.disallowableAmount))
       )
+
+  implicit val entertainmentCostsParser: ExpensesResponseParser[EntertainmentJourneyAnswers] =
+    (response: SuccessResponseSchema) =>
+      EntertainmentJourneyAnswers(
+        entertainmentAmount = response.financials.deductions.flatMap(_.businessEntertainmentCosts.map(_.amount)).getOrElse(0)
+      ) // TODO: What if it's None?
 
   implicit val officeSuppliesParser: ExpensesResponseParser[OfficeSuppliesJourneyAnswers] =
     (response: SuccessResponseSchema) =>

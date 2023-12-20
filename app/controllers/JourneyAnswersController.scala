@@ -131,4 +131,8 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
       expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
+
+  def getEntertainmentCostsAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResult(expensesService.getAnswers[EntertainmentJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
 }
