@@ -146,6 +146,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
+
   "saveOfficeSupplies" should {
     s"return a $NO_CONTENT when successful" in forAll(officeSuppliesJourneyAnswersGen) { data =>
       behave like testRoute(
@@ -169,6 +170,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
+
   "saveRepairsAndMaintenanceCosts" should {
     s"return a $NO_CONTENT when successful" in forAll(repairsAndMaintenanceCostsJourneyAnswersGen) { data =>
       behave like testRoute(
@@ -192,6 +194,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
+
   "saveStaffCosts" should {
     s"return a $NO_CONTENT when successful" in forAll(staffCostsJourneyAnswersGen) { data =>
       behave like testRoute(
@@ -202,6 +205,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
+
   "saveEntertainmentCosts" should {
     s"return a $NO_CONTENT when successful" in forAll(entertainmentCostsJourneyAnswersGen) { data =>
       behave like testRoute(
@@ -212,6 +216,18 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
+
+  "saveAdvertisingOrMarketing" should {
+    s"return a $NO_CONTENT when successful" in forAll(advertisingOrMarketingJourneyAnswersGen) { data =>
+      behave like testRoute(
+        request = buildRequest(data),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.saveAdvertisingOrMarketing(currTaxYear, businessId, nino)
+      )
+    }
+  }
+
   "getEntertainmentCosts" should {
     s"return a $OK and answers as json when successful" in new GetExpensesTest[EntertainmentJourneyAnswers] {
       override val journeyAnswers: EntertainmentJourneyAnswers = genOne(entertainmentCostsJourneyAnswersGen)

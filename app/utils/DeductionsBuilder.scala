@@ -17,6 +17,7 @@
 package utils
 
 import models.connector.api_1894.request._
+import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
@@ -65,6 +66,14 @@ object DeductionsBuilder {
       Deductions.empty.copy(
         staffCosts = Some(
           SelfEmploymentDeductionsDetailType(Some(answers.staffCostsAmount), answers.staffCostsDisallowableAmount)
+        )
+      )
+
+  implicit val advertisingOrMarketingCosts: DeductionsBuilder[AdvertisingOrMarketingJourneyAnswers] =
+    (answers: AdvertisingOrMarketingJourneyAnswers) =>
+      Deductions.empty.copy(
+        advertisingCosts = Some(
+          SelfEmploymentDeductionsDetailType(Some(answers.advertisingOrMarketingAmount), answers.advertisingOrMarketingDisallowableAmount)
         )
       )
 
