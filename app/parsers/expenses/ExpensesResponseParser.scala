@@ -23,6 +23,7 @@ import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
+import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import utils.ResponseParser
 
 trait ExpensesResponseParser[Result] extends ResponseParser[api_1786.SuccessResponseSchema, Result] {
@@ -50,7 +51,7 @@ object ExpensesResponseParser {
     (response: SuccessResponseSchema) =>
       EntertainmentJourneyAnswers(
         entertainmentAmount = response.financials.deductions.flatMap(_.businessEntertainmentCosts.map(_.amount)).getOrElse(noneFound)
-      ) // TODO: What if it's None?
+      )
 
   implicit val officeSuppliesParser: ExpensesResponseParser[OfficeSuppliesJourneyAnswers] =
     (response: SuccessResponseSchema) =>
@@ -62,6 +63,14 @@ object ExpensesResponseParser {
   implicit val constructionParser: ExpensesResponseParser[ConstructionJourneyAnswers] =
     (response: SuccessResponseSchema) =>
       ConstructionJourneyAnswers(
-        constructionAmount = response.financials.deductions.flatMap(_.adminCosts.map(_.amount)).getOrElse(noneFound)
+        constructionIndustryAmount = response.financials.deductions.flatMap(_.adminCosts.map(_.amount)).getOrElse(noneFound),
+        constructionIndustryDisallowableAmount = response.financials.deductions.flatMap(_.adminCosts.flatMap(_.disallowableAmount))
+      )
+
+  implicit val staffCostsParser: ExpensesResponseParser[StaffCostsJourneyAnswers] =
+    (response: SuccessResponseSchema) =>
+      StaffCostsJourneyAnswers(
+        staffCostsAmount = response.financials.deductions.flatMap(_.staffCosts.map(_.amount)).getOrElse(noneFound),
+        staffCostsDisallowableAmount = response.financials.deductions.flatMap(_.staffCosts.flatMap(_.disallowableAmount))
       )
 }

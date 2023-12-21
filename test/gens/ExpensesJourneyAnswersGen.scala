@@ -57,7 +57,8 @@ object ExpensesJourneyAnswersGen {
   } yield EntertainmentJourneyAnswers(disallowableAmount)
 
   val constructionJourneyAnswersGen: Gen[ConstructionJourneyAnswers] = for {
-    amount <- bigDecimalGen
-  } yield ConstructionJourneyAnswers(amount)
+    amount             <- bigDecimalGen
+    disallowableAmount <- Gen.option(bigDecimalGen)
+  } yield ConstructionJourneyAnswers(amount, disallowableAmount)
 
 }
