@@ -19,6 +19,7 @@ package controllers
 import controllers.actions.AuthorisedAction
 import models.common._
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
+import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
@@ -142,5 +143,12 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def getEntertainmentCostsAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleApiResult(expensesService.getAnswers[EntertainmentJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  def saveConstructionCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBody[ConstructionJourneyAnswers](user) { value =>
+      val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+    }
   }
 }
