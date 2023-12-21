@@ -26,6 +26,9 @@ GET         /:taxYear/:businessId/expenses-goods-to-sell-or-use/:nino/answers   
 POST        /:taxYear/:businessId/expenses-repairs-and-maintenance/:nino/answers                                        controllers.JourneyAnswersController.saveRepairsAndMaintenanceCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/expenses-repairs-and-maintenance/:nino/answers                                        controllers.JourneyAnswersController.getRepairsAndMaintenanceCostsAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
+POST        /:taxYear/:businessId/expenses-staff-costs/:nino/answers                                                    controllers.JourneyAnswersController.saveStaffCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+GET         /:taxYear/:businessId/expenses-staff-costs/:nino/answers                                                    controllers.JourneyAnswersController.getStaffCostsAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
 POST        /:taxYear/:businessId/expenses-advertising-marketing/:nino/answers                                          controllers.JourneyAnswersController.saveAdvertisingOrMarketing(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/:businessId/expenses-office-supplies/:nino/answers                                                controllers.JourneyAnswersController.saveOfficeSupplies(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
@@ -33,7 +36,5 @@ GET         /:taxYear/:businessId/expenses-office-supplies/:nino/answers        
 
 POST        /:taxYear/:businessId/expenses-entertainment/:nino/answers                                                  controllers.JourneyAnswersController.saveEntertainmentCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/expenses-entertainment/:nino/answers                                                  controllers.JourneyAnswersController.getEntertainmentCostsAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
-
-POST        /:taxYear/:businessId/expenses-staff-costs/:nino/answers                                                    controllers.JourneyAnswersController.saveStaffCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/:businessId/expenses-construction/:nino/answers                                                   controllers.JourneyAnswersController.saveConstructionCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
