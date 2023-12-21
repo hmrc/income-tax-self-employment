@@ -32,7 +32,7 @@ trait ExpensesResponseParser[Result] extends ResponseParser[api_1786.SuccessResp
 
 object ExpensesResponseParser {
 
-  private val noneFound = 0
+  private val noneFound = 0 // TODO: What if it's None?
 
   implicit val goodsToSellOrUseParser: ExpensesResponseParser[GoodsToSellOrUseJourneyAnswers] =
     (response: SuccessResponseSchema) =>
