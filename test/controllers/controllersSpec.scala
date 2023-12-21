@@ -16,9 +16,11 @@
 package controllers
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxOptionId
 import gens.ExpensesJourneyAnswersGen.entertainmentCostsJourneyAnswersGen
 import gens.genOne
 import models.error.ServiceError
+import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.Json
@@ -30,11 +32,31 @@ import scala.concurrent.Future
 
 class controllersSpec extends AnyWordSpec with Matchers with Logging {
 
+  private val journeyAnswers = genOne(entertainmentCostsJourneyAnswersGen)
+
+  "handleOptionalApiResult" when {
+    "result is a success" should {
+      "return Ok and answers as json" in {
+        val success = EitherT.right[ServiceError](Future.successful(journeyAnswers.some))
+        val result  = handleOptionalApiResult(success)
+
+        status(result) shouldBe 200
+        contentAsJson(result) shouldBe Json.toJson(journeyAnswers)
+      }
+    }
+    "unable to fetch answers from db" should {
+      "return a 204" in {
+        val failure = EitherT.right[ServiceError](Future.successful(Option.empty[EntertainmentJourneyAnswers]))
+        val result  = handleOptionalApiResult(failure)
+
+        status(result) shouldBe 204
+      }
+    }
+  }
   "handleApiResult" when {
     "result is a success" should {
       "return Ok and answers as json" in {
-        val journeyAnswers = genOne(entertainmentCostsJourneyAnswersGen)
-        val success        = EitherT.right[ServiceError](Future.successful(journeyAnswers))
+        val success = EitherT.right[ServiceError](Future.successful(journeyAnswers))
 
         val result = handleApiResult(success)
 
