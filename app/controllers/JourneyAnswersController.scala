@@ -122,6 +122,10 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     }
   }
 
+  def getStaffCostsAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResult(expensesService.getAnswers[StaffCostsJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
   def saveAdvertisingOrMarketing(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[AdvertisingOrMarketingJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
