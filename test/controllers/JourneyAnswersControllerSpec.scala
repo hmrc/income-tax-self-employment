@@ -215,7 +215,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         request = buildRequestNoContent,
         expectedStatus = OK,
         expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
-        methodBlock = () => controller.getRepairsAndMaintenanceCostsAnswers(currTaxYear, businessId, nino)
+        methodBlock = () => controller.getStaffCostsAnswers(currTaxYear, businessId, nino)
       )
     }
   }
