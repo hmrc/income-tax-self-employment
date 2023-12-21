@@ -44,7 +44,7 @@ class controllersSpec extends AnyWordSpec with Matchers with Logging {
         contentAsJson(result) shouldBe Json.toJson(journeyAnswers)
       }
     }
-    "unable to fetch answers from db" should {
+    "no journey answers were fetched" should {
       "return a 204" in {
         val failure = EitherT.right[ServiceError](Future.successful(Option.empty[EntertainmentJourneyAnswers]))
         val result  = handleOptionalApiResult(failure)
