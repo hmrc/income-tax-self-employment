@@ -18,7 +18,7 @@ package models.frontend.expenses.construction
 
 import play.api.libs.json._
 
-case class ConstructionJourneyAnswers(constructionAmount: BigDecimal)
+case class ConstructionJourneyAnswers(constructionIndustryAmount: BigDecimal, constructionIndustryDisallowableAmount: Option[BigDecimal])
 
 object ConstructionJourneyAnswers {
   implicit val formats: OFormat[ConstructionJourneyAnswers] = Json.format[ConstructionJourneyAnswers]
