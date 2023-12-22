@@ -19,6 +19,7 @@ package parsers.expenses
 import models.connector._
 import models.connector.api_1786.SuccessResponseSchema
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
+import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
@@ -63,8 +64,8 @@ object ExpensesResponseParser {
   implicit val constructionParser: ExpensesResponseParser[ConstructionJourneyAnswers] =
     (response: SuccessResponseSchema) =>
       ConstructionJourneyAnswers(
-        constructionIndustryAmount = response.financials.deductions.flatMap(_.adminCosts.map(_.amount)).getOrElse(noneFound),
-        constructionIndustryDisallowableAmount = response.financials.deductions.flatMap(_.adminCosts.flatMap(_.disallowableAmount))
+        constructionIndustryAmount = response.financials.deductions.flatMap(_.constructionIndustryScheme.map(_.amount)).getOrElse(noneFound),
+        constructionIndustryDisallowableAmount = response.financials.deductions.flatMap(_.constructionIndustryScheme.flatMap(_.disallowableAmount))
       )
 
   implicit val staffCostsParser: ExpensesResponseParser[StaffCostsJourneyAnswers] =
@@ -72,5 +73,11 @@ object ExpensesResponseParser {
       StaffCostsJourneyAnswers(
         staffCostsAmount = response.financials.deductions.flatMap(_.staffCosts.map(_.amount)).getOrElse(noneFound),
         staffCostsDisallowableAmount = response.financials.deductions.flatMap(_.staffCosts.flatMap(_.disallowableAmount))
+      )
+
+  implicit val depreciationCostsParser: ExpensesResponseParser[DepreciationCostsJourneyAnswers] =
+    (response: SuccessResponseSchema) =>
+      DepreciationCostsJourneyAnswers(
+        depreciationDisallowableAmount = response.financials.deductions.flatMap(_.depreciation.map(_.amount)).getOrElse(noneFound)
       )
 }
