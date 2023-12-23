@@ -25,19 +25,17 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import support.MongoTestSupport
 import uk.gov.hmrc.mongo.test.MongoSupport
 
-
-trait MongoSpec extends AnyWordSpec
-  with Matchers
-  with MongoSupport
-  with MongoTestSupport[JourneyAnswers]
-  with BeforeAndAfterEach
-  with GuiceOneAppPerSuite
-  with OptionValues {
+trait MongoSpec
+    extends AnyWordSpec
+    with Matchers
+    with MongoSupport
+    with BeforeAndAfterEach
+    with GuiceOneAppPerSuite
+    with OptionValues {
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(
     timeout = Span(5, Seconds),
     interval = Span(500, Millis)
   )
-
 
 }

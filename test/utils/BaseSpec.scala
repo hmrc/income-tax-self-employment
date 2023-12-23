@@ -16,6 +16,7 @@
 
 package utils
 
+import models.common.JourneyName.TradeDetails
 import models.common._
 import org.mockito.ArgumentMatchersSugar
 import org.scalatest.concurrent.ScalaFutures
@@ -45,6 +46,8 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
 }
 
 object BaseSpec {
+  implicit val hc: HeaderCarrier    = HeaderCarrier()
+
   // static data
   val taxYear: TaxYear       = TaxYear(2023)
   val taxYearStart: String   = TaxYear.startDate(taxYear)
@@ -60,6 +63,9 @@ object BaseSpec {
 
   // more complex data
   val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
+  val tradeDetailsCtx: JourneyContext            = journeyCtxWithNino.toJourneyContext(TradeDetails)
+  val incomeCtx: JourneyContext                  = journeyCtxWithNino.toJourneyContext(JourneyName.Income)
+  val expenseTailoringCtx: JourneyContext                  = journeyCtxWithNino.toJourneyContext(JourneyName.ExpensesTailoring)
 
   // operations
   def mkNow(): Instant                 = Instant.now().truncatedTo(ChronoUnit.SECONDS)

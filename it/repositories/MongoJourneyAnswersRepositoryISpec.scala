@@ -18,25 +18,24 @@ package repositories
 
 import bulders.BusinessDataBuilder.aBusiness
 import cats.implicits._
-import models.common.{BusinessId, JourneyName, TradingName}
 import models.common.JourneyName._
 import models.common.JourneyStatus._
+import models.common.{BusinessId, JourneyName, TradingName}
 import models.database.JourneyAnswers
-import models.domain.{Business, JourneyNameAndStatus, TradesJourneyStatuses}
+import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import models.frontend.TaskList
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import support.MongoTestSupport
 import utils.BaseSpec._
 
 import java.time.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-class MongoJourneyAnswersRepositoryISpec extends MongoSpec {
-  private val now             = mkNow()
-  private val clock           = mkClock(now)
-  private val tradeDetailsCtx = journeyCtxWithNino.toJourneyContext(TradeDetails)
-  private val incomeCtx       = journeyCtxWithNino.toJourneyContext(JourneyName.Income)
+class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport[JourneyAnswers] {
+  private val now   = mkNow()
+  private val clock = mkClock(now)
 
   override val repository = new MongoJourneyAnswersRepository(mongoComponent, clock)
 
@@ -136,7 +135,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec {
       val result = (for {
         _        <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
         inserted <- repository.get(incomeCtx)
-      } yield inserted).futureValue
+      } yield inserted.value).futureValue
 
       val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
       result shouldBe JourneyAnswers(
@@ -144,7 +143,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec {
         businessId,
         currTaxYear,
         JourneyName.Income,
-        InProgress,
+        NotStarted,
         Json.obj("field" -> "value"),
         expectedExpireAt,
         now,
@@ -166,7 +165,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec {
         businessId,
         currTaxYear,
         JourneyName.Income,
-        InProgress,
+        NotStarted,
         Json.obj("field" -> "updated"),
         expectedExpireAt,
         now,

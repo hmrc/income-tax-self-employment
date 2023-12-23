@@ -19,7 +19,7 @@ package repositories
 import cats.implicits._
 import models.common._
 import models.database.JourneyAnswers
-import models.domain.{Business, JourneyNameAndStatus, TradesJourneyStatuses}
+import models.domain.Business
 import models.frontend.TaskList
 import org.mongodb.scala._
 import org.mongodb.scala.bson._

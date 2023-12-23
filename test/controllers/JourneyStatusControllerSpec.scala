@@ -16,13 +16,14 @@
 
 package controllers
 
-import controllers.ControllerBehaviours.buildRequestNoContent
+import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
 import models.common.{JourneyName, JourneyStatus}
 import models.domain.JourneyNameAndStatus
-import play.api.http.Status.OK
+import models.frontend.{JourneyStatusData, TaskList}
+import play.api.http.Status.{NO_CONTENT, OK}
 import play.api.libs.json.Json
 import stubs.services.StubJourneyStatusService
-import utils.BaseSpec.{businessId, currTaxYear}
+import utils.BaseSpec.{businessId, currTaxYear, nino}
 
 class JourneyStatusControllerSpec extends ControllerBehaviours {
   private val journeyStatusService = StubJourneyStatusService(
@@ -42,6 +43,30 @@ class JourneyStatusControllerSpec extends ControllerBehaviours {
           )
           .toString(),
         methodBlock = () => underTest.getStatus(businessId, JourneyName.Income, currTaxYear)
+      )
+    }
+  }
+
+  "getTaskList" should {
+    "return task list" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json
+          .toJson(TaskList.empty)
+          .toString(),
+        methodBlock = () => underTest.getTaskList(currTaxYear, nino)
+      )
+    }
+  }
+
+  "setStatus" should {
+    "set a new status" in {
+      behave like testRoute(
+        request = buildRequest(JourneyStatusData(JourneyStatus.Completed)),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.setStatus(businessId, JourneyName.Income, currTaxYear)
       )
     }
   }

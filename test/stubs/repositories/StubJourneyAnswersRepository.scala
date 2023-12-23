@@ -29,7 +29,8 @@ import scala.concurrent.Future
 case class StubJourneyAnswersRepository(
     getAnswer: Option[JourneyAnswers] = None,
     upsertDateField: Future[UpdateResult] = Future.successful(updatedOne),
-    upsertStatusField: Future[UpdateResult] = Future.successful(updatedOne)
+    upsertStatusField: Future[UpdateResult] = Future.successful(updatedOne),
+    getAllResult: TaskList = TaskList.empty
 ) extends JourneyAnswersRepository {
 
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[UpdateResult] =
@@ -42,5 +43,6 @@ case class StubJourneyAnswersRepository(
 
   def get(ctx: JourneyContext): Future[Option[JourneyAnswers]] = Future.successful(getAnswer)
 
-  def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): Future[TaskList] = ???
+  def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): Future[TaskList] =
+    Future.successful(getAllResult)
 }
