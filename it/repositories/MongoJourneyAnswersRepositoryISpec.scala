@@ -61,7 +61,7 @@ class MongoJourneyAnswersRepositoryISpec
   "upsertData" should {
     "insert a new journey answers in in-progress status and calculate dates" in {
       val result = (for {
-        _        <- repository.upsertData(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
+        _        <- repository.upsertAnswers(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
         inserted <- repository.get(journeyCtxWithNino, JourneyName.Income)
       } yield inserted.value).futureValue
 
@@ -80,9 +80,9 @@ class MongoJourneyAnswersRepositoryISpec
 
     "update already existing answers (values, updateAt)" in {
       val result = (for {
-        _ <- repository.upsertData(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
+        _ <- repository.upsertAnswers(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
         _ = clock.advanceBy(1.day)
-        updatedResult <- repository.upsertData(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "updated"))
+        updatedResult <- repository.upsertAnswers(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "updated"))
         updated       <- repository.get(journeyCtxWithNino, JourneyName.Income)
         _ = updatedResult.getModifiedCount shouldBe 1
       } yield updated.value).futureValue
@@ -105,9 +105,9 @@ class MongoJourneyAnswersRepositoryISpec
   "updateStatus" should {
     "update status to a new one" in {
       val result = (for {
-        _ <- repository.upsertData(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
+        _ <- repository.upsertAnswers(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
         _ = clock.advanceBy(2.day)
-        updatedResult <- repository.updateStatus(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Completed)
+        updatedResult <- repository.setStatus(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Completed)
         inserted      <- repository.get(journeyCtxWithNino, JourneyName.Income)
         _ = updatedResult.getModifiedCount shouldBe 1
       } yield inserted.value).futureValue
@@ -120,7 +120,7 @@ class MongoJourneyAnswersRepositoryISpec
   "testOnlyClearAllData" should {
     "clear all the data" in {
       val res = (for {
-        _        <- repository.upsertData(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
+        _        <- repository.upsertAnswers(JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income), Json.obj("field" -> "value"))
         _        <- repository.testOnlyClearAllData()
         inserted <- repository.get(journeyCtxWithNino, JourneyName.Income)
       } yield inserted).futureValue

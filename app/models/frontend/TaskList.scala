@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package models.domain
+package models.frontend
 
-import models.common.{BusinessId, TradingName}
-import play.api.libs.json._
+import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
+import play.api.libs.json.{Json, OFormat}
 
-case class TradesJourneyStatuses(businessId: BusinessId, tradingName: Option[TradingName], journeyStatuses: List[JourneyNameAndStatus])
+final case class TaskList(tradeDetails: Option[JourneyNameAndStatus], businesses: List[TradesJourneyStatuses])
 
-object TradesJourneyStatuses {
-  implicit val format: OFormat[TradesJourneyStatuses] = Json.format[TradesJourneyStatuses]
+object TaskList {
+  implicit val format: OFormat[TaskList] = Json.format[TaskList]
 }

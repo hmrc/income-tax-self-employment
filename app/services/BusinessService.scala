@@ -17,8 +17,8 @@
 package services
 
 import connectors.SelfEmploymentConnector
-import models.common.IdType
-import models.domain.{Business, TradesJourneyStatuses}
+import models.common.{BusinessId, IdType, JourneyName, TradingName}
+import models.domain._
 import models.error.{DownstreamError, ServiceError}
 import repositories.JourneyStateRepository
 import services.BusinessService.{GetBusinessJourneyStatesResponse, GetBusinessResponse}
@@ -36,29 +36,37 @@ class BusinessService @Inject() (businessConnector: SelfEmploymentConnector, jou
   def getBusinesses(nino: String)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
     businessConnector
       .getBusinesses(IdType.Nino, nino)
-      .map(
-        _.map(_.taxPayerDisplayResponse)
-          .map(taxPayerDisplayResponse =>
-            taxPayerDisplayResponse.businessData.getOrElse(Nil).map(details => Business.mkBusiness(details, taxPayerDisplayResponse))))
+      .map(_.map(_.taxPayerDisplayResponse)
+        .map(taxPayerDisplayResponse =>
+          taxPayerDisplayResponse.businessData.getOrElse(Nil).map(details => Business.mkBusiness(details, taxPayerDisplayResponse.yearOfMigration))))
 
   def getBusiness(nino: String, businessId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[GetBusinessResponse] =
     getBusinesses(nino).map(_.map(_.filter(_.businessId == businessId)))
 
+  // TODO Simplfy this method
   def getBusinessJourneyStates(nino: String, taxYear: Int)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): Future[GetBusinessJourneyStatesResponse] = {
     lazy val pagerMsg = "[Self-Employment BE SessionRepository][get] Failed to find journey state data."
 
     getBusinesses(nino)
-      .map(_.map(_.map(bus =>
-        journeyStateRepository
-          .get(bus.businessId, taxYear)
-          .map(seqJs =>
-            (bus.businessId, Some(bus.tradingName.getOrElse("")), seqJs.map(j => (j.journeyStateData.journey, j.journeyStateData.completedState)))))))
+      .map(
+        _.map(_.map(bus =>
+          journeyStateRepository
+            .get(bus.businessId, taxYear)
+            .map(seqJs => (bus.businessId, bus.tradingName, seqJs.map(j => (j.journeyStateData.journey, j.journeyStateData.completedState)))))))
       .map(_.map(seq => Future.sequence(seq)))
       .map(_.toFuture())
       .flatten
-      .map(_.map(_.map(TradesJourneyStatuses(_))))
+      .map(_.map(_.map { case (businessId, maybeTradingName, statusWithIsCompleted) =>
+        val journeyStatuses = statusWithIsCompleted.toList.map { case (name, isCompleted) =>
+          JourneyNameAndStatus.fromIsCompleted(
+            JourneyName.withName(name),
+            isCompleted
+          )
+        }
+        TradesJourneyStatuses(BusinessId(businessId), maybeTradingName.map(TradingName(_)), journeyStatuses)
+      }))
       .recoverEitherWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
   }
 

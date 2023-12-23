@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package models.domain
+package models.common
 
-import models.common.{BusinessId, TradingName}
-import play.api.libs.json._
+import play.api.libs.json.{Format, Json}
 
-case class TradesJourneyStatuses(businessId: BusinessId, tradingName: Option[TradingName], journeyStatuses: List[JourneyNameAndStatus])
+final case class TradingName(value: String) extends AnyVal {
+  override def toString: String = value
+}
 
-object TradesJourneyStatuses {
-  implicit val format: OFormat[TradesJourneyStatuses] = Json.format[TradesJourneyStatuses]
+object TradingName {
+  implicit val format: Format[TradingName] = Json.valueFormat[TradingName]
 }

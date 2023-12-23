@@ -17,73 +17,53 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
-import models.database.JourneyState
-import JourneyState.JourneyStateData
-import play.api.Logging
+import models.common._
+import models.domain.JourneyNameAndStatus
+import models.frontend.JourneyStatusData
 import play.api.libs.json.Format.GenericFormat
-import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import repositories.JourneyStateRepository
 import services.BusinessService
+import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import utils.PagerDutyHelper.PagerDutyKeys.FAILED_TO_GET_JOURNEY_STATE_DATA
-import utils.PagerDutyHelper.WithRecovery
+import utils.Logging
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class JourneyStateController @Inject() (journeyStateRepository: JourneyStateRepository,
+                                        journeyStatusService: JourneyStatusService,
                                         businessService: BusinessService,
                                         auth: AuthorisedAction,
                                         cc: ControllerComponents)(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
-  def getJourneyState(businessId: String, journey: String, taxYear: Int): Action[AnyContent] = auth.async { _ =>
-    lazy val pagerMsg = "[Self-Employment BE SessionRepository][get] Failed to find journey state data."
+  def getJourneyState(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear): Action[AnyContent] = auth.async { request =>
+    val result = journeyStatusService
+      .get(JourneyContext(taxYear, businessId, request.getMtditid, journey))
+      .map(JourneyNameAndStatus(journey, _))
 
-    journeyStateRepository
-      .get(businessId, taxYear, journey)
-      .recoverWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
-      .map {
-        case Right(Some(model)) => Ok(Json.toJson(model.journeyStateData.completedState))
-        case Right(None)        => NoContent
-        case Left(serviceError) => InternalServerError(Json.toJson(serviceError.errorMessage))
-      }
+    handleApiResultT(result)
   }
 
-  def getJourneyStateSeq(nino: String, taxYear: Int): Action[AnyContent] = auth.async { implicit request =>
-    businessService
-      .getBusinessJourneyStates(nino, taxYear)
-      .map {
-        case Left(serviceError) => InternalServerError(Json.toJson(serviceError))
-        case Right(Seq())       => NoContent
-        case Right(res)         => Ok(Json.toJson(res))
-      }
+  // TODO Rename
+  def getJourneyStateSeq(taxYear: TaxYear, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
+    val result = journeyStatusService.getTaskList(taxYear, request.getMtditid, nino)
+    handleApiResultT(result)
+//    businessService
+//      .getBusinessJourneyStates(nino, taxYear)
+//      .map {
+//        case Left(serviceError) => InternalServerError(Json.toJson(serviceError))
+//        case Right(Seq())       => NoContent
+//        case Right(res)         => Ok(Json.toJson(res))
+//      }
   }
 
-  def putJourneyState(businessId: String, journey: String, taxYear: Int, completed: Boolean): Action[AnyContent] = auth.async { _ =>
-    lazy val pagerMsg = "[Self-Employment BE SessionRepository][set] Failed to save journey state data."
-
-    val journeyStateData = JourneyStateData(businessId, journey, taxYear, completed)
-
-    journeyStateRepository
-      .get(businessId, taxYear, journey)
-      .flatMap { maybeJourneyState =>
-        val (journeyState, isCreated) =
-          maybeJourneyState.fold((JourneyState(journeyStateData = journeyStateData), true))(js => (JourneyState(js.id, journeyStateData), false))
-
-        journeyStateRepository
-          .set(journeyState)
-          .map((_, isCreated))
-      }
-      .recoverWithPagerDutyLog(FAILED_TO_GET_JOURNEY_STATE_DATA, pagerMsg)
-      .map {
-        case Right((_, true))  => Created
-        case Right((_, false)) => NoContent
-        case Left(serverError) => InternalServerError(Json.toJson(serverError.errorMessage))
-      }
+  def setJourneyStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear): Action[AnyContent] = auth.async { implicit request =>
+    getBody[JourneyStatusData](request) { statusData =>
+      journeyStatusService.set(JourneyContext(taxYear, businessId, request.getMtditid, journey), statusData.status).map(_ => NoContent)
+    }
   }
-
 }

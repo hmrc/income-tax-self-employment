@@ -35,7 +35,7 @@ package object controllers {
     handleResultT(resultT)
   }
 
-  def handleApiResult[A: Writes](result: ApiResultT[A])(implicit ec: ExecutionContext, logger: Logger): Future[Result] = {
+  def handleApiResultT[A: Writes](result: ApiResultT[A])(implicit ec: ExecutionContext, logger: Logger): Future[Result] = {
     val resultT = result.map(r => Ok(Json.toJson(r)))
     handleResultT(resultT)
   }

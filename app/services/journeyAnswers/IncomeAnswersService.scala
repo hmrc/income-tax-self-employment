@@ -62,7 +62,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
 
   private def getDbAnswers(ctx: JourneyContextWithNino): EitherT[Future, InvalidJsonFormatError, Option[IncomeStorageAnswers]] = {
     val res = for {
-      row <- repository.get(ctx, Income)
+      row <- repository.get(ctx.toJourneyContext(Income))
       maybeDbAnswers = row.map(_.toStorageAnswers[IncomeStorageAnswers]).traverse(identity)
     } yield maybeDbAnswers
 
@@ -89,7 +89,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
     val upsertData = CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, upsertBody)
 
     val result = for {
-      _ <- EitherT.right[DownstreamError](repository.upsertData(JourneyContext(taxYear, businessId, mtditid, Income), Json.toJson(storageAnswers)))
+      _ <- EitherT.right[DownstreamError](repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, Income), Json.toJson(storageAnswers)))
       response <- EitherT(connector.listSEPeriodSummary(ctx))
       _ <-
         if (noSubmissionExists(response)) EitherT(connector.createSEPeriodSummary(createData)) else EitherT(connector.amendSEPeriodSummary(amendData))

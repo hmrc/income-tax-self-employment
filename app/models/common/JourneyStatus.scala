@@ -17,18 +17,24 @@
 package models.common
 
 import enumeratum._
-import org.mongodb.scala.bson.{BsonString, BsonValue}
 
-sealed abstract class JourneyStatus(override val entryName: String) extends EnumEntry
+sealed abstract class JourneyStatus(override val entryName: String) extends EnumEntry {
+  override def toString: String = entryName
+}
 
 object JourneyStatus extends Enum[JourneyStatus] with utils.PlayJsonEnum[JourneyStatus] {
 
   val values: IndexedSeq[JourneyStatus] = findValues
 
-  case object InProgress extends JourneyStatus("in-progress")
-  case object Completed  extends JourneyStatus("completed")
+  /** This status is used If there are no answers persisted */
+  case object CheckOurRecords extends JourneyStatus("checkOurRecords")
 
-  def toBson(status: JourneyStatus): BsonValue = new BsonString(status.entryName)
+  /** It is used to indicate the answers were submitted, but the last Completion page has not reached yet */
+  case object NotStarted extends JourneyStatus("notStarted")
 
-  def fromBson(bson: BsonValue): JourneyStatus = withName(bson.asString().getValue)
+  /** The completion page has been passed with answer No */
+  case object InProgress extends JourneyStatus("inProgress")
+
+  /** The completion page has been passed with answer Yes */
+  case object Completed extends JourneyStatus("completed")
 }

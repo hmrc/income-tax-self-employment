@@ -16,11 +16,16 @@
 
 package models.domain
 
-import models.common.{BusinessId, TradingName}
-import play.api.libs.json._
+import models.common.{JourneyName, JourneyStatus}
+import play.api.libs.json.{Json, OFormat}
 
-case class TradesJourneyStatuses(businessId: BusinessId, tradingName: Option[TradingName], journeyStatuses: List[JourneyNameAndStatus])
+final case class JourneyNameAndStatus(name: JourneyName, journeyStatus: JourneyStatus)
 
-object TradesJourneyStatuses {
-  implicit val format: OFormat[TradesJourneyStatuses] = Json.format[TradesJourneyStatuses]
+object JourneyNameAndStatus {
+  implicit val format: OFormat[JourneyNameAndStatus] = Json.format[JourneyNameAndStatus]
+
+  def fromIsCompleted(name: JourneyName, isCompleted: Boolean): JourneyNameAndStatus = {
+    val status: JourneyStatus = if (isCompleted) JourneyStatus.Completed else JourneyStatus.InProgress
+    JourneyNameAndStatus(name, status)
+  }
 }

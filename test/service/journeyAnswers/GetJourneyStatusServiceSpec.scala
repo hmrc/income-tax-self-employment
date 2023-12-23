@@ -31,7 +31,7 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class GetJourneyAnswersServiceSpec extends AnyWordSpec with MockJourneyAnswersRepository with ScalaFutures {
+class GetJourneyStatusServiceSpec extends AnyWordSpec with MockJourneyAnswersRepository with ScalaFutures {
 
   private val service = new GetJourneyAnswersService(mockJourneyAnswersRepository)
 

@@ -35,10 +35,10 @@ case class StubJourneyAnswersRepository(
   def get(ctx: JourneyContextWithNino, journeyName: JourneyName): Future[Option[JourneyAnswers]] =
     Future.successful(getAnswer)
 
-  def upsertData(ctx: JourneyContext, newData: JsValue): Future[UpdateResult] =
+  def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[UpdateResult] =
     upsertDateField
 
-  def updateStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] =
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] =
     upsertStatusField
 
   def testOnlyClearAllData(): Future[Unit] = ???
