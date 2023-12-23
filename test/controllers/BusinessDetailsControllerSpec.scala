@@ -26,7 +26,7 @@ import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status._
 import play.api.libs.json.Json
 import services.BusinessService
-import services.BusinessService.{GetBusinessJourneyStatesResponse, GetBusinessResponse}
+import services.BusinessService.GetBusinessResponse
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDate
@@ -92,12 +92,6 @@ object BusinessDetailsControllerSpec {
   def stubGetBusiness(mockBusinessService: BusinessService, nino: String, businessId: String, expectedResult: GetBusinessResponse): Unit = {
     when(mockBusinessService.getBusiness(meq(nino), meq(businessId))(any[HeaderCarrier], any[ExecutionContext])) thenReturn Future.successful(
       expectedResult)
-    ()
-  }
-
-  def stubGetBusinessJourneyStates(mockBusinessService: BusinessService, taxYear: Int, expectedResult: GetBusinessJourneyStatesResponse): Unit = {
-    when(mockBusinessService.getBusinessJourneyStates(any, meq(taxYear))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(Future.successful(expectedResult))
     ()
   }
 
