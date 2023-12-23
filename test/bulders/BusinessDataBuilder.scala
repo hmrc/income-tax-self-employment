@@ -16,10 +16,10 @@
 
 package bulders
 
-import bulders.JourneyStateDataBuilder.aJourneyAndState
+import models.common.{BusinessId, JourneyName, JourneyStatus, TradingName}
 import models.connector.api_1171.SuccessResponseSchema
 import models.domain.Business.mkBusiness
-import models.domain.TradesJourneyStatuses
+import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import play.api.libs.json.Json
 
 object BusinessDataBuilder {
@@ -27,11 +27,19 @@ object BusinessDataBuilder {
   lazy val aGetBusinessDataEmptyRequest = aGetBusinessDataResponse.copy(taxPayerDisplayResponse = aTaxPayerDisplayResponse.copy(businessData = None))
   lazy val aTaxPayerDisplayResponse     = aGetBusinessDataResponse.taxPayerDisplayResponse
   lazy val aBusinessData                = aGetBusinessDataResponse.taxPayerDisplayResponse.businessData
-  lazy val aBusinesses               = aBusinessData.map(_.map(a => mkBusiness(a, aGetBusinessDataResponse.taxPayerDisplayResponse))).getOrElse(Nil)
-  lazy val aBusiness                 = aBusinesses.head
-  lazy val aBusinessIdAndName        = (aBusiness.businessId, aBusiness.tradingName)
-  lazy val aBusinessJourneyStateSeq  = Seq((aBusiness.businessId, aBusiness.tradingName, Seq(aJourneyAndState)))
-  lazy val aTradesJourneyStatusesSeq = aBusinessJourneyStateSeq.map(TradesJourneyStatuses(_))
+  lazy val aBusinesses = aBusinessData.map(_.map(a => mkBusiness(a, aGetBusinessDataResponse.taxPayerDisplayResponse.yearOfMigration))).getOrElse(Nil)
+  lazy val aBusiness   = aBusinesses.head
+  lazy val aBusinessIdAndName = (aBusiness.businessId, aBusiness.tradingName)
+  lazy val aTradesJourneyStatusesSeq = List(
+    TradesJourneyStatuses(
+      BusinessId(aBusiness.businessId),
+      aBusiness.tradingName.map(TradingName(_)),
+      List(
+        JourneyNameAndStatus(JourneyName.Income, JourneyStatus.Completed),
+        JourneyNameAndStatus(JourneyName.ExpensesTailoring, JourneyStatus.Completed)
+      )
+    )
+  )
 
   // Note our models use a subset of all the data pulled back by the API which is included here
   lazy val aGetBusinessDataResponseStr: String =

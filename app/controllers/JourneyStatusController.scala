@@ -30,12 +30,12 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class JourneyStateController @Inject() (journeyStatusService: JourneyStatusService, auth: AuthorisedAction, cc: ControllerComponents)(implicit
+class JourneyStatusController @Inject() (journeyStatusService: JourneyStatusService, auth: AuthorisedAction, cc: ControllerComponents)(implicit
     ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
-  def getJourneyState(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear): Action[AnyContent] = auth.async { request =>
+  def getStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear): Action[AnyContent] = auth.async { request =>
     val result = journeyStatusService
       .get(JourneyContext(taxYear, businessId, request.getMtditid, journey))
       .map(JourneyNameAndStatus(journey, _))
@@ -48,7 +48,7 @@ class JourneyStateController @Inject() (journeyStatusService: JourneyStatusServi
     handleApiResultT(result)
   }
 
-  def setJourneyStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear): Action[AnyContent] = auth.async { implicit request =>
+  def setStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear): Action[AnyContent] = auth.async { implicit request =>
     getBody[JourneyStatusData](request) { statusData =>
       journeyStatusService.set(JourneyContext(taxYear, businessId, request.getMtditid, journey), statusData.status).map(_ => NoContent)
     }

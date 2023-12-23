@@ -16,11 +16,39 @@
 
 package models.frontend
 
-import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
+import models.common._
+import models.database.JourneyAnswers
+import models.domain.{Business, JourneyNameAndStatus, TradesJourneyStatuses}
 import play.api.libs.json.{Json, OFormat}
 
 final case class TaskList(tradeDetails: Option[JourneyNameAndStatus], businesses: List[TradesJourneyStatuses])
 
 object TaskList {
   implicit val format: OFormat[TaskList] = Json.format[TaskList]
+
+  val empty: TaskList = TaskList(None, Nil)
+
+  def fromJourneyAnswers(userJourneyAnswers: List[JourneyAnswers], businesses: List[Business]): TaskList = {
+    val groupedByBusinessId: Map[BusinessId, Seq[JourneyAnswers]] = userJourneyAnswers.groupBy(_.businessId)
+    val tradingDetailsStatus = groupedByBusinessId
+      .get(BusinessId.tradeDetailsId)
+      .flatMap(
+        _.toList.headOption
+          .map(a => JourneyNameAndStatus(a.journey, a.status)))
+
+    val perBusinessStatuses = businesses.map { business =>
+      val currentJourneys = groupedByBusinessId
+        .get(BusinessId(business.businessId))
+        .map(_.toList)
+        .getOrElse(Nil)
+
+      TradesJourneyStatuses(
+        BusinessId(business.businessId),
+        business.tradingName.map(TradingName(_)),
+        currentJourneys.map(j => JourneyNameAndStatus(j.journey, j.status))
+      )
+    }
+
+    TaskList(tradingDetailsStatus, perBusinessStatuses)
+  }
 }

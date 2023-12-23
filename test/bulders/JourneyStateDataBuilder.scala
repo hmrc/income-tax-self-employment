@@ -18,14 +18,10 @@ package bulders
 
 import bulders.BusinessDataBuilder.aBusiness
 import models.database.JourneyState
-import JourneyState.JourneyStateData
-
-import java.util.UUID
+import models.database.JourneyState.JourneyStateData
 
 object JourneyStateDataBuilder { // scalastyle:off magic.number
-  lazy val uuid = UUID.randomUUID()
   lazy val aJourneyState = JourneyState(
     journeyStateData = JourneyStateData(businessId = aBusiness.businessId, journey = "view-trades", taxYear = 2023, completedState = true)
   )
-  lazy val aJourneyAndState = (aJourneyState.journeyStateData.journey, aJourneyState.journeyStateData.completedState)
 }

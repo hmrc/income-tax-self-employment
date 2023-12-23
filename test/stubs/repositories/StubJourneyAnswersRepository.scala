@@ -19,6 +19,8 @@ package stubs.repositories
 import com.mongodb.client.result.UpdateResult
 import models.common._
 import models.database.JourneyAnswers
+import models.domain.Business
+import models.frontend.TaskList
 import play.api.libs.json.JsValue
 import repositories.JourneyAnswersRepository
 
@@ -30,11 +32,6 @@ case class StubJourneyAnswersRepository(
     upsertStatusField: Future[UpdateResult] = Future.successful(updatedOne)
 ) extends JourneyAnswersRepository {
 
-  def get(id: String): Future[Option[JourneyAnswers]] = Future.successful(getAnswer)
-
-  def get(ctx: JourneyContextWithNino, journeyName: JourneyName): Future[Option[JourneyAnswers]] =
-    Future.successful(getAnswer)
-
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[UpdateResult] =
     upsertDateField
 
@@ -42,4 +39,8 @@ case class StubJourneyAnswersRepository(
     upsertStatusField
 
   def testOnlyClearAllData(): Future[Unit] = ???
+
+  def get(ctx: JourneyContext): Future[Option[JourneyAnswers]] = Future.successful(getAnswer)
+
+  def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): Future[TaskList] = ???
 }

@@ -5,13 +5,11 @@ GET         /individuals/business/details/:nino/list                            
 GET         /individuals/business/details/:nino/:businessId                                                             controllers.BusinessDetailsController.getBusiness(nino: String, businessId: String)
 
 # Journey Statuses
-GET         /:taxYear/:nino/task-list                                                                                   controllers.JourneyStateController.getTaskList(taxYear: TaxYear, nino: Nino)
-GET         /completed-section/:businessId/:journey/:taxYear                                                            controllers.JourneyStateController.getJourneyState(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear)
-PUT         /completed-section/:businessId/:journey/:taxYear                                                            controllers.JourneyStateController.setJourneyStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear)
+GET         /:taxYear/:nino/task-list                                                                                   controllers.JourneyStatusController.getTaskList(taxYear: TaxYear, nino: Nino)
+GET         /completed-section/:businessId/:journey/:taxYear                                                            controllers.JourneyStatusController.getStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear)
+PUT         /completed-section/:businessId/:journey/:taxYear                                                            controllers.JourneyStatusController.setStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear)
 
 # Journey Answers
-GET         /check-your-answers/get/:id                                                                                 controllers.journeyAnswers.GetJourneyAnswersController.handleRequest(id: String)
-
 POST        /:taxYear/:businessId/income/:nino/answers                                                                  controllers.JourneyAnswersController.saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/income/:nino/answers                                                                  controllers.JourneyAnswersController.getIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 

@@ -42,7 +42,7 @@ class JourneyStatusServiceImpl @Inject() (businessConnector: SelfEmploymentConne
     extends JourneyStatusService {
 
   def set(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] =
-    EitherT.rightT[Future, ServiceError](repository.setStatus(ctx, status).void)
+    EitherT.rightT[Future, ServiceError](repository.setStatus(ctx, status)).void
 
   def get(ctx: JourneyContext): ApiResultT[JourneyStatus] =
     for {

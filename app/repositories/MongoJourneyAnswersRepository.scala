@@ -23,9 +23,7 @@ import models.domain.{Business, JourneyNameAndStatus, TradesJourneyStatuses}
 import models.frontend.TaskList
 import org.mongodb.scala._
 import org.mongodb.scala.bson._
-import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters.equal
-import org.mongodb.scala.model.Projections.{exclude, include}
+import org.mongodb.scala.model.Projections.exclude
 import org.mongodb.scala.model._
 import org.mongodb.scala.result.UpdateResult
 import play.api.libs.json.{JsValue, Json}
@@ -39,7 +37,6 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait JourneyAnswersRepository {
-  def get(id: String): Future[Option[JourneyAnswers]]
   def get(ctx: JourneyContext): Future[Option[JourneyAnswers]]
   def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): Future[TaskList]
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[UpdateResult]
@@ -91,15 +88,6 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     Filters.eq("taxYear", taxYear.endYear)
   )
 
-  // TODO remove
-  def get(id: String): Future[Option[JourneyAnswers]] =
-    collection
-      .withReadPreference(ReadPreference.primaryPreferred())
-      .find(filterByConstraint("_id", id))
-      .headOption()
-
-  private def filterByConstraint(field: String, value: String): Bson = equal(field, value)
-
   def get(ctx: JourneyContext): Future[Option[JourneyAnswers]] = {
     val filter = filterJourney(ctx)
     collection
@@ -115,28 +103,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
       .find(filter)
       .projection(projection)
       .toFuture()
-      .map { seqJourneyAnswers =>
-        val groupedByBusinessId: Map[BusinessId, Seq[JourneyAnswers]] = seqJourneyAnswers.groupBy(_.businessId)
-        val tradingDetailsStatus = groupedByBusinessId
-          .get(BusinessId.tradeDetailsId)
-          .flatMap(_.toList.headOption
-            .map(a => JourneyNameAndStatus(a.journey, a.status)))
-
-        val perBusinessStatuses = businesses.map { business =>
-          val currentJourneys = groupedByBusinessId
-            .get(BusinessId(business.businessId))
-            .map(_.toList)
-            .getOrElse(Nil)
-
-          TradesJourneyStatuses(
-            BusinessId(business.businessId),
-            business.tradingName.map(TradingName(_)),
-            currentJourneys.map(j => JourneyNameAndStatus(j.journey, j.status))
-          )
-        }
-
-        TaskList(tradingDetailsStatus, perBusinessStatuses)
-      }
+      .map(answers => TaskList.fromJourneyAnswers(answers.toList, businesses))
   }
 
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[UpdateResult] = {
