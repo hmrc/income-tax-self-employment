@@ -5,7 +5,7 @@ GET         /individuals/business/details/:nino/list                            
 GET         /individuals/business/details/:nino/:businessId                                                             controllers.BusinessDetailsController.getBusiness(nino: String, businessId: String)
 
 # Journey Statuses
-GET         /:taxYear/:nino/task-list                                                                                   controllers.JourneyStateController.getJourneyStateSeq(taxYear: TaxYear, nino: Nino)
+GET         /:taxYear/:nino/task-list                                                                                   controllers.JourneyStateController.getTaskList(taxYear: TaxYear, nino: Nino)
 GET         /completed-section/:businessId/:journey/:taxYear                                                            controllers.JourneyStateController.getJourneyState(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear)
 PUT         /completed-section/:businessId/:journey/:taxYear                                                            controllers.JourneyStateController.setJourneyStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear)
 

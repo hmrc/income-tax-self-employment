@@ -33,7 +33,6 @@ import models.error.{DownstreamError, ServiceError}
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
-import services.mapDownstreamErrors
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTOps._
 
@@ -96,7 +95,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       _ <- EitherT(connector.createAmendSEAnnualSubmission(upsertData))
     } yield ()
 
-    result.leftMap(mapDownstreamErrors)
+    result.leftAs[ServiceError]
   }
 
   private def noSubmissionExists(response: ListSEPeriodSummariesResponse) =

@@ -73,21 +73,21 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
       OK,
       Json.toJson(aTradesJourneyStatusesSeq).toString,
       () => stubBusinessConnectorGet(expectedResult = Right(aTradesJourneyStatusesSeq)),
-      () => underTest.getJourneyStateSeq(nino, taxYear)
+      () => underTest.getTaskList(nino, taxYear)
     )
 
     behave like controllerSpec(
       NO_CONTENT,
       "",
       () => stubBusinessConnectorGet(expectedResult = Right(Seq())),
-      () => underTest.getJourneyStateSeq(businessId, taxYear),
+      () => underTest.getTaskList(businessId, taxYear),
       "No content")
 
     behave like controllerSpec(
       INTERNAL_SERVER_ERROR,
       Json.toJson(MongoError("db error")).toString(),
       () => stubBusinessConnectorGet(expectedResult = Left(MongoError("db error"))),
-      () => underTest.getJourneyStateSeq(businessId, taxYear),
+      () => underTest.getTaskList(businessId, taxYear),
       "Mongo-Error"
     )
 
@@ -96,7 +96,7 @@ class JourneyStateControllerSpec extends ControllerBehaviours {
       INTERNAL_SERVER_ERROR,
       Json.toJson(downstreamError).toString(),
       () => stubBusinessConnectorGet(expectedResult = Left(downstreamError)),
-      () => underTest.getJourneyStateSeq(businessId, taxYear),
+      () => underTest.getTaskList(businessId, taxYear),
       "Api-Error"
     )
   }

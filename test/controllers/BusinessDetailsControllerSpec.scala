@@ -17,10 +17,9 @@
 package controllers
 
 import bulders.BusinessDataBuilder._
-import controllers.BusinessDetailsControllerSpec.{stubGetBusiness, stubGetBusinessJourneyStates, stubGetBusinesses}
-import models.error.DownstreamErrorBody.SingleDownstreamErrorBody.{notFound, serverError, invalidNino, serviceUnavailable}
-import models.error.ServiceError.DatabaseError.MongoError
+import controllers.BusinessDetailsControllerSpec.{stubGetBusiness, stubGetBusinesses}
 import models.error.DownstreamError.SingleDownstreamError
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody.{invalidNino, notFound, serverError, serviceUnavailable}
 import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.MockitoSugar.when
 import org.scalatestplus.mockito.MockitoSugar
@@ -81,39 +80,6 @@ class BusinessDetailsControllerSpec extends ControllerBehaviours {
         () => underTest.getBusiness(nino, businessId)
       )
   }
-
-  s"GET /individuals/business/journeyStates/$nino/$taxYear" should {
-    behave like controllerSpec(
-      OK,
-      Json.toJson(aTradesJourneyStatusesSeq).toString,
-      () => stubGetBusinessJourneyStates(mockBusinessService, taxYear, Right(aTradesJourneyStatusesSeq)),
-      () => underTest.getBusinessJourneyStates(nino, taxYear)
-    )
-
-    behave like controllerSpec(
-      NO_CONTENT,
-      "",
-      () => stubGetBusinessJourneyStates(mockBusinessService, taxYear, Right(Nil)),
-      () => underTest.getBusinessJourneyStates(nino, taxYear))
-
-    behave like controllerSpec(
-      INTERNAL_SERVER_ERROR,
-      Json.toJson(MongoError("db error")).toString(),
-      () => stubGetBusinessJourneyStates(mockBusinessService, taxYear, Left(MongoError("db error"))),
-      () => underTest.getBusinessJourneyStates(nino, taxYear),
-      "Mongo-Error"
-    )
-
-    val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, serverError)
-    behave like controllerSpec(
-      INTERNAL_SERVER_ERROR,
-      Json.toJson(downstreamError).toString(),
-      () => stubGetBusinessJourneyStates(mockBusinessService, taxYear, Left(downstreamError)),
-      () => underTest.getBusinessJourneyStates(businessId, taxYear),
-      "Api-Error"
-    )
-  }
-
 }
 
 object BusinessDetailsControllerSpec {

@@ -29,7 +29,7 @@ object JourneyStatus extends Enum[JourneyStatus] with utils.PlayJsonEnum[Journey
   /** This status is used If there are no answers persisted */
   case object CheckOurRecords extends JourneyStatus("checkOurRecords")
 
-  /** It is used to indicate the answers were submitted, but the last Completion page has not reached yet */
+  /** It is used to indicate the answers were submitted, but the 'Have you completed' question has not been answered */
   case object NotStarted extends JourneyStatus("notStarted")
 
   /** The completion page has been passed with answer No */

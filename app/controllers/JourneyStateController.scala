@@ -22,8 +22,6 @@ import models.domain.JourneyNameAndStatus
 import models.frontend.JourneyStatusData
 import play.api.libs.json.Format.GenericFormat
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import repositories.JourneyStateRepository
-import services.BusinessService
 import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.Logging
@@ -32,11 +30,8 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class JourneyStateController @Inject() (journeyStateRepository: JourneyStateRepository,
-                                        journeyStatusService: JourneyStatusService,
-                                        businessService: BusinessService,
-                                        auth: AuthorisedAction,
-                                        cc: ControllerComponents)(implicit ec: ExecutionContext)
+class JourneyStateController @Inject() (journeyStatusService: JourneyStatusService, auth: AuthorisedAction, cc: ControllerComponents)(implicit
+    ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
@@ -48,17 +43,9 @@ class JourneyStateController @Inject() (journeyStateRepository: JourneyStateRepo
     handleApiResultT(result)
   }
 
-  // TODO Rename
-  def getJourneyStateSeq(taxYear: TaxYear, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
+  def getTaskList(taxYear: TaxYear, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
     val result = journeyStatusService.getTaskList(taxYear, request.getMtditid, nino)
     handleApiResultT(result)
-//    businessService
-//      .getBusinessJourneyStates(nino, taxYear)
-//      .map {
-//        case Left(serviceError) => InternalServerError(Json.toJson(serviceError))
-//        case Right(Seq())       => NoContent
-//        case Right(res)         => Ok(Json.toJson(res))
-//      }
   }
 
   def setJourneyStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear): Action[AnyContent] = auth.async { implicit request =>
