@@ -19,6 +19,7 @@ package utils
 import models.connector.api_1894.request._
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
+import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
@@ -91,6 +92,14 @@ object DeductionsBuilder {
       Deductions.empty.copy(
         constructionIndustryScheme = Some(
           SelfEmploymentDeductionsDetailType(Some(answers.constructionIndustryAmount), answers.constructionIndustryDisallowableAmount)
+        )
+      )
+
+  implicit val depreciationCosts: DeductionsBuilder[DepreciationCostsJourneyAnswers] =
+    (answers: DepreciationCostsJourneyAnswers) =>
+      Deductions.empty.copy(
+        depreciation = Some(
+          SelfEmploymentDeductionsDetailPosNegType(None, Some(answers.depreciationDisallowableAmount))
         )
       )
 }
