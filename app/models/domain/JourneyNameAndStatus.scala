@@ -23,9 +23,4 @@ final case class JourneyNameAndStatus(name: JourneyName, journeyStatus: JourneyS
 
 object JourneyNameAndStatus {
   implicit val format: OFormat[JourneyNameAndStatus] = Json.format[JourneyNameAndStatus]
-
-  def fromIsCompleted(name: JourneyName, isCompleted: Boolean): JourneyNameAndStatus = {
-    val status: JourneyStatus = if (isCompleted) JourneyStatus.Completed else JourneyStatus.InProgress
-    JourneyNameAndStatus(name, status)
-  }
 }
