@@ -26,7 +26,7 @@ object JourneyStatus extends Enum[JourneyStatus] with utils.PlayJsonEnum[Journey
 
   val values: IndexedSeq[JourneyStatus] = findValues
 
-  /** This status is used If there are no answers persisted */
+  /** This status is used if there are no answers persisted */
   case object CheckOurRecords extends JourneyStatus("checkOurRecords")
 
   /** It is used to indicate the answers were submitted, but the 'Have you completed' question has not been answered */
