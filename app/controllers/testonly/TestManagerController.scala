@@ -17,16 +17,15 @@
 package controllers.testonly
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import repositories.{JourneyAnswersRepository, JourneyStateRepository}
+import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.Logging
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class TestManagerController @Inject() (journeyStateRepository: JourneyStateRepository,
-                                       journeyAnswersRepository: JourneyAnswersRepository,
-                                       cc: MessagesControllerComponents)(implicit ec: ExecutionContext)
+class TestManagerController @Inject() (journeyAnswersRepository: JourneyAnswersRepository, cc: MessagesControllerComponents)(implicit
+    ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
@@ -35,10 +34,7 @@ class TestManagerController @Inject() (journeyStateRepository: JourneyStateRepos
   }
 
   def clearAllData(): Action[AnyContent] = Action.async {
-    for {
-      _ <- journeyStateRepository.testOnlyClearAllData()
-      _ <- journeyAnswersRepository.testOnlyClearAllData()
-    } yield NoContent
+    journeyAnswersRepository.testOnlyClearAllData().map(_ => NoContent)
   }
 
 }

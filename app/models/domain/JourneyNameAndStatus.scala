@@ -14,23 +14,13 @@
  * limitations under the License.
  */
 
-package mocks
+package models.domain
 
-import models.database.JourneyAnswers
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaFirstStubbing
-import org.scalatestplus.mockito.MockitoSugar
-import repositories.JourneyAnswersRepository
+import models.common.{JourneyName, JourneyStatus}
+import play.api.libs.json.{Json, OFormat}
 
-import scala.concurrent.Future
+final case class JourneyNameAndStatus(name: JourneyName, journeyStatus: JourneyStatus)
 
-trait MockJourneyAnswersRepository extends MockitoSugar {
-  val mockJourneyAnswersRepository: JourneyAnswersRepository = mock[JourneyAnswersRepository]
-
-  object MockJourneyAnswersRepository {
-
-    def get(id: String): ScalaFirstStubbing[Future[Option[JourneyAnswers]]] =
-      when(mockJourneyAnswersRepository.get(id))
-  }
-
+object JourneyNameAndStatus {
+  implicit val format: OFormat[JourneyNameAndStatus] = Json.format[JourneyNameAndStatus]
 }

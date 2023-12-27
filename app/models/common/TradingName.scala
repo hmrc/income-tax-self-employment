@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package bulders
+package models.common
 
-import bulders.BusinessDataBuilder.aBusiness
-import models.database.JourneyState
-import JourneyState.JourneyStateData
+import play.api.libs.json.{Format, Json}
 
-import java.util.UUID
+final case class TradingName(value: String) extends AnyVal {
+  override def toString: String = value
+}
 
-object JourneyStateDataBuilder { // scalastyle:off magic.number
-  lazy val uuid = UUID.randomUUID()
-  lazy val aJourneyState = JourneyState(
-    journeyStateData = JourneyStateData(businessId = aBusiness.businessId, journey = "view-trades", taxYear = 2023, completedState = true)
-  )
-  lazy val aJourneyAndState = (aJourneyState.journeyStateData.journey, aJourneyState.journeyStateData.completedState)
+object TradingName {
+  implicit val format: Format[TradingName] = Json.valueFormat[TradingName]
 }

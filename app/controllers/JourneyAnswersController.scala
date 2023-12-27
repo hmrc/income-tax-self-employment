@@ -91,7 +91,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def getGoodsToSellOrUseAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResult(expensesService.getAnswers[GoodsToSellOrUseJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+    handleApiResultT(expensesService.getAnswers[GoodsToSellOrUseJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def saveOfficeSupplies(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
@@ -102,7 +102,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def getOfficeSuppliesAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResult(expensesService.getAnswers[OfficeSuppliesJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+    handleApiResultT(expensesService.getAnswers[OfficeSuppliesJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def saveRepairsAndMaintenanceCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
@@ -113,7 +113,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def getRepairsAndMaintenanceCostsAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResult(
+    handleApiResultT(
       expensesService.getAnswers[RepairsAndMaintenanceCostsJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
@@ -125,7 +125,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def getStaffCostsAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResult(expensesService.getAnswers[StaffCostsJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+    handleApiResultT(expensesService.getAnswers[StaffCostsJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def saveAdvertisingOrMarketing(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
@@ -143,7 +143,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def getEntertainmentCostsAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResult(expensesService.getAnswers[EntertainmentJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+    handleApiResultT(expensesService.getAnswers[EntertainmentJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def saveConstructionCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
@@ -154,7 +154,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def getConstructionCostsAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResult(expensesService.getAnswers[ConstructionJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+    handleApiResultT(expensesService.getAnswers[ConstructionJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def saveDepreciationCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
@@ -165,7 +165,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def getDepreciationCostsAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResult(expensesService.getAnswers[DepreciationCostsJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+    handleApiResultT(expensesService.getAnswers[DepreciationCostsJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
 }

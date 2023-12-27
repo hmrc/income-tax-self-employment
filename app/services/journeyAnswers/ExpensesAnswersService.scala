@@ -47,7 +47,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, 
 
   def saveAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =
     EitherT
-      .right[ServiceError](repository.upsertData(JourneyContext(taxYear, businessId, mtditid, ExpensesTailoring), Json.toJson(answers)))
+      .right[ServiceError](repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, ExpensesTailoring), Json.toJson(answers)))
       .void
 
   def saveAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {

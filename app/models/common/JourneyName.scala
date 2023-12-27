@@ -19,11 +19,15 @@ package models.common
 import enumeratum._
 import play.api.mvc.PathBindable
 
-sealed abstract class JourneyName(override val entryName: String) extends EnumEntry
+sealed abstract class JourneyName(override val entryName: String) extends EnumEntry {
+  override def toString: String = entryName
+}
 
 object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName] {
   val values: IndexedSeq[JourneyName] = findValues
 
+  case object TradeDetails               extends JourneyName("trade-details")
+  case object SelfEmploymentAbroad       extends JourneyName("self-employment-abroad")
   case object Income                     extends JourneyName("income")
   case object ExpensesTailoring          extends JourneyName("expenses-categories")
   case object GoodsToSellOrUse           extends JourneyName("expenses-goods-to-sell-or-use")

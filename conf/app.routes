@@ -3,16 +3,13 @@
 # Business
 GET         /individuals/business/details/:nino/list                                                                    controllers.BusinessDetailsController.getBusinesses(nino: String)
 GET         /individuals/business/details/:nino/:businessId                                                             controllers.BusinessDetailsController.getBusiness(nino: String, businessId: String)
-GET         /individuals/business/journey-states/:nino/:taxYear                                                         controllers.BusinessDetailsController.getBusinessJourneyStates(nino: String, taxYear: Int)
 
-# Journey State
-GET         /completed-section/:nino/:taxYear                                                                           controllers.JourneyStateController.getJourneyStateSeq(nino: String, taxYear: Int)
-GET         /completed-section/:businessId/:journey/:taxYear                                                            controllers.JourneyStateController.getJourneyState(businessId: String, journey: String, taxYear: Int)
-PUT         /completed-section/:businessId/:journey/:taxYear/:completed                                                 controllers.JourneyStateController.putJourneyState(businessId: String, journey: String, taxYear: Int, completed: Boolean)
+# Journey Statuses
+GET         /:taxYear/:nino/task-list                                                                                   controllers.JourneyStatusController.getTaskList(taxYear: TaxYear, nino: Nino)
+GET         /completed-section/:businessId/:journey/:taxYear                                                            controllers.JourneyStatusController.getStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear)
+PUT         /completed-section/:businessId/:journey/:taxYear                                                            controllers.JourneyStatusController.setStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear)
 
 # Journey Answers
-GET         /check-your-answers/get/:id                                                                                 controllers.journeyAnswers.GetJourneyAnswersController.handleRequest(id: String)
-
 POST        /:taxYear/:businessId/income/:nino/answers                                                                  controllers.JourneyAnswersController.saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/income/:nino/answers                                                                  controllers.JourneyAnswersController.getIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 

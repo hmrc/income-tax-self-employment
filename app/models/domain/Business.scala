@@ -16,7 +16,7 @@
 
 package models.domain
 
-import models.connector.api_1171.{BusinessDataDetails, ResponseType}
+import models.connector.api_1171.BusinessDataDetails
 import models.domain.Business.{AccountingPeriod, LatencyDetails}
 import play.api.libs.json.{Json, OFormat}
 
@@ -57,12 +57,12 @@ object Business {
   private val typeOfBusiness                         = "self-employment"
   private val latencyIndicatorType: String => String = latencyIndicator => if (latencyIndicator == "Q") "Quarterly" else "Annual"
 
-  def mkBusiness(details: BusinessDataDetails, taxPDR: ResponseType) =
+  def mkBusiness(details: BusinessDataDetails, yearOfMigration: Option[String]) =
     Business(
       businessId = details.incomeSourceId,
       typeOfBusiness,
       details.tradingName,
-      taxPDR.yearOfMigration,
+      yearOfMigration,
       accountingPeriods = Seq(
         AccountingPeriod(
           details.accountingPeriodStartDate,

@@ -14,18 +14,20 @@
  * limitations under the License.
  */
 
-package utils
+package repositories
 
-import scala.concurrent.{ExecutionContext, Future}
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{BeforeAndAfterEach, OptionValues}
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import uk.gov.hmrc.mongo.test.MongoSupport
 
-// TODO Remove this and Use EitherT
-object ScalaHelper {
-  implicit class FutureEither[L, R](either: Either[L, Future[R]]) {
+trait MongoSpec extends AnyWordSpec with Matchers with MongoSupport with BeforeAndAfterEach with GuiceOneAppPerSuite with OptionValues {
 
-    def toFuture()(implicit ec: ExecutionContext): Future[Either[L, R]] =
-      Some(either).map {
-        case Left(s)  => Future.successful(Left(s))
-        case Right(f) => f.map(Right(_))
-      }.get
-  }
+  implicit override val patienceConfig: PatienceConfig = PatienceConfig(
+    timeout = Span(5, Seconds),
+    interval = Span(500, Millis)
+  )
+
 }
