@@ -22,6 +22,7 @@ import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import org.scalacheck.Gen
@@ -61,6 +62,11 @@ object ExpensesJourneyAnswersGen {
     amount             <- bigDecimalGen
     disallowableAmount <- Gen.option(bigDecimalGen)
   } yield ConstructionJourneyAnswers(amount, disallowableAmount)
+
+  val professionalFeesJourneyAnswersGen: Gen[ProfessionalFeesJourneyAnswers] = for {
+    amount             <- bigDecimalGen
+    disallowableAmount <- Gen.option(bigDecimalGen)
+  } yield ProfessionalFeesJourneyAnswers(amount, disallowableAmount)
 
   val depreciationJourneyAnswersGen: Gen[DepreciationCostsJourneyAnswers] = for {
     disallowableAmount <- bigDecimalGen

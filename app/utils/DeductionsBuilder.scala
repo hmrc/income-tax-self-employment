@@ -23,6 +23,7 @@ import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringTotalAmountAnswers
@@ -92,6 +93,14 @@ object DeductionsBuilder {
       Deductions.empty.copy(
         constructionIndustryScheme = Some(
           SelfEmploymentDeductionsDetailType(Some(answers.constructionIndustryAmount), answers.constructionIndustryDisallowableAmount)
+        )
+      )
+
+  implicit val professionalFees: DeductionsBuilder[ProfessionalFeesJourneyAnswers] =
+    (answers: ProfessionalFeesJourneyAnswers) =>
+      Deductions.empty.copy(
+        professionalFees = Some(
+          SelfEmploymentDeductionsDetailAllowablePosNegType(Some(answers.professionalFeesAmount), answers.professionalFeesDisallowableAmount)
         )
       )
 

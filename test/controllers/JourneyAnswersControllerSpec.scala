@@ -31,6 +31,7 @@ import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import org.scalamock.handlers.CallHandler3
@@ -266,6 +267,31 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         expectedStatus = OK,
         expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
         methodBlock = () => controller.getConstructionCostsAnswers(currTaxYear, businessId, nino)
+      )
+    }
+  }
+
+  "saveProfessionalFees" should {
+    s"return a $NO_CONTENT when successful" in forAll(professionalFeesJourneyAnswersGen) { data =>
+      behave like testRoute(
+        request = buildRequest(data),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.saveProfessionalFees(currTaxYear, businessId, nino)
+      )
+    }
+  }
+
+  "getProfessionalFeesAnswers" should {
+    s"return a $OK and answers as json when successful" in new GetExpensesTest[ProfessionalFeesJourneyAnswers] {
+      override val journeyAnswers: ProfessionalFeesJourneyAnswers = genOne(professionalFeesJourneyAnswersGen)
+      mockExpensesService()
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
+        methodBlock = () => controller.getProfessionalFeesAnswers(currTaxYear, businessId, nino)
       )
     }
   }
