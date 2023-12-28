@@ -18,6 +18,7 @@ package parsers.expenses
 
 import models.connector._
 import models.connector.api_1786.SuccessResponseSchema
+import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
@@ -79,5 +80,12 @@ object ExpensesResponseParser {
     (response: SuccessResponseSchema) =>
       DepreciationCostsJourneyAnswers(
         depreciationDisallowableAmount = response.financials.deductions.flatMap(_.depreciation.map(_.amount)).getOrElse(noneFound)
+      )
+
+  implicit val advertisingOrMarketingParser: ExpensesResponseParser[AdvertisingOrMarketingJourneyAnswers] =
+    (response: SuccessResponseSchema) =>
+      AdvertisingOrMarketingJourneyAnswers(
+        advertisingOrMarketingAmount = response.financials.deductions.flatMap(_.advertisingCosts.map(_.amount)).getOrElse(noneFound),
+        advertisingOrMarketingDisallowableAmount = response.financials.deductions.flatMap(_.advertisingCosts.flatMap(_.disallowableAmount))
       )
 }
