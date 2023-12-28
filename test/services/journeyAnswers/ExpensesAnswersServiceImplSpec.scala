@@ -51,7 +51,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       override val connector = StubSelfEmploymentConnector()
 
       val answers = genOne(expensesTailoringNoExpensesAnswersGen)
-      val result  = underTest.saveAnswers(businessId, currTaxYear, mtditid, answers).value.futureValue
+      val result  = underTest.persistAnswers(businessId, currTaxYear, mtditid, answers).value.futureValue
       result shouldBe ().asRight
     }
   }
@@ -61,7 +61,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       override val connector = StubSelfEmploymentConnector()
 
       val answers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
-      val result  = underTest.saveAnswers(businessId, currTaxYear, mtditid, answers).value.futureValue
+      val result  = underTest.persistAnswers(businessId, currTaxYear, mtditid, answers).value.futureValue
       result shouldBe ().asRight
     }
   }
@@ -71,7 +71,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       override val connector = StubSelfEmploymentConnector()
 
       val someExpensesAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
-      val result              = underTest.saveAnswers(journeyCtxWithNino, someExpensesAnswers).value.futureValue
+      val result              = underTest.sendAnswers(journeyCtxWithNino, someExpensesAnswers).value.futureValue
       result shouldBe ().asRight
     }
   }

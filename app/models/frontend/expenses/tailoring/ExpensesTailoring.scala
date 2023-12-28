@@ -16,14 +16,22 @@
 
 package models.frontend.expenses.tailoring
 
-import play.api.libs.json.{Json, OFormat, OWrites, Reads}
+import models.common.{Enumerable, WithName}
 
-final case class ExpensesTailoringCategoryTypeAnswer(expensesCategories: ExpensesCategories)
+sealed trait ExpensesTailoring
 
-object ExpensesTailoringCategoryTypeAnswer {
-  implicit val reads: Reads[ExpensesTailoringCategoryTypeAnswer] = Json.reads[ExpensesTailoringCategoryTypeAnswer]
+object ExpensesTailoring extends Enumerable.Implicits {
 
-  implicit val writes: OWrites[ExpensesTailoringCategoryTypeAnswer] = Json.writes[ExpensesTailoringCategoryTypeAnswer]
+  case object TotalAmount          extends WithName("totalAmount") with ExpensesTailoring
+  case object IndividualCategories extends WithName("individualCategories") with ExpensesTailoring
+  case object NoExpenses           extends WithName("noExpenses") with ExpensesTailoring
 
-  implicit val formats: OFormat[ExpensesTailoringCategoryTypeAnswer] = OFormat(reads, writes)
+  val values: Seq[ExpensesTailoring] = Seq(
+    TotalAmount,
+    IndividualCategories,
+    NoExpenses
+  )
+
+  implicit val enumerable: Enumerable[ExpensesTailoring] =
+    Enumerable(values.map(v => v.toString -> v): _*)
 }

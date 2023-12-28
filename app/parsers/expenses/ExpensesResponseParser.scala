@@ -27,6 +27,7 @@ import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import utils.ResponseParser
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 
 trait ExpensesResponseParser[Result] extends ResponseParser[api_1786.SuccessResponseSchema, Result] {
   override def parse(response: api_1786.SuccessResponseSchema): Result
@@ -81,6 +82,13 @@ object ExpensesResponseParser {
       DepreciationCostsJourneyAnswers(
         depreciationDisallowableAmount = response.financials.deductions.flatMap(_.depreciation.map(_.amount)).getOrElse(noneFound)
       )
+
+  implicit val asOneTotalAnswersParser: ExpensesResponseParser[ExpensesTailoringAnswers.AsOneTotalAnswers] =
+    (response: SuccessResponseSchema) =>
+      ExpensesTailoringAnswers.AsOneTotalAnswers(
+        response.financials.deductions.flatMap(_.simplifiedExpenses).getOrElse(noneFound)
+      )
+
 
   implicit val advertisingOrMarketingParser: ExpensesResponseParser[AdvertisingOrMarketingJourneyAnswers] =
     (response: SuccessResponseSchema) =>

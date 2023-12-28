@@ -20,37 +20,52 @@ import cats.data.EitherT
 import cats.implicits._
 import connectors.SelfEmploymentConnector
 import models.common.JourneyName.ExpensesTailoring
-import models.common.TaxYear.{endDate, startDate}
+import models.common.TaxYear.endDate
+import models.common.TaxYear.startDate
 import models.common._
-import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType}
+import models.connector.api_1894.request.CreateSEPeriodSummaryRequestBody
+import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
+import models.connector.api_1894.request.FinancialsType
+import models.database.JourneyAnswers
+import models.database.expenses.ExpensesCategoriesDb
 import models.domain.ApiResultT
 import models.error.ServiceError
+import models.frontend.expenses.tailoring
+import models.frontend.expenses.tailoring.ExpensesTailoring.IndividualCategories
+import models.frontend.expenses.tailoring.ExpensesTailoring.NoExpenses
+import models.frontend.expenses.tailoring.ExpensesTailoring.TotalAmount
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import parsers.expenses.ExpensesResponseParser
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.Json
+import play.api.libs.json.Writes
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.DeductionsBuilder
 import utils.EitherTOps.EitherTExtensions
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
+import javax.inject.Singleton
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 trait ExpensesAnswersService {
-  def saveAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit]
-  def saveAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit]
+  def sendAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def getAnswers[A: ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A]
+  def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]]
 }
 
 @Singleton
 class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends ExpensesAnswersService {
 
-  def saveAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =
+  def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =
     EitherT
       .right[ServiceError](repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, ExpensesTailoring), Json.toJson(answers)))
       .void
 
-  def saveAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+  def sendAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     val financials  = FinancialsType.fromFrontendModel(answers)
     val body        = CreateSEPeriodSummaryRequestBody(startDate(ctx.taxYear), endDate(ctx.taxYear), Some(financials))
     val requestData = CreateSEPeriodSummaryRequestData(ctx.taxYear, ctx.businessId, ctx.nino, body)
@@ -68,6 +83,44 @@ class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, 
       successResponse <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
       result = parser.parse(successResponse)
     } yield result
-
   }
+
+  def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]] =
+    for {
+      maybeAnswers             <- getExpenseTailoringDbAnswers(ctx)
+      existingTailoringAnswers <- maybeAnswers.traverse(getExistingTailoringAnswers(ctx, _))
+    } yield existingTailoringAnswers
+
+  private def getExistingTailoringAnswers(ctx: JourneyContextWithNino, answers: JourneyAnswers)(implicit hc: HeaderCarrier) =
+    for {
+      category         <- getExpenseTailoringCategory(answers)
+      tailoringAnswers <- getTailoringAnswers(ctx, answers, category.expensesCategories)
+    } yield tailoringAnswers
+
+  private def getExpenseTailoringDbAnswers(ctx: JourneyContextWithNino): ApiResultT[Option[JourneyAnswers]] =
+    EitherT.right[ServiceError](repository.get(ctx.toJourneyContext(ExpensesTailoring)))
+
+  private def getTailoringAnswers(ctx: JourneyContextWithNino, answers: JourneyAnswers, tailoringCategory: tailoring.ExpensesTailoring)(implicit
+      hc: HeaderCarrier): ApiResultT[ExpensesTailoringAnswers] =
+    tailoringCategory match {
+      case NoExpenses           => getNoExpensesTailoring
+      case IndividualCategories => getExpensesIndividualCategories(answers)
+      case TotalAmount          => getExpenseTailoringAsOneTotal(ctx)
+    }
+
+  private def getExpenseTailoringCategory(answers: JourneyAnswers): ApiResultT[ExpensesCategoriesDb] =
+    EitherT.fromEither[Future](answers.toStorageAnswers[ExpensesCategoriesDb]).leftAs[ServiceError]
+
+  private def getNoExpensesTailoring: ApiResultT[ExpensesTailoringAnswers] =
+    EitherT.rightT[Future, ServiceError](ExpensesTailoringAnswers.NoExpensesAnswers: ExpensesTailoringAnswers)
+
+  private def getExpensesIndividualCategories(answers: JourneyAnswers): ApiResultT[ExpensesTailoringAnswers] =
+    EitherT
+      .fromEither[Future](answers.toStorageAnswers[ExpensesTailoringIndividualCategoriesAnswers])
+      .leftAs[ServiceError]
+      .map(identity[ExpensesTailoringAnswers])
+
+  private def getExpenseTailoringAsOneTotal(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[ExpensesTailoringAnswers] =
+    getAnswers[AsOneTotalAnswers](ctx).map(identity[ExpensesTailoringAnswers])
+
 }

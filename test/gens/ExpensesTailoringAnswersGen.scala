@@ -18,7 +18,7 @@ package gens
 
 import models.frontend.expenses.tailoring.individualCategories._
 import models.frontend.expenses.tailoring.{
-  ExpensesCategories,
+  ExpensesTailoring,
   ExpensesTailoringIndividualCategoriesAnswers,
   ExpensesTailoringCategoryTypeAnswer,
   ExpensesTailoringTotalAmountAnswers
@@ -26,7 +26,7 @@ import models.frontend.expenses.tailoring.{
 import org.scalacheck.Gen
 
 object ExpensesTailoringAnswersGen {
-  val expensesCategoriesGen: Gen[ExpensesCategories]                               = Gen.oneOf(ExpensesCategories.values)
+  val expensesCategoriesGen: Gen[ExpensesTailoring]                               = Gen.oneOf(ExpensesTailoring.values)
   val officeSuppliesGen: Gen[OfficeSupplies]                                       = Gen.oneOf(OfficeSupplies.values)
   val taxiMinicabOrRoadHaulageGen: Gen[TaxiMinicabOrRoadHaulage]                   = Gen.oneOf(TaxiMinicabOrRoadHaulage.values)
   val goodsToSellOrUseGen: Gen[GoodsToSellOrUse]                                   = Gen.oneOf(GoodsToSellOrUse.values)
