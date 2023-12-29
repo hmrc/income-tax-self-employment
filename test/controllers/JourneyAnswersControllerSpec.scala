@@ -26,6 +26,7 @@ import gens.genOne
 import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
 import models.error.ServiceError
+import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
@@ -234,13 +235,24 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
-  "saveAdvertisingOrMarketing" should {
-    s"return a $NO_CONTENT when successful" in forAll(advertisingOrMarketingJourneyAnswersGen) { data =>
+  "advertisingOrMarketing" should {
+    s"Save return a $NO_CONTENT when successful" in forAll(advertisingOrMarketingJourneyAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
         expectedBody = "",
         methodBlock = () => underTest.saveAdvertisingOrMarketing(currTaxYear, businessId, nino)
+      )
+    }
+    s"get return a $OK and answers as json when successful" in new GetExpensesTest[AdvertisingOrMarketingJourneyAnswers] {
+      override val journeyAnswers: AdvertisingOrMarketingJourneyAnswers = genOne(advertisingOrMarketingJourneyAnswersGen)
+      mockExpensesService()
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
+        methodBlock = () => controller.getAdvertisingOrMarketing(currTaxYear, businessId, nino)
       )
     }
   }
