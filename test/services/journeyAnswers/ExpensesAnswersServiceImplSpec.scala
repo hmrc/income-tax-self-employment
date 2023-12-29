@@ -16,7 +16,7 @@
 
 package services.journeyAnswers
 
-import cats.implicits.catsSyntaxEitherId
+import cats.implicits._
 import gens.ExpensesJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.genOne
@@ -31,8 +31,9 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import parsers.expenses.ExpensesResponseParser.goodsToSellOrUseParser
 import play.api.libs.json.{JsObject, Json}
+import services.journeyAnswers.ExpensesAnswersServiceImplSpec._
 import stubs.connectors.StubSelfEmploymentConnector
-import stubs.connectors.StubSelfEmploymentConnector.{api1786DeductionsSuccessResponse, api1965MatchedResponse}
+import stubs.connectors.StubSelfEmploymentConnector.api1786DeductionsSuccessResponse
 import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
@@ -40,8 +41,6 @@ import utils.BaseSpec._
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import ExpensesAnswersServiceImplSpec._
-import cats.implicits._
 
 class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
