@@ -18,6 +18,7 @@ package controllers
 
 import controllers.actions.AuthorisedAction
 import models.common._
+import models.database.expenses.ExpensesCategoriesDb
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
@@ -26,6 +27,7 @@ import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.tailoring._
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Format.GenericFormat
@@ -56,31 +58,30 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     handleOptionalApiResult(incomeService.getAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
-  def saveExpensesTailoringCategoryTypeAnswer(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    getBody[ExpensesTailoringCategoryTypeAnswer](user) { value =>
-      expensesService.saveAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
-    }
+  def saveExpensesTailoringNoExpensesAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+    val result = expensesService.persistAnswers(businessId, taxYear, user.getMtditid, NoExpensesAnswers)
+    handleApiUnitResultT(result)
   }
 
   def saveExpensesTailoringIndividualCategoriesAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
     getBody[ExpensesTailoringIndividualCategoriesAnswers](user) { value =>
-      expensesService.saveAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
+      expensesService.persistAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
     }
   }
 
   def saveExpensesTailoringTotalAmountAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async {
     implicit user =>
-      val submitTotalAmountToApi = getBody[ExpensesTailoringTotalAmountAnswers](user) { value =>
+      getBody[AsOneTotalAnswers](user) { value =>
         val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-        expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+        for {
+          _ <- expensesService.saveAnswers(ctx, value)
+          _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, ExpensesCategoriesDb(ExpensesTailoring.TotalAmount))
+        } yield NoContent
       }
-      val storeTailoringTypeInDatabase = getBody[ExpensesTailoringCategoryTypeAnswer](user) { value =>
-        expensesService.saveAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
-      }
-      for {
-        _      <- submitTotalAmountToApi
-        result <- storeTailoringTypeInDatabase
-      } yield result
+  }
+
+  def getExpensesTailoring(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(expensesService.getExpensesTailoringAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>

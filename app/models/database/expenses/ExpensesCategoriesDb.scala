@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package models.frontend.expenses.tailoring
+package models.database.expenses
 
-import play.api.libs.json.{Json, OFormat, OWrites, Reads}
+import models.frontend.expenses.tailoring.ExpensesTailoring
+import play.api.libs.json.OFormat
+import play.api.libs.json.Json
 
-final case class ExpensesTailoringTotalAmountAnswers(expensesCategories: ExpensesCategories, totalAmount: BigDecimal)
+final case class ExpensesCategoriesDb(expensesCategories: ExpensesTailoring)
 
-object ExpensesTailoringTotalAmountAnswers {
-  implicit val reads: Reads[ExpensesTailoringTotalAmountAnswers] = Json.reads[ExpensesTailoringTotalAmountAnswers]
-
-  implicit val writes: OWrites[ExpensesTailoringTotalAmountAnswers] = Json.writes[ExpensesTailoringTotalAmountAnswers]
-
-  implicit val formats: OFormat[ExpensesTailoringTotalAmountAnswers] = OFormat(reads, writes)
+object ExpensesCategoriesDb {
+  implicit val format: OFormat[ExpensesCategoriesDb] = Json.format[ExpensesCategoriesDb]
 }
