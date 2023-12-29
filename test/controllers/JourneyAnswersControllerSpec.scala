@@ -62,19 +62,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     expensesService = StubExpensesAnswersService()
   )
 
-  "saveIncomeAnswers" should {
-    s"return a $NO_CONTENT when successful" in forAll(incomeJourneyAnswersGen) { data =>
-      behave like testRoute(
-        request = buildRequest(data),
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.saveIncomeAnswers(currTaxYear, businessId, nino)
-      )
-    }
-  }
-
-  "getIncomeAnswers" should {
-    s"return $NO_CONTENT if there is no answers" in {
+  "IncomeAnswers" should {
+    s"Get return $NO_CONTENT if there is no answers" in {
       behave like testRoute(
         request = buildRequestNoContent,
         expectedStatus = NO_CONTENT,
@@ -83,7 +72,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
 
-    s"return answers" in {
+    s"Get return answers" in {
       val answers = genOne(incomeJourneyAnswersGen)
       val underTest = new JourneyAnswersController(
         auth = mockAuthorisedAction,
@@ -99,42 +88,18 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => underTest.getIncomeAnswers(currTaxYear, businessId, nino)
       )
     }
-  }
 
-  "saveExpensesTailoringNoExpensesAnswers" should {
-    s"return a $NO_CONTENT when successful" in {
-      behave like testRoute(
-        request = buildRequest(NoExpensesAnswers),
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.saveExpensesTailoringNoExpensesAnswers(currTaxYear, businessId)
-      )
-    }
-  }
-
-  "saveExpensesTailoringIndividualCategoriesAnswers" should {
-    s"return a $NO_CONTENT when successful" in forAll(expensesTailoringIndividualCategoriesAnswersGen) { data =>
+    s"Save return a $NO_CONTENT when successful" in forAll(incomeJourneyAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
         expectedBody = "",
-        methodBlock = () => underTest.saveExpensesTailoringIndividualCategoriesAnswers(currTaxYear, businessId)
+        methodBlock = () => underTest.saveIncomeAnswers(currTaxYear, businessId, nino)
       )
     }
   }
 
-  "saveExpensesTailoringTotalAmountAnswers" should {
-    s"return a $NO_CONTENT when successful" in forAll(expensesTailoringTotalAmountAnswersGen) { data =>
-      behave like testRoute(
-        request = buildRequest(data),
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.saveExpensesTailoringTotalAmountAnswers(currTaxYear, businessId, nino)
-      )
-    }
-  }
-
-  "getExpensesTailoring" should {
+  "ExpensesTailoring" should {
     val cases = Table(
       ("journeyAnswers", "expectedStatus"),
       (None, NO_CONTENT),
@@ -143,7 +108,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       (genOne[ExpensesTailoringIndividualCategoriesAnswers](expensesTailoringIndividualCategoriesAnswersGen).some, OK)
     )
 
-    s"return correct status if for get tailoring answers" in {
+    s"Get return correct status if for get tailoring answers" in {
       forAll(cases) { (journeyAnswers, expectedStatus) =>
         val controller: JourneyAnswersController = new JourneyAnswersController(
           auth = mockAuthorisedAction,
@@ -159,10 +124,51 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         )
       }
     }
+
+    s"Save ExpensesTailoringNoExpenses return a $NO_CONTENT when successful" in {
+      behave like testRoute(
+        request = buildRequest(NoExpensesAnswers),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.saveExpensesTailoringNoExpenses(currTaxYear, businessId)
+      )
+    }
+
+    s"Save ExpensesTailoringIndividualCategories return a $NO_CONTENT when successful" in {
+      forAll(expensesTailoringIndividualCategoriesAnswersGen) { data =>
+        behave like testRoute(
+          request = buildRequest(data),
+          expectedStatus = NO_CONTENT,
+          expectedBody = "",
+          methodBlock = () => underTest.saveExpensesTailoringIndividualCategories(currTaxYear, businessId)
+        )
+      }
+    }
+
+    s"Save ExpensesTailoringTotalAmount return a $NO_CONTENT when successful" in forAll(expensesTailoringTotalAmountAnswersGen) { data =>
+      behave like testRoute(
+        request = buildRequest(data),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.saveExpensesTailoringTotalAmount(currTaxYear, businessId, nino)
+      )
+    }
   }
 
-  "saveGoodsToSellOrUse" should {
-    s"return a $NO_CONTENT when successful" in forAll(goodsToSellOrUseJourneyAnswersGen) { data =>
+  "GoodsToSellOrUse" should {
+    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[GoodsToSellOrUseJourneyAnswers] {
+      override val journeyAnswers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
+      mockExpensesService()
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
+        methodBlock = () => controller.getGoodsToSellOrUse(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Save return a $NO_CONTENT when successful" in forAll(goodsToSellOrUseJourneyAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
@@ -171,22 +177,21 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
-  "getGoodsToSellOrUseAnswers" should {
-    s"return a $OK and answers as json when successful" in new GetExpensesTest[GoodsToSellOrUseJourneyAnswers] {
-      override val journeyAnswers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
+
+  "OfficeSupplies" should {
+    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[OfficeSuppliesJourneyAnswers] {
+      override val journeyAnswers: OfficeSuppliesJourneyAnswers = genOne(officeSuppliesJourneyAnswersGen)
       mockExpensesService()
 
       behave like testRoute(
         request = buildRequestNoContent,
         expectedStatus = OK,
         expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
-        methodBlock = () => controller.getGoodsToSellOrUseAnswers(currTaxYear, businessId, nino)
+        methodBlock = () => controller.getOfficeSupplies(currTaxYear, businessId, nino)
       )
     }
-  }
 
-  "saveOfficeSupplies" should {
-    s"return a $NO_CONTENT when successful" in forAll(officeSuppliesJourneyAnswersGen) { data =>
+    s"Save return a $NO_CONTENT when successful" in forAll(officeSuppliesJourneyAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
@@ -195,22 +200,21 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
-  "getOfficeSuppliesAnswers" should {
-    s"return a $OK and answers as json when successful" in new GetExpensesTest[OfficeSuppliesJourneyAnswers] {
-      override val journeyAnswers: OfficeSuppliesJourneyAnswers = genOne(officeSuppliesJourneyAnswersGen)
+
+  "RepairsAndMaintenanceCosts" should {
+    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[RepairsAndMaintenanceCostsJourneyAnswers] {
+      override val journeyAnswers: RepairsAndMaintenanceCostsJourneyAnswers = genOne(repairsAndMaintenanceCostsJourneyAnswersGen)
       mockExpensesService()
 
       behave like testRoute(
         request = buildRequestNoContent,
         expectedStatus = OK,
         expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
-        methodBlock = () => controller.getOfficeSuppliesAnswers(currTaxYear, businessId, nino)
+        methodBlock = () => controller.getRepairsAndMaintenanceCosts(currTaxYear, businessId, nino)
       )
     }
-  }
 
-  "saveRepairsAndMaintenanceCosts" should {
-    s"return a $NO_CONTENT when successful" in forAll(repairsAndMaintenanceCostsJourneyAnswersGen) { data =>
+    s"Save return a $NO_CONTENT when successful" in forAll(repairsAndMaintenanceCostsJourneyAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
@@ -219,22 +223,21 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
-  "getRepairsAndMaintenanceCostsAnswers" should {
-    s"return a $OK and answers as json when successful" in new GetExpensesTest[RepairsAndMaintenanceCostsJourneyAnswers] {
-      override val journeyAnswers: RepairsAndMaintenanceCostsJourneyAnswers = genOne(repairsAndMaintenanceCostsJourneyAnswersGen)
+
+  "StaffCosts" should {
+    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[StaffCostsJourneyAnswers] {
+      override val journeyAnswers: StaffCostsJourneyAnswers = genOne(staffCostsJourneyAnswersGen)
       mockExpensesService()
 
       behave like testRoute(
         request = buildRequestNoContent,
         expectedStatus = OK,
         expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
-        methodBlock = () => controller.getRepairsAndMaintenanceCostsAnswers(currTaxYear, businessId, nino)
+        methodBlock = () => controller.getStaffCosts(currTaxYear, businessId, nino)
       )
     }
-  }
 
-  "saveStaffCosts" should {
-    s"return a $NO_CONTENT when successful" in forAll(staffCostsJourneyAnswersGen) { data =>
+    s"Save return a $NO_CONTENT when successful" in forAll(staffCostsJourneyAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
@@ -244,22 +247,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
-  "getStaffCostsAnswers" should {
-    s"return a $OK and answers as json when successful" in new GetExpensesTest[StaffCostsJourneyAnswers] {
-      override val journeyAnswers: StaffCostsJourneyAnswers = genOne(staffCostsJourneyAnswersGen)
-      mockExpensesService()
-
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = OK,
-        expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
-        methodBlock = () => controller.getStaffCostsAnswers(currTaxYear, businessId, nino)
-      )
-    }
-  }
-
-  "saveEntertainmentCosts" should {
-    s"return a $NO_CONTENT when successful" in forAll(entertainmentCostsJourneyAnswersGen) { data =>
+  "EntertainmentCosts" should {
+    s"Save return a $NO_CONTENT when successful" in forAll(entertainmentCostsJourneyAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
@@ -270,14 +259,6 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "advertisingOrMarketing" should {
-    s"Save return a $NO_CONTENT when successful" in forAll(advertisingOrMarketingJourneyAnswersGen) { data =>
-      behave like testRoute(
-        request = buildRequest(data),
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.saveAdvertisingOrMarketing(currTaxYear, businessId, nino)
-      )
-    }
     s"get return a $OK and answers as json when successful" in new GetExpensesTest[AdvertisingOrMarketingJourneyAnswers] {
       override val journeyAnswers: AdvertisingOrMarketingJourneyAnswers = genOne(advertisingOrMarketingJourneyAnswersGen)
       mockExpensesService()
@@ -289,10 +270,31 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => controller.getAdvertisingOrMarketing(currTaxYear, businessId, nino)
       )
     }
+
+    s"Save return a $NO_CONTENT when successful" in forAll(advertisingOrMarketingJourneyAnswersGen) { data =>
+      behave like testRoute(
+        request = buildRequest(data),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.saveAdvertisingOrMarketing(currTaxYear, businessId, nino)
+      )
+    }
   }
 
-  "saveConstructionCosts" should {
-    s"return a $NO_CONTENT when successful" in forAll(constructionJourneyAnswersGen) { data =>
+  "ConstructionCosts" should {
+    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[ConstructionJourneyAnswers] {
+      override val journeyAnswers: ConstructionJourneyAnswers = genOne(constructionJourneyAnswersGen)
+      mockExpensesService()
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
+        methodBlock = () => controller.getConstructionCosts(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Save return a $NO_CONTENT when successful" in forAll(constructionJourneyAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
@@ -302,22 +304,20 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
-  "getConstructionCostsAnswers" should {
-    s"return a $OK and answers as json when successful" in new GetExpensesTest[ConstructionJourneyAnswers] {
-      override val journeyAnswers: ConstructionJourneyAnswers = genOne(constructionJourneyAnswersGen)
+  "ProfessionalFees" should {
+    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[ProfessionalFeesJourneyAnswers] {
+      override val journeyAnswers: ProfessionalFeesJourneyAnswers = genOne(professionalFeesJourneyAnswersGen)
       mockExpensesService()
 
       behave like testRoute(
         request = buildRequestNoContent,
         expectedStatus = OK,
         expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
-        methodBlock = () => controller.getConstructionCostsAnswers(currTaxYear, businessId, nino)
+        methodBlock = () => controller.getProfessionalFees(currTaxYear, businessId, nino)
       )
     }
-  }
 
-  "saveProfessionalFees" should {
-    s"return a $NO_CONTENT when successful" in forAll(professionalFeesJourneyAnswersGen) { data =>
+    s"Save return a $NO_CONTENT when successful" in forAll(professionalFeesJourneyAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
@@ -327,22 +327,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
-  "getProfessionalFeesAnswers" should {
-    s"return a $OK and answers as json when successful" in new GetExpensesTest[ProfessionalFeesJourneyAnswers] {
-      override val journeyAnswers: ProfessionalFeesJourneyAnswers = genOne(professionalFeesJourneyAnswersGen)
-      mockExpensesService()
-
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = OK,
-        expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
-        methodBlock = () => controller.getProfessionalFeesAnswers(currTaxYear, businessId, nino)
-      )
-    }
-  }
-
-  "getEntertainmentCosts" should {
-    s"return a $OK and answers as json when successful" in new GetExpensesTest[EntertainmentJourneyAnswers] {
+  "EntertainmentCosts" should {
+    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[EntertainmentJourneyAnswers] {
       override val journeyAnswers: EntertainmentJourneyAnswers = genOne(entertainmentCostsJourneyAnswersGen)
       mockExpensesService()
 
@@ -350,13 +336,13 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         request = buildRequestNoContent,
         expectedStatus = OK,
         expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
-        methodBlock = () => controller.getEntertainmentCostsAnswers(currTaxYear, businessId, nino)
+        methodBlock = () => controller.getEntertainmentCosts(currTaxYear, businessId, nino)
       )
     }
   }
 
-  "getDepreciationCostsAnswers" should {
-    s"return a $OK and answers as json when successful" in new GetExpensesTest[DepreciationCostsJourneyAnswers] {
+  "DepreciationCosts" should {
+    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[DepreciationCostsJourneyAnswers] {
       override val journeyAnswers: DepreciationCostsJourneyAnswers = genOne(depreciationJourneyAnswersGen)
       mockExpensesService()
 
@@ -364,13 +350,11 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         request = buildRequestNoContent,
         expectedStatus = OK,
         expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
-        methodBlock = () => controller.getDepreciationCostsAnswers(currTaxYear, businessId, nino)
+        methodBlock = () => controller.getDepreciationCosts(currTaxYear, businessId, nino)
       )
     }
-  }
 
-  "saveDepreciationCosts" should {
-    s"return a $NO_CONTENT when successful" in forAll(depreciationJourneyAnswersGen) { data =>
+    s"Save return a $NO_CONTENT when successful" in forAll(depreciationJourneyAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
