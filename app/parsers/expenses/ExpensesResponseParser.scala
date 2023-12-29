@@ -24,6 +24,7 @@ import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
@@ -68,6 +69,13 @@ object ExpensesResponseParser {
       ConstructionJourneyAnswers(
         constructionIndustryAmount = response.financials.deductions.flatMap(_.constructionIndustryScheme.map(_.amount)).getOrElse(noneFound),
         constructionIndustryDisallowableAmount = response.financials.deductions.flatMap(_.constructionIndustryScheme.flatMap(_.disallowableAmount))
+      )
+
+  implicit val professionalFeesParser: ExpensesResponseParser[ProfessionalFeesJourneyAnswers] =
+    (response: SuccessResponseSchema) =>
+      ProfessionalFeesJourneyAnswers(
+        professionalFeesAmount = response.financials.deductions.flatMap(_.professionalFees.map(_.amount)).getOrElse(noneFound),
+        professionalFeesDisallowableAmount = response.financials.deductions.flatMap(_.professionalFees.flatMap(_.disallowableAmount))
       )
 
   implicit val staffCostsParser: ExpensesResponseParser[StaffCostsJourneyAnswers] =
