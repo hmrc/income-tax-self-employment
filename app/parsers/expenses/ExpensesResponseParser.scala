@@ -26,8 +26,8 @@ import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
-import utils.ResponseParser
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
+import utils.ResponseParser
 
 trait ExpensesResponseParser[Result] extends ResponseParser[api_1786.SuccessResponseSchema, Result] {
   override def parse(response: api_1786.SuccessResponseSchema): Result
