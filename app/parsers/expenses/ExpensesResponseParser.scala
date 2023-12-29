@@ -89,7 +89,6 @@ object ExpensesResponseParser {
         response.financials.deductions.flatMap(_.simplifiedExpenses).getOrElse(noneFound)
       )
 
-
   implicit val advertisingOrMarketingParser: ExpensesResponseParser[AdvertisingOrMarketingJourneyAnswers] =
     (response: SuccessResponseSchema) =>
       AdvertisingOrMarketingJourneyAnswers(
