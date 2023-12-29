@@ -40,13 +40,13 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =
     expensesSaveTailoringAnswersRes
 
-  def sendAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def saveAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     expensesSaveAnswersRes
 
   def getAnswers[A: ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A] =
     expensesGetAnswersRes.map(_.asInstanceOf[A])
 
-  def getJourneyAnswers[A](ctx: JourneyContextWithNino): ApiResultT[Option[ExpensesTailoringAnswers]] =
+  def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]] =
     EitherT.rightT[Future, ServiceError](getJourneyAnswers)
 
 }

@@ -16,10 +16,9 @@
 
 package models.frontend.expenses.tailoring
 
-import play.api.libs.json._
 import models.frontend.expenses.tailoring.individualCategories._
+import play.api.libs.json._
 import utils.JsonOps._
-import models.database.expenses.ExpensesCategoriesDb
 
 sealed trait ExpensesTailoringAnswers {
   val expensesCategories: ExpensesTailoring

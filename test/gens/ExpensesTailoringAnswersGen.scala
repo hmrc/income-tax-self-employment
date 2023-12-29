@@ -16,17 +16,13 @@
 
 package gens
 
+import models.frontend.expenses.tailoring.ExpensesTailoring
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, ExpensesTailoringIndividualCategoriesAnswers}
 import models.frontend.expenses.tailoring.individualCategories._
-import models.frontend.expenses.tailoring.{
-  ExpensesTailoring,
-  ExpensesTailoringIndividualCategoriesAnswers,
-  ExpensesTailoringCategoryTypeAnswer,
-  ExpensesTailoringTotalAmountAnswers
-}
 import org.scalacheck.Gen
 
 object ExpensesTailoringAnswersGen {
-  val expensesCategoriesGen: Gen[ExpensesTailoring]                               = Gen.oneOf(ExpensesTailoring.values)
+  val expensesCategoriesGen: Gen[ExpensesTailoring]                                = Gen.oneOf(ExpensesTailoring.values)
   val officeSuppliesGen: Gen[OfficeSupplies]                                       = Gen.oneOf(OfficeSupplies.values)
   val taxiMinicabOrRoadHaulageGen: Gen[TaxiMinicabOrRoadHaulage]                   = Gen.oneOf(TaxiMinicabOrRoadHaulage.values)
   val goodsToSellOrUseGen: Gen[GoodsToSellOrUse]                                   = Gen.oneOf(GoodsToSellOrUse.values)
@@ -47,14 +43,7 @@ object ExpensesTailoringAnswersGen {
   val disallowableSubcontractorCostsGen: Gen[DisallowableSubcontractorCosts]       = Gen.oneOf(DisallowableSubcontractorCosts.values)
   val disallowableProfessionalFeesGen: Gen[DisallowableProfessionalFees]           = Gen.oneOf(DisallowableProfessionalFees.values)
 
-  val expensesTailoringNoExpensesAnswersGen: Gen[ExpensesTailoringCategoryTypeAnswer] = for {
-    expensesCategories <- expensesCategoriesGen
-  } yield ExpensesTailoringCategoryTypeAnswer(
-    expensesCategories
-  )
-
   val expensesTailoringIndividualCategoriesAnswersGen: Gen[ExpensesTailoringIndividualCategoriesAnswers] = for {
-    expensesCategories                <- expensesCategoriesGen
     officeSupplies                    <- officeSuppliesGen
     taxiMinicabOrRoadHaulage          <- taxiMinicabOrRoadHaulageGen
     goodsToSellOrUse                  <- goodsToSellOrUseGen
@@ -75,7 +64,6 @@ object ExpensesTailoringAnswersGen {
     disallowableSubcontractorCosts    <- Gen.option(disallowableSubcontractorCostsGen)
     disallowableProfessionalFees      <- Gen.option(disallowableProfessionalFeesGen)
   } yield ExpensesTailoringIndividualCategoriesAnswers(
-    expensesCategories,
     officeSupplies,
     taxiMinicabOrRoadHaulage,
     goodsToSellOrUse,
@@ -97,11 +85,9 @@ object ExpensesTailoringAnswersGen {
     disallowableProfessionalFees
   )
 
-  val expensesTailoringTotalAmountAnswersGen: Gen[ExpensesTailoringTotalAmountAnswers] = for {
-    expensesCategories <- expensesCategoriesGen
-    totalAmount        <- bigDecimalGen
-  } yield ExpensesTailoringTotalAmountAnswers(
-    expensesCategories,
+  val expensesTailoringTotalAmountAnswersGen: Gen[AsOneTotalAnswers] = for {
+    totalAmount <- bigDecimalGen
+  } yield AsOneTotalAnswers(
     totalAmount
   )
 }

@@ -18,22 +18,30 @@ package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
 import gens.ExpensesJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
-import gens.ExpensesTailoringAnswersGen.{expensesTailoringIndividualCategoriesAnswersGen, expensesTailoringNoExpensesAnswersGen}
+import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.genOne
+import models.common.{JourneyName, JourneyStatus}
+import models.database.JourneyAnswers
+import models.database.expenses.ExpensesCategoriesDb
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
+import models.frontend.expenses.tailoring.ExpensesTailoring
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import parsers.expenses.ExpensesResponseParser
+import parsers.expenses.ExpensesResponseParser.goodsToSellOrUseParser
+import play.api.libs.json.{JsObject, Json}
 import stubs.connectors.StubSelfEmploymentConnector
-import stubs.connectors.StubSelfEmploymentConnector.api1786DeductionsSuccessResponse
-import ExpensesResponseParser.goodsToSellOrUseParser
+import stubs.connectors.StubSelfEmploymentConnector.{api1786DeductionsSuccessResponse, api1965MatchedResponse}
 import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import ExpensesAnswersServiceImplSpec._
+import cats.implicits._
 
 class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
@@ -50,7 +58,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
     "store data successfully" in new Test {
       override val connector = StubSelfEmploymentConnector()
 
-      val answers = genOne(expensesTailoringNoExpensesAnswersGen)
+      val answers = NoExpensesAnswers
       val result  = underTest.persistAnswers(businessId, currTaxYear, mtditid, answers).value.futureValue
       result shouldBe ().asRight
     }
@@ -71,7 +79,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       override val connector = StubSelfEmploymentConnector()
 
       val someExpensesAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
-      val result              = underTest.sendAnswers(journeyCtxWithNino, someExpensesAnswers).value.futureValue
+      val result              = underTest.saveAnswers(journeyCtxWithNino, someExpensesAnswers).value.futureValue
       result shouldBe ().asRight
     }
   }
@@ -84,6 +92,64 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
     val expectedResult = GoodsToSellOrUseJourneyAnswers(100.0, Some(100.0))
 
     result shouldBe expectedResult.asRight
+  }
+
+  "getExpensesTailoringAnswers" should {
+    "return None when there are no answers" in new Test {
+      override val connector = StubSelfEmploymentConnector()
+      val result             = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
+      result shouldBe None.asRight
+    }
+
+    "return NoExpensesAnswers" in new Test {
+      override val connector = StubSelfEmploymentConnector()
+      override val repo = StubJourneyAnswersRepository(getAnswer = journeyAnswers
+        .copy(data = Json.toJson(ExpensesCategoriesDb(ExpensesTailoring.NoExpenses)).as[JsObject])
+        .some)
+      val result = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
+      result shouldBe NoExpensesAnswers.some.asRight
+    }
+
+    "return AsOneTotalAnswers" in new Test {
+      override val connector = StubSelfEmploymentConnector(
+        getPeriodicSummaryDetailResult = Future.successful(
+          api1786DeductionsSuccessResponse
+            .copy(financials = api1786DeductionsSuccessResponse.financials
+              .copy(deductions = api1786DeductionsSuccessResponse.financials.deductions.map(_.copy(simplifiedExpenses = BigDecimal("10.5").some))))
+            .asRight)
+      )
+      override val repo = StubJourneyAnswersRepository(getAnswer = journeyAnswers
+        .copy(data = Json.toJson(ExpensesCategoriesDb(ExpensesTailoring.TotalAmount)).as[JsObject])
+        .some)
+      val result = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
+      result shouldBe AsOneTotalAnswers(BigDecimal("10.5")).some.asRight
+    }
+
+    "return ExpensesTailoringIndividualCategoriesAnswers" in new Test {
+      val answers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
+
+      override val connector = StubSelfEmploymentConnector()
+      override val repo = StubJourneyAnswersRepository(getAnswer = journeyAnswers
+        .copy(data = Json.toJson(answers).as[JsObject])
+        .some)
+      val result = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
+      result shouldBe answers.some.asRight
+    }
 
   }
+}
+
+object ExpensesAnswersServiceImplSpec {
+  val journeyAnswers: JourneyAnswers = JourneyAnswers(
+    mtditid,
+    businessId,
+    currTaxYear,
+    JourneyName.ExpensesTailoring,
+    JourneyStatus.Completed,
+    JsObject.empty,
+    Instant.now(),
+    Instant.now(),
+    Instant.now()
+  )
+
 }

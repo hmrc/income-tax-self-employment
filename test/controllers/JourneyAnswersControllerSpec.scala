@@ -34,7 +34,13 @@ import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{
+  AsOneTotalAnswers,
+  ExpensesTailoringIndividualCategoriesAnswers,
+  NoExpensesAnswers
+}
 import org.scalamock.handlers.CallHandler3
+import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import parsers.expenses.ExpensesResponseParser
 import play.api.http.Status._
@@ -46,7 +52,7 @@ import utils.BaseSpec._
 
 import scala.concurrent.Future
 
-class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckPropertyChecks {
+class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckPropertyChecks with TableDrivenPropertyChecks {
 
   val underTest = new JourneyAnswersController(
     auth = mockAuthorisedAction,
@@ -95,12 +101,12 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "saveExpensesTailoringNoExpensesAnswers" should {
-    s"return a $NO_CONTENT when successful" in forAll(expensesTailoringNoExpensesAnswersGen) { data =>
+    s"return a $NO_CONTENT when successful" in {
       behave like testRoute(
-        request = buildRequest(data),
+        request = buildRequest(NoExpensesAnswers),
         expectedStatus = NO_CONTENT,
         expectedBody = "",
-        methodBlock = () => underTest.saveExpensesTailoringCategoryTypeAnswer(currTaxYear, businessId)
+        methodBlock = () => underTest.saveExpensesTailoringNoExpensesAnswers(currTaxYear, businessId)
       )
     }
   }
@@ -124,6 +130,33 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         expectedBody = "",
         methodBlock = () => underTest.saveExpensesTailoringTotalAmountAnswers(currTaxYear, businessId, nino)
       )
+    }
+  }
+
+  "getExpensesTailoring" should {
+    val cases = Table(
+      ("journeyAnswers", "expectedStatus"),
+      (None, NO_CONTENT),
+      (NoExpensesAnswers.some, OK),
+      (genOne[AsOneTotalAnswers](expensesTailoringTotalAmountAnswersGen).some, OK),
+      (genOne[ExpensesTailoringIndividualCategoriesAnswers](expensesTailoringIndividualCategoriesAnswersGen).some, OK)
+    )
+
+    s"return correct status if for get tailoring answers" in {
+      forAll(cases) { (journeyAnswers, expectedStatus) =>
+        val controller: JourneyAnswersController = new JourneyAnswersController(
+          auth = mockAuthorisedAction,
+          cc = stubControllerComponents,
+          incomeService = StubIncomeAnswersService(),
+          expensesService = StubExpensesAnswersService(getJourneyAnswers = journeyAnswers)
+        )
+        behave like testRoute(
+          request = buildRequestNoContent,
+          expectedStatus = expectedStatus,
+          expectedBody = journeyAnswers.map(j => Json.stringify(Json.toJson(j))).getOrElse(""),
+          methodBlock = () => controller.getExpensesTailoring(currTaxYear, businessId, nino)
+        )
+      }
     }
   }
 
@@ -337,5 +370,6 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         .getAnswers(_: JourneyContextWithNino)(_: ExpensesResponseParser[T], _: HeaderCarrier))
         .expects(*, *, *)
         .returns(EitherT.right[ServiceError](Future.successful(journeyAnswers)))
+
   }
 }

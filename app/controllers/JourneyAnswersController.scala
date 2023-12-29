@@ -18,6 +18,7 @@ package controllers
 
 import controllers.actions.AuthorisedAction
 import models.common._
+import models.database.expenses.ExpensesCategoriesDb
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
@@ -26,6 +27,7 @@ import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.tailoring._
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Format.GenericFormat
@@ -33,12 +35,9 @@ import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.journeyAnswers._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.Logging
-import ExpensesTailoringAnswers._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-import controllers.handleApiResultT
-import models.database.expenses.ExpensesCategoriesDb
 
 @Singleton
 class JourneyAnswersController @Inject() (auth: AuthorisedAction,
@@ -59,7 +58,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     handleOptionalApiResult(incomeService.getAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
-  def saveExpensesTailoringNoExpenses(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+  def saveExpensesTailoringNoExpensesAnswers(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
     val result = expensesService.persistAnswers(businessId, taxYear, user.getMtditid, NoExpensesAnswers)
     handleApiUnitResultT(result)
   }
@@ -75,7 +74,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
       getBody[AsOneTotalAnswers](user) { value =>
         val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
         for {
-          _ <- expensesService.sendAnswers(ctx, value)
+          _ <- expensesService.saveAnswers(ctx, value)
           _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, ExpensesCategoriesDb(ExpensesTailoring.TotalAmount))
         } yield NoContent
       }
@@ -88,7 +87,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[GoodsToSellOrUseJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-      expensesService.sendAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -99,7 +98,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveOfficeSupplies(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[OfficeSuppliesJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-      expensesService.sendAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -110,7 +109,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveRepairsAndMaintenanceCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[RepairsAndMaintenanceCostsJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-      expensesService.sendAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -122,7 +121,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveStaffCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[StaffCostsJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-      expensesService.sendAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -133,7 +132,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveAdvertisingOrMarketing(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[AdvertisingOrMarketingJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-      expensesService.sendAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -146,7 +145,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveEntertainmentCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[EntertainmentJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-      expensesService.sendAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -157,7 +156,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveConstructionCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[ConstructionJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-      expensesService.sendAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -168,7 +167,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveDepreciationCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[DepreciationCostsJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-      expensesService.sendAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 
