@@ -74,15 +74,14 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     }
   }
 
-  def saveExpensesTailoringTotalAmount(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async {
-    implicit user =>
-      getBody[AsOneTotalAnswers](user) { value =>
-        val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-        for {
-          _ <- expensesService.saveAnswers(ctx, value)
-          _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, ExpensesCategoriesDb(ExpensesTailoring.TotalAmount))
-        } yield NoContent
-      }
+  def saveExpensesTailoringTotalAmount(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBody[AsOneTotalAnswers](user) { value =>
+      val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
+      for {
+        _ <- expensesService.saveAnswers(ctx, value)
+        _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, ExpensesCategoriesDb(ExpensesTailoring.TotalAmount))
+      } yield NoContent
+    }
   }
 
   def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
