@@ -37,7 +37,6 @@ class FinancialsTypeSpec extends AnyWordSpec with Matchers {
       )
 
       FinancialsType.fromFrontendModel(answers) shouldBe expectedResult
-
     }
     "work with goods to sell or use" in {
       val answers = goodsToSellOrUseJourneyAnswersGen.sample.get
@@ -111,6 +110,19 @@ class FinancialsTypeSpec extends AnyWordSpec with Matchers {
         Some(
           Deductions.empty.copy(constructionIndustryScheme = Some(
             SelfEmploymentDeductionsDetailType(Some(answers.constructionIndustryAmount), answers.constructionIndustryDisallowableAmount)
+          )))
+      )
+
+      FinancialsType.fromFrontendModel(answers) shouldBe expectedResult
+    }
+    "work with other expenses" in {
+      val answers = otherExpensesJourneyAnswersGen.sample.get
+
+      val expectedResult = FinancialsType(
+        None,
+        Some(
+          Deductions.empty.copy(other = Some(
+            SelfEmploymentDeductionsDetailType(Some(answers.otherExpensesAmount), answers.otherExpensesDisallowableAmount)
           )))
       )
 

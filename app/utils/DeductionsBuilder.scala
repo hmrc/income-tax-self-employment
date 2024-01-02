@@ -23,6 +23,7 @@ import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
 import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
@@ -111,4 +112,9 @@ object DeductionsBuilder {
           SelfEmploymentDeductionsDetailPosNegType(None, Some(answers.depreciationDisallowableAmount))
         )
       )
+
+  implicit val otherExpenses: DeductionsBuilder[OtherExpensesJourneyAnswers] =
+    (answers: OtherExpensesJourneyAnswers) =>
+      Deductions.empty.copy(other =
+        Some(SelfEmploymentDeductionsDetailType(Some(answers.otherExpensesAmount), answers.otherExpensesDisallowableAmount)))
 }
