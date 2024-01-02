@@ -27,6 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object PagerDutyHelper extends Logging {
 
+  // TODO Do it more generic, why FAILED to get journey state causes pager duty but not other errors here?
   object PagerDutyKeys extends Enumeration {
     val BAD_SUCCESS_JSON_FROM_API: PagerDutyKeys.Value        = Value
     val SERVICE_UNAVAILABLE_FROM_API: PagerDutyKeys.Value     = Value
@@ -46,8 +47,6 @@ object PagerDutyHelper extends Logging {
     }
 
   type PagerDutyKey = PagerDutyHelper.PagerDutyKeys.Value
-
-  type Not[T] = T => Nothing // L,R,T <: Not[Either[L,R]]
 
   implicit class WithRecovery[T](future: Future[T]) {
     def recoverWithPagerDutyLog(pagerDutyKey: PagerDutyKey, msg: String)(implicit ec: ExecutionContext): Future[Either[ServiceError, T]] =

@@ -14,16 +14,13 @@
  * limitations under the License.
  */
 
-package models.frontend.expenses.tailoring
+package models.domain
 
-import play.api.libs.json.{Json, OFormat, OWrites, Reads}
+import models.common.{JourneyName, JourneyStatus}
+import play.api.libs.json.{Json, OFormat}
 
-final case class ExpensesTailoringCategoryTypeAnswer(expensesCategories: ExpensesCategories)
+final case class JourneyNameAndStatus(name: JourneyName, journeyStatus: JourneyStatus)
 
-object ExpensesTailoringCategoryTypeAnswer {
-  implicit val reads: Reads[ExpensesTailoringCategoryTypeAnswer] = Json.reads[ExpensesTailoringCategoryTypeAnswer]
-
-  implicit val writes: OWrites[ExpensesTailoringCategoryTypeAnswer] = Json.writes[ExpensesTailoringCategoryTypeAnswer]
-
-  implicit val formats: OFormat[ExpensesTailoringCategoryTypeAnswer] = OFormat(reads, writes)
+object JourneyNameAndStatus {
+  implicit val format: OFormat[JourneyNameAndStatus] = Json.format[JourneyNameAndStatus]
 }

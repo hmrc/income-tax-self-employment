@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-package utils
+package models.common
 
-import scala.concurrent.{ExecutionContext, Future}
+import play.api.libs.json.{Format, Json}
 
-// TODO Remove this and Use EitherT
-object ScalaHelper {
-  implicit class FutureEither[L, R](either: Either[L, Future[R]]) {
+final case class TradingName(value: String) extends AnyVal {
+  override def toString: String = value
+}
 
-    def toFuture()(implicit ec: ExecutionContext): Future[Either[L, R]] =
-      Some(either).map {
-        case Left(s)  => Future.successful(Left(s))
-        case Right(f) => f.map(Right(_))
-      }.get
-  }
+object TradingName {
+  implicit val format: Format[TradingName] = Json.valueFormat[TradingName]
 }

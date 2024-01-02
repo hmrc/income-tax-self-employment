@@ -16,21 +16,15 @@
 
 package service
 
-import bulders.BusinessDataBuilder.{aBusiness, aGetBusinessDataResponse, aTaxPayerDisplayResponse, aTradesJourneyStatusesSeq}
-import bulders.JourneyStateDataBuilder.aJourneyState
+import bulders.BusinessDataBuilder.{aBusiness, aGetBusinessDataResponse, aTaxPayerDisplayResponse}
 import connectors.SelfEmploymentConnector
 import connectors.SelfEmploymentConnector.Api1171Response
 import models.common.IdType
 import models.common.IdType.Nino
 import models.database.JourneyState
+import models.database.JourneyState.JourneyStateData
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
-import models.error.ServiceError
-import models.error.ServiceError.DatabaseError.MongoError
-import org.mockito.ArgumentMatchers.{any, eq => meq}
-import org.mockito.Mockito.when
-import org.scalatestplus.mockito.MockitoSugar
-import repositories.MongoJourneyStateRepository
 import services.BusinessService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
@@ -40,9 +34,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class BusinessServiceSpec extends TestUtils {
   val mockBusinessConnector = mock[SelfEmploymentConnector]
-  val mockSessionRepository = MockitoSugar.mock[MongoJourneyStateRepository]
 
-  lazy val service = new BusinessService(mockBusinessConnector, mockSessionRepository)
+  lazy val aJourneyState = JourneyState(
+    journeyStateData = JourneyStateData(businessId = aBusiness.businessId, journey = "income", taxYear = 2023, completedState = true)
+  )
+
+  lazy val service = new BusinessService(mockBusinessConnector)
   val nino         = aTaxPayerDisplayResponse.nino
   val businessId   = aBusiness.businessId
   val taxYear      = LocalDate.now.getYear
@@ -58,36 +55,6 @@ class BusinessServiceSpec extends TestUtils {
       val expectedLeft = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
       behave like leftResponse(svcMethod, expectedLeft, () => stubConnectorGetBusiness(expectedLeft))
     }
-
-  "getBusinessesJourneyStates" should {
-    behave like rightResponse(
-      () => service.getBusinessJourneyStates(nino, taxYear),
-      Right(aTradesJourneyStatusesSeq),
-      () => {
-        stubConnectorGetBusiness(Right(aGetBusinessDataResponse))
-        stubSessionRepositoryGetSeq(Right(Seq(aJourneyState)))
-      }
-    )
-
-    val connectorResult = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
-    behave like leftResponse(
-      () => service.getBusinessJourneyStates(nino, taxYear),
-      connectorResult,
-      () => stubConnectorGetBusiness(connectorResult),
-      "Connector problems"
-    )
-
-    val sessionRepoResult = Left(MongoError("db error"))
-    behave like leftResponse(
-      () => service.getBusinessJourneyStates(nino, taxYear),
-      sessionRepoResult,
-      () => {
-        stubConnectorGetBusiness(Right(aGetBusinessDataResponse))
-        stubSessionRepositoryGetSeq(sessionRepoResult)
-      },
-      "Repository problems"
-    )
-  }
 
   def rightResponse[A](svcMethod: () => Future[A], expectedResult: A, stubs: () => Unit): Unit =
     "return a Right with GetBusinessDataRequest model" in {
@@ -108,16 +75,4 @@ class BusinessServiceSpec extends TestUtils {
       .returning(Future.successful(expectedResult))
     ()
   }
-
-  type GetJourneyStatesResponse = Either[ServiceError, Seq[JourneyState]]
-
-  private def stubSessionRepositoryGetSeq(expectedResult: GetJourneyStatesResponse): Unit = {
-    when(mockSessionRepository.get(any, meq(taxYear))) thenReturn (expectedResult match {
-      case Right(journeyStates)    => Future.successful(journeyStates)
-      case Left(MongoError(error)) => Future.failed(new RuntimeException(error))
-      case Left(error)             => Future.failed(new RuntimeException(error.errorMessage))
-    })
-    ()
-  }
-
 }

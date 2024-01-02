@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
-package models.domain
+package repositories
 
-import models.common.{BusinessId, TradingName}
-import play.api.libs.json._
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{BeforeAndAfterEach, OptionValues}
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import uk.gov.hmrc.mongo.test.MongoSupport
 
-case class TradesJourneyStatuses(businessId: BusinessId, tradingName: Option[TradingName], journeyStatuses: List[JourneyNameAndStatus])
+trait MongoSpec extends AnyWordSpec with Matchers with MongoSupport with BeforeAndAfterEach with GuiceOneAppPerSuite with OptionValues {
 
-object TradesJourneyStatuses {
-  implicit val format: OFormat[TradesJourneyStatuses] = Json.format[TradesJourneyStatuses]
+  implicit override val patienceConfig: PatienceConfig = PatienceConfig(
+    timeout = Span(5, Seconds),
+    interval = Span(500, Millis)
+  )
+
 }

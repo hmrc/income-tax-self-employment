@@ -66,7 +66,7 @@ trait DownstreamParserBehaviours extends TestUtils {
 
       result mustBe
         // note*: the spacings in the String below are important and the test will fail if altered
-        s"""[TestParser][read] Received 500 from $downstreamApi. Body:{
+        s"""[TestParser][read] Received 500 from $downstreamApi. Body: {
            |  "failures" : [ {
            |    "code" : "SERVICE_UNAVAILABLE",
            |    "reason" : "$serviceUnavailableReason",

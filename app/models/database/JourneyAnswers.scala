@@ -39,5 +39,14 @@ case class JourneyAnswers(mtditid: Mtditid,
 }
 
 object JourneyAnswers extends MongoJavatimeFormats.Implicits {
-  implicit val formats: OFormat[JourneyAnswers] = Json.format[JourneyAnswers]
+  private val reads: Reads[JourneyAnswers] = Json
+    .reads[JourneyAnswers]
+    .orElse(
+      Reads[JourneyAnswers] { json =>
+        Json.reads[JourneyAnswers].reads(json.as[JsObject] + ("data" -> JsObject.empty))
+      }
+    )
+  private val writes: OWrites[JourneyAnswers] = Json.writes[JourneyAnswers]
+
+  implicit val formats: OFormat[JourneyAnswers] = OFormat(reads, writes)
 }

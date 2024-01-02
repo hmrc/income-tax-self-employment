@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-package mocks
+package utils
 
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaFirstStubbing
-import org.scalatestplus.mockito.MockitoSugar
-import services.journeyAnswers.{GetJourneyAnswersResult, GetJourneyAnswersService}
+import play.api.libs.json._
 
-import scala.concurrent.Future
+object JsonOps {
+  implicit class JsonExtensionOps[A](val underlying: JsObject) {
 
-trait MockGetJourneyAnswersService extends MockitoSugar {
-  val mockGetJourneyAnswersService: GetJourneyAnswersService = mock[GetJourneyAnswersService]
-
-  object MockGetJourneyAnswersService {
-
-    def getJourneyAnswers(id: String): ScalaFirstStubbing[Future[GetJourneyAnswersResult]] =
-      when(mockGetJourneyAnswersService.getJourneyAnswers(id))
+    def withType(typeKey: String, typeValue: String): JsObject =
+      Json.obj(
+        typeKey -> JsString(typeValue)
+      ) ++ underlying
 
   }
-
 }

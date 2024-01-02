@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package bulders
+package models.frontend.expenses.professionalFees
 
-import bulders.BusinessDataBuilder.aBusiness
-import models.database.JourneyState
-import JourneyState.JourneyStateData
+import play.api.libs.json._
 
-import java.util.UUID
+case class ProfessionalFeesJourneyAnswers(professionalFeesAmount: BigDecimal, professionalFeesDisallowableAmount: Option[BigDecimal])
 
-object JourneyStateDataBuilder { // scalastyle:off magic.number
-  lazy val uuid = UUID.randomUUID()
-  lazy val aJourneyState = JourneyState(
-    journeyStateData = JourneyStateData(businessId = aBusiness.businessId, journey = "view-trades", taxYear = 2023, completedState = true)
-  )
-  lazy val aJourneyAndState = (aJourneyState.journeyStateData.journey, aJourneyState.journeyStateData.completedState)
+object ProfessionalFeesJourneyAnswers {
+  implicit val formats: OFormat[ProfessionalFeesJourneyAnswers] = Json.format[ProfessionalFeesJourneyAnswers]
 }

@@ -59,7 +59,7 @@ class controllersSpec extends AnyWordSpec with Matchers with Logging {
       "return Ok and answers as json" in {
         val success = EitherT.right[ServiceError](Future.successful(journeyAnswers))
 
-        val result = handleApiResult(success)
+        val result = handleApiResultT(success)
 
         status(result) shouldBe 200
         contentAsJson(result) shouldBe Json.toJson(journeyAnswers)

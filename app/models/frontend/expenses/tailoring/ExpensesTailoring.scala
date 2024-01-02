@@ -18,20 +18,20 @@ package models.frontend.expenses.tailoring
 
 import models.common.{Enumerable, WithName}
 
-sealed trait ExpensesCategories
+sealed trait ExpensesTailoring
 
-object ExpensesCategories extends Enumerable.Implicits {
+object ExpensesTailoring extends Enumerable.Implicits {
 
-  case object TotalAmount          extends WithName("totalAmount") with ExpensesCategories
-  case object IndividualCategories extends WithName("individualCategories") with ExpensesCategories
-  case object NoExpenses           extends WithName("noExpenses") with ExpensesCategories
+  case object TotalAmount          extends WithName("totalAmount") with ExpensesTailoring
+  case object IndividualCategories extends WithName("individualCategories") with ExpensesTailoring
+  case object NoExpenses           extends WithName("noExpenses") with ExpensesTailoring
 
-  val values: Seq[ExpensesCategories] = Seq(
+  val values: Seq[ExpensesTailoring] = Seq(
     TotalAmount,
     IndividualCategories,
     NoExpenses
   )
 
-  implicit val enumerable: Enumerable[ExpensesCategories] =
+  implicit val enumerable: Enumerable[ExpensesTailoring] =
     Enumerable(values.map(v => v.toString -> v): _*)
 }

@@ -19,12 +19,14 @@ package utils
 import models.connector.api_1894.request._
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
+import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
-import models.frontend.expenses.tailoring.ExpensesTailoringTotalAmountAnswers
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 
 trait DeductionsBuilder[A] {
   def build(answers: A): Deductions
@@ -32,8 +34,8 @@ trait DeductionsBuilder[A] {
 
 object DeductionsBuilder {
 
-  implicit val expensesTotalAmount: DeductionsBuilder[ExpensesTailoringTotalAmountAnswers] =
-    (answers: ExpensesTailoringTotalAmountAnswers) =>
+  implicit val expensesTotalAmount: DeductionsBuilder[ExpensesTailoringAnswers.AsOneTotalAnswers] =
+    (answers: ExpensesTailoringAnswers.AsOneTotalAnswers) =>
       Deductions.empty.copy(
         simplifiedExpenses = Some(answers.totalAmount)
       )
@@ -91,6 +93,22 @@ object DeductionsBuilder {
       Deductions.empty.copy(
         constructionIndustryScheme = Some(
           SelfEmploymentDeductionsDetailType(Some(answers.constructionIndustryAmount), answers.constructionIndustryDisallowableAmount)
+        )
+      )
+
+  implicit val professionalFees: DeductionsBuilder[ProfessionalFeesJourneyAnswers] =
+    (answers: ProfessionalFeesJourneyAnswers) =>
+      Deductions.empty.copy(
+        professionalFees = Some(
+          SelfEmploymentDeductionsDetailAllowablePosNegType(Some(answers.professionalFeesAmount), answers.professionalFeesDisallowableAmount)
+        )
+      )
+
+  implicit val depreciationCosts: DeductionsBuilder[DepreciationCostsJourneyAnswers] =
+    (answers: DepreciationCostsJourneyAnswers) =>
+      Deductions.empty.copy(
+        depreciation = Some(
+          SelfEmploymentDeductionsDetailPosNegType(None, Some(answers.depreciationDisallowableAmount))
         )
       )
 }

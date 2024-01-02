@@ -29,13 +29,15 @@ import utils.DeductionsBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 
 case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResultT[Unit] = serviceUnitT,
                                       expensesSaveAnswersRes: ApiResultT[Unit] = serviceUnitT,
-                                      expensesGetAnswersRes: ApiResultT[AnyRef] = EitherT.right[ServiceError](Future.successful("unused")))
+                                      expensesGetAnswersRes: ApiResultT[AnyRef] = EitherT.right[ServiceError](Future.successful("unused")),
+                                      getJourneyAnswers: Option[ExpensesTailoringAnswers] = None)
     extends ExpensesAnswersService {
 
-  def saveAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =
+  def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =
     expensesSaveTailoringAnswersRes
 
   def saveAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
@@ -43,4 +45,8 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
 
   def getAnswers[A: ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A] =
     expensesGetAnswersRes.map(_.asInstanceOf[A])
+
+  def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]] =
+    EitherT.rightT[Future, ServiceError](getJourneyAnswers)
+
 }

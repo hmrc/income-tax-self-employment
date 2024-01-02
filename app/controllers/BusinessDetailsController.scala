@@ -42,16 +42,6 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
     businessService.getBusiness(nino, businessId) map businessDataResponse
   }
 
-  def getBusinessJourneyStates(nino: String, taxYear: Int): Action[AnyContent] = auth.async { implicit request =>
-    businessService
-      .getBusinessJourneyStates(nino, taxYear)
-      .map {
-        case Left(serviceError) => InternalServerError(Json.toJson(serviceError))
-        case Right(Seq())       => NoContent
-        case Right(res)         => Ok(Json.toJson(res))
-      }
-  }
-
   private def businessDataResponse(dataResponse: GetBusinessResponse) =
     dataResponse match {
       case Right(model) => Ok(Json.toJson(model))

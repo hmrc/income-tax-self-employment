@@ -16,12 +16,14 @@
 
 package repositories
 
+import cats.implicits._
 import models.common._
 import models.database.JourneyAnswers
+import models.domain.Business
+import models.frontend.TaskList
 import org.mongodb.scala._
 import org.mongodb.scala.bson._
-import org.mongodb.scala.bson.conversions.Bson
-import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Projections.exclude
 import org.mongodb.scala.model._
 import org.mongodb.scala.result.UpdateResult
 import play.api.libs.json.{JsValue, Json}
@@ -33,17 +35,12 @@ import java.time.{Clock, Instant}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import cats.implicits._
 
 trait JourneyAnswersRepository {
-  def get(id: String): Future[Option[JourneyAnswers]]
-
-  def get(ctx: JourneyContextWithNino, journeyName: JourneyName): Future[Option[JourneyAnswers]]
-
-  def upsertData(ctx: JourneyContext, newData: JsValue): Future[UpdateResult]
-
-  def updateStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult]
-
+  def get(ctx: JourneyContext): Future[Option[JourneyAnswers]]
+  def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): Future[TaskList]
+  def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[UpdateResult]
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult]
   def testOnlyClearAllData(): Future[Unit]
 }
 
@@ -86,44 +83,47 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     Filters.eq("journey", ctx.journey.entryName)
   )
 
-  // TODO remove
-  def get(id: String): Future[Option[JourneyAnswers]] =
-    collection
-      .withReadPreference(ReadPreference.primaryPreferred())
-      .find(filterByConstraint("_id", id))
-      .headOption()
+  private def filterAllJourneys(taxYear: TaxYear, mtditid: Mtditid) = Filters.and(
+    Filters.eq("mtditid", mtditid.value),
+    Filters.eq("taxYear", taxYear.endYear)
+  )
 
-  private def filterByConstraint(field: String, value: String): Bson = equal(field, value)
-
-  def get(ctx: JourneyContextWithNino, journeyName: JourneyName): Future[Option[JourneyAnswers]] = {
-    val filter = filterJourney(ctx.toJourneyContext(journeyName))
+  def get(ctx: JourneyContext): Future[Option[JourneyAnswers]] = {
+    val filter = filterJourney(ctx)
     collection
-      .withReadPreference(ReadPreference.primaryPreferred())
+      .withReadPreference(ReadPreference.primaryPreferred()) // TODO Why? Cannot we just use standard?
       .find(filter)
       .headOption()
   }
 
-  def upsertData(ctx: JourneyContext, newData: JsValue): Future[UpdateResult] = {
+  def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): Future[TaskList] = {
+    val filter     = filterAllJourneys(taxYear, mtditid)
+    val projection = exclude("data")
+    collection
+      .find(filter)
+      .projection(projection)
+      .toFuture()
+      .map(answers => TaskList.fromJourneyAnswers(answers.toList, businesses))
+  }
+
+  def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[UpdateResult] = {
     val filter  = filterJourney(ctx)
     val bson    = BsonDocument(Json.stringify(newData))
-    val update  = createUpsert(ctx)("data", bson)
+    val update  = createUpsert(ctx)("data", bson, JourneyStatus.NotStarted)
     val options = new UpdateOptions().upsert(true)
 
     collection.updateOne(filter, update, options).toFuture()
   }
 
-  def updateStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
-    val now    = Instant.now(clock)
-    val filter = filterJourney(ctx)
-    val update = Updates.combine(
-      Updates.set("status", status.entryName),
-      Updates.set("updatedAt", now)
-    )
-    val options = new UpdateOptions().upsert(false)
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
+    val filter  = filterJourney(ctx)
+    val update  = createUpsertStatus(ctx)(status)
+    val options = new UpdateOptions().upsert(true)
+
     collection.updateOne(filter, update, options).toFuture()
   }
 
-  private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue) = {
+  private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
     val now      = Instant.now(clock)
     val expireAt = calculateExpireAt(now)
 
@@ -133,11 +133,27 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
       Updates.setOnInsert("mtditid", ctx.mtditid.value),
       Updates.setOnInsert("taxYear", ctx.taxYear.endYear),
       Updates.setOnInsert("businessId", ctx.businessId.value),
-      Updates.setOnInsert("status", JourneyStatus.InProgress.entryName),
+      Updates.setOnInsert("status", statusOnInsert.entryName),
       Updates.setOnInsert("journey", ctx.journey.entryName),
       Updates.setOnInsert("createdAt", now),
       Updates.setOnInsert("expireAt", expireAt)
     )
   }
 
+  private def createUpsertStatus(ctx: JourneyContext)(status: JourneyStatus) = {
+    val now      = Instant.now(clock)
+    val expireAt = calculateExpireAt(now)
+
+    Updates.combine(
+      Updates.set("status", status.entryName),
+      Updates.set("updatedAt", now),
+      Updates.setOnInsert("data", BsonDocument()),
+      Updates.setOnInsert("mtditid", ctx.mtditid.value),
+      Updates.setOnInsert("taxYear", ctx.taxYear.endYear),
+      Updates.setOnInsert("businessId", ctx.businessId.value),
+      Updates.setOnInsert("journey", ctx.journey.entryName),
+      Updates.setOnInsert("createdAt", now),
+      Updates.setOnInsert("expireAt", expireAt)
+    )
+  }
 }

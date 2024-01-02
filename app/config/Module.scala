@@ -18,7 +18,7 @@ package config
 
 import com.google.inject.AbstractModule
 import connectors.{SelfEmploymentConnector, SelfEmploymentConnectorImpl}
-import repositories.{JourneyAnswersRepository, JourneyStateRepository, MongoJourneyAnswersRepository, MongoJourneyStateRepository}
+import repositories.{JourneyAnswersRepository, MongoJourneyAnswersRepository}
 import services.journeyAnswers._
 
 import java.time.{Clock, ZoneOffset}
@@ -30,9 +30,9 @@ class Module extends AbstractModule {
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
     bind(classOf[IncomeAnswersService]).to(classOf[IncomeAnswersServiceImpl])
     bind(classOf[ExpensesAnswersService]).to(classOf[ExpensesAnswersServiceImpl])
-    bind(classOf[JourneyStateRepository]).to(classOf[MongoJourneyStateRepository])
     bind(classOf[JourneyAnswersRepository]).to(classOf[MongoJourneyAnswersRepository])
     bind(classOf[SelfEmploymentConnector]).to(classOf[SelfEmploymentConnectorImpl])
+    bind(classOf[JourneyStatusService]).to(classOf[JourneyStatusServiceImpl])
     ()
   }
 
