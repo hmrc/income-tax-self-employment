@@ -105,7 +105,7 @@ object DeductionsBuilder {
         )
       )
 
-  implicit val interestFees: DeductionsBuilder[InterestJourneyAnswers] =
+  implicit val interest: DeductionsBuilder[InterestJourneyAnswers] =
     (answers: InterestJourneyAnswers) =>
       Deductions.empty.copy(
         professionalFees = Some(

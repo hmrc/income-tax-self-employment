@@ -170,14 +170,14 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def saveProfessionalFees(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    getBody[InterestJourneyAnswers](user) { value =>
+    getBody[ProfessionalFeesJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
       expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
   }
 
   def getInterest(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResultT(expensesService.getAnswers[ProfessionalFeesJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+    handleApiResultT(expensesService.getAnswers[InterestJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def saveInterest(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
