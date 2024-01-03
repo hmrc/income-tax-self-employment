@@ -36,8 +36,8 @@ import utils.BaseSpec._
 
 class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
-  private val connector           = new SelfEmploymentConnectorImpl(httpClient, appConfig)
-  val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
+  val connector = new SelfEmploymentConnectorImpl(httpClient, appConfig)
+  val ctx       = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
 
   "getPeriodicSummaryDetail" must {
     "return successful response" in new Api1786Test {

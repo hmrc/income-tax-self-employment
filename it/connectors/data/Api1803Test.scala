@@ -22,8 +22,7 @@ import play.api.libs.json.Json
 import utils.BaseSpec._
 
 trait Api1803Test {
-  val taxYearTys    = asTys(currTaxYear)
-  val downstreamUrl = s"/income-tax/$taxYearTys/$nino/self-employments/$businessId/annual-summaries"
+  val downstreamUrl = s"/income-tax/${asTys(taxYear)}/$nino/self-employments/$businessId/annual-summaries"
 
   val successResponseRaw: String = """{
                                      |  "annualAdjustments": {

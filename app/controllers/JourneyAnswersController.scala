@@ -25,6 +25,7 @@ import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
 import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
@@ -181,6 +182,13 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveDepreciationCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[DepreciationCostsJourneyAnswers](user) { value =>
+      val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
+      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+    }
+  }
+
+  def saveOtherExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBody[OtherExpensesJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
       expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
