@@ -18,13 +18,12 @@ package connectors.data
 
 import models.common.TaxYear.asTys
 import models.connector.api_1786._
-import utils.BaseSpec._
 import play.api.libs.json.Json
+import utils.BaseSpec._
 
 trait Api1786Test {
-  val taxYearTys = asTys(currTaxYear)
   val downstreamUrl =
-    s"/income-tax/$taxYearTys/$nino/self-employments/$businessId/periodic-summary-detail\\?from=$taxYearStart&to=$taxYearEnd"
+    s"/income-tax/${asTys(taxYear)}/$nino/self-employments/$businessId/periodic-summary-detail\\?from=$taxYearStart&to=$taxYearEnd"
 
   val successResponseRaw: String =
     """{
