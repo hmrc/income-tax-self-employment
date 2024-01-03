@@ -109,8 +109,8 @@ object DeductionsBuilder {
   implicit val interest: DeductionsBuilder[InterestJourneyAnswers] =
     (answers: InterestJourneyAnswers) =>
       Deductions.empty.copy(
-        professionalFees = Some(
-          SelfEmploymentDeductionsDetailAllowablePosNegType(Some(answers.interestAmount), answers.interestDisallowableAmount)
+        interest = Some(
+          SelfEmploymentDeductionsDetailPosNegType(Some(answers.interestAmount), answers.interestDisallowableAmount)
         )
       )
 
