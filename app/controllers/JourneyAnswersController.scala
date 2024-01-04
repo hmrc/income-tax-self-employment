@@ -207,7 +207,6 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     }
   }
 
-  // Implement package object to shorten this code to 1 line
   def saveFinancialCharges(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBody[FinancialChargesJourneyAnswers](user) { value =>
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
