@@ -49,7 +49,7 @@ object BaseSpec {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   // static data
-  val taxYear: TaxYear       = TaxYear(2023)
+  val taxYear: TaxYear       = TaxYear(2024)
   val taxYearStart: String   = TaxYear.startDate(taxYear)
   val taxYearEnd: String     = TaxYear.endDate(taxYear)
   val businessId: BusinessId = BusinessId("someBusinessId")
