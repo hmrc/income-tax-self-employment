@@ -30,6 +30,7 @@ import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJou
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
+import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.interest.InterestJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
@@ -400,6 +401,17 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
   "FinancialCharges" should {
+    s"Return a $OK and answers as json when successful" in new GetExpensesTest[FinancialChargesJourneyAnswers] {
+      override val journeyAnswers: FinancialChargesJourneyAnswers = genOne(financialChargesJourneyAnswersGen)
+      mockExpensesService()
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
+        methodBlock = () => controller.getFinancialCharges(currTaxYear, businessId, nino)
+      )
+    }
     s"Save answers and return a $NO_CONTENT when successful" in {
       forAll(financialChargesJourneyAnswersGen) { data =>
         behave like testRoute(
