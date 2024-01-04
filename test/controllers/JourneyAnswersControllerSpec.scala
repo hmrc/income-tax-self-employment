@@ -399,6 +399,18 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       }
     }
   }
+  "saveFinancialCharges" should {
+    s"Save answers and return a $NO_CONTENT when successful" in {
+      forAll(financialChargesJourneyAnswersGen) { data =>
+        behave like testRoute(
+          request = buildRequest(data),
+          expectedStatus = NO_CONTENT,
+          expectedBody = "",
+          methodBlock = () => underTest.saveFinancialCharges(currTaxYear, businessId, nino)
+        )
+      }
+    }
+  }
 
   trait GetExpensesTest[T] {
     val expensesService: ExpensesAnswersService = mock[ExpensesAnswersService]

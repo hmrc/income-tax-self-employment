@@ -21,6 +21,7 @@ import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJou
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
+import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.interest.InterestJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
@@ -126,4 +127,9 @@ object DeductionsBuilder {
     (answers: OtherExpensesJourneyAnswers) =>
       Deductions.empty.copy(other =
         Some(SelfEmploymentDeductionsDetailType(Some(answers.otherExpensesAmount), answers.otherExpensesDisallowableAmount)))
+
+  implicit val financialCharges: DeductionsBuilder[FinancialChargesJourneyAnswers] =
+    (answers: FinancialChargesJourneyAnswers) =>
+      Deductions.empty.copy(financialCharges =
+        Some(SelfEmploymentDeductionsDetailPosNegType(Some(answers.financialChargesAmount), answers.financialChargesDisallowableAmount)))
 }

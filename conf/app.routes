@@ -49,3 +49,5 @@ POST        /:taxYear/:businessId/expenses-depreciation/:nino/answers           
 GET         /:taxYear/:businessId/expenses-depreciation/:nino/answers                                                   controllers.JourneyAnswersController.getDepreciationCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/:businessId/expenses-other-expenses/:nino/answers                                                 controllers.JourneyAnswersController.saveOtherExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
+POST        /:taxYear/:businessId/expenses-financial-charges/:nino/answers                                              controllers.JourneyAnswersController.saveFinancialCharges(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
