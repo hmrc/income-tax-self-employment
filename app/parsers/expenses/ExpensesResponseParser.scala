@@ -22,6 +22,7 @@ import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJou
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
+import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.interest.InterestJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
@@ -45,6 +46,7 @@ object ExpensesResponseParser {
         goodsToSellOrUseAmount = response.financials.deductions.flatMap(_.costOfGoods.map(_.amount)).getOrElse(noneFound),
         disallowableGoodsToSellOrUseAmount = response.financials.deductions.flatMap(_.costOfGoods.flatMap(_.disallowableAmount))
       )
+
   implicit val repairsAndMaintenanceCostsParser: ExpensesResponseParser[RepairsAndMaintenanceCostsJourneyAnswers] =
     (response: SuccessResponseSchema) =>
       RepairsAndMaintenanceCostsJourneyAnswers(
@@ -110,5 +112,12 @@ object ExpensesResponseParser {
       AdvertisingOrMarketingJourneyAnswers(
         advertisingOrMarketingAmount = response.financials.deductions.flatMap(_.advertisingCosts.map(_.amount)).getOrElse(noneFound),
         advertisingOrMarketingDisallowableAmount = response.financials.deductions.flatMap(_.advertisingCosts.flatMap(_.disallowableAmount))
+      )
+
+  implicit val financialChargesParser: ExpensesResponseParser[FinancialChargesJourneyAnswers] =
+    (response: SuccessResponseSchema) =>
+      FinancialChargesJourneyAnswers(
+        financialChargesAmount = response.financials.deductions.flatMap(_.financialCharges.map(_.amount)).getOrElse(noneFound),
+        financialChargesDisallowableAmount = response.financials.deductions.flatMap(_.financialCharges.flatMap(_.disallowableAmount))
       )
 }
