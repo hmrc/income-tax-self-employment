@@ -399,7 +399,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       }
     }
   }
-  "saveFinancialCharges" should {
+  "FinancialCharges" should {
     s"Save answers and return a $NO_CONTENT when successful" in {
       forAll(financialChargesJourneyAnswersGen) { data =>
         behave like testRoute(
