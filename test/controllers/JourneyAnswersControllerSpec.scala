@@ -411,15 +411,15 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
         methodBlock = () => controller.getFinancialCharges(currTaxYear, businessId, nino)
       )
-      s"Save answers and return a $NO_CONTENT when successful" in {
-        forAll(financialChargesJourneyAnswersGen) { data =>
-          behave like testRoute(
-            request = buildRequest(data),
-            expectedStatus = NO_CONTENT,
-            expectedBody = "",
-            methodBlock = () => underTest.saveFinancialCharges(currTaxYear, businessId, nino)
-          )
-        }
+    }
+    s"Save answers and return a $NO_CONTENT when successful" in {
+      forAll(financialChargesJourneyAnswersGen) { data =>
+        behave like testRoute(
+          request = buildRequest(data),
+          expectedStatus = NO_CONTENT,
+          expectedBody = "",
+          methodBlock = () => underTest.saveFinancialCharges(currTaxYear, businessId, nino)
+        )
       }
     }
   }
