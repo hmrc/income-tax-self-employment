@@ -34,14 +34,11 @@ import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.interest.InterestJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
 import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
-import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{
-  AsOneTotalAnswers,
-  ExpensesTailoringIndividualCategoriesAnswers,
-  NoExpensesAnswers
-}
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import org.scalamock.handlers.CallHandler3
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -158,7 +155,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "GoodsToSellOrUse" should {
-    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[GoodsToSellOrUseJourneyAnswers] {
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[GoodsToSellOrUseJourneyAnswers] {
       override val journeyAnswers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
       mockExpensesService()
 
@@ -181,7 +178,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "OfficeSupplies" should {
-    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[OfficeSuppliesJourneyAnswers] {
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[OfficeSuppliesJourneyAnswers] {
       override val journeyAnswers: OfficeSuppliesJourneyAnswers = genOne(officeSuppliesJourneyAnswersGen)
       mockExpensesService()
 
@@ -204,7 +201,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "RepairsAndMaintenanceCosts" should {
-    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[RepairsAndMaintenanceCostsJourneyAnswers] {
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[RepairsAndMaintenanceCostsJourneyAnswers] {
       override val journeyAnswers: RepairsAndMaintenanceCostsJourneyAnswers = genOne(repairsAndMaintenanceCostsJourneyAnswersGen)
       mockExpensesService()
 
@@ -227,7 +224,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "StaffCosts" should {
-    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[StaffCostsJourneyAnswers] {
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[StaffCostsJourneyAnswers] {
       override val journeyAnswers: StaffCostsJourneyAnswers = genOne(staffCostsJourneyAnswersGen)
       mockExpensesService()
 
@@ -261,7 +258,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "AdvertisingOrMarketing" should {
-    s"get return a $OK and answers as json when successful" in new GetExpensesTest[AdvertisingOrMarketingJourneyAnswers] {
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[AdvertisingOrMarketingJourneyAnswers] {
       override val journeyAnswers: AdvertisingOrMarketingJourneyAnswers = genOne(advertisingOrMarketingJourneyAnswersGen)
       mockExpensesService()
 
@@ -284,7 +281,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "ConstructionCosts" should {
-    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[ConstructionJourneyAnswers] {
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[ConstructionJourneyAnswers] {
       override val journeyAnswers: ConstructionJourneyAnswers = genOne(constructionJourneyAnswersGen)
       mockExpensesService()
 
@@ -307,7 +304,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "ProfessionalFees" should {
-    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[ProfessionalFeesJourneyAnswers] {
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[ProfessionalFeesJourneyAnswers] {
       override val journeyAnswers: ProfessionalFeesJourneyAnswers = genOne(professionalFeesJourneyAnswersGen)
       mockExpensesService()
 
@@ -330,7 +327,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "Interest" should {
-    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[InterestJourneyAnswers] {
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[InterestJourneyAnswers] {
       override val journeyAnswers: InterestJourneyAnswers = genOne(interestJourneyAnswersGen)
       mockExpensesService()
 
@@ -353,7 +350,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "EntertainmentCosts" should {
-    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[EntertainmentJourneyAnswers] {
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[EntertainmentJourneyAnswers] {
       override val journeyAnswers: EntertainmentJourneyAnswers = genOne(entertainmentCostsJourneyAnswersGen)
       mockExpensesService()
 
@@ -367,7 +364,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "DepreciationCosts" should {
-    s"Get return a $OK and answers as json when successful" in new GetExpensesTest[DepreciationCostsJourneyAnswers] {
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[DepreciationCostsJourneyAnswers] {
       override val journeyAnswers: DepreciationCostsJourneyAnswers = genOne(depreciationJourneyAnswersGen)
       mockExpensesService()
 
@@ -388,7 +385,19 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
   }
-  "saveOtherExpenses" should {
+  "OtherExpenses" should {
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[OtherExpensesJourneyAnswers] {
+      override val journeyAnswers: OtherExpensesJourneyAnswers = genOne(otherExpensesJourneyAnswersGen)
+      mockExpensesService()
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
+        methodBlock = () => controller.getOtherExpenses(currTaxYear, businessId, nino)
+      )
+    }
+
     s"Save answers and return a $NO_CONTENT when successful" in {
       forAll(otherExpensesJourneyAnswersGen) { data =>
         behave like testRoute(
@@ -401,7 +410,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
   "FinancialCharges" should {
-    s"Return a $OK and answers as json when successful" in new GetExpensesTest[FinancialChargesJourneyAnswers] {
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[FinancialChargesJourneyAnswers] {
       override val journeyAnswers: FinancialChargesJourneyAnswers = genOne(financialChargesJourneyAnswersGen)
       mockExpensesService()
 
