@@ -26,6 +26,7 @@ import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.interest.InterestJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
 import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
@@ -119,5 +120,12 @@ object ExpensesResponseParser {
       FinancialChargesJourneyAnswers(
         financialChargesAmount = response.financials.deductions.flatMap(_.financialCharges.map(_.amount)).getOrElse(noneFound),
         financialChargesDisallowableAmount = response.financials.deductions.flatMap(_.financialCharges.flatMap(_.disallowableAmount))
+      )
+
+  implicit val otherExpensesParser: ExpensesResponseParser[OtherExpensesJourneyAnswers] =
+    (response: SuccessResponseSchema) =>
+      OtherExpensesJourneyAnswers(
+        otherExpensesAmount = response.financials.deductions.flatMap(_.other.map(_.amount)).getOrElse(noneFound),
+        otherExpensesDisallowableAmount = response.financials.deductions.flatMap(_.other.flatMap(_.disallowableAmount))
       )
 }
