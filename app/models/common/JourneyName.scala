@@ -41,6 +41,7 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
   case object Interest                   extends JourneyName("expenses-interest")
   case object OtherExpenses              extends JourneyName("expenses-other-expenses")
   case object FinancialCharges           extends JourneyName("expenses-financial-charges")
+  case object IrrecoverableDebts         extends JourneyName("expenses-irrecoverable-debts")
   case object Depreciation               extends JourneyName("expenses-depreciation")
 
   // Are we using this code? Should we be if not?

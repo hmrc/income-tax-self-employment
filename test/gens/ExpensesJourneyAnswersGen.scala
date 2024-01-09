@@ -23,6 +23,7 @@ import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.interest.InterestJourneyAnswers
+import models.frontend.expenses.irrecoverableDebts.IrrecoverableDebtsJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
 import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
@@ -89,5 +90,10 @@ object ExpensesJourneyAnswersGen {
     amount             <- bigDecimalGen
     disallowableAmount <- Gen.option(bigDecimalGen)
   } yield FinancialChargesJourneyAnswers(amount, disallowableAmount)
+
+  val irrecoverableDebtsJourneyAnswersGen: Gen[IrrecoverableDebtsJourneyAnswers] = for {
+    amount             <- bigDecimalGen
+    disallowableAmount <- Gen.option(bigDecimalGen)
+  } yield IrrecoverableDebtsJourneyAnswers(amount, disallowableAmount)
 
 }

@@ -26,6 +26,7 @@ import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
 import models.frontend.expenses.interest.InterestJourneyAnswers
+import models.frontend.expenses.irrecoverableDebts.IrrecoverableDebtsJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
 import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
 import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
@@ -220,6 +221,10 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
       val ctx = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
       expensesService.saveAnswers(ctx, value).map(_ => NoContent)
     }
+  }
+
+  def getIrrecoverableDebts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResultT(expensesService.getAnswers[IrrecoverableDebtsJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
 }
