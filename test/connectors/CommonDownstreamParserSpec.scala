@@ -16,6 +16,7 @@
 
 package connectors
 
+import connectors.DownstreamParser._
 import helpers.PagerDutyAware
 import models.error.DownstreamError
 import models.error.DownstreamErrorBody._
@@ -26,14 +27,12 @@ import play.api.libs.json._
 import uk.gov.hmrc.http.HttpResponse
 import utils.PagerDutyHelper.PagerDutyKeys._
 
-import DownstreamParser._
-
 class CommonDownstreamParserSpec extends AnyWordSpecLike with PagerDutyAware with TableDrivenPropertyChecks {
   val newValue = "http://someurl"
 
   "logMessage" should {
     "log properly formatted message" in {
-      val result = CommonDownstreamParser(newValue).logMessage(HttpResponse(500, "test"))
+      val result = CommonDownstreamParser("method", newValue, HttpResponse(200, "")).logMessage(HttpResponse(500, "test"))
 
       assert(result === "[CommonDownstreamParser][read] Received 500 from http://someurl. Body: test ")
     }
@@ -42,7 +41,7 @@ class CommonDownstreamParserSpec extends AnyWordSpecLike with PagerDutyAware wit
   "reportInvalidJsonError" should {
     "return a SingleDownstreamError and log a pager duty error" in new PagerDutyAware {
       val jsPath = __ \ "some"
-      val result = CommonDownstreamParser(newValue).reportInvalidJsonError(
+      val result = CommonDownstreamParser("method", newValue, HttpResponse(200, "")).reportInvalidJsonError(
         List(
           (jsPath, Nil)
         ))
@@ -65,7 +64,7 @@ class CommonDownstreamParserSpec extends AnyWordSpecLike with PagerDutyAware wit
 
     forAll(cases) { case (status, expectedKey, expectedStatus) =>
       s"return a pager duty $expectedKey and http status $expectedStatus for an error response with status=$status" in new PagerDutyAware {
-        val parser = DownstreamParser.CommonDownstreamParser("url")
+        val parser = DownstreamParser.CommonDownstreamParser("method", "url", HttpResponse(status, ""))
         val result = parser.pagerDutyError(HttpResponse(status, ""))
 
         assert(result.status === expectedStatus)

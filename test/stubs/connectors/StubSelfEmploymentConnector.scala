@@ -73,7 +73,7 @@ case class StubSelfEmploymentConnector(
 
 object StubSelfEmploymentConnector {
   val api1171EmptyResponse: api_1171.SuccessResponseSchema =
-    api_1171.SuccessResponseSchema(OffsetDateTime.now().toString, api_1171.ResponseType("safeId", "nino", "mtdid", None, false, None, None))
+    api_1171.SuccessResponseSchema(OffsetDateTime.now().toString, api_1171.ResponseType("safeId", "nino", "mtdid", None, false, None))
 
   val api1894SuccessResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("id")
 

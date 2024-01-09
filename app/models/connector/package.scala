@@ -17,7 +17,7 @@
 package models
 
 import connectors.DownstreamParser
-import DownstreamParser.CommonDownstreamParser
+import connectors.DownstreamParser.CommonDownstreamParser
 import models.error.DownstreamError
 import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json._
@@ -26,18 +26,19 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 package object connector {
   type ApiResponse[A] = Either[DownstreamError, A]
 
-  implicit def httpReads[A: Reads]: HttpReads[ApiResponse[A]] = (_: String, url: String, response: HttpResponse) =>
+  implicit def httpReads[A: Reads]: HttpReads[ApiResponse[A]] = (method: String, url: String, response: HttpResponse) =>
     response.status match {
       case OK | CREATED =>
         response.json
           .validate[A]
           .fold[Either[DownstreamError, A]](
-            errors => Left(createCommonErrorParser(url).reportInvalidJsonError(errors.toList)),
+            errors => Left(createCommonErrorParser(method, url, response).reportInvalidJsonError(errors.toList)),
             parsedModel => Right(parsedModel)
           )
 
-      case _ => Left(createCommonErrorParser(url).pagerDutyError(response))
+      case _ => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
     }
 
-  private def createCommonErrorParser(url: String): DownstreamParser = CommonDownstreamParser(url)
+  private def createCommonErrorParser(method: String, url: String, response: HttpResponse): DownstreamParser =
+    CommonDownstreamParser(method, url, response)
 }

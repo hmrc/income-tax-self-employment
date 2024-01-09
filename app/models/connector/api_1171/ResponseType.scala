@@ -26,8 +26,7 @@ case class ResponseType(
     mtdId: String,
     yearOfMigration: Option[String],
     propertyIncome: Boolean,
-    businessData: Option[List[BusinessDataDetails]],
-    propertyData: Option[List[PropertyDataDetails]]
+    businessData: Option[List[BusinessDataDetails]]
 )
 
 object ResponseType {

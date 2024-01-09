@@ -29,8 +29,11 @@ trait DownstreamParserBehaviours extends TestUtils {
   def downstreamApi: String
 
   object FakeParser extends DownstreamParser {
-    val parserName: String = "TestParser"
-    val downstreamService  = downstreamApi
+    val parserName: String    = "TestParser"
+    val targetUrl             = downstreamApi
+    val requestMethod: String = "GET"
+    val responseStatus: Int   = 500
+    val responseBody: String  = "error body"
   }
 
   val serviceUnavailableReason = "Dependent systems are currently not responding."
