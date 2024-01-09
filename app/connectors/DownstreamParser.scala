@@ -29,13 +29,19 @@ import scala.util.{Failure, Success, Try}
 
 trait DownstreamParser {
   val parserName: String
-  val downstreamService: String
+  val targetUrl: String
+  val requestMethod: String
+  val responseStatus: Int
+  val responseBody: String
 
   private[connectors] def logMessage(response: HttpResponse): String =
-    s"[$parserName][read] Received ${response.status} from $downstreamService. Body: ${response.body} ${getCorrelationId(response)}"
+    s"[$parserName][read] Received ${response.status} from $targetUrl. Body: ${response.body} ${getCorrelationId(response)}"
 
   def reportInvalidJsonError(errors: List[(JsPath, scala.collection.Seq[JsonValidationError])]): SingleDownstreamError = {
-    pagerDutyLog(BAD_SUCCESS_JSON_FROM_API, s"[$parserName][read] Invalid Json from $downstreamService: ${formatJsonErrors(errors)}")
+    pagerDutyLog(
+      BAD_SUCCESS_JSON_FROM_API,
+      s"[$parserName][read] Invalid Json when calling $requestMethod $targetUrl: ${formatJsonErrors(errors)}, responseStatus: $responseStatus, responseBody: $responseBody"
+    )
     SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
   }
 
@@ -66,7 +72,10 @@ trait DownstreamParser {
     } match {
       case Success(leftStatusError) => leftStatusError
       case Failure(t) =>
-        pagerDutyLog(UNEXPECTED_RESPONSE_FROM_API, s"[$parserName][read] Unexpected Json error: ${t.getMessage} from $downstreamService service.")
+        pagerDutyLog(
+          UNEXPECTED_RESPONSE_FROM_API,
+          s"[$parserName][read] Unexpected Json error: ${t.getMessage} when calling $requestMethod $targetUrl, responseStatus: $responseStatus, responseBody $responseBody"
+        )
         SingleDownstreamError(status, SingleDownstreamErrorBody.parsingError)
     }
   }
@@ -92,8 +101,11 @@ trait DownstreamParser {
 }
 
 object DownstreamParser {
-  case class CommonDownstreamParser(url: String) extends DownstreamParser {
-    val parserName: String        = "CommonDownstreamParser"
-    val downstreamService: String = url
+  case class CommonDownstreamParser(method: String, url: String, response: HttpResponse) extends DownstreamParser {
+    val parserName: String    = "CommonDownstreamParser"
+    val targetUrl: String     = url
+    val requestMethod: String = method
+    val responseStatus: Int   = response.status
+    val responseBody: String  = response.body
   }
 }

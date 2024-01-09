@@ -2,23 +2,6 @@
 <configuration>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <filter class="ch.qos.logback.core.filter.EvaluatorFilter">
-            <evaluator>
-                <expression>
-                    // Define a condition to filter out static assets based on the message content
-                    return (
-                    message.contains(".js") ||
-                    message.contains(".css") ||
-                    message.contains(".png") ||
-                    message.contains(".jpg") ||
-                    message.contains(".ico")
-                    );
-                </expression>
-            </evaluator>
-            <OnMismatch>NEUTRAL</OnMismatch>
-            <OnMatch>DENY</OnMatch>
-        </filter>
-
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <pattern>%date{ISO8601} level=[%level] logger=[%logger] thread=[%thread] rid=[%X{X-Request-ID}] user=[%X{Authorization}] status=[%X{httpStatus}] responseTime=[%X{responseTime}ms] message=[%message] %replace(exception=[%xException]){'^exception=\[\]$',''}%n</pattern>
         </encoder>
