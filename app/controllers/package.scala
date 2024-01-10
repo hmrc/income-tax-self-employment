@@ -15,6 +15,7 @@
  */
 
 import controllers.actions.AuthorisedAction
+import models.common.{BusinessId, JourneyContextWithNino, Nino, TaxYear}
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.error.ServiceError.{CannotParseJsonError, CannotReadJsonError}
@@ -66,6 +67,15 @@ package object controllers {
         }
       case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
     }
+
+  def getBodyWithCtx[A: Reads](taxYear: TaxYear, businessId: BusinessId, nino: Nino)(
+      invokeBlock: (JourneyContextWithNino, A) => ApiResultT[Result])(implicit
+      ec: ExecutionContext,
+      logger: Logger,
+      request: AuthorisedAction.User[AnyContent]): Future[Result] = {
+    val ctx = JourneyContextWithNino(taxYear, businessId, request.getMtditid, nino)
+    getBody(request)(invokeBlock(ctx, _))
+  }
 
   private def parseBody[A: Reads](user: AuthorisedAction.User[AnyContent]): Try[Option[JsResult[A]]] =
     Try(user.body.asJson.map(_.validate[A]))

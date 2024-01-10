@@ -43,6 +43,8 @@ object ExpensesJourneyAnswersGen {
     disallowableAmount <- Gen.option(bigDecimalGen)
   } yield OfficeSuppliesJourneyAnswers(amount, disallowableAmount)
 
+  val entertainmentJourneyAnswersGen: Gen[EntertainmentJourneyAnswers] = bigDecimalGen.map(EntertainmentJourneyAnswers(_))
+
   val repairsAndMaintenanceCostsJourneyAnswersGen: Gen[RepairsAndMaintenanceCostsJourneyAnswers] = for {
     amount             <- bigDecimalGen
     disallowableAmount <- Gen.option(bigDecimalGen)
@@ -71,6 +73,8 @@ object ExpensesJourneyAnswersGen {
     amount             <- bigDecimalGen
     disallowableAmount <- Gen.option(bigDecimalGen)
   } yield ProfessionalFeesJourneyAnswers(amount, disallowableAmount)
+
+  val depreciationCostsJourneyAnswersGen: Gen[DepreciationCostsJourneyAnswers] = bigDecimalGen.map(DepreciationCostsJourneyAnswers(_))
 
   val interestJourneyAnswersGen: Gen[InterestJourneyAnswers] = for {
     amount             <- bigDecimalGen

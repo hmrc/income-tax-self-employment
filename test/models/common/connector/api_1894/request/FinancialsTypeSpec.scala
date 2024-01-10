@@ -21,7 +21,7 @@ import gens.ExpensesJourneyAnswersGen._
 import models.connector.api_1894.request._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import utils.DeductionsBuilder.{goodsToSellOrUse, officeSupplies}
+import models.connector.Api1894DeductionsBuilder.{goodsToSellOrUse, officeSupplies}
 
 class FinancialsTypeSpec extends AnyWordSpec with Matchers {
 

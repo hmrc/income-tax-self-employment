@@ -18,14 +18,13 @@ package stubs.services
 
 import cats.data.EitherT
 import models.common.{BusinessId, JourneyContextWithNino, Mtditid, TaxYear}
+import models.connector.{Api1786ExpensesResponseParser, Api1894DeductionsBuilder}
 import models.domain.ApiResultT
 import models.error.ServiceError
-import parsers.expenses.ExpensesResponseParser
 import play.api.libs.json.Writes
 import services.journeyAnswers.ExpensesAnswersService
 import stubs.serviceUnitT
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.DeductionsBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -40,10 +39,10 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =
     expensesSaveTailoringAnswersRes
 
-  def saveAnswers[A: DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def saveAnswers[A: Api1894DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     expensesSaveAnswersRes
 
-  def getAnswers[A: ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A] =
+  def getAnswers[A: Api1786ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A] =
     expensesGetAnswersRes.map(_.asInstanceOf[A])
 
   def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]] =
