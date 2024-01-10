@@ -29,7 +29,7 @@ import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAn
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import parsers.expenses.ExpensesResponseParser.goodsToSellOrUseParser
+import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
 import play.api.libs.json.{JsObject, Json}
 import services.journeyAnswers.ExpensesAnswersServiceImplSpec._
 import stubs.connectors.StubSelfEmploymentConnector

@@ -17,8 +17,8 @@
 package models.connector.api_1894.request
 
 import cats.implicits.catsSyntaxOptionId
+import models.connector.Api1894DeductionsBuilder
 import play.api.libs.json._
-import utils.DeductionsBuilder
 
 /** Represents the Swagger definition for financialsType.
   */
@@ -27,8 +27,8 @@ case class FinancialsType(incomes: Option[IncomesType], deductions: Option[Deduc
 object FinancialsType {
   implicit lazy val financialsTypeJsonFormat: Format[FinancialsType] = Json.format[FinancialsType]
 
-  def fromFrontendModel[A: DeductionsBuilder](answers: A): FinancialsType = {
-    val builder = implicitly[DeductionsBuilder[A]]
+  def fromFrontendModel[A: Api1894DeductionsBuilder](answers: A): FinancialsType = {
+    val builder = implicitly[Api1894DeductionsBuilder[A]]
     FinancialsType(None, builder.build(answers).some)
   }
 }

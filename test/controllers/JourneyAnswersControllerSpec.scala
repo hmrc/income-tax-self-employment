@@ -24,6 +24,7 @@ import gens.ExpensesTailoringAnswersGen._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import gens.genOne
 import models.common.JourneyContextWithNino
+import models.connector.Api1786ExpensesResponseParser
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
@@ -43,7 +44,6 @@ import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import org.scalamock.handlers.CallHandler3
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
-import parsers.expenses.ExpensesResponseParser
 import play.api.http.Status._
 import play.api.libs.json.Json
 import services.journeyAnswers.ExpensesAnswersService
@@ -446,6 +446,16 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => controller.getIrrecoverableDebts(currTaxYear, businessId, nino)
       )
     }
+    s"Save answers and return a $NO_CONTENT when successful" in {
+      forAll(irrecoverableDebtsJourneyAnswersGen) { data =>
+        behave like testRoute(
+          request = buildRequest(data),
+          expectedStatus = NO_CONTENT,
+          expectedBody = "",
+          methodBlock = () => underTest.saveIrrecoverableDebts(currTaxYear, businessId, nino)
+        )
+      }
+    }
   }
 
   trait GetExpensesTest[T] {
@@ -459,9 +469,9 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       expensesService = expensesService
     )
 
-    def mockExpensesService(): CallHandler3[JourneyContextWithNino, ExpensesResponseParser[T], HeaderCarrier, ApiResultT[T]] =
+    def mockExpensesService(): CallHandler3[JourneyContextWithNino, Api1786ExpensesResponseParser[T], HeaderCarrier, ApiResultT[T]] =
       (expensesService
-        .getAnswers(_: JourneyContextWithNino)(_: ExpensesResponseParser[T], _: HeaderCarrier))
+        .getAnswers(_: JourneyContextWithNino)(_: Api1786ExpensesResponseParser[T], _: HeaderCarrier))
         .expects(*, *, *)
         .returns(EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
