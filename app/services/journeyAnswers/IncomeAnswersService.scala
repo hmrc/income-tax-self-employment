@@ -61,7 +61,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
   private def getDbAnswers(ctx: JourneyContextWithNino): EitherT[Future, ServiceError, Option[IncomeStorageAnswers]] =
     for {
       row            <- repository.get(ctx.toJourneyContext(Income))
-      maybeDbAnswers <- EitherT.fromEither[Future](row.map(_.toStorageAnswers[IncomeStorageAnswers]).traverse(identity)).leftAs[ServiceError]
+      maybeDbAnswers <- getPersistedAnswers[IncomeStorageAnswers](row)
     } yield maybeDbAnswers
 
   def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {

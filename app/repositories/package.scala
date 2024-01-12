@@ -18,8 +18,6 @@ import play.api.libs.json.{JsNumber, Reads, Writes}
 
 import java.time.Instant
 
-
-
 package object repositories {
   implicit val instantWrites: Writes[Instant] = Writes[Instant] { instant =>
     JsNumber(instant.toEpochMilli)

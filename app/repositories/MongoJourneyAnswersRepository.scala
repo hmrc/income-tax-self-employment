@@ -40,8 +40,6 @@ import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-
-
 trait JourneyAnswersRepository {
   def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]]
   def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): ApiResultT[TaskList]
@@ -167,8 +165,9 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     )
   }
 
-
-  private def handleUpdateExactlyOne(ctx: JourneyContext, result: Future[UpdateResult])(implicit logger: Logger, ec: ExecutionContext): ApiResultT[Unit] = {
+  private def handleUpdateExactlyOne(ctx: JourneyContext, result: Future[UpdateResult])(implicit
+      logger: Logger,
+      ec: ExecutionContext): ApiResultT[Unit] = {
     val futResult: Future[Either[ServiceError, UpdateResult]] = result.map { r =>
       if (r.getModifiedCount != 1) {
         logger.warn(s"Modified count was not 1, was ${r.getModifiedCount} for ctx=${ctx.toString}") // TODO Add Pager Duty

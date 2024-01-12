@@ -18,10 +18,12 @@ package utils
 
 import models.common.JourneyName.TradeDetails
 import models.common._
+import models.database.JourneyAnswers
 import org.mockito.ArgumentMatchersSugar
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar
+import play.api.libs.json.JsObject
 import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, DefaultActionBuilder}
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -70,5 +72,16 @@ object BaseSpec {
   // operations
   def mkNow(): Instant                 = Instant.now().truncatedTo(ChronoUnit.SECONDS)
   def mkClock(now: Instant): TestClock = TestClock(now, ZoneOffset.UTC)
+  def mkJourneyAnswers(journey: JourneyName, status: JourneyStatus, data: JsObject): JourneyAnswers = JourneyAnswers(
+    mtditid,
+    businessId,
+    currTaxYear,
+    journey,
+    status,
+    data,
+    Instant.now(),
+    Instant.now(),
+    Instant.now()
+  )
 
 }

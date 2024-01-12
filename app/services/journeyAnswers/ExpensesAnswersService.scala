@@ -106,16 +106,13 @@ class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, 
     }
 
   private def getExpenseTailoringCategory(answers: JourneyAnswers): ApiResultT[ExpensesCategoriesDb] =
-    EitherT.fromEither[Future](answers.toStorageAnswers[ExpensesCategoriesDb]).leftAs[ServiceError]
+    getPersistedAnswers(answers)
 
   private def getNoExpensesTailoring: ApiResultT[ExpensesTailoringAnswers] =
     EitherT.rightT[Future, ServiceError](ExpensesTailoringAnswers.NoExpensesAnswers: ExpensesTailoringAnswers)
 
   private def getExpensesIndividualCategories(answers: JourneyAnswers): ApiResultT[ExpensesTailoringAnswers] =
-    EitherT
-      .fromEither[Future](answers.toStorageAnswers[ExpensesTailoringIndividualCategoriesAnswers])
-      .leftAs[ServiceError]
-      .map(identity[ExpensesTailoringAnswers])
+    getPersistedAnswers(answers)
 
   private def getExpenseTailoringAsOneTotal(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[ExpensesTailoringAnswers] =
     getAnswers[AsOneTotalAnswers](ctx).map(identity[ExpensesTailoringAnswers])

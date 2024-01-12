@@ -65,7 +65,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   )
 
   "SelfEmploymentAbroadAnswers" should {
-    "Get return $NO_CONTENT if there is no answers" in {
+    s"Get return $NO_CONTENT if there is no answers" in {
       behave like testRoute(
         request = buildRequestNoContent,
         expectedStatus = NO_CONTENT,
