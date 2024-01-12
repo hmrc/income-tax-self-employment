@@ -27,6 +27,8 @@ import org.mongodb.scala._
 import org.mongodb.scala.bson._
 import org.mongodb.scala.model.Projections.exclude
 import org.mongodb.scala.model._
+import org.mongodb.scala.result.UpdateResult
+import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import repositories.ExpireAtCalculator.calculateExpireAt
 import uk.gov.hmrc.mongo.MongoComponent
@@ -36,7 +38,9 @@ import utils.Logging
 import java.time.{Clock, Instant}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
+
+
 
 trait JourneyAnswersRepository {
   def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]]
@@ -161,5 +165,17 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
       Updates.setOnInsert("createdAt", now),
       Updates.setOnInsert("expireAt", expireAt)
     )
+  }
+
+
+  private def handleUpdateExactlyOne(ctx: JourneyContext, result: Future[UpdateResult])(implicit logger: Logger, ec: ExecutionContext): ApiResultT[Unit] = {
+    val futResult: Future[Either[ServiceError, UpdateResult]] = result.map { r =>
+      if (r.getModifiedCount != 1) {
+        logger.warn(s"Modified count was not 1, was ${r.getModifiedCount} for ctx=${ctx.toString}") // TODO Add Pager Duty
+      }
+      Right(r)
+    }
+
+    EitherT(futResult).void
   }
 }

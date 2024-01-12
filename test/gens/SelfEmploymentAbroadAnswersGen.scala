@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-import play.api.libs.json.{JsNumber, Reads, Writes}
+package gens
 
-import java.time.Instant
+import models.frontend.abroad.SelfEmploymentAbroadAnswers
+import org.scalacheck.Gen
 
+object SelfEmploymentAbroadAnswersGen {
 
-
-package object repositories {
-  implicit val instantWrites: Writes[Instant] = Writes[Instant] { instant =>
-    JsNumber(instant.toEpochMilli)
-  }
-
-  implicit val instantReads: Reads[Instant] = Reads[Instant] {
-    _.validate[Long].map(Instant.ofEpochMilli)
-  }
+  val selfEmploymentAbroadAnswersGen: Gen[SelfEmploymentAbroadAnswers] = for {
+    incomeNotCountedAsTurnover <- booleanGen
+  } yield SelfEmploymentAbroadAnswers(incomeNotCountedAsTurnover)
 
 }

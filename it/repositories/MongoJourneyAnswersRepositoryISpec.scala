@@ -24,16 +24,16 @@ import models.common.{BusinessId, JourneyName, TradingName}
 import models.database.JourneyAnswers
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import models.frontend.TaskList
+import org.scalatest.EitherValues._
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import support.MongoTestSupport
 import utils.BaseSpec._
+import utils.EitherTTestOps._
 
 import java.time.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
-import org.scalatest.EitherValues._
-import utils.EitherTTestOps._
 
 class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport[JourneyAnswers] {
   private val now   = mkNow()

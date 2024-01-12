@@ -22,6 +22,7 @@ import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
+import gens.SelfEmploymentAbroadAnswersGen.selfEmploymentAbroadAnswersGen
 import gens.genOne
 import models.common.JourneyContextWithNino
 import models.connector.Api1786ExpensesResponseParser
@@ -62,6 +63,44 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     incomeService = StubIncomeAnswersService(),
     expensesService = StubExpensesAnswersService()
   )
+
+  "SelfEmploymentAbroadAnswers" should {
+    "Get return $NO_CONTENT if there is no answers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.getSelfEmploymentAbroad(currTaxYear, businessId, nino)
+      )
+    }
+
+    "Get return answers" in {
+      val answers = genOne(selfEmploymentAbroadAnswersGen)
+      val underTest = new JourneyAnswersController(
+        auth = mockAuthorisedAction,
+        cc = stubControllerComponents,
+        abroadAnswersService = StubAbroadAnswersService(getAnswersRes = Some(answers).asRight),
+        incomeService = StubIncomeAnswersService(),
+        expensesService = StubExpensesAnswersService()
+      )
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.toJson(answers).toString(),
+        methodBlock = () => underTest.getSelfEmploymentAbroad(currTaxYear, businessId, nino)
+      )
+    }
+    s"Save return a $NO_CONTENT when successful" in forAll(selfEmploymentAbroadAnswersGen) { data =>
+      behave like testRoute(
+        request = buildRequest(data),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.saveSelfEmploymentAbroad(currTaxYear, businessId, nino)
+      )
+    }
+
+  }
 
   "IncomeAnswers" should {
     s"Get return $NO_CONTENT if there is no answers" in {
