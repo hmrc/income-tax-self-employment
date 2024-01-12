@@ -32,6 +32,8 @@ import utils.BaseSpec._
 import java.time.Duration
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import org.scalatest.EitherValues._
+import utils.EitherTTestOps._
 
 class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport[JourneyAnswers] {
   private val now   = mkNow()
@@ -49,7 +51,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val result = (for {
         _      <- repository.setStatus(tradeDetailsCtx, InProgress)
         answer <- repository.get(tradeDetailsCtx)
-      } yield answer).futureValue
+      } yield answer).rightValue
 
       result.value shouldBe JourneyAnswers(
         tradeDetailsCtx.mtditid,
@@ -68,7 +70,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val result = (for {
         _      <- repository.setStatus(incomeCtx, InProgress)
         answer <- repository.get(incomeCtx)
-      } yield answer).futureValue
+      } yield answer).rightValue
 
       result.value shouldBe JourneyAnswers(
         incomeCtx.mtditid,
@@ -86,7 +88,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
 
   "getAll" should {
     "return an empty task list" in {
-      val result = repository.getAll(currTaxYear, mtditid, List.empty).futureValue
+      val result = repository.getAll(currTaxYear, mtditid, List.empty).value.futureValue.value
       result shouldBe TaskList(None, Nil)
     }
 
@@ -94,7 +96,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val result = (for {
         _        <- repository.setStatus(tradeDetailsCtx, InProgress)
         taskList <- repository.getAll(tradeDetailsCtx.taxYear, tradeDetailsCtx.mtditid, Nil)
-      } yield taskList).futureValue
+      } yield taskList).value.futureValue.value
 
       result shouldBe TaskList(JourneyNameAndStatus(TradeDetails, InProgress).some, Nil)
     }
@@ -110,7 +112,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
         _        <- repository.setStatus(incomeCtx, Completed)
         _        <- repository.setStatus(incomeCtx.copy(_businessId = BusinessId("business2")), InProgress)
         taskList <- repository.getAll(tradeDetailsCtx.taxYear, tradeDetailsCtx.mtditid, businesses)
-      } yield taskList).futureValue
+      } yield taskList).rightValue
 
       result shouldBe TaskList(
         JourneyNameAndStatus(TradeDetails, CheckOurRecords).some,
@@ -135,7 +137,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val result = (for {
         _        <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
         inserted <- repository.get(incomeCtx)
-      } yield inserted.value).futureValue
+      } yield inserted.value).rightValue
 
       val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
       result shouldBe JourneyAnswers(
@@ -154,10 +156,9 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val result = (for {
         _ <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
         _ = clock.advanceBy(1.day)
-        updatedResult <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "updated"))
-        updated       <- repository.get(incomeCtx)
-        _ = updatedResult.getModifiedCount shouldBe 1
-      } yield updated.value).futureValue
+        _       <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "updated"))
+        updated <- repository.get(incomeCtx)
+      } yield updated.value).rightValue
 
       val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
       result shouldBe JourneyAnswers(
@@ -179,10 +180,9 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val result = (for {
         _ <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
         _ = clock.advanceBy(2.day)
-        updatedResult <- repository.setStatus(incomeCtx, Completed)
-        inserted      <- repository.get(incomeCtx)
-        _ = updatedResult.getModifiedCount shouldBe 1
-      } yield inserted.value).futureValue
+        _        <- repository.setStatus(incomeCtx, Completed)
+        inserted <- repository.get(incomeCtx)
+      } yield inserted.value).rightValue
 
       result.status shouldBe Completed
       result.updatedAt shouldBe now.plus(Duration.ofDays(2))
@@ -195,7 +195,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
         _        <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
         _        <- repository.testOnlyClearAllData()
         inserted <- repository.get(incomeCtx)
-      } yield inserted).futureValue
+      } yield inserted).rightValue
 
       res shouldBe None
     }

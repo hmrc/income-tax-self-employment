@@ -60,9 +60,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, 
     extends ExpensesAnswersService {
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =
-    EitherT
-      .right[ServiceError](repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, ExpensesTailoring), Json.toJson(answers)))
-      .void
+    repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, ExpensesTailoring), Json.toJson(answers))
 
   def saveAnswers[A: Api1894DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     val financials  = FinancialsType.fromFrontendModel(answers)
@@ -97,7 +95,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, 
     } yield tailoringAnswers
 
   private def getExpenseTailoringDbAnswers(ctx: JourneyContextWithNino): ApiResultT[Option[JourneyAnswers]] =
-    EitherT.right[ServiceError](repository.get(ctx.toJourneyContext(ExpensesTailoring)))
+    repository.get(ctx.toJourneyContext(ExpensesTailoring))
 
   private def getTailoringAnswers(ctx: JourneyContextWithNino, answers: JourneyAnswers, tailoringCategory: tailoring.ExpensesTailoring)(implicit
       hc: HeaderCarrier): ApiResultT[ExpensesTailoringAnswers] =

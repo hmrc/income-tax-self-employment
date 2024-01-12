@@ -10,6 +10,9 @@ GET         /completed-section/:businessId/:journey/:taxYear                    
 PUT         /completed-section/:businessId/:journey/:taxYear                                                            controllers.JourneyStatusController.setStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear)
 
 # Journey Answers
+GET         /:taxYear/:businessId/self-employment-abroad/:nino/answers                                                  controllers.JourneyAnswersController.getSelfEmploymentAbroad(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/:businessId/self-employment-abroad/:nino/answers                                                  controllers.JourneyAnswersController.saveSelfEmploymentAbroad(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
 POST        /:taxYear/:businessId/income/:nino/answers                                                                  controllers.JourneyAnswersController.saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/income/:nino/answers                                                                  controllers.JourneyAnswersController.getIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 

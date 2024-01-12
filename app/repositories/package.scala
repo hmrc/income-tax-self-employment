@@ -14,9 +14,17 @@
  * limitations under the License.
  */
 
+import cats.data.EitherT
+import cats.implicits._
+import models.common.JourneyContext
+import models.domain.ApiResultT
+import models.error.ServiceError
+import org.mongodb.scala.result.UpdateResult
+import play.api.Logger
 import play.api.libs.json.{JsNumber, Reads, Writes}
 
 import java.time.Instant
+import scala.concurrent.{ExecutionContext, Future}
 
 package object repositories {
   implicit val instantWrites: Writes[Instant] = Writes[Instant] { instant =>
@@ -26,4 +34,14 @@ package object repositories {
   implicit val instantReads: Reads[Instant] = Reads[Instant] {
     _.validate[Long].map(Instant.ofEpochMilli)
   }
+
+  def handleUpdateExactlyOne(ctx: JourneyContext, result: Future[UpdateResult])(implicit logger: Logger, ec: ExecutionContext): ApiResultT[Unit] =
+    EitherT
+      .rightT[Future, ServiceError](result.map { r =>
+        if (r.getModifiedCount != 1) {
+          logger.warn(s"Modified count was not 1, was ${r.getModifiedCount} for ctx=${ctx.toString}") // TODO Add Pager Duty
+        }
+        r
+      })
+      .void
 }

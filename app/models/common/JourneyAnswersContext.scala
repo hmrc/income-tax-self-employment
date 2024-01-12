@@ -22,7 +22,7 @@ import models.common.JourneyName.TradeDetails
   *   also called incomeSourceId
   */
 case class JourneyContextWithNino(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino) {
-  def toJourneyContext(journeyName: JourneyName) = JourneyContext(taxYear, businessId, mtditid, journeyName)
+  def toJourneyContext(journeyName: JourneyName): JourneyContext = JourneyContext(taxYear, businessId, mtditid, journeyName)
 }
 
 /** @param businessId

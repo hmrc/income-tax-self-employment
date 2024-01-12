@@ -47,7 +47,7 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
 import play.api.libs.json.Json
 import services.journeyAnswers.ExpensesAnswersService
-import stubs.services.{StubExpensesAnswersService, StubIncomeAnswersService}
+import stubs.services.{StubAbroadAnswersService, StubExpensesAnswersService, StubIncomeAnswersService}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
@@ -58,6 +58,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   val underTest = new JourneyAnswersController(
     auth = mockAuthorisedAction,
     cc = stubControllerComponents,
+    abroadAnswersService = StubAbroadAnswersService(),
     incomeService = StubIncomeAnswersService(),
     expensesService = StubExpensesAnswersService()
   )
@@ -77,6 +78,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       val underTest = new JourneyAnswersController(
         auth = mockAuthorisedAction,
         cc = stubControllerComponents,
+        abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(getAnswersRes = Some(answers).asRight),
         expensesService = StubExpensesAnswersService()
       )
@@ -113,6 +115,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         val controller: JourneyAnswersController = new JourneyAnswersController(
           auth = mockAuthorisedAction,
           cc = stubControllerComponents,
+          abroadAnswersService = StubAbroadAnswersService(),
           incomeService = StubIncomeAnswersService(),
           expensesService = StubExpensesAnswersService(getJourneyAnswers = journeyAnswers)
         )
@@ -465,6 +468,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     val controller = new JourneyAnswersController(
       auth = mockAuthorisedAction,
       cc = stubControllerComponents,
+      abroadAnswersService = StubAbroadAnswersService(),
       incomeService = StubIncomeAnswersService(),
       expensesService = expensesService
     )

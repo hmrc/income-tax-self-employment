@@ -16,33 +16,37 @@
 
 package stubs.repositories
 
-import com.mongodb.client.result.UpdateResult
+import cats.data.EitherT
+import cats.implicits._
 import models.common._
 import models.database.JourneyAnswers
-import models.domain.Business
+import models.domain.{ApiResultT, Business}
+import models.error.ServiceError
 import models.frontend.TaskList
 import play.api.libs.json.JsValue
 import repositories.JourneyAnswersRepository
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 case class StubJourneyAnswersRepository(
     getAnswer: Option[JourneyAnswers] = None,
-    upsertDateField: Future[UpdateResult] = Future.successful(updatedOne),
-    upsertStatusField: Future[UpdateResult] = Future.successful(updatedOne),
-    getAllResult: TaskList = TaskList.empty
+    upsertDateField: Either[ServiceError, Unit] = Right(()),
+    upsertStatusField: Either[ServiceError, Unit] = Right(()),
+    getAllResult: Either[ServiceError, TaskList] = Right(TaskList.empty)
 ) extends JourneyAnswersRepository {
+  implicit val ec: ExecutionContext = ExecutionContext.global
 
-  def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[UpdateResult] =
-    upsertDateField
+  def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] =
+    EitherT.fromEither[Future](upsertDateField)
 
-  def setStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] =
-    upsertStatusField
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] =
+    EitherT.fromEither[Future](upsertStatusField)
 
-  def testOnlyClearAllData(): Future[Unit] = ???
+  def testOnlyClearAllData(): ApiResultT[Unit] = ???
 
-  def get(ctx: JourneyContext): Future[Option[JourneyAnswers]] = Future.successful(getAnswer)
+  def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]] =
+    EitherT.rightT[Future, ServiceError](getAnswer)
 
-  def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): Future[TaskList] =
-    Future.successful(getAllResult)
+  def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): ApiResultT[TaskList] =
+    EitherT.fromEither[Future](getAllResult)
 }

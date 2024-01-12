@@ -77,7 +77,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
       val underTest = new JourneyStatusServiceImpl(
         businessConnector,
         repository.copy(
-          getAllResult = taskList
+          getAllResult = Right(taskList)
         )
       )
 
