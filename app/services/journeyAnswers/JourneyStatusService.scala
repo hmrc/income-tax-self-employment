@@ -46,7 +46,7 @@ class JourneyStatusServiceImpl @Inject() (businessConnector: SelfEmploymentConne
 
   def get(ctx: JourneyContext): ApiResultT[JourneyStatus] =
     for {
-      answer <- EitherT.right(repository.get(ctx))
+      answer <- repository.get(ctx)
       status = answer.map(_.status).getOrElse(JourneyStatus.CheckOurRecords)
     } yield status
 
@@ -59,7 +59,7 @@ class JourneyStatusServiceImpl @Inject() (businessConnector: SelfEmploymentConne
     for {
       businessesResp <- EitherT(businessConnector.getBusinesses(IdType.Nino, nino.value))
       businesses = getBusinesses(businessesResp)
-      taskList <- EitherT.right(repository.getAll(taxYear, mtditid, businesses))
+      taskList <- repository.getAll(taxYear, mtditid, businesses)
     } yield taskList
   }
 }

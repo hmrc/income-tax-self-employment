@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-import play.api.libs.json.{JsNumber, Reads, Writes}
+package utils
 
-import java.time.Instant
+import cats.data.EitherT
+import org.scalatest.EitherValues._
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 
-package object repositories {
-  implicit val instantWrites: Writes[Instant] = Writes[Instant] { instant =>
-    JsNumber(instant.toEpochMilli)
+import scala.concurrent.Future
+
+object EitherTTestOps extends ScalaFutures with IntegrationPatience {
+
+  implicit class EitherTExtensions[A, B](val eitherT: EitherT[Future, A, B]) {
+    def rightValue: B = eitherT.value.futureValue.value
+    def leftValue: A  = eitherT.value.futureValue.left.value
   }
-
-  implicit val instantReads: Reads[Instant] = Reads[Instant] {
-    _.validate[Long].map(Instant.ofEpochMilli)
-  }
-
 }

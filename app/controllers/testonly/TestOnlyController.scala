@@ -16,6 +16,7 @@
 
 package controllers.testonly
 
+import controllers.handleApiUnitResultT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -24,7 +25,9 @@ import utils.Logging
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
-class TestManagerController @Inject() (journeyAnswersRepository: JourneyAnswersRepository, cc: MessagesControllerComponents)(implicit
+/** Contains operations used only by tests and environment with stubs.
+  */
+class TestOnlyController @Inject() (journeyAnswersRepository: JourneyAnswersRepository, cc: MessagesControllerComponents)(implicit
     ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
@@ -34,7 +37,7 @@ class TestManagerController @Inject() (journeyAnswersRepository: JourneyAnswersR
   }
 
   def clearAllData(): Action[AnyContent] = Action.async {
-    journeyAnswersRepository.testOnlyClearAllData().map(_ => NoContent)
+    handleApiUnitResultT(journeyAnswersRepository.testOnlyClearAllData())
   }
 
 }

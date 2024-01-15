@@ -28,8 +28,7 @@ import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, Amend
 import models.connector.api_1965.ListSEPeriodSummariesResponse
 import models.database.income.IncomeStorageAnswers
 import models.domain.ApiResultT
-import models.error.ServiceError.InvalidJsonFormatError
-import models.error.{DownstreamError, ServiceError}
+import models.error.ServiceError
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
@@ -59,26 +58,15 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       }
     } yield incomeAnswers
 
-  private def getDbAnswers(ctx: JourneyContextWithNino): EitherT[Future, InvalidJsonFormatError, Option[IncomeStorageAnswers]] = {
-    val res = for {
-      row <- repository.get(ctx.toJourneyContext(Income))
-      maybeDbAnswers = row.map(_.toStorageAnswers[IncomeStorageAnswers]).traverse(identity)
+  private def getDbAnswers(ctx: JourneyContextWithNino): EitherT[Future, ServiceError, Option[IncomeStorageAnswers]] =
+    for {
+      row            <- repository.get(ctx.toJourneyContext(Income))
+      maybeDbAnswers <- getPersistedAnswers[IncomeStorageAnswers](row)
     } yield maybeDbAnswers
-
-    EitherT(res)
-  }
 
   def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     import ctx._
     val storageAnswers = IncomeStorageAnswers.fromJourneyAnswers(answers)
-
-    val createIncome = IncomesType(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount)
-    val createBody   = CreateSEPeriodSummaryRequestBody(startDate(taxYear), endDate(taxYear), Some(FinancialsType(createIncome.some, None)))
-    val createData   = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, createBody)
-
-    val amendIncome = Incomes(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount, None)
-    val amendBody   = AmendSEPeriodSummaryRequestBody(amendIncome.some, None)
-    val amendData   = AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, amendBody)
 
     val upsertBody = CreateAmendSEAnnualSubmissionRequestBody(
       Some(AnnualAdjustments.empty.copy(includedNonTaxableProfits = answers.notTaxableAmount, outstandingBusinessIncome = answers.otherIncomeAmount)),
@@ -88,17 +76,34 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
     val upsertData = CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, upsertBody)
 
     val result = for {
-      _ <- EitherT.right[DownstreamError](repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, Income), Json.toJson(storageAnswers)))
-      response <- EitherT(connector.listSEPeriodSummary(ctx))
-      _ <-
-        if (noSubmissionExists(response)) EitherT(connector.createSEPeriodSummary(createData)) else EitherT(connector.amendSEPeriodSummary(amendData))
-      _ <- EitherT(connector.createAmendSEAnnualSubmission(upsertData))
+      _        <- repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, Income), Json.toJson(storageAnswers))
+      response <- EitherT(connector.listSEPeriodSummary(ctx)).leftAs[ServiceError]
+      _        <- upsertPeriodSummary(response, ctx, answers)
+      _        <- EitherT(connector.createAmendSEAnnualSubmission(upsertData)).leftAs[ServiceError]
     } yield ()
 
     result.leftAs[ServiceError]
   }
 
-  private def noSubmissionExists(response: ListSEPeriodSummariesResponse) =
-    response.periods.forall(_.isEmpty)
+  private def upsertPeriodSummary(response: ListSEPeriodSummariesResponse, ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit
+      hc: HeaderCarrier) = {
+    import ctx._
 
+    val noSubmissionExists = response.periods.forall(_.isEmpty)
+
+    val result = if (noSubmissionExists) {
+      val createIncome = IncomesType(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount)
+      val createBody   = CreateSEPeriodSummaryRequestBody(startDate(taxYear), endDate(taxYear), Some(FinancialsType(createIncome.some, None)))
+      val createData   = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, createBody)
+      connector.createSEPeriodSummary(createData)
+    } else {
+      val amendIncome = Incomes(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount, None)
+      val amendBody   = AmendSEPeriodSummaryRequestBody(amendIncome.some, None)
+      val amendData   = AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, amendBody)
+
+      connector.amendSEPeriodSummary(amendData)
+    }
+
+    EitherT(result).leftAs[ServiceError].void
+  }
 }

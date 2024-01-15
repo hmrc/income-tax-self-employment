@@ -16,20 +16,24 @@
 
 package repositories
 
+import cats.data.EitherT
 import cats.implicits._
 import models.common._
 import models.database.JourneyAnswers
-import models.domain.Business
+import models.domain.{ApiResultT, Business}
+import models.error.ServiceError
 import models.frontend.TaskList
 import org.mongodb.scala._
 import org.mongodb.scala.bson._
 import org.mongodb.scala.model.Projections.exclude
 import org.mongodb.scala.model._
 import org.mongodb.scala.result.UpdateResult
+import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
 import repositories.ExpireAtCalculator.calculateExpireAt
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import utils.Logging
 
 import java.time.{Clock, Instant}
 import java.util.concurrent.TimeUnit
@@ -37,11 +41,11 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait JourneyAnswersRepository {
-  def get(ctx: JourneyContext): Future[Option[JourneyAnswers]]
-  def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): Future[TaskList]
-  def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[UpdateResult]
-  def setStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult]
-  def testOnlyClearAllData(): Future[Unit]
+  def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]]
+  def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): ApiResultT[TaskList]
+  def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit]
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit]
+  def testOnlyClearAllData(): ApiResultT[Unit]
 }
 
 @Singleton
@@ -68,13 +72,15 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
         )
       )
     )
-    with JourneyAnswersRepository {
+    with JourneyAnswersRepository
+    with Logging {
 
-  def testOnlyClearAllData(): Future[Unit] =
-    collection
-      .deleteMany(new org.bson.Document())
-      .toFuture()
-      .void
+  def testOnlyClearAllData(): ApiResultT[Unit] =
+    EitherT.right[ServiceError](
+      collection
+        .deleteMany(new org.bson.Document())
+        .toFuture()
+        .void)
 
   private def filterJourney(ctx: JourneyContext) = Filters.and(
     Filters.eq("mtditid", ctx.mtditid.value),
@@ -88,39 +94,41 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     Filters.eq("taxYear", taxYear.endYear)
   )
 
-  def get(ctx: JourneyContext): Future[Option[JourneyAnswers]] = {
+  def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]] = {
     val filter = filterJourney(ctx)
-    collection
-      .withReadPreference(ReadPreference.primaryPreferred()) // TODO Why? Cannot we just use standard?
-      .find(filter)
-      .headOption()
+    EitherT.right[ServiceError](
+      collection
+        .withReadPreference(ReadPreference.primaryPreferred()) // TODO Why? Cannot we just use standard?
+        .find(filter)
+        .headOption())
   }
 
-  def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): Future[TaskList] = {
+  def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): ApiResultT[TaskList] = {
     val filter     = filterAllJourneys(taxYear, mtditid)
     val projection = exclude("data")
-    collection
-      .find(filter)
-      .projection(projection)
-      .toFuture()
-      .map(answers => TaskList.fromJourneyAnswers(answers.toList, businesses))
+    EitherT.right[ServiceError](
+      collection
+        .find(filter)
+        .projection(projection)
+        .toFuture()
+        .map(answers => TaskList.fromJourneyAnswers(answers.toList, businesses)))
   }
 
-  def upsertAnswers(ctx: JourneyContext, newData: JsValue): Future[UpdateResult] = {
+  def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] = {
     val filter  = filterJourney(ctx)
     val bson    = BsonDocument(Json.stringify(newData))
     val update  = createUpsert(ctx)("data", bson, JourneyStatus.NotStarted)
     val options = new UpdateOptions().upsert(true)
 
-    collection.updateOne(filter, update, options).toFuture()
+    handleUpdateExactlyOne(ctx, collection.updateOne(filter, update, options).toFuture())
   }
 
-  def setStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] = {
     val filter  = filterJourney(ctx)
     val update  = createUpsertStatus(ctx)(status)
     val options = new UpdateOptions().upsert(true)
 
-    collection.updateOne(filter, update, options).toFuture()
+    handleUpdateExactlyOne(ctx, collection.updateOne(filter, update, options).toFuture())
   }
 
   private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
@@ -155,5 +163,18 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
       Updates.setOnInsert("createdAt", now),
       Updates.setOnInsert("expireAt", expireAt)
     )
+  }
+
+  private def handleUpdateExactlyOne(ctx: JourneyContext, result: Future[UpdateResult])(implicit
+      logger: Logger,
+      ec: ExecutionContext): ApiResultT[Unit] = {
+    val futResult: Future[Either[ServiceError, UpdateResult]] = result.map { r =>
+      if (r.getModifiedCount != 1) {
+        logger.warn(s"Modified count was not 1, was ${r.getModifiedCount} for ctx=${ctx.toString}") // TODO Add Pager Duty
+      }
+      Right(r)
+    }
+
+    EitherT(futResult).void
   }
 }

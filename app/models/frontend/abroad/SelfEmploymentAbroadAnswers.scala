@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 
-import play.api.libs.json.{JsNumber, Reads, Writes}
+package models.frontend.abroad
 
-import java.time.Instant
+import play.api.libs.json.{Json, OFormat}
 
-package object repositories {
-  implicit val instantWrites: Writes[Instant] = Writes[Instant] { instant =>
-    JsNumber(instant.toEpochMilli)
-  }
+final case class SelfEmploymentAbroadAnswers(selfEmploymentAbroad: Boolean)
 
-  implicit val instantReads: Reads[Instant] = Reads[Instant] {
-    _.validate[Long].map(Instant.ofEpochMilli)
-  }
-
+object SelfEmploymentAbroadAnswers {
+  implicit val format: OFormat[SelfEmploymentAbroadAnswers] = Json.format[SelfEmploymentAbroadAnswers]
 }

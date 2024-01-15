@@ -19,6 +19,7 @@ package controllers
 import controllers.actions.AuthorisedAction
 import models.common._
 import models.database.expenses.ExpensesCategoriesDb
+import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
@@ -47,10 +48,21 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class JourneyAnswersController @Inject() (auth: AuthorisedAction,
                                           cc: ControllerComponents,
+                                          abroadAnswersService: AbroadAnswersService,
                                           incomeService: IncomeAnswersService,
                                           expensesService: ExpensesAnswersService)(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
+
+  def getSelfEmploymentAbroad(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(abroadAnswersService.getAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  def saveSelfEmploymentAbroad(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBodyWithCtx[SelfEmploymentAbroadAnswers](taxYear, businessId, nino) { (ctx, value) =>
+      abroadAnswersService.persistAnswers(ctx, value).map(_ => NoContent)
+    }
+  }
 
   def getIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(incomeService.getAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
