@@ -123,12 +123,15 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     handleUpdateExactlyOne(ctx, collection.updateOne(filter, update, options).toFuture())
   }
 
-  def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] = {
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] =
+    handleUpdateExactlyOne(ctx, upsertStatus(ctx, status))
+
+  private[repositories] def upsertStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
     val filter  = filterJourney(ctx)
     val update  = createUpsertStatus(ctx)(status)
     val options = new UpdateOptions().upsert(true)
 
-    handleUpdateExactlyOne(ctx, collection.updateOne(filter, update, options).toFuture())
+    collection.updateOne(filter, update, options).toFuture()
   }
 
   private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
@@ -168,9 +171,18 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
   private def handleUpdateExactlyOne(ctx: JourneyContext, result: Future[UpdateResult])(implicit
       logger: Logger,
       ec: ExecutionContext): ApiResultT[Unit] = {
+    def insertedSuccessfully(result: UpdateResult) =
+      result.getModifiedCount == 0 && result.getMatchedCount == 0 && Option(result.getUpsertedId).nonEmpty
+    def updatedSuccessfully(result: UpdateResult) = result.getModifiedCount == 1
+
     val futResult: Future[Either[ServiceError, UpdateResult]] = result.map { r =>
-      if (r.getModifiedCount != 1) {
-        logger.warn(s"Modified count was not 1, was ${r.getModifiedCount} for ctx=${ctx.toString}") // TODO Add Pager Duty
+      val notInsertedOne = !insertedSuccessfully(r)
+      val notUpdatedOne  = !updatedSuccessfully(r)
+
+      if (notInsertedOne && notUpdatedOne) {
+        logger.warn(
+          s"Upsert invalid state (this should never happened): getModifiedCount=${r.getModifiedCount}, getMatchedCount=${r.getMatchedCount}, getUpsertedId=${r.getUpsertedId}, notInsertedOne=$notInsertedOne, notUpdatedOne=$notUpdatedOne, for ctx=${ctx.toString}"
+        ) // TODO Add Pager Duty
       }
       Right(r)
     }

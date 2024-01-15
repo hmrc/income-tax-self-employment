@@ -17,12 +17,14 @@
 package repositories
 
 import bulders.BusinessDataBuilder.aBusiness
+import cats.data.EitherT
 import cats.implicits._
 import models.common.JourneyName._
 import models.common.JourneyStatus._
-import models.common.{BusinessId, JourneyName, TradingName}
+import models.common.{BusinessId, JourneyContext, JourneyName, TradingName}
 import models.database.JourneyAnswers
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
+import models.error.ServiceError
 import models.frontend.TaskList
 import org.scalatest.EitherValues._
 import play.api.libs.json.{JsObject, Json}
@@ -201,4 +203,30 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
     }
   }
 
+  "upsertStatus" should {
+    "return correct UpdateResult for insert and update" in {
+      val ctx = JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income)
+      val result = (for {
+        beginning     <- repository.get(ctx)
+        createdResult <- EitherT.right[ServiceError](repository.upsertStatus(ctx, InProgress))
+        created       <- repository.get(ctx)
+        updatedResult <- EitherT.right[ServiceError](repository.upsertStatus(ctx, Completed))
+        updated       <- repository.get(ctx)
+      } yield (beginning, createdResult, created, updatedResult, updated)).value
+
+      val (beginning, createdResult, created, updatedResult, updated) = result.futureValue.value
+      assert(beginning === None)
+
+      assert(createdResult.getModifiedCount == 0)
+      assert(createdResult.getMatchedCount == 0)
+      assert(Option(createdResult.getUpsertedId) !== None)
+      assert(created.value.status === InProgress)
+
+      assert(updatedResult.getModifiedCount == 1)
+      assert(updatedResult.getMatchedCount == 1)
+      assert(Option(updatedResult.getUpsertedId) === None)
+      assert(updated.value.status === Completed)
+    }
+
+  }
 }
