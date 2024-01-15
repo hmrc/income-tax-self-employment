@@ -35,7 +35,7 @@ case class JourneyAnswers(mtditid: Mtditid,
                           createdAt: Instant,
                           updatedAt: Instant) {
 
-  def toStorageAnswers[A: Reads](implicit ct: ClassTag[A]): Either[InvalidJsonFormatError, A] = jsonAs[A](data)
+  def validatedAs[A: Reads](implicit ct: ClassTag[A]): Either[InvalidJsonFormatError, A] = jsonAs[A](data)
 }
 
 object JourneyAnswers extends MongoJavatimeFormats.Implicits {

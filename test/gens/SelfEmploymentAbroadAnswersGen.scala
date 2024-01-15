@@ -22,7 +22,7 @@ import org.scalacheck.Gen
 object SelfEmploymentAbroadAnswersGen {
 
   val selfEmploymentAbroadAnswersGen: Gen[SelfEmploymentAbroadAnswers] = for {
-    incomeNotCountedAsTurnover <- booleanGen
-  } yield SelfEmploymentAbroadAnswers(incomeNotCountedAsTurnover)
+    selfEmploymentAbroad <- booleanGen
+  } yield SelfEmploymentAbroadAnswers(selfEmploymentAbroad)
 
 }
