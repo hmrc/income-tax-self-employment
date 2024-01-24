@@ -14,23 +14,13 @@
  * limitations under the License.
  */
 
-package models.frontend.expenses.tailoring.individualCategories
+package models.database.expenses
 
-import models.common.{Enumerable, WithName}
+import models.frontend.expenses.goodsToSellOrUse.TaxiMinicabOrRoadHaulage
+import play.api.libs.json.{Json, OFormat}
 
-sealed trait TaxiMinicabOrRoadHaulage
+final case class TaxiMinicabOrRoadHaulageDb(taxiMinicabOrRoadHaulage: TaxiMinicabOrRoadHaulage)
 
-object TaxiMinicabOrRoadHaulage extends Enumerable.Implicits {
-
-  case object Yes extends WithName("yes") with TaxiMinicabOrRoadHaulage
-  case object No  extends WithName("no") with TaxiMinicabOrRoadHaulage
-
-  val values: Seq[TaxiMinicabOrRoadHaulage] = Seq(
-    Yes,
-    No
-  )
-
-  implicit val enumerable: Enumerable[TaxiMinicabOrRoadHaulage] =
-    Enumerable(values.map(v => v.toString -> v): _*)
-
+object TaxiMinicabOrRoadHaulageDb {
+  implicit val format: OFormat[TaxiMinicabOrRoadHaulageDb] = Json.format[TaxiMinicabOrRoadHaulageDb]
 }

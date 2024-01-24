@@ -16,12 +16,20 @@
 
 package models.frontend.expenses.goodsToSellOrUse
 
-import play.api.libs.json._
+import models.common.{Enumerable, WithName}
 
-case class GoodsToSellOrUseJourneyAnswers(taxiMinicabOrRoadHaulage: TaxiMinicabOrRoadHaulage,
-                                          goodsToSellOrUseAmount: BigDecimal,
-                                          disallowableGoodsToSellOrUseAmount: Option[BigDecimal])
+sealed trait TaxiMinicabOrRoadHaulage
 
-object GoodsToSellOrUseJourneyAnswers {
-  implicit val formats: OFormat[GoodsToSellOrUseJourneyAnswers] = Json.format[GoodsToSellOrUseJourneyAnswers]
+object TaxiMinicabOrRoadHaulage extends Enumerable.Implicits {
+
+  case object Yes extends WithName("yes") with TaxiMinicabOrRoadHaulage
+  case object No  extends WithName("no") with TaxiMinicabOrRoadHaulage
+
+  val values: Seq[TaxiMinicabOrRoadHaulage] = Seq(
+    Yes,
+    No
+  )
+
+  implicit val enumerable: Enumerable[TaxiMinicabOrRoadHaulage] =
+    Enumerable(values.map(v => v.toString -> v): _*)
 }

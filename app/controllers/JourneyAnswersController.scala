@@ -18,7 +18,7 @@ package controllers
 
 import controllers.actions.AuthorisedAction
 import models.common._
-import models.database.expenses.ExpensesCategoriesDb
+import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
@@ -100,7 +100,10 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[GoodsToSellOrUseJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      for {
+        _ <- expensesService.saveAnswers(ctx, value)
+        _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, TaxiMinicabOrRoadHaulageDb(value.taxiMinicabOrRoadHaulage))
+      } yield NoContent
     }
   }
 
