@@ -20,16 +20,17 @@ import cats.implicits._
 import gens.ExpensesJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.genOne
+import models.common.JourneyName.ExpensesTailoring
 import models.common.{JourneyName, JourneyStatus}
+import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
 import models.database.JourneyAnswers
 import models.database.expenses.ExpensesCategoriesDb
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
-import models.frontend.expenses.tailoring.ExpensesTailoring
+import models.frontend.expenses.tailoring.ExpensesTailoring.{NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
 import play.api.libs.json.{JsObject, Json}
 import services.journeyAnswers.ExpensesAnswersServiceImplSpec._
 import stubs.connectors.StubSelfEmploymentConnector
@@ -58,7 +59,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       override val connector = StubSelfEmploymentConnector()
 
       val answers = NoExpensesAnswers
-      val result  = underTest.persistAnswers(businessId, currTaxYear, mtditid, answers).value.futureValue
+      val result  = underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
       result shouldBe ().asRight
     }
   }
@@ -68,7 +69,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       override val connector = StubSelfEmploymentConnector()
 
       val answers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
-      val result  = underTest.persistAnswers(businessId, currTaxYear, mtditid, answers).value.futureValue
+      val result  = underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
       result shouldBe ().asRight
     }
   }
@@ -103,7 +104,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
     "return NoExpensesAnswers" in new Test {
       override val connector = StubSelfEmploymentConnector()
       override val repo = StubJourneyAnswersRepository(getAnswer = journeyAnswers
-        .copy(data = Json.toJson(ExpensesCategoriesDb(ExpensesTailoring.NoExpenses)).as[JsObject])
+        .copy(data = Json.toJson(ExpensesCategoriesDb(NoExpenses)).as[JsObject])
         .some)
       val result = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe NoExpensesAnswers.some.asRight
@@ -118,7 +119,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
             .asRight)
       )
       override val repo = StubJourneyAnswersRepository(getAnswer = journeyAnswers
-        .copy(data = Json.toJson(ExpensesCategoriesDb(ExpensesTailoring.TotalAmount)).as[JsObject])
+        .copy(data = Json.toJson(ExpensesCategoriesDb(TotalAmount)).as[JsObject])
         .some)
       val result = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe AsOneTotalAnswers(BigDecimal("10.5")).some.asRight

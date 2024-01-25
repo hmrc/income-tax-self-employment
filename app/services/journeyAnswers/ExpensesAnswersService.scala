@@ -20,36 +20,29 @@ import cats.data.EitherT
 import cats.implicits._
 import connectors.SelfEmploymentConnector
 import models.common.JourneyName.ExpensesTailoring
-import models.common.TaxYear.endDate
-import models.common.TaxYear.startDate
+import models.common.TaxYear.{endDate, startDate}
 import models.common._
+import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType}
 import models.connector.{Api1786ExpensesResponseParser, Api1894DeductionsBuilder}
-import models.connector.api_1894.request.CreateSEPeriodSummaryRequestBody
-import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
-import models.connector.api_1894.request.FinancialsType
 import models.database.JourneyAnswers
 import models.database.expenses.ExpensesCategoriesDb
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.expenses.tailoring
-import models.frontend.expenses.tailoring.ExpensesTailoring.IndividualCategories
-import models.frontend.expenses.tailoring.ExpensesTailoring.NoExpenses
-import models.frontend.expenses.tailoring.ExpensesTailoring.TotalAmount
+import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategories, NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
-import play.api.libs.json.Json
-import play.api.libs.json.Writes
+import play.api.libs.json.{Json, Writes}
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTOps.EitherTExtensions
 
-import javax.inject.Inject
-import javax.inject.Singleton
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 trait ExpensesAnswersService {
-  def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit]
+  def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
+      writes: Writes[A]): ApiResultT[Unit]
   def saveAnswers[A: Api1894DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def getAnswers[A: Api1786ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A]
   def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]]
@@ -59,8 +52,9 @@ trait ExpensesAnswersService {
 class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends ExpensesAnswersService {
 
-  def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, answers: A)(implicit writes: Writes[A]): ApiResultT[Unit] =
-    repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, ExpensesTailoring), Json.toJson(answers))
+  def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
+      writes: Writes[A]): ApiResultT[Unit] =
+    repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, journey), Json.toJson(answers))
 
   def saveAnswers[A: Api1894DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     val financials  = FinancialsType.fromFrontendModel(answers)
