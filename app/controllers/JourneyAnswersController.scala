@@ -17,15 +17,16 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
+import models.common.JourneyName.{ExpensesTailoring, GoodsToSellOrUse}
 import models.common._
-import models.database.expenses.ExpensesCategoriesDb
+import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
-import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
+import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers}
 import models.frontend.expenses.interest.InterestJourneyAnswers
 import models.frontend.expenses.irrecoverableDebts.IrrecoverableDebtsJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
@@ -33,8 +34,8 @@ import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
 import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
+import models.frontend.expenses.tailoring.ExpensesTailoring.TotalAmount
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
-import models.frontend.expenses.tailoring._
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Format.GenericFormat
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -79,13 +80,13 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def saveExpensesTailoringNoExpenses(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    val result = expensesService.persistAnswers(businessId, taxYear, user.getMtditid, NoExpensesAnswers)
+    val result = expensesService.persistAnswers(businessId, taxYear, user.getMtditid, ExpensesTailoring, NoExpensesAnswers)
     handleApiUnitResultT(result)
   }
 
   def saveExpensesTailoringIndividualCategories(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
     getBody[ExpensesTailoringIndividualCategoriesAnswers](user) { value =>
-      expensesService.persistAnswers(businessId, taxYear, user.getMtditid, value).map(_ => NoContent)
+      expensesService.persistAnswers(businessId, taxYear, user.getMtditid, ExpensesTailoring, value).map(_ => NoContent)
     }
   }
 
@@ -93,14 +94,22 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     getBodyWithCtx[AsOneTotalAnswers](taxYear, businessId, nino) { (ctx, value) =>
       for {
         _ <- expensesService.saveAnswers(ctx, value)
-        _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, ExpensesCategoriesDb(ExpensesTailoring.TotalAmount))
+        _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, ExpensesTailoring, ExpensesCategoriesDb(TotalAmount))
       } yield NoContent
     }
   }
 
   def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    getBodyWithCtx[GoodsToSellOrUseJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+    getBodyWithCtx[GoodsToSellOrUseAnswers](taxYear, businessId, nino) { (ctx, value) =>
+      for {
+        _ <- expensesService.saveAnswers(ctx, GoodsToSellOrUseJourneyAnswers(value.goodsToSellOrUseAmount, value.disallowableGoodsToSellOrUseAmount))
+        _ <- expensesService.persistAnswers(
+          businessId,
+          taxYear,
+          user.getMtditid,
+          GoodsToSellOrUse,
+          TaxiMinicabOrRoadHaulageDb(value.taxiMinicabOrRoadHaulage))
+      } yield NoContent
     }
   }
 

@@ -210,7 +210,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
 
-    s"Save return a $NO_CONTENT when successful" in forAll(goodsToSellOrUseJourneyAnswersGen) { data =>
+    s"Save return a $NO_CONTENT when successful" in forAll(goodsToSellOrUseAnswersGen) { data =>
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,

@@ -24,7 +24,6 @@ import org.scalacheck.Gen
 object ExpensesTailoringAnswersGen {
   val expensesCategoriesGen: Gen[ExpensesTailoring]                                = Gen.oneOf(ExpensesTailoring.values)
   val officeSuppliesGen: Gen[OfficeSupplies]                                       = Gen.oneOf(OfficeSupplies.values)
-  val taxiMinicabOrRoadHaulageGen: Gen[TaxiMinicabOrRoadHaulage]                   = Gen.oneOf(TaxiMinicabOrRoadHaulage.values)
   val goodsToSellOrUseGen: Gen[GoodsToSellOrUse]                                   = Gen.oneOf(GoodsToSellOrUse.values)
   val repairsAndMaintenanceGen: Gen[RepairsAndMaintenance]                         = Gen.oneOf(RepairsAndMaintenance.values)
   val workFromHomeGen: Gen[WorkFromHome]                                           = Gen.oneOf(WorkFromHome.values)
@@ -45,7 +44,6 @@ object ExpensesTailoringAnswersGen {
 
   val expensesTailoringIndividualCategoriesAnswersGen: Gen[ExpensesTailoringIndividualCategoriesAnswers] = for {
     officeSupplies                    <- officeSuppliesGen
-    taxiMinicabOrRoadHaulage          <- taxiMinicabOrRoadHaulageGen
     goodsToSellOrUse                  <- goodsToSellOrUseGen
     repairsAndMaintenance             <- repairsAndMaintenanceGen
     workFromHome                      <- workFromHomeGen
@@ -65,7 +63,6 @@ object ExpensesTailoringAnswersGen {
     disallowableProfessionalFees      <- Gen.option(disallowableProfessionalFeesGen)
   } yield ExpensesTailoringIndividualCategoriesAnswers(
     officeSupplies,
-    taxiMinicabOrRoadHaulage,
     goodsToSellOrUse,
     repairsAndMaintenance,
     workFromHome,

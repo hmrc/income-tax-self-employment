@@ -21,7 +21,7 @@ import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
-import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
+import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers, TaxiMinicabOrRoadHaulage}
 import models.frontend.expenses.interest.InterestJourneyAnswers
 import models.frontend.expenses.irrecoverableDebts.IrrecoverableDebtsJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
@@ -37,6 +37,12 @@ object ExpensesJourneyAnswersGen {
     amount             <- bigDecimalGen
     disallowableAmount <- Gen.option(bigDecimalGen)
   } yield GoodsToSellOrUseJourneyAnswers(amount, disallowableAmount)
+
+  val goodsToSellOrUseAnswersGen: Gen[GoodsToSellOrUseAnswers] = for {
+    taxiMinicabOrRoadHaulage <- Gen.oneOf(TaxiMinicabOrRoadHaulage.values)
+    amount                   <- bigDecimalGen
+    disallowableAmount       <- Gen.option(bigDecimalGen)
+  } yield GoodsToSellOrUseAnswers(taxiMinicabOrRoadHaulage, amount, disallowableAmount)
 
   val officeSuppliesJourneyAnswersGen: Gen[OfficeSuppliesJourneyAnswers] = for {
     amount             <- bigDecimalGen
