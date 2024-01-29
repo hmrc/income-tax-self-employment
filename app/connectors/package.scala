@@ -15,6 +15,7 @@
  */
 
 import models.connector.IntegrationContext
+import models.logging.ConnectorRequestInfo
 import play.api.Logger
 import play.api.libs.json.Writes
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
@@ -28,7 +29,7 @@ package object connectors {
       ec: ExecutionContext,
       logger: Logger): Future[Resp] = {
     val reads = implicitly[HttpReads[Resp]]
-    logger.info(s"GET ${context.url}")
+    ConnectorRequestInfo("GET", context.url, context.api).logRequest(logger)
     http.GET[Resp](context.url)(reads, context.enrichedHeaderCarrier, ec)
   }
 
@@ -38,7 +39,7 @@ package object connectors {
       logger: Logger): Future[Resp] = {
     val reads  = implicitly[HttpReads[Resp]]
     val writes = implicitly[Writes[Req]]
-    logger.info(s"POST ${context.url}")
+    ConnectorRequestInfo("POST", context.url, context.api).logRequestWithBody(logger, body)
     http.POST[Req, Resp](context.url, body)(writes, reads, context.enrichedHeaderCarrier, ec)
   }
 
@@ -48,7 +49,7 @@ package object connectors {
       logger: Logger): Future[Resp] = {
     val reads  = implicitly[HttpReads[Resp]]
     val writes = implicitly[Writes[Req]]
-    logger.info(s"PUT ${context.url}")
+    ConnectorRequestInfo("PUT", context.url, context.api).logRequestWithBody(logger, body)
     http.PUT[Req, Resp](context.url, body)(writes, reads, context.enrichedHeaderCarrier, ec)
   }
 }
