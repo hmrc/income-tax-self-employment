@@ -23,6 +23,7 @@ import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
 sealed trait IntegrationContext {
   val url: String
+  val api: IFSApiName
 
   def enrichedHeaderCarrier(implicit headerCarrier: HeaderCarrier): HeaderCarrier
 }

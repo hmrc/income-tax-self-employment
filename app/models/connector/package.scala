@@ -19,6 +19,8 @@ package models
 import connectors.DownstreamParser
 import connectors.DownstreamParser.CommonDownstreamParser
 import models.error.DownstreamError
+import models.logging.ConnectorResponseInfo
+import play.api.Logger
 import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
@@ -26,7 +28,9 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 package object connector {
   type ApiResponse[A] = Either[DownstreamError, A]
 
-  implicit def httpReads[A: Reads]: HttpReads[ApiResponse[A]] = (method: String, url: String, response: HttpResponse) =>
+  implicit def httpReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[A]] = (method: String, url: String, response: HttpResponse) => {
+    ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
+
     response.status match {
       case OK | CREATED =>
         response.json
@@ -38,6 +42,7 @@ package object connector {
 
       case _ => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
     }
+  }
 
   private def createCommonErrorParser(method: String, url: String, response: HttpResponse): DownstreamParser =
     CommonDownstreamParser(method, url, response)
