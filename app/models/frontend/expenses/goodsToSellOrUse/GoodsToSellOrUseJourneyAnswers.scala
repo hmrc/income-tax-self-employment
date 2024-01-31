@@ -16,6 +16,9 @@
 
 package models.frontend.expenses.goodsToSellOrUse
 
+import models.connector.Api1786ExpensesResponseParser.noneFound
+import models.connector.api_1786
+import models.database.expenses.TaxiMinicabOrRoadHaulageDb
 import play.api.libs.json._
 
 case class GoodsToSellOrUseJourneyAnswers(goodsToSellOrUseAmount: BigDecimal, disallowableGoodsToSellOrUseAmount: Option[BigDecimal])
@@ -30,4 +33,11 @@ case class GoodsToSellOrUseAnswers(taxiMinicabOrRoadHaulage: TaxiMinicabOrRoadHa
 
 object GoodsToSellOrUseAnswers {
   implicit val formats: OFormat[GoodsToSellOrUseAnswers] = Json.format[GoodsToSellOrUseAnswers]
+
+  def apply(dbTaxiAnswer: TaxiMinicabOrRoadHaulageDb, periodicSummaryDetails: api_1786.SuccessResponseSchema): GoodsToSellOrUseAnswers =
+    GoodsToSellOrUseAnswers(
+      taxiMinicabOrRoadHaulage = dbTaxiAnswer.taxiMinicabOrRoadHaulage,
+      goodsToSellOrUseAmount = periodicSummaryDetails.financials.deductions.flatMap(_.costOfGoods.map(_.amount)).getOrElse(noneFound),
+      disallowableGoodsToSellOrUseAmount = periodicSummaryDetails.financials.deductions.flatMap(_.costOfGoods.flatMap(_.disallowableAmount))
+    )
 }

@@ -33,7 +33,7 @@ import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
-import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
+import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseAnswers
 import models.frontend.expenses.interest.InterestJourneyAnswers
 import models.frontend.expenses.irrecoverableDebts.IrrecoverableDebtsJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
@@ -42,7 +42,7 @@ import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
-import org.scalamock.handlers.CallHandler3
+import org.scalamock.handlers.{CallHandler2, CallHandler3}
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
@@ -156,7 +156,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
           cc = stubControllerComponents,
           abroadAnswersService = StubAbroadAnswersService(),
           incomeService = StubIncomeAnswersService(),
-          expensesService = StubExpensesAnswersService(getJourneyAnswers = journeyAnswers)
+          expensesService = StubExpensesAnswersService(getTailoringJourneyAnswers = journeyAnswers)
         )
         behave like testRoute(
           request = buildRequestNoContent,
@@ -198,9 +198,18 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "GoodsToSellOrUse" should {
-    s"Get answers and return a $OK when successful" in new GetExpensesTest[GoodsToSellOrUseJourneyAnswers] {
-      override val journeyAnswers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
-      mockExpensesService()
+    s"Get return $NO_CONTENT if there is no answers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.getGoodsToSellOrUse(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[GoodsToSellOrUseAnswers] {
+      override val journeyAnswers: GoodsToSellOrUseAnswers = genOne(goodsToSellOrUseAnswersGen)
+      mockGoodsToSellOrUseExpensesService(journeyAnswers)
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -518,5 +527,11 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         .expects(*, *, *)
         .returns(EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
+    def mockGoodsToSellOrUseExpensesService(
+        answers: GoodsToSellOrUseAnswers): CallHandler2[JourneyContextWithNino, HeaderCarrier, ApiResultT[Option[GoodsToSellOrUseAnswers]]] =
+      (expensesService
+        .getGoodsToSellOrUseAnswers(_: JourneyContextWithNino)(_: HeaderCarrier))
+        .expects(*, *)
+        .returns(EitherT.right[ServiceError](Future.successful(Some(answers))))
   }
 }
