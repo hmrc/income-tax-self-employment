@@ -24,8 +24,9 @@ import models.common.JourneyName.ExpensesTailoring
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
 import models.database.JourneyAnswers
-import models.database.expenses.ExpensesCategoriesDb
-import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseJourneyAnswers
+import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
+import models.frontend.expenses.goodsToSellOrUse.TaxiMinicabOrRoadHaulage.Yes
+import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers}
 import models.frontend.expenses.tailoring.ExpensesTailoring.{NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
@@ -103,7 +104,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
     "return NoExpensesAnswers" in new Test {
       override val connector = StubSelfEmploymentConnector()
-      override val repo = StubJourneyAnswersRepository(getAnswer = journeyAnswers
+      override val repo = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
         .copy(data = Json.toJson(ExpensesCategoriesDb(NoExpenses)).as[JsObject])
         .some)
       val result = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
@@ -118,7 +119,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
               .copy(deductions = api1786DeductionsSuccessResponse.financials.deductions.map(_.copy(simplifiedExpenses = BigDecimal("10.5").some))))
             .asRight)
       )
-      override val repo = StubJourneyAnswersRepository(getAnswer = journeyAnswers
+      override val repo = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
         .copy(data = Json.toJson(ExpensesCategoriesDb(TotalAmount)).as[JsObject])
         .some)
       val result = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
@@ -129,7 +130,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       val answers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
 
       override val connector = StubSelfEmploymentConnector()
-      override val repo = StubJourneyAnswersRepository(getAnswer = journeyAnswers
+      override val repo = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
         .copy(data = Json.toJson(answers).as[JsObject])
         .some)
       val result = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
@@ -137,14 +138,43 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
     }
 
   }
+
+  "getGoodsToSellOrUseAnswers" should {
+    "return None when there are no answers" in new Test {
+      override val connector = StubSelfEmploymentConnector()
+      val result             = underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value.futureValue
+      result shouldBe None.asRight
+    }
+
+    "return GoodsToSellOrUseAnswers when they exist" in new Test {
+      override val connector =
+        StubSelfEmploymentConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
+      override val repo = StubJourneyAnswersRepository(getAnswer = goodsToSellOrUseJourneyAnswers
+        .copy(data = Json.toJson(TaxiMinicabOrRoadHaulageDb(Yes)).as[JsObject])
+        .some)
+      val result = underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value.futureValue
+      result shouldBe GoodsToSellOrUseAnswers(Yes, BigDecimal("100.0"), Some(BigDecimal("100.0"))).some.asRight
+    }
+  }
 }
 
 object ExpensesAnswersServiceImplSpec {
-  val journeyAnswers: JourneyAnswers = JourneyAnswers(
+  val tailoringJourneyAnswers: JourneyAnswers = JourneyAnswers(
     mtditid,
     businessId,
     currTaxYear,
     JourneyName.ExpensesTailoring,
+    JourneyStatus.Completed,
+    JsObject.empty,
+    Instant.now(),
+    Instant.now(),
+    Instant.now()
+  )
+  val goodsToSellOrUseJourneyAnswers: JourneyAnswers = JourneyAnswers(
+    mtditid,
+    businessId,
+    currTaxYear,
+    JourneyName.GoodsToSellOrUse,
     JourneyStatus.Completed,
     JsObject.empty,
     Instant.now(),

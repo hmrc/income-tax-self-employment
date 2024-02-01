@@ -19,15 +19,16 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.SelfEmploymentConnector
-import models.common.JourneyName.ExpensesTailoring
+import models.common.JourneyName.{ExpensesTailoring, GoodsToSellOrUse}
 import models.common.TaxYear.{endDate, startDate}
 import models.common._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType}
 import models.connector.{Api1786ExpensesResponseParser, Api1894DeductionsBuilder}
 import models.database.JourneyAnswers
-import models.database.expenses.ExpensesCategoriesDb
+import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
 import models.domain.ApiResultT
 import models.error.ServiceError
+import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseAnswers
 import models.frontend.expenses.tailoring
 import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategories, NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
@@ -46,6 +47,7 @@ trait ExpensesAnswersService {
   def saveAnswers[A: Api1894DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def getAnswers[A: Api1786ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A]
   def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]]
+  def getGoodsToSellOrUseAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[GoodsToSellOrUseAnswers]]
 }
 
 @Singleton
@@ -78,7 +80,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, 
 
   def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]] =
     for {
-      maybeAnswers             <- getExpenseTailoringDbAnswers(ctx)
+      maybeAnswers             <- getDbAnswers(ctx, ExpensesTailoring)
       existingTailoringAnswers <- maybeAnswers.traverse(getExistingTailoringAnswers(ctx, _))
     } yield existingTailoringAnswers
 
@@ -88,8 +90,8 @@ class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, 
       tailoringAnswers <- getTailoringAnswers(ctx, answers, category.expensesCategories)
     } yield tailoringAnswers
 
-  private def getExpenseTailoringDbAnswers(ctx: JourneyContextWithNino): ApiResultT[Option[JourneyAnswers]] =
-    repository.get(ctx.toJourneyContext(ExpensesTailoring))
+  private def getDbAnswers(ctx: JourneyContextWithNino, journey: JourneyName): ApiResultT[Option[JourneyAnswers]] =
+    repository.get(ctx.toJourneyContext(journey))
 
   private def getTailoringAnswers(ctx: JourneyContextWithNino, answers: JourneyAnswers, tailoringCategory: tailoring.ExpensesTailoring)(implicit
       hc: HeaderCarrier): ApiResultT[ExpensesTailoringAnswers] =
@@ -110,5 +112,26 @@ class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, 
 
   private def getExpenseTailoringAsOneTotal(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[ExpensesTailoringAnswers] =
     getAnswers[AsOneTotalAnswers](ctx).map(identity[ExpensesTailoringAnswers])
+
+  def getGoodsToSellOrUseAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[GoodsToSellOrUseAnswers]] =
+    for {
+      dbTaxiAnswer <- getTaxiAnswer(ctx)
+      gtsouAnswers <- getFullGoodsAnswers(ctx, dbTaxiAnswer)
+    } yield gtsouAnswers
+
+  private def getTaxiAnswer(ctx: JourneyContextWithNino): ApiResultT[Option[TaxiMinicabOrRoadHaulageDb]] =
+    for {
+      maybeData <- getDbAnswers(ctx, GoodsToSellOrUse)
+      dbAnswer  <- getPersistedAnswers[TaxiMinicabOrRoadHaulageDb](maybeData)
+    } yield dbAnswer
+
+  private def getFullGoodsAnswers(ctx: JourneyContextWithNino, dbTaxiAnswer: Option[TaxiMinicabOrRoadHaulageDb])(implicit
+      hc: HeaderCarrier): ApiResultT[Option[GoodsToSellOrUseAnswers]] = {
+    val result = connector.getPeriodicSummaryDetail(ctx).map {
+      case Right(periodicSummaryDetails) => dbTaxiAnswer.map(taxi => GoodsToSellOrUseAnswers(taxi, periodicSummaryDetails))
+      case Left(_)                       => None
+    }
+    EitherT.liftF(result)
+  }
 
 }

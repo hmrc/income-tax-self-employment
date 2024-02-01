@@ -114,7 +114,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def getGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResultT(expensesService.getAnswers[GoodsToSellOrUseJourneyAnswers](JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+    handleOptionalApiResult(expensesService.getGoodsToSellOrUseAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def getOfficeSupplies(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
