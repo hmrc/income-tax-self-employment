@@ -29,7 +29,7 @@ trait CapitalAllowancesAnswersService {
 }
 
 @Singleton
-class CapitalAllowancesAnswersServiceImpl @Inject()(repository: JourneyAnswersRepository) extends CapitalAllowancesAnswersService {
+class CapitalAllowancesAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository) extends CapitalAllowancesAnswersService {
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
       writes: Writes[A]): ApiResultT[Unit] =
