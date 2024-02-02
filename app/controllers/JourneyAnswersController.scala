@@ -17,10 +17,11 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
-import models.common.JourneyName.{ExpensesTailoring, GoodsToSellOrUse}
+import models.common.JourneyName.{CapitalAllowancesTailoring, ExpensesTailoring, GoodsToSellOrUse}
 import models.common._
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
+import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
@@ -51,10 +52,12 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
                                           cc: ControllerComponents,
                                           abroadAnswersService: AbroadAnswersService,
                                           incomeService: IncomeAnswersService,
-                                          expensesService: ExpensesAnswersService)(implicit ec: ExecutionContext)
+                                          expensesService: ExpensesAnswersService,
+                                          capitalAllowancesService: CapitalAllowancesService)(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
+  // Abroad
   def getSelfEmploymentAbroad(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(abroadAnswersService.getAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
@@ -65,6 +68,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     }
   }
 
+  // Income
   def getIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(incomeService.getAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
@@ -75,6 +79,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     }
   }
 
+  // Expenses
   def getExpensesTailoring(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(expensesService.getExpensesTailoringAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
@@ -237,6 +242,13 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveIrrecoverableDebts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[IrrecoverableDebtsJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
       expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+    }
+  }
+
+  // Capital Allowances
+  def saveCapitalAllowancesTailoring(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+    getBody[CapitalAllowancesTailoringAnswers](user) { value =>
+      capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, CapitalAllowancesTailoring, value).map(_ => NoContent)
     }
   }
 
