@@ -49,7 +49,7 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
 import play.api.libs.json.Json
 import services.journeyAnswers.ExpensesAnswersService
-import stubs.services.{StubAbroadAnswersService, StubCapitalAllowancesService, StubExpensesAnswersService, StubIncomeAnswersService}
+import stubs.services.{StubAbroadAnswersService, StubCapitalAllowancesAnswersAnswersService, StubExpensesAnswersService, StubIncomeAnswersService}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
@@ -63,7 +63,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     abroadAnswersService = StubAbroadAnswersService(),
     incomeService = StubIncomeAnswersService(),
     expensesService = StubExpensesAnswersService(),
-    capitalAllowancesService = StubCapitalAllowancesService()
+    capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
   )
 
   "SelfEmploymentAbroadAnswers" should {
@@ -84,7 +84,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(getAnswersRes = Some(answers).asRight),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesService()
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
       )
 
       behave like testRoute(
@@ -123,7 +123,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(getAnswersRes = Some(answers).asRight),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesService()
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
       )
 
       behave like testRoute(
@@ -161,7 +161,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
           abroadAnswersService = StubAbroadAnswersService(),
           incomeService = StubIncomeAnswersService(),
           expensesService = StubExpensesAnswersService(getTailoringJourneyAnswers = journeyAnswers),
-          capitalAllowancesService = StubCapitalAllowancesService()
+          capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
         )
         behave like testRoute(
           request = buildRequestNoContent,
@@ -537,7 +537,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       abroadAnswersService = StubAbroadAnswersService(),
       incomeService = StubIncomeAnswersService(),
       expensesService = expensesService,
-      capitalAllowancesService = StubCapitalAllowancesService()
+      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
     )
 
     def mockExpensesService(): CallHandler3[JourneyContextWithNino, Api1786ExpensesResponseParser[T], HeaderCarrier, ApiResultT[T]] =

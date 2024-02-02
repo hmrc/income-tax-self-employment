@@ -25,8 +25,8 @@ import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec._
 import utils.EitherTTestOps._
 
-class CapitalAllowancesServiceImplSpec extends AnyWordSpecLike {
-  val service = new CapitalAllowancesServiceImpl(StubJourneyAnswersRepository())
+class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike {
+  val service = new CapitalAllowancesAnswersServiceImpl(StubJourneyAnswersRepository())
 
   "persistAnswers" should {
     "persist answers successfully" in {

@@ -53,7 +53,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
                                           abroadAnswersService: AbroadAnswersService,
                                           incomeService: IncomeAnswersService,
                                           expensesService: ExpensesAnswersService,
-                                          capitalAllowancesService: CapitalAllowancesService)(implicit ec: ExecutionContext)
+                                          capitalAllowancesService: CapitalAllowancesAnswersService)(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 

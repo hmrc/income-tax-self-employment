@@ -14,25 +14,17 @@
  * limitations under the License.
  */
 
-package services.journeyAnswers
+package stubs.services
 
-import models.common._
+import models.common.{BusinessId, JourneyName, Mtditid, TaxYear}
 import models.domain.ApiResultT
-import play.api.libs.json.{Json, Writes}
-import repositories.JourneyAnswersRepository
+import play.api.libs.json.Writes
+import services.journeyAnswers.CapitalAllowancesAnswersService
+import stubs.serviceUnitT
 
-import javax.inject.{Inject, Singleton}
-
-trait CapitalAllowancesService {
-  def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
-      writes: Writes[A]): ApiResultT[Unit]
-}
-
-@Singleton
-class CapitalAllowancesServiceImpl @Inject() (repository: JourneyAnswersRepository) extends CapitalAllowancesService {
+case class StubCapitalAllowancesAnswersAnswersService(persistCapitalAllowancesTailoring: ApiResultT[Unit] = serviceUnitT)
+    extends CapitalAllowancesAnswersService {
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
-      writes: Writes[A]): ApiResultT[Unit] =
-    repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, journey), Json.toJson(answers))
-
+      writes: Writes[A]): ApiResultT[Unit] = persistCapitalAllowancesTailoring
 }
