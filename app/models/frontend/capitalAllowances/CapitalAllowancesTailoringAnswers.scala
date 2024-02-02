@@ -17,7 +17,6 @@
 package models.frontend.capitalAllowances
 
 import models.common.{Enumerable, WithName}
-import models.frontend.capitalAllowances.Group.{AssetAndAllowances, BuildingsAndStructures, ZeroEmissions}
 import play.api.libs.json.{Format, Json}
 
 case class CapitalAllowancesTailoringAnswers(claimCapitalAllowances: Boolean, selectCapitalAllowances: List[CapitalAllowances])
@@ -26,52 +25,19 @@ object CapitalAllowancesTailoringAnswers {
   implicit val formats: Format[CapitalAllowancesTailoringAnswers] = Json.format[CapitalAllowancesTailoringAnswers]
 }
 
-sealed trait Group
-
-object Group {
-  case object ZeroEmissions          extends WithName("zeroEmissions") with Group
-  case object BuildingsAndStructures extends WithName("buildingsAndStructures") with Group
-  case object AssetAndAllowances     extends WithName("assetAndAllowances") with Group
-}
-
-sealed trait AllowanceType {
-  val identifier: Group
-}
-
-sealed trait CapitalAllowances extends AllowanceType
+sealed trait CapitalAllowances
 
 object CapitalAllowances extends Enumerable.Implicits {
 
-  case object ZeroEmissionCar extends WithName("zeroEmissionCar") with AllowanceType with CapitalAllowances {
-    override val identifier: Group = ZeroEmissions
-  }
-  case object ZeroEmissionGoodsVehicle extends WithName("zeroEmissionGoodsVehicle") with AllowanceType with CapitalAllowances {
-    override val identifier: Group = ZeroEmissions
-  }
-  case object ElectricVehicleChargepoint extends WithName("electricVehicleChargepoint") with AllowanceType with CapitalAllowances {
-    override val identifier: Group = ZeroEmissions
-  }
-  case object StructuresAndBuildings extends WithName("structuresAndBuildings") with AllowanceType with CapitalAllowances {
-    override val identifier: Group = BuildingsAndStructures
-  }
-  case object SpecialTaxSitesStructuresAndBuildings
-      extends WithName("specialTaxSitesStructuresAndBuildings")
-      with AllowanceType
-      with CapitalAllowances {
-    override val identifier: Group = BuildingsAndStructures
-  }
-  case object AnnualInvestment extends WithName("annualInvestment") with AllowanceType with CapitalAllowances {
-    override val identifier: Group = AssetAndAllowances
-  }
-  case object WritingDown extends WithName("writingDown") with AllowanceType with CapitalAllowances {
-    override val identifier: Group = AssetAndAllowances
-  }
-  case object Balancing extends WithName("balancing") with AllowanceType with CapitalAllowances {
-    override val identifier: Group = AssetAndAllowances
-  }
-  case object BalancingCharge extends WithName("balancingCharge") with AllowanceType with CapitalAllowances {
-    override val identifier: Group = AssetAndAllowances
-  }
+  case object ZeroEmissionCar                       extends WithName("zeroEmissionCar") with CapitalAllowances
+  case object ZeroEmissionGoodsVehicle              extends WithName("zeroEmissionGoodsVehicle") with CapitalAllowances
+  case object ElectricVehicleChargepoint            extends WithName("electricVehicleChargepoint") with CapitalAllowances
+  case object StructuresAndBuildings                extends WithName("structuresAndBuildings") with CapitalAllowances
+  case object SpecialTaxSitesStructuresAndBuildings extends WithName("specialTaxSitesStructuresAndBuildings") with CapitalAllowances
+  case object AnnualInvestment                      extends WithName("annualInvestment") with CapitalAllowances
+  case object WritingDown                           extends WithName("writingDown") with CapitalAllowances
+  case object Balancing                             extends WithName("balancing") with CapitalAllowances
+  case object BalancingCharge                       extends WithName("balancingCharge") with CapitalAllowances
 
   val accrualAllowances: List[CapitalAllowances] =
     List(
