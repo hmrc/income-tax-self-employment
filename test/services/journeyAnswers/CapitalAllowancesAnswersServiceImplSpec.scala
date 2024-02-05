@@ -25,6 +25,8 @@ import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec._
 import utils.EitherTTestOps._
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike {
   val service = new CapitalAllowancesAnswersServiceImpl(StubJourneyAnswersRepository())
 

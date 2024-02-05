@@ -16,14 +16,26 @@
 
 package stubs.services
 
-import models.common.{BusinessId, JourneyName, Mtditid, TaxYear}
+import cats.data.EitherT
+import models.common._
 import models.domain.ApiResultT
+import models.error.ServiceError
+import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import play.api.libs.json.Writes
 import services.journeyAnswers.CapitalAllowancesAnswersService
 import stubs.serviceUnitT
+import uk.gov.hmrc.http.HeaderCarrier
 
-case class StubCapitalAllowancesAnswersAnswersService(persistCapitalAllowancesTailoring: ApiResultT[Unit] = serviceUnitT)
+import scala.concurrent.{ExecutionContext, Future}
+
+case class StubCapitalAllowancesAnswersAnswersService(getCapitalAllowancesTailoring: Either[ServiceError, Option[CapitalAllowancesTailoringAnswers]] =
+                                                        Right(None),
+                                                      persistCapitalAllowancesTailoring: ApiResultT[Unit] = serviceUnitT)
     extends CapitalAllowancesAnswersService {
+  implicit val ec: ExecutionContext = ExecutionContext.global
+
+  def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]] =
+    EitherT.fromEither[Future](getCapitalAllowancesTailoring)
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
       writes: Writes[A]): ApiResultT[Unit] = persistCapitalAllowancesTailoring

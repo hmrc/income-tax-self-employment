@@ -246,6 +246,10 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   // Capital Allowances
+  def getCapitalAllowancesTailoring(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(
+      capitalAllowancesService.getCapitalAllowancesTailoring(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
   def saveCapitalAllowancesTailoring(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
     getBody[CapitalAllowancesTailoringAnswers](user) { value =>
       capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, CapitalAllowancesTailoring, value).map(_ => NoContent)
