@@ -16,10 +16,13 @@
 
 package models.domain
 
-import models.common.{BusinessId, TradingName}
+import models.common.{AccountingType, BusinessId, TradingName}
 import play.api.libs.json._
 
-case class TradesJourneyStatuses(businessId: BusinessId, tradingName: Option[TradingName], journeyStatuses: List[JourneyNameAndStatus])
+case class TradesJourneyStatuses(businessId: BusinessId,
+                                 tradingName: Option[TradingName],
+                                 accountingType: AccountingType,
+                                 journeyStatuses: List[JourneyNameAndStatus])
 
 object TradesJourneyStatuses {
   implicit val format: OFormat[TradesJourneyStatuses] = Json.format[TradesJourneyStatuses]

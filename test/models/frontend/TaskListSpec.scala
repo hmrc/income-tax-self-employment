@@ -17,16 +17,15 @@
 package models.frontend
 
 import bulders.BusinessDataBuilder
+import cats.implicits._
 import models.common._
 import models.database.JourneyAnswers
+import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
 import utils.BaseSpec._
 
 import java.time.Instant
-import models.domain.JourneyNameAndStatus
-import cats.implicits._
-import models.domain.TradesJourneyStatuses
 
 class TaskListSpec extends AnyWordSpecLike {
   val now = Instant.now()
@@ -67,11 +66,13 @@ class TaskListSpec extends AnyWordSpecLike {
             TradesJourneyStatuses(
               businessId1,
               BusinessDataBuilder.aBusiness.tradingName.map(TradingName(_)),
+              AccountingType(BusinessDataBuilder.aBusiness.accountingType.getOrElse("")),
               Nil
             ),
             TradesJourneyStatuses(
               businessId2,
               BusinessDataBuilder.aBusiness.tradingName.map(TradingName(_)),
+              AccountingType(BusinessDataBuilder.aBusiness.accountingType.getOrElse("")),
               Nil
             )
           )
