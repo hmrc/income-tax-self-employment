@@ -23,15 +23,5 @@ final case class AccountingType(value: String) extends AnyVal {
 }
 
 object AccountingType {
-//
-//  implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[BusinessId] = new PathBindable[BusinessId] {
-//
-//    override def bind(key: String, value: String): Either[String, BusinessId] =
-//      strBinder.bind(key, value).map(BusinessId.apply)
-//
-//    override def unbind(key: String, businessId: BusinessId): String =
-//      strBinder.unbind(key, businessId.value)
-//  }
-//
   implicit val format: Format[AccountingType] = Json.valueFormat[AccountingType]
 }
