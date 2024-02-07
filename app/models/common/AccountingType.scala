@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package models.domain
+package models.common
 
-import models.common.{AccountingType, BusinessId, TradingName}
-import play.api.libs.json._
+import play.api.libs.json.{Format, Json}
 
-case class TradesJourneyStatuses(businessId: BusinessId,
-                                 tradingName: Option[TradingName],
-                                 accountingType: AccountingType,
-                                 journeyStatuses: List[JourneyNameAndStatus])
+final case class AccountingType(value: String) extends AnyVal {
+  override def toString: String = value.toUpperCase
+}
 
-object TradesJourneyStatuses {
-  implicit val format: OFormat[TradesJourneyStatuses] = Json.format[TradesJourneyStatuses]
+object AccountingType {
+  implicit val format: Format[AccountingType] = Json.valueFormat[AccountingType]
 }

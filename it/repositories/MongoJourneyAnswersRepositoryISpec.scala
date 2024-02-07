@@ -21,7 +21,7 @@ import cats.data.EitherT
 import cats.implicits._
 import models.common.JourneyName._
 import models.common.JourneyStatus._
-import models.common.{BusinessId, JourneyContext, JourneyName, TradingName}
+import models.common._
 import models.database.JourneyAnswers
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import models.error.ServiceError
@@ -105,8 +105,8 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
 
     "return task list with businesses" in {
       val businesses = List(
-        aBusiness.copy(businessId = incomeCtx.businessId.value),
-        aBusiness.copy(businessId = "business2", tradingName = Some("some other business"))
+        aBusiness.copy(businessId = incomeCtx.businessId.value, accountingType = Some("ACCRUAL")),
+        aBusiness.copy(businessId = "business2", tradingName = Some("some other business"), accountingType = Some("CASH"))
       )
 
       val result = (for {
@@ -122,11 +122,13 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
           TradesJourneyStatuses(
             BusinessId(incomeCtx.businessId.value),
             TradingName("string").some,
+            AccountingType("ACCRUAL"),
             List(JourneyNameAndStatus(Income, Completed))
           ),
           TradesJourneyStatuses(
             BusinessId("business2"),
             TradingName("some other business").some,
+            AccountingType("CASH"),
             List(JourneyNameAndStatus(Income, InProgress))
           )
         )

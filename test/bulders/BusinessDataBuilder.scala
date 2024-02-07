@@ -16,7 +16,7 @@
 
 package bulders
 
-import models.common.{BusinessId, JourneyName, JourneyStatus, TradingName}
+import models.common._
 import models.connector.api_1171.SuccessResponseSchema
 import models.domain.Business.mkBusiness
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
@@ -34,6 +34,7 @@ object BusinessDataBuilder {
     TradesJourneyStatuses(
       BusinessId(aBusiness.businessId),
       aBusiness.tradingName.map(TradingName(_)),
+      AccountingType(aBusiness.accountingType.getOrElse("")),
       List(
         JourneyNameAndStatus(JourneyName.Income, JourneyStatus.Completed),
         JourneyNameAndStatus(JourneyName.ExpensesTailoring, JourneyStatus.Completed)

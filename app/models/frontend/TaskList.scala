@@ -45,6 +45,7 @@ object TaskList {
       TradesJourneyStatuses(
         BusinessId(business.businessId),
         business.tradingName.map(TradingName(_)),
+        AccountingType(business.accountingType.getOrElse("")),
         currentJourneys.map(j => JourneyNameAndStatus(j.journey, j.status))
       )
     }
