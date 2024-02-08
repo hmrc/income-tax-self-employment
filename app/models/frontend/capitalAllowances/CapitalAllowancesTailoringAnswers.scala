@@ -17,12 +17,12 @@
 package models.frontend.capitalAllowances
 
 import models.common.{Enumerable, WithName}
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
 
 case class CapitalAllowancesTailoringAnswers(claimCapitalAllowances: Boolean, selectCapitalAllowances: List[CapitalAllowances])
 
 object CapitalAllowancesTailoringAnswers {
-  implicit val formats: Format[CapitalAllowancesTailoringAnswers] = Json.format[CapitalAllowancesTailoringAnswers]
+  implicit val formats: OFormat[CapitalAllowancesTailoringAnswers] = Json.format[CapitalAllowancesTailoringAnswers]
 }
 
 sealed trait CapitalAllowances

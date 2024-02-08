@@ -20,7 +20,12 @@ import cats.implicits.catsSyntaxEitherId
 import gens.CapitalAllowancesTailoringAnswersGen.capitalAllowancesTailoringAnswersGen
 import gens.genOne
 import models.common.JourneyName.CapitalAllowancesTailoring
+import models.common.{JourneyName, JourneyStatus}
+import models.database.JourneyAnswers
+import models.frontend.capitalAllowances.CapitalAllowances.{ZeroEmissionCar, ZeroEmissionGoodsVehicle}
+import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import org.scalatest.wordspec.AnyWordSpecLike
+import play.api.libs.json.Json
 import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec._
 import utils.EitherTTestOps._
@@ -29,6 +34,27 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike {
   val service = new CapitalAllowancesAnswersServiceImpl(StubJourneyAnswersRepository())
+
+  "getAnswers" should {
+    "return empty if no answers" in {
+      val result = service.getCapitalAllowancesTailoring(journeyCtxWithNino).rightValue
+      assert(result === None)
+    }
+
+    "return answers if they exist" in {
+      val tailoringAnswers =
+        CapitalAllowancesTailoringAnswers(claimCapitalAllowances = true, selectCapitalAllowances = List(ZeroEmissionCar, ZeroEmissionGoodsVehicle))
+      val journeyAnswers: JourneyAnswers =
+        mkJourneyAnswers(JourneyName.CapitalAllowancesTailoring, JourneyStatus.Completed, Json.toJsObject(tailoringAnswers))
+
+      val service = new CapitalAllowancesAnswersServiceImpl(
+        StubJourneyAnswersRepository(
+          getAnswer = Some(journeyAnswers)
+        ))
+      val result = service.getCapitalAllowancesTailoring(journeyCtxWithNino).rightValue
+      assert(result === Some(tailoringAnswers))
+    }
+  }
 
   "persistAnswers" should {
     "persist answers successfully" in {
