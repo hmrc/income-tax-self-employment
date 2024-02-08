@@ -19,6 +19,7 @@ package controllers
 import cats.data.EitherT
 import cats.implicits._
 import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
+import gens.CapitalAllowancesTailoringAnswersGen.capitalAllowancesTailoringAnswersGen
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
@@ -48,7 +49,7 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
 import play.api.libs.json.Json
 import services.journeyAnswers.ExpensesAnswersService
-import stubs.services.{StubAbroadAnswersService, StubExpensesAnswersService, StubIncomeAnswersService}
+import stubs.services.{StubAbroadAnswersService, StubCapitalAllowancesAnswersAnswersService, StubExpensesAnswersService, StubIncomeAnswersService}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
@@ -61,7 +62,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     cc = stubControllerComponents,
     abroadAnswersService = StubAbroadAnswersService(),
     incomeService = StubIncomeAnswersService(),
-    expensesService = StubExpensesAnswersService()
+    expensesService = StubExpensesAnswersService(),
+    capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
   )
 
   "SelfEmploymentAbroadAnswers" should {
@@ -81,7 +83,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         cc = stubControllerComponents,
         abroadAnswersService = StubAbroadAnswersService(getAnswersRes = Some(answers).asRight),
         incomeService = StubIncomeAnswersService(),
-        expensesService = StubExpensesAnswersService()
+        expensesService = StubExpensesAnswersService(),
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
       )
 
       behave like testRoute(
@@ -119,7 +122,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         cc = stubControllerComponents,
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(getAnswersRes = Some(answers).asRight),
-        expensesService = StubExpensesAnswersService()
+        expensesService = StubExpensesAnswersService(),
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
       )
 
       behave like testRoute(
@@ -156,7 +160,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
           cc = stubControllerComponents,
           abroadAnswersService = StubAbroadAnswersService(),
           incomeService = StubIncomeAnswersService(),
-          expensesService = StubExpensesAnswersService(getTailoringJourneyAnswers = journeyAnswers)
+          expensesService = StubExpensesAnswersService(getTailoringJourneyAnswers = journeyAnswers),
+          capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
         )
         behave like testRoute(
           request = buildRequestNoContent,
@@ -509,6 +514,19 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
+  "CapitalAllowances" should {
+    s"Save answers and return a $NO_CONTENT when successful" in {
+      forAll(capitalAllowancesTailoringAnswersGen) { data =>
+        behave like testRoute(
+          request = buildRequest(data),
+          expectedStatus = NO_CONTENT,
+          expectedBody = "",
+          methodBlock = () => underTest.saveCapitalAllowancesTailoring(currTaxYear, businessId)
+        )
+      }
+    }
+  }
+
   trait GetExpensesTest[T] {
     val expensesService: ExpensesAnswersService = mock[ExpensesAnswersService]
     val journeyAnswers: T
@@ -518,7 +536,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       cc = stubControllerComponents,
       abroadAnswersService = StubAbroadAnswersService(),
       incomeService = StubIncomeAnswersService(),
-      expensesService = expensesService
+      expensesService = expensesService,
+      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
     )
 
     def mockExpensesService(): CallHandler3[JourneyContextWithNino, Api1786ExpensesResponseParser[T], HeaderCarrier, ApiResultT[T]] =
