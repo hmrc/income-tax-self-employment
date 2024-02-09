@@ -61,3 +61,4 @@ GET         /:taxYear/:businessId/expenses-irrecoverable-debts/:nino/answers    
 POST        /:taxYear/:businessId/expenses-irrecoverable-debts/:nino/answers            controllers.JourneyAnswersController.saveIrrecoverableDebts(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/:businessId/capital-allowances-tailoring/answers                  controllers.JourneyAnswersController.saveCapitalAllowancesTailoring(taxYear: TaxYear, businessId: BusinessId)
+GET         /:taxYear/:businessId/capital-allowances-tailoring/:nino/answers            controllers.JourneyAnswersController.getCapitalAllowancesTailoring(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

@@ -16,20 +16,31 @@
 
 package services.journeyAnswers
 
+import models.common.JourneyName.CapitalAllowancesTailoring
 import models.common._
 import models.domain.ApiResultT
+import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import play.api.libs.json.{Json, Writes}
 import repositories.JourneyAnswersRepository
+import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.ExecutionContext
 
 trait CapitalAllowancesAnswersService {
+  def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]]
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
       writes: Writes[A]): ApiResultT[Unit]
 }
 
 @Singleton
-class CapitalAllowancesAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository) extends CapitalAllowancesAnswersService {
+class CapitalAllowancesAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
+    extends CapitalAllowancesAnswersService {
+  def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]] =
+    for {
+      maybeDbAnswers           <- repository.get(ctx.toJourneyContext(CapitalAllowancesTailoring))
+      existingTailoringAnswers <- getPersistedAnswers[CapitalAllowancesTailoringAnswers](maybeDbAnswers)
+    } yield existingTailoringAnswers
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
       writes: Writes[A]): ApiResultT[Unit] =

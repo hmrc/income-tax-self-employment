@@ -24,10 +24,10 @@ object CapitalAllowancesTailoringAnswersGen {
   val capitalAllowancesTailoringGen: Gen[CapitalAllowances] = Gen.oneOf(CapitalAllowances.accrualAllowances)
 
   val capitalAllowancesTailoringAnswersGen: Gen[CapitalAllowancesTailoringAnswers] = for {
-    claimAnyCapitalAllowances <- booleanGen
-    selectCapitalAllowances   <- Gen.listOfN(9, capitalAllowancesTailoringGen)
+    claimCapitalAllowances  <- booleanGen
+    selectCapitalAllowances <- Gen.listOfN(9, capitalAllowancesTailoringGen)
   } yield CapitalAllowancesTailoringAnswers(
-    claimAnyCapitalAllowances,
+    claimCapitalAllowances,
     selectCapitalAllowances
   )
 
