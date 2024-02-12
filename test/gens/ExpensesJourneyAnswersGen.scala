@@ -29,7 +29,7 @@ import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
 import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
-import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsJourneyAnswers
+import models.frontend.expenses.workplaceRunningCosts._
 import org.scalacheck.Gen
 
 object ExpensesJourneyAnswersGen {
@@ -49,6 +49,38 @@ object ExpensesJourneyAnswersGen {
     wfhPremisesRunningCosts              <- bigDecimalGen
     wfbpPremisesRunningCostsDisallowable <- Gen.option(bigDecimalGen)
   } yield WorkplaceRunningCostsJourneyAnswers(wfhPremisesRunningCosts, wfbpPremisesRunningCostsDisallowable)
+
+  val workplaceRunningCostsAnswersGen: Gen[WorkplaceRunningCostsAnswers] = for {
+    moreThan25Hours                         <- Gen.option(Gen.oneOf(MoreThan25Hours.values))
+    wfhHours25To50                          <- Gen.option(intGen)
+    wfhHours51To100                         <- Gen.option(intGen)
+    wfhHours101Plus                         <- Gen.option(intGen)
+    wfhFlatRateOrActualCosts                <- Gen.option(Gen.oneOf(WfhFlatRateOrActualCosts.values))
+    wfhClaimingAmount                       <- Gen.option(bigDecimalGen)
+    liveAtBusinessPremises                  <- Gen.option(Gen.oneOf(LiveAtBusinessPremises.values))
+    businessPremisesAmount                  <- Gen.option(bigDecimalGen)
+    businessPremisesDisallowableAmount      <- Gen.option(bigDecimalGen)
+    livingAtBusinessPremisesOnePerson       <- Gen.option(intGen)
+    livingAtBusinessPremisesTwoPeople       <- Gen.option(intGen)
+    livingAtBusinessPremisesThreePlusPeople <- Gen.option(intGen)
+    wfbpFlatRateOrActualCosts               <- Gen.option(Gen.oneOf(WfbpFlatRateOrActualCosts.values))
+    wfbpClaimingAmount                      <- Gen.option(bigDecimalGen)
+  } yield WorkplaceRunningCostsAnswers(
+    moreThan25Hours,
+    wfhHours25To50,
+    wfhHours51To100,
+    wfhHours101Plus,
+    wfhFlatRateOrActualCosts,
+    wfhClaimingAmount,
+    liveAtBusinessPremises,
+    businessPremisesAmount,
+    businessPremisesDisallowableAmount,
+    livingAtBusinessPremisesOnePerson,
+    livingAtBusinessPremisesTwoPeople,
+    livingAtBusinessPremisesThreePlusPeople,
+    wfbpFlatRateOrActualCosts,
+    wfbpClaimingAmount
+  )
 
   val officeSuppliesJourneyAnswersGen: Gen[OfficeSuppliesJourneyAnswers] = for {
     amount             <- bigDecimalGen

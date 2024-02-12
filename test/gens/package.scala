@@ -25,6 +25,8 @@ package object gens {
     .chooseNum[BigDecimal](0, 10000)
     .map(n => n.setScale(2, BigDecimal.RoundingMode.HALF_UP))
 
+  val intGen: Gen[Int] = Gen.chooseNum[Int](0, 10000)
+
   /** gen.sample.get - can fail as generator may return None. Use this method for safely generate one instance of A
     */
   def genOne[A](gen: Gen[A]): A =

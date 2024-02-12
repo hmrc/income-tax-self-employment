@@ -234,6 +234,18 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
+  "WorkplaceRunningCosts" should {
+
+    s"Save return a $NO_CONTENT when successful" in forAll(workplaceRunningCostsAnswersGen) { data =>
+      behave like testRoute(
+        request = buildRequest(data),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.saveWorkplaceRunningCosts(currTaxYear, businessId, nino)
+      )
+    }
+  }
+
   "OfficeSupplies" should {
     s"Get answers and return a $OK when successful" in new GetExpensesTest[OfficeSuppliesJourneyAnswers] {
       override val journeyAnswers: OfficeSuppliesJourneyAnswers = genOne(officeSuppliesJourneyAnswersGen)
