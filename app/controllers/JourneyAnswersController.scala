@@ -19,7 +19,7 @@ package controllers
 import controllers.actions.AuthorisedAction
 import models.common.JourneyName.{CapitalAllowancesTailoring, ExpensesTailoring, GoodsToSellOrUse, WorkplaceRunningCosts}
 import models.common._
-import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
+import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
@@ -37,7 +37,7 @@ import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCosts
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoring.TotalAmount
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
-import models.frontend.expenses.workplaceRunningCosts.{WorkplaceRunningCostsAnswers, WorkplaceRunningCostsJourneyAnswers}
+import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Format.GenericFormat
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -126,13 +126,8 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveWorkplaceRunningCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[WorkplaceRunningCostsAnswers](taxYear, businessId, nino) { (ctx, value) =>
       for {
-        _ <- expensesService.saveAnswers(ctx, WorkplaceRunningCostsJourneyAnswers(value.wfhAmount, value.businessPremisesAmount))
-        _ <- expensesService.persistAnswers(
-          businessId,
-          taxYear,
-          user.getMtditid,
-          WorkplaceRunningCosts,
-          WorkplaceRunningCostsDb(value.taxiMinicabOrRoadHaulage))
+        _ <- expensesService.saveAnswers(ctx, value.toApiSubmissionModel)
+        _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, WorkplaceRunningCosts, value.toDbModel)
       } yield NoContent
     }
   }

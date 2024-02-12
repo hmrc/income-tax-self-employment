@@ -16,34 +16,62 @@
 
 package models.frontend.expenses.workplaceRunningCosts
 
-import models.common.{Enumerable, WithName}
-import play.api.i18n.Messages
+import models.connector.Api1786ExpensesResponseParser.noneFound
+import models.database.expenses.WorkplaceRunningCostsDb
 import play.api.libs.json.{Json, OFormat}
 
-case class WorkplaceRunningCostsJourneyAnswers(wfhPremisesRunningCosts: BigDecimal,
-                                               wfbpPremisesRunningCostsDisallowable: Option[BigDecimal])
+case class WorkplaceRunningCostsJourneyAnswers(wfhPremisesRunningCosts: BigDecimal, wfbpPremisesRunningCostsDisallowable: Option[BigDecimal])
 
 object WorkplaceRunningCostsJourneyAnswers {
   implicit val formats: OFormat[WorkplaceRunningCostsJourneyAnswers] = Json.format[WorkplaceRunningCostsJourneyAnswers]
 }
 
 case class WorkplaceRunningCostsAnswers(moreThan25Hours: Boolean,
-                                               monthsWfh25to50Hours: Option[BigDecimal],
-                                               monthsWfh51to100Hours: Option[BigDecimal],
-                                               monthsWfh101orMoreHours: Option[BigDecimal],
-                                               wfhFlatRateOrActual: Boolean,
-                                               wfhAmount: Option[BigDecimal],
-                                               liveAtBusinessPremises: LiveAtBusinessPremises,
-                                               businessPremisesAmount: Option[BigDecimal],
-                                               disallowableBusinessPremisesAmount: Option[BigDecimal],
-                                               monthsOnePersonAtBP: Option[BigDecimal],
-                                               monthsTwoPeopleAtBP: Option[BigDecimal],
-                                               monthsThreeOrMorePeopleAtBP: Option[BigDecimal],
-                                               businessPremisesFlatRateOrActual: Option[Boolean],
-                                               personalUseAmount: Option[BigDecimal])
+                                        monthsWfh25to50Hours: Option[BigDecimal],
+                                        monthsWfh51to100Hours: Option[BigDecimal],
+                                        monthsWfh101orMoreHours: Option[BigDecimal],
+                                        wfhFlatRateOrActual: Boolean,
+                                        wfhClaimAmount: Option[BigDecimal],
+                                        liveAtBusinessPremises: LiveAtBusinessPremises,
+                                        businessPremisesAmount: Option[BigDecimal],
+                                        disallowableBusinessPremisesAmount: Option[BigDecimal],
+                                        monthsOnePersonAtBP: Option[BigDecimal],
+                                        monthsTwoPeopleAtBP: Option[BigDecimal],
+                                        monthsThreeOrMorePeopleAtBP: Option[BigDecimal],
+                                        businessPremisesFlatRateOrActual: Option[Boolean],
+                                        personalUseAmount: Option[BigDecimal]) {
+
+  def toApiSubmissionModel: WorkplaceRunningCostsJourneyAnswers = {
+    val wfhPremisesRunningCosts: BigDecimal = (wfhClaimAmount, personalUseAmount) match {
+      case (Some(wca), Some(pua)) => wca + pua
+      case (Some(wca), None)      => wca
+      case (None, Some(pua))      => pua
+      case (None, None)           => noneFound
+    }
+    WorkplaceRunningCostsJourneyAnswers(
+      wfhPremisesRunningCosts = wfhPremisesRunningCosts,
+      wfbpPremisesRunningCostsDisallowable = disallowableBusinessPremisesAmount
+    )
+  }
+
+  def toDbModel: WorkplaceRunningCostsDb =
+    WorkplaceRunningCostsDb(
+      moreThan25Hours,
+      monthsWfh25to50Hours,
+      monthsWfh51to100Hours,
+      monthsWfh101orMoreHours,
+      wfhFlatRateOrActual,
+      liveAtBusinessPremises,
+      businessPremisesAmount,
+      disallowableBusinessPremisesAmount,
+      monthsOnePersonAtBP,
+      monthsTwoPeopleAtBP,
+      monthsThreeOrMorePeopleAtBP,
+      businessPremisesFlatRateOrActual
+    )
+}
 
 object WorkplaceRunningCostsAnswers {
   implicit val formats: OFormat[WorkplaceRunningCostsAnswers] = Json.format[WorkplaceRunningCostsAnswers]
 
-  def apply(one)
 }

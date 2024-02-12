@@ -16,10 +16,21 @@
 
 package models.database.expenses
 
-import models.frontend.expenses.goodsToSellOrUse.TaxiMinicabOrRoadHaulage
+import models.frontend.expenses.workplaceRunningCosts.LiveAtBusinessPremises
 import play.api.libs.json.{Json, OFormat}
 
-final case class WorkplaceRunningCostsDb(taxiMinicabOrRoadHaulage: TaxiMinicabOrRoadHaulage)
+final case class WorkplaceRunningCostsDb(moreThan25Hours: Boolean,
+                                         monthsWfh25to50Hours: Option[BigDecimal],
+                                         monthsWfh51to100Hours: Option[BigDecimal],
+                                         monthsWfh101orMoreHours: Option[BigDecimal],
+                                         wfhFlatRateOrActual: Boolean,
+                                         liveAtBusinessPremises: LiveAtBusinessPremises,
+                                         businessPremisesAmount: Option[BigDecimal],
+                                         disallowableBusinessPremisesAmount: Option[BigDecimal],
+                                         monthsOnePersonAtBP: Option[BigDecimal],
+                                         monthsTwoPeopleAtBP: Option[BigDecimal],
+                                         monthsThreeOrMorePeopleAtBP: Option[BigDecimal],
+                                         businessPremisesFlatRateOrActual: Option[Boolean])
 
 object WorkplaceRunningCostsDb {
   implicit val format: OFormat[WorkplaceRunningCostsDb] = Json.format[WorkplaceRunningCostsDb]
