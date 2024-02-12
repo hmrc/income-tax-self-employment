@@ -29,6 +29,7 @@ import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
 import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
+import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsJourneyAnswers
 import org.scalacheck.Gen
 
 object ExpensesJourneyAnswersGen {
@@ -43,6 +44,11 @@ object ExpensesJourneyAnswersGen {
     amount                   <- bigDecimalGen
     disallowableAmount       <- Gen.option(bigDecimalGen)
   } yield GoodsToSellOrUseAnswers(taxiMinicabOrRoadHaulage, amount, disallowableAmount)
+
+  val workplaceRunningCostsJourneyAnswersGen: Gen[WorkplaceRunningCostsJourneyAnswers] = for {
+    wfhPremisesRunningCosts              <- bigDecimalGen
+    wfbpPremisesRunningCostsDisallowable <- Gen.option(bigDecimalGen)
+  } yield WorkplaceRunningCostsJourneyAnswers(wfhPremisesRunningCosts, wfbpPremisesRunningCostsDisallowable)
 
   val officeSuppliesJourneyAnswersGen: Gen[OfficeSuppliesJourneyAnswers] = for {
     amount             <- bigDecimalGen
