@@ -26,48 +26,47 @@ object WorkplaceRunningCostsJourneyAnswers {
   implicit val formats: OFormat[WorkplaceRunningCostsJourneyAnswers] = Json.format[WorkplaceRunningCostsJourneyAnswers]
 }
 
-case class WorkplaceRunningCostsAnswers(moreThan25Hours: Boolean,
-                                        monthsWfh25to50Hours: Option[BigDecimal],
-                                        monthsWfh51to100Hours: Option[BigDecimal],
-                                        monthsWfh101orMoreHours: Option[BigDecimal],
-                                        wfhFlatRateOrActual: Boolean,
-                                        wfhClaimAmount: Option[BigDecimal],
-                                        liveAtBusinessPremises: LiveAtBusinessPremises,
+case class WorkplaceRunningCostsAnswers(moreThan25Hours: Option[MoreThan25Hours],
+                                        wfhHours25To50: Option[Int],
+                                        wfhHours51To100: Option[Int],
+                                        wfhHours101Plus: Option[Int],
+                                        wfhFlatRateOrActualCosts: Option[WfhFlatRateOrActualCosts],
+                                        wfhClaimingAmount: Option[BigDecimal],
+                                        liveAtBusinessPremises: Option[LiveAtBusinessPremises],
                                         businessPremisesAmount: Option[BigDecimal],
-                                        disallowableBusinessPremisesAmount: Option[BigDecimal],
-                                        monthsOnePersonAtBP: Option[BigDecimal],
-                                        monthsTwoPeopleAtBP: Option[BigDecimal],
-                                        monthsThreeOrMorePeopleAtBP: Option[BigDecimal],
-                                        businessPremisesFlatRateOrActual: Option[Boolean],
-                                        personalUseAmount: Option[BigDecimal]) {
+                                        businessPremisesDisallowableAmount: Option[BigDecimal],
+                                        livingAtBusinessPremisesOnePerson: Option[Int],
+                                        livingAtBusinessPremisesTwoPeople: Option[Int],
+                                        livingAtBusinessPremisesThreePlusPeople: Option[Int],
+                                        wfbpFlatRateOrActualCosts: Option[WfbpFlatRateOrActualCosts],
+                                        wfbpClaimingAmount: Option[BigDecimal]) {
 
   def toApiSubmissionModel: WorkplaceRunningCostsJourneyAnswers = {
-    val wfhPremisesRunningCosts: BigDecimal = (wfhClaimAmount, personalUseAmount) match {
-      case (Some(wca), Some(pua)) => wca + pua
-      case (Some(wca), None)      => wca
-      case (None, Some(pua))      => pua
-      case (None, None)           => noneFound
+    val wfhPremisesRunningCosts: BigDecimal = (wfhClaimingAmount, wfbpClaimingAmount) match {
+      case (Some(wfh), Some(wfbp)) => wfh + wfbp
+      case (Some(wfh), None)       => wfh
+      case (None, Some(wfbp))      => wfbp
+      case (None, None)            => noneFound
     }
     WorkplaceRunningCostsJourneyAnswers(
       wfhPremisesRunningCosts = wfhPremisesRunningCosts,
-      wfbpPremisesRunningCostsDisallowable = disallowableBusinessPremisesAmount
+      wfbpPremisesRunningCostsDisallowable = businessPremisesDisallowableAmount
     )
   }
 
   def toDbModel: WorkplaceRunningCostsDb =
     WorkplaceRunningCostsDb(
       moreThan25Hours,
-      monthsWfh25to50Hours,
-      monthsWfh51to100Hours,
-      monthsWfh101orMoreHours,
-      wfhFlatRateOrActual,
+      wfhHours25To50,
+      wfhHours51To100,
+      wfhHours101Plus,
+      wfhFlatRateOrActualCosts,
       liveAtBusinessPremises,
       businessPremisesAmount,
-      disallowableBusinessPremisesAmount,
-      monthsOnePersonAtBP,
-      monthsTwoPeopleAtBP,
-      monthsThreeOrMorePeopleAtBP,
-      businessPremisesFlatRateOrActual
+      livingAtBusinessPremisesOnePerson,
+      livingAtBusinessPremisesTwoPeople,
+      livingAtBusinessPremisesThreePlusPeople,
+      wfbpFlatRateOrActualCosts
     )
 }
 

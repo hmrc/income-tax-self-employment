@@ -16,21 +16,20 @@
 
 package models.database.expenses
 
-import models.frontend.expenses.workplaceRunningCosts.LiveAtBusinessPremises
+import models.frontend.expenses.workplaceRunningCosts.{LiveAtBusinessPremises, MoreThan25Hours, WfbpFlatRateOrActualCosts, WfhFlatRateOrActualCosts}
 import play.api.libs.json.{Json, OFormat}
 
-final case class WorkplaceRunningCostsDb(moreThan25Hours: Boolean,
-                                         monthsWfh25to50Hours: Option[BigDecimal],
-                                         monthsWfh51to100Hours: Option[BigDecimal],
-                                         monthsWfh101orMoreHours: Option[BigDecimal],
-                                         wfhFlatRateOrActual: Boolean,
-                                         liveAtBusinessPremises: LiveAtBusinessPremises,
+final case class WorkplaceRunningCostsDb(moreThan25Hours: Option[MoreThan25Hours],
+                                         wfhHours25To50: Option[Int],
+                                         wfhHours51To100: Option[Int],
+                                         wfhHours101Plus: Option[Int],
+                                         wfhFlatRateOrActualCosts: Option[WfhFlatRateOrActualCosts],
+                                         liveAtBusinessPremises: Option[LiveAtBusinessPremises],
                                          businessPremisesAmount: Option[BigDecimal],
-                                         disallowableBusinessPremisesAmount: Option[BigDecimal],
-                                         monthsOnePersonAtBP: Option[BigDecimal],
-                                         monthsTwoPeopleAtBP: Option[BigDecimal],
-                                         monthsThreeOrMorePeopleAtBP: Option[BigDecimal],
-                                         businessPremisesFlatRateOrActual: Option[Boolean])
+                                         livingAtBusinessPremisesOnePerson: Option[Int],
+                                         livingAtBusinessPremisesTwoPeople: Option[Int],
+                                         livingAtBusinessPremisesThreePlusPeople: Option[Int],
+                                         wfbpFlatRateOrActualCosts: Option[WfbpFlatRateOrActualCosts])
 
 object WorkplaceRunningCostsDb {
   implicit val format: OFormat[WorkplaceRunningCostsDb] = Json.format[WorkplaceRunningCostsDb]
