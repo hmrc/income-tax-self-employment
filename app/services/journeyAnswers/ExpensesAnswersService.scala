@@ -19,13 +19,13 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.SelfEmploymentConnector
-import models.common.JourneyName.{ExpensesTailoring, GoodsToSellOrUse}
+import models.common.JourneyName.{ExpensesTailoring, GoodsToSellOrUse, WorkplaceRunningCosts}
 import models.common.TaxYear.{endDate, startDate}
 import models.common._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType}
 import models.connector.{Api1786ExpensesResponseParser, Api1894DeductionsBuilder}
 import models.database.JourneyAnswers
-import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
+import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseAnswers
@@ -33,6 +33,7 @@ import models.frontend.expenses.tailoring
 import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategories, NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
+import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import play.api.libs.json.{Json, Writes}
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -48,6 +49,7 @@ trait ExpensesAnswersService {
   def getAnswers[A: Api1786ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A]
   def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]]
   def getGoodsToSellOrUseAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[GoodsToSellOrUseAnswers]]
+  def getWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WorkplaceRunningCostsAnswers]]
 }
 
 @Singleton
@@ -129,6 +131,27 @@ class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, 
       hc: HeaderCarrier): ApiResultT[Option[GoodsToSellOrUseAnswers]] = {
     val result = connector.getPeriodicSummaryDetail(ctx).map {
       case Right(periodicSummaryDetails) => dbTaxiAnswer.map(taxi => GoodsToSellOrUseAnswers(taxi, periodicSummaryDetails))
+      case Left(_)                       => None
+    }
+    EitherT.liftF(result)
+  }
+
+  def getWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WorkplaceRunningCostsAnswers]] =
+    for {
+      dbAnswers   <- getWorkplaceRunningCostsDbAnswers(ctx)
+      fullAnswers <- getFullWorkplaceRunningCostsAnswers(ctx, dbAnswers)
+    } yield fullAnswers
+
+  private def getWorkplaceRunningCostsDbAnswers(ctx: JourneyContextWithNino): ApiResultT[Option[WorkplaceRunningCostsAnswers]] =
+    for {
+      maybeData <- getDbAnswers(ctx, WorkplaceRunningCosts)
+      dbAnswers <- getPersistedAnswers[WorkplaceRunningCostsAnswers](maybeData)
+    } yield dbAnswers
+
+  private def getFullWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[WorkplaceRunningCostsAnswers])(implicit
+      hc: HeaderCarrier): ApiResultT[Option[WorkplaceRunningCostsAnswers]] = {
+    val result = connector.getPeriodicSummaryDetail(ctx).map {
+      case Right(periodicSummaryDetails) => dbAnswers.map(taxi => WorkplaceRunningCostsAnswers(taxi, periodicSummaryDetails))
       case Left(_)                       => None
     }
     EitherT.liftF(result)

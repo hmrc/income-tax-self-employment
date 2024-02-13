@@ -127,9 +127,13 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     getBodyWithCtx[WorkplaceRunningCostsAnswers](taxYear, businessId, nino) { (ctx, value) =>
       for {
         _ <- expensesService.saveAnswers(ctx, value.toApiSubmissionModel)
-        _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, WorkplaceRunningCosts, value.toDbModel)
+        _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, WorkplaceRunningCosts, value)
       } yield NoContent
     }
+  }
+
+  def getWorkplaceRunningCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(expensesService.getWorkplaceRunningCostsAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def getOfficeSupplies(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>

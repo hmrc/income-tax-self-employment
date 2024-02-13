@@ -17,7 +17,7 @@
 package models.frontend.expenses.workplaceRunningCosts
 
 import models.connector.Api1786ExpensesResponseParser.noneFound
-import models.database.expenses.WorkplaceRunningCostsDb
+import models.connector.api_1786
 import play.api.libs.json.{Json, OFormat}
 
 case class WorkplaceRunningCostsJourneyAnswers(wfhPremisesRunningCosts: BigDecimal, wfbpPremisesRunningCostsDisallowable: Option[BigDecimal])
@@ -54,23 +54,40 @@ case class WorkplaceRunningCostsAnswers(moreThan25Hours: Option[MoreThan25Hours]
     )
   }
 
-  def toDbModel: WorkplaceRunningCostsDb =
-    WorkplaceRunningCostsDb(
-      moreThan25Hours,
-      wfhHours25To50,
-      wfhHours51To100,
-      wfhHours101Plus,
-      wfhFlatRateOrActualCosts,
-      liveAtBusinessPremises,
-      businessPremisesAmount,
-      livingAtBusinessPremisesOnePerson,
-      livingAtBusinessPremisesTwoPeople,
-      livingAtBusinessPremisesThreePlusPeople,
-      wfbpFlatRateOrActualCosts
-    )
+//  def toDbModel: WorkplaceRunningCostsDb =
+//    WorkplaceRunningCostsDb(
+//      moreThan25Hours,
+//      wfhHours25To50,
+//      wfhHours51To100,
+//      wfhHours101Plus,
+//      wfhFlatRateOrActualCosts,
+//      liveAtBusinessPremises,
+//      businessPremisesAmount,
+//      livingAtBusinessPremisesOnePerson,
+//      livingAtBusinessPremisesTwoPeople,
+//      livingAtBusinessPremisesThreePlusPeople,
+//      wfbpFlatRateOrActualCosts
+//    )
 }
 
 object WorkplaceRunningCostsAnswers {
   implicit val formats: OFormat[WorkplaceRunningCostsAnswers] = Json.format[WorkplaceRunningCostsAnswers]
 
+  def apply(dbAnswers: WorkplaceRunningCostsAnswers, periodicSummaryDetails: api_1786.SuccessResponseSchema): WorkplaceRunningCostsAnswers =
+    new WorkplaceRunningCostsAnswers(
+      moreThan25Hours = dbAnswers.moreThan25Hours,
+      wfhHours25To50 = dbAnswers.wfhHours25To50,
+      wfhHours51To100 = dbAnswers.wfhHours51To100,
+      wfhHours101Plus = dbAnswers.wfhHours101Plus,
+      wfhFlatRateOrActualCosts = dbAnswers.wfhFlatRateOrActualCosts,
+      wfhClaimingAmount = periodicSummaryDetails.financials.deductions.flatMap(_.premisesRunningCosts.map(_.amount)),
+      liveAtBusinessPremises = dbAnswers.liveAtBusinessPremises,
+      businessPremisesAmount = dbAnswers.businessPremisesAmount,
+      businessPremisesDisallowableAmount = periodicSummaryDetails.financials.deductions.flatMap(_.premisesRunningCosts.flatMap(_.disallowableAmount)),
+      livingAtBusinessPremisesOnePerson = dbAnswers.livingAtBusinessPremisesOnePerson,
+      livingAtBusinessPremisesTwoPeople = dbAnswers.livingAtBusinessPremisesTwoPeople,
+      livingAtBusinessPremisesThreePlusPeople = dbAnswers.livingAtBusinessPremisesThreePlusPeople,
+      wfbpFlatRateOrActualCosts = dbAnswers.wfbpFlatRateOrActualCosts,
+      wfbpClaimingAmount = periodicSummaryDetails.financials.deductions.flatMap(_.premisesRunningCosts.map(_.amount))
+    )
 }
