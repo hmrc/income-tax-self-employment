@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-import org.scalacheck.Gen
+package models.frontend.expenses.workplaceRunningCosts
 
-import scala.util.{Success, Try}
+import models.common.{Enumerable, WithName}
 
-package object gens {
-  val booleanGen: Gen[Boolean] = Gen.oneOf(true, false)
+sealed trait MoreThan25Hours
 
-  val bigDecimalGen: Gen[BigDecimal] = Gen
-    .chooseNum[BigDecimal](0, 10000)
-    .map(n => n.setScale(2, BigDecimal.RoundingMode.HALF_UP))
+object MoreThan25Hours extends Enumerable.Implicits {
 
-  val intGen: Gen[Int] = Gen.chooseNum[Int](0, 10000)
+  case object Yes extends WithName("yes") with MoreThan25Hours
+  case object No  extends WithName("no") with MoreThan25Hours
 
-  /** gen.sample.get - can fail as generator may return None. Use this method for safely generate one instance of A
-    */
-  def genOne[A](gen: Gen[A]): A =
-    LazyList.continually(Try(gen.sample)).collect { case Success(Some(value)) => value }.head
+  val values: Seq[MoreThan25Hours] = Seq(
+    Yes,
+    No
+  )
+
+  implicit val enumerable: Enumerable[MoreThan25Hours] =
+    Enumerable(values.map(v => v.toString -> v): _*)
+
 }

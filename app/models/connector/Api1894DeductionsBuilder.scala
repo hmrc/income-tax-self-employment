@@ -31,6 +31,7 @@ import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
+import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsJourneyAnswers
 
 trait Api1894DeductionsBuilder[A] {
   def build(answers: A): Deductions
@@ -51,6 +52,14 @@ object Api1894DeductionsBuilder {
       Deductions.empty.copy(
         costOfGoods = Some(
           SelfEmploymentDeductionsDetailPosNegType(Some(answers.goodsToSellOrUseAmount), answers.disallowableGoodsToSellOrUseAmount)
+        )
+      )
+
+  implicit val workplaceRunningCosts: Api1894DeductionsBuilder[WorkplaceRunningCostsJourneyAnswers] =
+    (answers: WorkplaceRunningCostsJourneyAnswers) =>
+      Deductions.empty.copy(
+        premisesRunningCosts = Some(
+          SelfEmploymentDeductionsDetailPosNegType(Some(answers.wfhPremisesRunningCosts), answers.wfbpPremisesRunningCostsDisallowable)
         )
       )
 

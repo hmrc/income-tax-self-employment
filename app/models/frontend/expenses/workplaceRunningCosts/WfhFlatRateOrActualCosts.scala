@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-import org.scalacheck.Gen
+package models.frontend.expenses.workplaceRunningCosts
 
-import scala.util.{Success, Try}
+import models.common.{Enumerable, WithName}
 
-package object gens {
-  val booleanGen: Gen[Boolean] = Gen.oneOf(true, false)
+sealed trait WfhFlatRateOrActualCosts
 
-  val bigDecimalGen: Gen[BigDecimal] = Gen
-    .chooseNum[BigDecimal](0, 10000)
-    .map(n => n.setScale(2, BigDecimal.RoundingMode.HALF_UP))
+object WfhFlatRateOrActualCosts extends Enumerable.Implicits {
 
-  val intGen: Gen[Int] = Gen.chooseNum[Int](0, 10000)
+  case object FlatRate    extends WithName("flatRate") with WfhFlatRateOrActualCosts
+  case object ActualCosts extends WithName("actualCosts") with WfhFlatRateOrActualCosts
 
-  /** gen.sample.get - can fail as generator may return None. Use this method for safely generate one instance of A
-    */
-  def genOne[A](gen: Gen[A]): A =
-    LazyList.continually(Try(gen.sample)).collect { case Success(Some(value)) => value }.head
+  val values: Seq[WfhFlatRateOrActualCosts] = Seq(
+    FlatRate,
+    ActualCosts
+  )
+
+  implicit val enumerable: Enumerable[WfhFlatRateOrActualCosts] =
+    Enumerable(values.map(v => v.toString -> v): _*)
+
 }

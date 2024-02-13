@@ -17,7 +17,7 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
-import models.common.JourneyName.{CapitalAllowancesTailoring, ExpensesTailoring, GoodsToSellOrUse}
+import models.common.JourneyName.{CapitalAllowancesTailoring, ExpensesTailoring, GoodsToSellOrUse, WorkplaceRunningCosts}
 import models.common._
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
@@ -37,6 +37,7 @@ import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCosts
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoring.TotalAmount
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
+import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Format.GenericFormat
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -120,6 +121,15 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def getGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(expensesService.getGoodsToSellOrUseAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  def saveWorkplaceRunningCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBodyWithCtx[WorkplaceRunningCostsAnswers](taxYear, businessId, nino) { (ctx, value) =>
+      for {
+        _ <- expensesService.saveAnswers(ctx, value.toApiSubmissionModel)
+        _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, WorkplaceRunningCosts, value.toDbModel)
+      } yield NoContent
+    }
   }
 
   def getOfficeSupplies(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
