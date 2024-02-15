@@ -24,11 +24,12 @@ import models.common.JourneyName.ExpensesTailoring
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
 import models.database.JourneyAnswers
-import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
+import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
 import models.frontend.expenses.goodsToSellOrUse.TaxiMinicabOrRoadHaulage.Yes
 import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers}
 import models.frontend.expenses.tailoring.ExpensesTailoring.{NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
+import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -156,6 +157,24 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       result shouldBe GoodsToSellOrUseAnswers(Yes, BigDecimal("100.0"), Some(BigDecimal("100.0"))).some.asRight
     }
   }
+
+  "getWorkplaceRunningCostsAnswers" should {
+    "return None when there are no answers" in new Test {
+      override val connector = StubSelfEmploymentConnector()
+      val result             = underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value.futureValue
+      result shouldBe None.asRight
+    }
+
+    "return WorkplaceRunningCostsAnswers when they exist" in new Test {
+      override val connector =
+        StubSelfEmploymentConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
+      override val repo = StubJourneyAnswersRepository(getAnswer = workplaceRunningCostsJourneyAnswers
+        .copy(data = Json.toJson(workplaceRunningCostsDb).as[JsObject])
+        .some)
+      val result = underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value.futureValue
+      result shouldBe WorkplaceRunningCostsAnswers(workplaceRunningCostsDb, api1786DeductionsSuccessResponse).some.asRight
+    }
+  }
 }
 
 object ExpensesAnswersServiceImplSpec {
@@ -180,6 +199,33 @@ object ExpensesAnswersServiceImplSpec {
     Instant.now(),
     Instant.now(),
     Instant.now()
+  )
+  val workplaceRunningCostsJourneyAnswers: JourneyAnswers = JourneyAnswers(
+    mtditid,
+    businessId,
+    currTaxYear,
+    JourneyName.WorkplaceRunningCosts,
+    JourneyStatus.Completed,
+    JsObject.empty,
+    Instant.now(),
+    Instant.now(),
+    Instant.now()
+  )
+  val workplaceRunningCostsDb: WorkplaceRunningCostsDb = WorkplaceRunningCostsDb(
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    false,
+    None,
+    None,
+    None,
+    None,
+    None
   )
 
 }

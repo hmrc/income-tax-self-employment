@@ -142,16 +142,16 @@ class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, 
       fullAnswers <- getFullWorkplaceRunningCostsAnswers(ctx, dbAnswers)
     } yield fullAnswers
 
-  private def getWorkplaceRunningCostsDbAnswers(ctx: JourneyContextWithNino): ApiResultT[Option[WorkplaceRunningCostsAnswers]] =
+  private def getWorkplaceRunningCostsDbAnswers(ctx: JourneyContextWithNino): ApiResultT[Option[WorkplaceRunningCostsDb]] =
     for {
       maybeData <- getDbAnswers(ctx, WorkplaceRunningCosts)
-      dbAnswers <- getPersistedAnswers[WorkplaceRunningCostsAnswers](maybeData)
+      dbAnswers <- getPersistedAnswers[WorkplaceRunningCostsDb](maybeData)
     } yield dbAnswers
 
-  private def getFullWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[WorkplaceRunningCostsAnswers])(implicit
+  private def getFullWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[WorkplaceRunningCostsDb])(implicit
       hc: HeaderCarrier): ApiResultT[Option[WorkplaceRunningCostsAnswers]] = {
     val result = connector.getPeriodicSummaryDetail(ctx).map {
-      case Right(periodicSummaryDetails) => dbAnswers.map(taxi => WorkplaceRunningCostsAnswers(taxi, periodicSummaryDetails))
+      case Right(periodicSummaryDetails) => dbAnswers.map(answers => WorkplaceRunningCostsAnswers(answers, periodicSummaryDetails))
       case Left(_)                       => None
     }
     EitherT.liftF(result)

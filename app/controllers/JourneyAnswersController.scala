@@ -127,7 +127,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     getBodyWithCtx[WorkplaceRunningCostsAnswers](taxYear, businessId, nino) { (ctx, value) =>
       for {
         _ <- expensesService.saveAnswers(ctx, value.toApiSubmissionModel)
-        _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, WorkplaceRunningCosts, value)
+        _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, WorkplaceRunningCosts, value.toDbModel)
       } yield NoContent
     }
   }

@@ -25,6 +25,7 @@ POST        /:taxYear/:businessId/expenses-goods-to-sell-or-use/:nino/answers   
 GET         /:taxYear/:businessId/expenses-goods-to-sell-or-use/:nino/answers           controllers.JourneyAnswersController.getGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/:businessId/expenses-workplace-running-costs/:nino/answers        controllers.JourneyAnswersController.saveWorkplaceRunningCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+GET         /:taxYear/:businessId/expenses-workplace-running-costs/:nino/answers        controllers.JourneyAnswersController.getWorkplaceRunningCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/:businessId/expenses-repairs-and-maintenance/:nino/answers        controllers.JourneyAnswersController.saveRepairsAndMaintenanceCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/expenses-repairs-and-maintenance/:nino/answers        controllers.JourneyAnswersController.getRepairsAndMaintenanceCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

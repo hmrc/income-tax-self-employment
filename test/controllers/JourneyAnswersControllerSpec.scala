@@ -43,6 +43,7 @@ import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
+import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import org.scalamock.handlers.{CallHandler2, CallHandler3}
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
@@ -235,6 +236,26 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "WorkplaceRunningCosts" should {
+    s"Get return $NO_CONTENT if there is no answers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.getWorkplaceRunningCosts(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Get answers and return a $OK when successful" in new GetExpensesTest[WorkplaceRunningCostsAnswers] {
+      override val journeyAnswers: WorkplaceRunningCostsAnswers = genOne(workplaceRunningCostsAnswersGen)
+      mockWorkplaceRunningCostsExpensesService(journeyAnswers)
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.stringify(Json.toJson(journeyAnswers)),
+        methodBlock = () => controller.getWorkplaceRunningCosts(currTaxYear, businessId, nino)
+      )
+    }
 
     s"Save return a $NO_CONTENT when successful" in forAll(workplaceRunningCostsAnswersGen) { data =>
       behave like testRoute(
@@ -562,6 +583,13 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         answers: GoodsToSellOrUseAnswers): CallHandler2[JourneyContextWithNino, HeaderCarrier, ApiResultT[Option[GoodsToSellOrUseAnswers]]] =
       (expensesService
         .getGoodsToSellOrUseAnswers(_: JourneyContextWithNino)(_: HeaderCarrier))
+        .expects(*, *)
+        .returns(EitherT.right[ServiceError](Future.successful(Some(answers))))
+
+    def mockWorkplaceRunningCostsExpensesService(answers: WorkplaceRunningCostsAnswers)
+        : CallHandler2[JourneyContextWithNino, HeaderCarrier, ApiResultT[Option[WorkplaceRunningCostsAnswers]]] =
+      (expensesService
+        .getWorkplaceRunningCostsAnswers(_: JourneyContextWithNino)(_: HeaderCarrier))
         .expects(*, *)
         .returns(EitherT.right[ServiceError](Future.successful(Some(answers))))
   }
