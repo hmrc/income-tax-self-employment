@@ -23,6 +23,7 @@ import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
+import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import play.api.libs.json.Writes
 import services.journeyAnswers.ExpensesAnswersService
 import stubs.serviceUnitT
@@ -35,7 +36,8 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
                                       expensesSaveAnswersRes: ApiResultT[Unit] = serviceUnitT,
                                       expensesGetAnswersRes: ApiResultT[AnyRef] = EitherT.right[ServiceError](Future.successful("unused")),
                                       getTailoringJourneyAnswers: Option[ExpensesTailoringAnswers] = None,
-                                      getGoodsToSellOrUseAnswers: Option[GoodsToSellOrUseAnswers] = None)
+                                      getGoodsToSellOrUseAnswers: Option[GoodsToSellOrUseAnswers] = None,
+                                      getWorkplaceRunningCostsAnswers: Option[WorkplaceRunningCostsAnswers] = None)
     extends ExpensesAnswersService {
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
@@ -53,4 +55,7 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
 
   def getGoodsToSellOrUseAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[GoodsToSellOrUseAnswers]] =
     EitherT.rightT[Future, ServiceError](getGoodsToSellOrUseAnswers)
+
+  def getWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WorkplaceRunningCostsAnswers]] =
+    EitherT.rightT[Future, ServiceError](getWorkplaceRunningCostsAnswers)
 }

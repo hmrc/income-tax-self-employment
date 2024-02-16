@@ -93,8 +93,11 @@ object StubSelfEmploymentConnector {
       currTaxYearEnd,
       api_1786.FinancialsType(
         Some(
-          DeductionsType.empty.copy(costOfGoods =
-            Some(SelfEmploymentDeductionsDetailTypePosNeg(amount = BigDecimal(100.00), disallowableAmount = BigDecimal(100.00).some)))),
+          DeductionsType.empty.copy(
+            costOfGoods = Some(SelfEmploymentDeductionsDetailTypePosNeg(amount = BigDecimal(100.00), disallowableAmount = BigDecimal(100.00).some)),
+            premisesRunningCosts =
+              Some(SelfEmploymentDeductionsDetailTypePosNeg(amount = BigDecimal(100.00), disallowableAmount = BigDecimal(100.00).some))
+          )),
         None
       )
     )

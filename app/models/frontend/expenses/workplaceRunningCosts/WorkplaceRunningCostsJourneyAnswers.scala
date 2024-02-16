@@ -16,7 +16,7 @@
 
 package models.frontend.expenses.workplaceRunningCosts
 
-import models.connector.Api1786ExpensesResponseParser.noneFound
+import models.connector.api_1786
 import models.database.expenses.WorkplaceRunningCostsDb
 import play.api.libs.json.{Json, OFormat}
 
@@ -42,12 +42,7 @@ case class WorkplaceRunningCostsAnswers(moreThan25Hours: Option[MoreThan25Hours]
                                         wfbpClaimingAmount: Option[BigDecimal]) {
 
   def toApiSubmissionModel: WorkplaceRunningCostsJourneyAnswers = {
-    val wfhPremisesRunningCosts: BigDecimal = (wfhClaimingAmount, wfbpClaimingAmount) match {
-      case (Some(wfh), Some(wfbp)) => wfh + wfbp
-      case (Some(wfh), None)       => wfh
-      case (None, Some(wfbp))      => wfbp
-      case (None, None)            => noneFound
-    }
+    val wfhPremisesRunningCosts: BigDecimal = Seq(wfhClaimingAmount, businessPremisesAmount, wfbpClaimingAmount).flatten.sum
     WorkplaceRunningCostsJourneyAnswers(
       wfhPremisesRunningCosts = wfhPremisesRunningCosts,
       wfbpPremisesRunningCostsDisallowable = businessPremisesDisallowableAmount
@@ -61,16 +56,40 @@ case class WorkplaceRunningCostsAnswers(moreThan25Hours: Option[MoreThan25Hours]
       wfhHours51To100,
       wfhHours101Plus,
       wfhFlatRateOrActualCosts,
+      wfhClaimingAmount,
       liveAtBusinessPremises,
       businessPremisesAmount,
+      businessPremisesDisallowableAmount.isDefined,
       livingAtBusinessPremisesOnePerson,
       livingAtBusinessPremisesTwoPeople,
       livingAtBusinessPremisesThreePlusPeople,
-      wfbpFlatRateOrActualCosts
+      wfbpFlatRateOrActualCosts,
+      wfbpClaimingAmount
     )
 }
 
 object WorkplaceRunningCostsAnswers {
   implicit val formats: OFormat[WorkplaceRunningCostsAnswers] = Json.format[WorkplaceRunningCostsAnswers]
 
+  def apply(dbAnswers: WorkplaceRunningCostsDb, periodicSummaryDetails: api_1786.SuccessResponseSchema): WorkplaceRunningCostsAnswers =
+    new WorkplaceRunningCostsAnswers(
+      moreThan25Hours = dbAnswers.moreThan25Hours,
+      wfhHours25To50 = dbAnswers.wfhHours25To50,
+      wfhHours51To100 = dbAnswers.wfhHours51To100,
+      wfhHours101Plus = dbAnswers.wfhHours101Plus,
+      wfhFlatRateOrActualCosts = dbAnswers.wfhFlatRateOrActualCosts,
+      wfhClaimingAmount = dbAnswers.wfhClaimingAmount,
+      liveAtBusinessPremises = dbAnswers.liveAtBusinessPremises,
+      businessPremisesAmount = dbAnswers.businessPremisesAmount,
+      businessPremisesDisallowableAmount = if (dbAnswers.wfbpExpensesAreDisallowable) {
+        periodicSummaryDetails.financials.deductions.flatMap(_.premisesRunningCosts.flatMap(_.disallowableAmount))
+      } else {
+        None
+      },
+      livingAtBusinessPremisesOnePerson = dbAnswers.livingAtBusinessPremisesOnePerson,
+      livingAtBusinessPremisesTwoPeople = dbAnswers.livingAtBusinessPremisesTwoPeople,
+      livingAtBusinessPremisesThreePlusPeople = dbAnswers.livingAtBusinessPremisesThreePlusPeople,
+      wfbpFlatRateOrActualCosts = dbAnswers.wfbpFlatRateOrActualCosts,
+      wfbpClaimingAmount = dbAnswers.wfbpClaimingAmount
+    )
 }

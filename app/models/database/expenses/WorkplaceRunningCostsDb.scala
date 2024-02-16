@@ -24,12 +24,15 @@ final case class WorkplaceRunningCostsDb(moreThan25Hours: Option[MoreThan25Hours
                                          wfhHours51To100: Option[Int],
                                          wfhHours101Plus: Option[Int],
                                          wfhFlatRateOrActualCosts: Option[WfhFlatRateOrActualCosts],
+                                         wfhClaimingAmount: Option[BigDecimal],
                                          liveAtBusinessPremises: Option[LiveAtBusinessPremises],
                                          businessPremisesAmount: Option[BigDecimal],
+                                         wfbpExpensesAreDisallowable: Boolean,
                                          livingAtBusinessPremisesOnePerson: Option[Int],
                                          livingAtBusinessPremisesTwoPeople: Option[Int],
                                          livingAtBusinessPremisesThreePlusPeople: Option[Int],
-                                         wfbpFlatRateOrActualCosts: Option[WfbpFlatRateOrActualCosts])
+                                         wfbpFlatRateOrActualCosts: Option[WfbpFlatRateOrActualCosts],
+                                         wfbpClaimingAmount: Option[BigDecimal])
 
 object WorkplaceRunningCostsDb {
   implicit val format: OFormat[WorkplaceRunningCostsDb] = Json.format[WorkplaceRunningCostsDb]
