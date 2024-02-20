@@ -26,15 +26,13 @@ object ZeroEmissionCarsJourneyAnswers {
 }
 
 case class ZeroEmissionCarsAnswers(zeroEmissionCarsUsedForWork: Boolean,
-                                   zeroEmissionCarsAllowance: ZeroEmissionCarsAllowance,
-                                   zeroEmissionCarsTotalCostOfCar: BigDecimal,
-                                   zeroEmissionCarsOnlyForSelfEmployment: ZecOnlyForSelfEmployment,
-                                   zeroEmissionCarsUsedOutsideSE: ZecUseOutsideSE,
-                                   zeroEmissionCarsUsedOutsideSEPercentage: Int,
-                                   zecHowMuchDoYouWantToClaim: ZecHowMuchDoYouWantToClaim,
-                                   zeroEmissionCarsClaimAmount: BigDecimal) {
-
-  def toApiSubmissionModel: ZeroEmissionCarsJourneyAnswers = ZeroEmissionCarsJourneyAnswers(zeroEmissionsCarAllowance = zeroEmissionCarsClaimAmount)
+                                   zeroEmissionCarsAllowance: Option[ZeroEmissionCarsAllowance],
+                                   zeroEmissionCarsTotalCostOfCar: Option[BigDecimal],
+                                   zeroEmissionCarsOnlyForSelfEmployment: Option[ZecOnlyForSelfEmployment],
+                                   zeroEmissionCarsUsedOutsideSE: Option[ZecUseOutsideSE],
+                                   zeroEmissionCarsUsedOutsideSEPercentage: Option[Int],
+                                   zecHowMuchDoYouWantToClaim: Option[ZecHowMuchDoYouWantToClaim],
+                                   zeroEmissionCarsClaimAmount: Option[BigDecimal]) {
 
   def toDbModel: ZeroEmissionCarsDb = ZeroEmissionCarsDb(
     zeroEmissionCarsUsedForWork,
