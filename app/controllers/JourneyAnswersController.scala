@@ -273,7 +273,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveZeroEmissionCars(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[ZeroEmissionCarsAnswers](taxYear, businessId, nino) { (ctx, value) =>
       for {
-        _ <- capitalAllowancesService.saveZecAnswers(ctx, value.toApiSubmissionModel)
+        _ <- capitalAllowancesService.saveAnswers(ctx, value.toApiSubmissionModel)
         _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, CapitalAllowancesZeroEmissionCars, value.toDbModel)
       } yield NoContent
     }

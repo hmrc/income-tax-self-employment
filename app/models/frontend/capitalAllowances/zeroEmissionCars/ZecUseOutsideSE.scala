@@ -17,9 +17,6 @@
 package models.frontend.capitalAllowances.zeroEmissionCars
 
 import models.common.{Enumerable, WithName}
-import play.api.i18n.Messages
-import uk.gov.hmrc.govukfrontend.views.Aliases.Text
-import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
 
 sealed trait ZecUseOutsideSE
 object ZecUseOutsideSE extends Enumerable.Implicits {

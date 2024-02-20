@@ -16,10 +16,7 @@
 
 package models.frontend.capitalAllowances.zeroEmissionCars
 
-import models.common.{Enumerable, UserType, WithName}
-import play.api.i18n.Messages
-import uk.gov.hmrc.govukfrontend.views.Aliases.Text
-import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
+import models.common.{Enumerable, WithName}
 
 sealed trait ZecOnlyForSelfEmployment
 object ZecOnlyForSelfEmployment extends Enumerable.Implicits {
