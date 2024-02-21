@@ -18,6 +18,7 @@ package stubs.services
 
 import cats.data.EitherT
 import models.common._
+import models.connector.Api1802AnnualAllowancesBuilder
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
@@ -28,15 +29,19 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class StubCapitalAllowancesAnswersAnswersService(getCapitalAllowancesTailoring: Either[ServiceError, Option[CapitalAllowancesTailoringAnswers]] =
-                                                        Right(None),
-                                                      persistCapitalAllowancesTailoring: ApiResultT[Unit] = serviceUnitT)
+case class StubCapitalAllowancesAnswersAnswersService(saveAnswers: ApiResultT[Unit] = serviceUnitT,
+                                                      persistCapitalAllowancesTailoring: ApiResultT[Unit] = serviceUnitT,
+                                                      getCapitalAllowancesTailoring: Either[ServiceError, Option[CapitalAllowancesTailoringAnswers]] =
+                                                        Right(None))
     extends CapitalAllowancesAnswersService {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]] =
-    EitherT.fromEither[Future](getCapitalAllowancesTailoring)
+  def saveAnswers[A: Api1802AnnualAllowancesBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    persistCapitalAllowancesTailoring
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
       writes: Writes[A]): ApiResultT[Unit] = persistCapitalAllowancesTailoring
+
+  def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]] =
+    EitherT.fromEither[Future](getCapitalAllowancesTailoring)
 }

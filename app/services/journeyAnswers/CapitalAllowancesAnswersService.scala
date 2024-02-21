@@ -16,9 +16,14 @@
 
 package services.journeyAnswers
 
+import cats.data.EitherT
+import connectors.SelfEmploymentConnector
 import models.common.JourneyName.CapitalAllowancesTailoring
 import models.common._
+import models.connector.Api1802AnnualAllowancesBuilder
+import models.connector.api_1802.request.{AnnualAllowances, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.domain.ApiResultT
+import models.error.ServiceError
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import play.api.libs.json.{Json, Writes}
 import repositories.JourneyAnswersRepository
@@ -28,22 +33,37 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 trait CapitalAllowancesAnswersService {
-  def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]]
+  def saveAnswers[A: Api1802AnnualAllowancesBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
       writes: Writes[A]): ApiResultT[Unit]
+  def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]]
 }
 
 @Singleton
-class CapitalAllowancesAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
+class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, repository: JourneyAnswersRepository)(implicit
+    ec: ExecutionContext)
     extends CapitalAllowancesAnswersService {
+
+  def saveAnswers[A: Api1802AnnualAllowancesBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] = {
+
+    val updatedAnnualAllowances = AnnualAllowances.fromFrontendModel(answers)
+    val upsertBody              = CreateAmendSEAnnualSubmissionRequestBody(None, Some(updatedAnnualAllowances), None)
+    val requestData             = CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, upsertBody)
+
+    val result = connector.createAmendSEAnnualSubmission(requestData).map(_ => ())
+
+    EitherT.right[ServiceError](result)
+  }
+
+  def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
+      writes: Writes[A]): ApiResultT[Unit] =
+    repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, journey), Json.toJson(answers))
+
   def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]] =
     for {
       maybeDbAnswers           <- repository.get(ctx.toJourneyContext(CapitalAllowancesTailoring))
       existingTailoringAnswers <- getPersistedAnswers[CapitalAllowancesTailoringAnswers](maybeDbAnswers)
     } yield existingTailoringAnswers
-
-  def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
-      writes: Writes[A]): ApiResultT[Unit] =
-    repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, journey), Json.toJson(answers))
 
 }

@@ -19,7 +19,7 @@ package controllers
 import cats.data.EitherT
 import cats.implicits._
 import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
-import gens.CapitalAllowancesTailoringAnswersGen.capitalAllowancesTailoringAnswersGen
+import gens.CapitalAllowancesTailoringAnswersGen.{capitalAllowancesTailoringAnswersGen, zeroEmissionCarsAnswersGen}
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
@@ -547,7 +547,34 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
-  "CapitalAllowances" should {
+  "CapitalAllowancesTailoring" should {
+    s"Get return $NO_CONTENT if there is no answers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.getCapitalAllowancesTailoring(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Get return answers" in {
+      val answers = genOne(capitalAllowancesTailoringAnswersGen)
+      val underTest = new JourneyAnswersController(
+        auth = mockAuthorisedAction,
+        cc = stubControllerComponents,
+        abroadAnswersService = StubAbroadAnswersService(),
+        incomeService = StubIncomeAnswersService(),
+        expensesService = StubExpensesAnswersService(),
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getCapitalAllowancesTailoring = Some(answers).asRight)
+      )
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.toJson(answers).toString(),
+        methodBlock = () => underTest.getCapitalAllowancesTailoring(currTaxYear, businessId, nino)
+      )
+    }
     s"Save answers and return a $NO_CONTENT when successful" in {
       forAll(capitalAllowancesTailoringAnswersGen) { data =>
         behave like testRoute(
@@ -555,6 +582,19 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
           expectedStatus = NO_CONTENT,
           expectedBody = "",
           methodBlock = () => underTest.saveCapitalAllowancesTailoring(currTaxYear, businessId)
+        )
+      }
+    }
+  }
+
+  "ZeroEmissionCars" should {
+    s"Save answers and return a $NO_CONTENT when successful" in {
+      forAll(zeroEmissionCarsAnswersGen) { data =>
+        behave like testRoute(
+          request = buildRequest(data),
+          expectedStatus = NO_CONTENT,
+          expectedBody = "",
+          methodBlock = () => underTest.saveZeroEmissionCars(currTaxYear, businessId, nino)
         )
       }
     }
