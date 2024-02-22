@@ -16,6 +16,7 @@
 
 package models.frontend.capitalAllowances.zeroEmissionCars
 
+import models.connector.api_1803
 import models.database.capitalAllowances.ZeroEmissionCarsDb
 import play.api.libs.json.{Format, Json, OFormat}
 
@@ -47,4 +48,16 @@ case class ZeroEmissionCarsAnswers(zeroEmissionCarsUsedForWork: Boolean,
 
 object ZeroEmissionCarsAnswers {
   implicit val formats: Format[ZeroEmissionCarsAnswers] = Json.format[ZeroEmissionCarsAnswers]
+
+  def apply(dbAnswers: ZeroEmissionCarsDb, annualSummaries: api_1803.SuccessResponseSchema): ZeroEmissionCarsAnswers =
+    new ZeroEmissionCarsAnswers(
+      zeroEmissionCarsUsedForWork = dbAnswers.zeroEmissionCarsUsedForWork,
+      zeroEmissionCarsAllowance = dbAnswers.zeroEmissionCarsAllowance,
+      zeroEmissionCarsTotalCostOfCar = dbAnswers.zeroEmissionCarsTotalCostOfCar,
+      zeroEmissionCarsOnlyForSelfEmployment = dbAnswers.zeroEmissionCarsOnlyForSelfEmployment,
+      zeroEmissionCarsUsedOutsideSE = dbAnswers.zeroEmissionCarsUsedOutsideSE,
+      zeroEmissionCarsUsedOutsideSEPercentage = dbAnswers.zeroEmissionCarsUsedOutsideSEPercentage,
+      zecHowMuchDoYouWantToClaim = dbAnswers.zecHowMuchDoYouWantToClaim,
+      zeroEmissionCarsClaimAmount = annualSummaries.annualAllowances.flatMap(_.zeroEmissionsCarAllowance)
+    )
 }

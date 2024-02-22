@@ -275,9 +275,12 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
       value.zeroEmissionCarsClaimAmount map (claimAmount =>
         capitalAllowancesService.saveAnswers(ctx, ZeroEmissionCarsJourneyAnswers(zeroEmissionsCarAllowance = claimAmount)))
       for {
-        _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, CapitalAllowancesZeroEmissionCars, value.toDbModel)
+        _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, ZeroEmissionCars, value.toDbModel)
       } yield NoContent
     }
+  }
+  def getZeroEmissionCars(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(capitalAllowancesService.getZeroEmissionCars(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
 }
