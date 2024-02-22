@@ -19,12 +19,12 @@ package models.database.capitalAllowances
 import models.frontend.capitalAllowances.zeroEmissionCars._
 import play.api.libs.json.{Json, OFormat}
 
-final case class ZeroEmissionCarsDb(zeroEmissionCarsUsedForWork: Boolean,
-                                    zeroEmissionCarsAllowance: Option[ZeroEmissionCarsAllowance],
-                                    zeroEmissionCarsTotalCostOfCar: Option[BigDecimal],
-                                    zeroEmissionCarsOnlyForSelfEmployment: Option[ZecOnlyForSelfEmployment],
-                                    zeroEmissionCarsUsedOutsideSE: Option[ZecUseOutsideSE],
-                                    zeroEmissionCarsUsedOutsideSEPercentage: Option[Int],
+final case class ZeroEmissionCarsDb(zeroEmissionCars: Boolean,
+                                    zecAllowance: Option[ZeroEmissionCarsAllowance],
+                                    zecTotalCostOfCar: Option[BigDecimal],
+                                    zecOnlyForSelfEmployment: Option[ZecOnlyForSelfEmployment],
+                                    zecUsedOutsideSE: Option[ZecUseOutsideSE],
+                                    zecUsedOutsideSEPercentage: Option[Int],
                                     zecHowMuchDoYouWantToClaim: Option[ZecHowMuchDoYouWantToClaim])
 
 object ZeroEmissionCarsDb {

@@ -88,7 +88,9 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
   private def getFullZeroEmissionCarsAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[ZeroEmissionCarsDb])(implicit
       hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]] = {
     val result = connector.getAnnualSummaries(ctx).map {
-      case Right(annualSummaries) => dbAnswers.map(answers => ZeroEmissionCarsAnswers(answers, annualSummaries))
+      case Right(annualSummaries) =>
+        println("--- ann " + annualSummaries)
+        dbAnswers.map(answers => ZeroEmissionCarsAnswers(answers, annualSummaries))
       case Left(_)                => None
     }
     EitherT.liftF(result)
