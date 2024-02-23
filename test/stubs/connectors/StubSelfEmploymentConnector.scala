@@ -23,12 +23,13 @@ import models.common.{IdType, JourneyContextWithNino}
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
+import models.connector.api_1803.{AnnualAllowancesType, SuccessResponseSchema}
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1895.response.AmendSEPeriodSummaryResponse
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
-import models.connector.{api_1171, api_1786, api_1803}
+import models.connector.{api_1171, api_1786}
 import stubs.connectors.StubSelfEmploymentConnector._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
@@ -41,6 +42,7 @@ case class StubSelfEmploymentConnector(
     createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(api1894SuccessResponse.asRight),
     amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(api1895SuccessResponse.asRight),
     createAmendSEAnnualSubmissionResult: Future[Api1802Response] = Future.successful(api1802SuccessResponse.asRight),
+    getAnnualSummaries: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight),
     listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
     getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight),
     getAnnualSummariesResult: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight)
@@ -73,13 +75,23 @@ case class StubSelfEmploymentConnector(
 
 object StubSelfEmploymentConnector {
   val api1171EmptyResponse: api_1171.SuccessResponseSchema =
-    api_1171.SuccessResponseSchema(OffsetDateTime.now().toString, api_1171.ResponseType("safeId", "nino", "mtdid", None, false, None))
+    api_1171.SuccessResponseSchema(
+      OffsetDateTime.now().toString,
+      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, None))
 
   val api1894SuccessResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("id")
 
   val api1895SuccessResponse: AmendSEPeriodSummaryResponse = AmendSEPeriodSummaryResponse("id")
 
   val api1802SuccessResponse: CreateAmendSEAnnualSubmissionResponse = CreateAmendSEAnnualSubmissionResponse("id")
+
+  val api1803SuccessResponse: SuccessResponseSchema = SuccessResponseSchema(
+    None,
+    Some(
+      AnnualAllowancesType.emptyAnnualAllowancesType.copy(
+        zeroEmissionsCarAllowance = Some(5000.00)
+      )),
+    None)
 
   val api1965MatchedResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(
     Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None))))
@@ -101,8 +113,6 @@ object StubSelfEmploymentConnector {
         None
       )
     )
-
-  val api1803SuccessResponse: api_1803.SuccessResponseSchema = api_1803.SuccessResponseSchema(None, None, None)
 
   val api1965EmptyResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(Some(List.empty))
 }

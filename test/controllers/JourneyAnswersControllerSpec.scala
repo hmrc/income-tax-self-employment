@@ -19,7 +19,7 @@ package controllers
 import cats.data.EitherT
 import cats.implicits._
 import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
-import gens.CapitalAllowancesTailoringAnswersGen.{capitalAllowancesTailoringAnswersGen, zeroEmissionCarsAnswersGen}
+import gens.CapitalAllowancesAnswersGen.{capitalAllowancesTailoringAnswersGen, zeroEmissionCarsAnswersGen}
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
@@ -588,6 +588,34 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "ZeroEmissionCars" should {
+    s"Get return $NO_CONTENT if there is no answers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.getZeroEmissionCars(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Get return answers" in {
+      val answers = genOne(zeroEmissionCarsAnswersGen)
+      val underTest = new JourneyAnswersController(
+        auth = mockAuthorisedAction,
+        cc = stubControllerComponents,
+        abroadAnswersService = StubAbroadAnswersService(),
+        incomeService = StubIncomeAnswersService(),
+        expensesService = StubExpensesAnswersService(),
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getZeroEmissionCars = Some(answers).asRight)
+      )
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.toJson(answers).toString(),
+        methodBlock = () => underTest.getZeroEmissionCars(currTaxYear, businessId, nino)
+      )
+    }
+
     s"Save answers and return a $NO_CONTENT when successful" in {
       forAll(zeroEmissionCarsAnswersGen) { data =>
         behave like testRoute(
