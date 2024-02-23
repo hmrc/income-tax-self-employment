@@ -17,19 +17,19 @@
 package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
-import gens.CapitalAllowancesTailoringAnswersGen.capitalAllowancesTailoringAnswersGen
+import gens.CapitalAllowancesAnswersGen.{capitalAllowancesTailoringAnswersGen, zeroEmissionCarsDbAnswersGen}
 import gens.{bigDecimalGen, genOne}
 import models.common.JourneyName.CapitalAllowancesTailoring
 import models.common.{JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import models.frontend.capitalAllowances.CapitalAllowances.{ZeroEmissionCar, ZeroEmissionGoodsVehicle}
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
-import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsJourneyAnswers
+import models.frontend.capitalAllowances.zeroEmissionCars.{ZeroEmissionCarsAnswers, ZeroEmissionCarsJourneyAnswers}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
 import stubs.connectors.StubSelfEmploymentConnector
-import stubs.connectors.StubSelfEmploymentConnector.api1802SuccessResponse
+import stubs.connectors.StubSelfEmploymentConnector.{api1802SuccessResponse, api1803SuccessResponse}
 import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec._
 import utils.EitherTTestOps._
@@ -39,7 +39,10 @@ import scala.concurrent.Future
 
 class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
   val connector: StubSelfEmploymentConnector =
-    StubSelfEmploymentConnector(createAmendSEAnnualSubmissionResult = Future.successful(api1802SuccessResponse.asRight))
+    StubSelfEmploymentConnector(
+      createAmendSEAnnualSubmissionResult = Future.successful(api1802SuccessResponse.asRight),
+      getAnnualSummaries = Future.successful(api1803SuccessResponse.asRight)
+    )
   val service = new CapitalAllowancesAnswersServiceImpl(connector, StubJourneyAnswersRepository())
 
   "saveAnswers" should {
@@ -77,6 +80,28 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
         ))
       val result = service.getCapitalAllowancesTailoring(journeyCtxWithNino).rightValue
       assert(result === Some(tailoringAnswers))
+    }
+  }
+
+  "getZeroEmissionCars" should {
+    "return empty if no answers" in {
+      val result = service.getZeroEmissionCars(journeyCtxWithNino).rightValue
+      assert(result === None)
+    }
+
+    "return answers if they exist" in {
+      val dbAnswers = genOne(zeroEmissionCarsDbAnswersGen)
+      val journeyAnswers: JourneyAnswers =
+        mkJourneyAnswers(JourneyName.ZeroEmissionCars, JourneyStatus.Completed, Json.toJsObject(dbAnswers))
+      val services = new CapitalAllowancesAnswersServiceImpl(
+        connector,
+        StubJourneyAnswersRepository(
+          getAnswer = Some(journeyAnswers)
+        ))
+      val result          = services.getZeroEmissionCars(journeyCtxWithNino).rightValue
+      val expectedAnswers = ZeroEmissionCarsAnswers(dbAnswers, api1803SuccessResponse)
+
+      result shouldBe Some(expectedAnswers)
     }
   }
 }

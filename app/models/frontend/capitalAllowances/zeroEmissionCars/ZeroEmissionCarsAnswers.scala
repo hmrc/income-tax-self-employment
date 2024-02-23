@@ -16,8 +16,9 @@
 
 package models.frontend.capitalAllowances.zeroEmissionCars
 
+import models.connector.api_1803
 import models.database.capitalAllowances.ZeroEmissionCarsDb
-import play.api.libs.json.{Format, Json, OFormat}
+import play.api.libs.json.{Json, OFormat}
 
 case class ZeroEmissionCarsJourneyAnswers(zeroEmissionsCarAllowance: BigDecimal)
 
@@ -25,26 +26,38 @@ object ZeroEmissionCarsJourneyAnswers {
   implicit val formats: OFormat[ZeroEmissionCarsJourneyAnswers] = Json.format[ZeroEmissionCarsJourneyAnswers]
 }
 
-case class ZeroEmissionCarsAnswers(zeroEmissionCarsUsedForWork: Boolean,
-                                   zeroEmissionCarsAllowance: Option[ZeroEmissionCarsAllowance],
-                                   zeroEmissionCarsTotalCostOfCar: Option[BigDecimal],
-                                   zeroEmissionCarsOnlyForSelfEmployment: Option[ZecOnlyForSelfEmployment],
-                                   zeroEmissionCarsUsedOutsideSE: Option[ZecUseOutsideSE],
-                                   zeroEmissionCarsUsedOutsideSEPercentage: Option[Int],
+case class ZeroEmissionCarsAnswers(zeroEmissionCars: Boolean,
+                                   zecAllowance: Option[ZeroEmissionCarsAllowance],
+                                   zecTotalCostOfCar: Option[BigDecimal],
+                                   zecOnlyForSelfEmployment: Option[ZecOnlyForSelfEmployment],
+                                   zecUsedOutsideSE: Option[ZecUseOutsideSE],
+                                   zecUsedOutsideSEPercentage: Option[Int],
                                    zecHowMuchDoYouWantToClaim: Option[ZecHowMuchDoYouWantToClaim],
-                                   zeroEmissionCarsClaimAmount: Option[BigDecimal]) {
+                                   zecClaimAmount: Option[BigDecimal]) {
 
   def toDbModel: ZeroEmissionCarsDb = ZeroEmissionCarsDb(
-    zeroEmissionCarsUsedForWork,
-    zeroEmissionCarsAllowance,
-    zeroEmissionCarsTotalCostOfCar,
-    zeroEmissionCarsOnlyForSelfEmployment,
-    zeroEmissionCarsUsedOutsideSE,
-    zeroEmissionCarsUsedOutsideSEPercentage,
+    zeroEmissionCars,
+    zecAllowance,
+    zecTotalCostOfCar,
+    zecOnlyForSelfEmployment,
+    zecUsedOutsideSE,
+    zecUsedOutsideSEPercentage,
     zecHowMuchDoYouWantToClaim
   )
 }
 
 object ZeroEmissionCarsAnswers {
-  implicit val formats: Format[ZeroEmissionCarsAnswers] = Json.format[ZeroEmissionCarsAnswers]
+  implicit val formats: OFormat[ZeroEmissionCarsAnswers] = Json.format[ZeroEmissionCarsAnswers]
+
+  def apply(dbAnswers: ZeroEmissionCarsDb, annualSummaries: api_1803.SuccessResponseSchema): ZeroEmissionCarsAnswers =
+    new ZeroEmissionCarsAnswers(
+      zeroEmissionCars = dbAnswers.zeroEmissionCars,
+      zecAllowance = dbAnswers.zecAllowance,
+      zecTotalCostOfCar = dbAnswers.zecTotalCostOfCar,
+      zecOnlyForSelfEmployment = dbAnswers.zecOnlyForSelfEmployment,
+      zecUsedOutsideSE = dbAnswers.zecUsedOutsideSE,
+      zecUsedOutsideSEPercentage = dbAnswers.zecUsedOutsideSEPercentage,
+      zecHowMuchDoYouWantToClaim = dbAnswers.zecHowMuchDoYouWantToClaim,
+      zecClaimAmount = annualSummaries.annualAllowances.flatMap(_.zeroEmissionsCarAllowance)
+    )
 }

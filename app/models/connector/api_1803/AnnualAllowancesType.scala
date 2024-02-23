@@ -42,4 +42,20 @@ case class AnnualAllowancesType(
 
 object AnnualAllowancesType {
   implicit lazy val annualAllowancesTypeJsonFormat: Format[AnnualAllowancesType] = Json.format[AnnualAllowancesType]
+
+  val emptyAnnualAllowancesType: AnnualAllowancesType = AnnualAllowancesType(
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None
+  )
 }

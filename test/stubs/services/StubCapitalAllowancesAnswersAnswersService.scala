@@ -22,6 +22,7 @@ import models.connector.Api1802AnnualAllowancesBuilder
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
+import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
 import play.api.libs.json.Writes
 import services.journeyAnswers.CapitalAllowancesAnswersService
 import stubs.serviceUnitT
@@ -32,7 +33,8 @@ import scala.concurrent.{ExecutionContext, Future}
 case class StubCapitalAllowancesAnswersAnswersService(saveAnswers: ApiResultT[Unit] = serviceUnitT,
                                                       persistCapitalAllowancesTailoring: ApiResultT[Unit] = serviceUnitT,
                                                       getCapitalAllowancesTailoring: Either[ServiceError, Option[CapitalAllowancesTailoringAnswers]] =
-                                                        Right(None))
+                                                        Right(None),
+                                                      getZeroEmissionCars: Either[ServiceError, Option[ZeroEmissionCarsAnswers]] = Right(None))
     extends CapitalAllowancesAnswersService {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -44,4 +46,7 @@ case class StubCapitalAllowancesAnswersAnswersService(saveAnswers: ApiResultT[Un
 
   def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]] =
     EitherT.fromEither[Future](getCapitalAllowancesTailoring)
+
+  def getZeroEmissionCars(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]] =
+    EitherT.fromEither[Future](getZeroEmissionCars)
 }

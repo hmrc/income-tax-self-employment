@@ -67,3 +67,4 @@ POST        /:taxYear/:businessId/capital-allowances-tailoring/answers          
 GET         /:taxYear/:businessId/capital-allowances-tailoring/:nino/answers                 controllers.JourneyAnswersController.getCapitalAllowancesTailoring(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/:businessId/capital-allowances-zero-emission-cars/:nino/answers        controllers.JourneyAnswersController.saveZeroEmissionCars(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+GET         /:taxYear/:businessId/capital-allowances-zero-emission-cars/:nino/answers        controllers.JourneyAnswersController.getZeroEmissionCars(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
