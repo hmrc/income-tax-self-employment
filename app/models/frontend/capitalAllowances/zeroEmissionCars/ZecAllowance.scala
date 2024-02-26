@@ -18,18 +18,18 @@ package models.frontend.capitalAllowances.zeroEmissionCars
 
 import models.common.{Enumerable, WithName}
 
-sealed trait ZeroEmissionCarsAllowance
+sealed trait ZecAllowance
 
-object ZeroEmissionCarsAllowance extends Enumerable.Implicits {
+object ZecAllowance extends Enumerable.Implicits {
 
-  case object Yes extends WithName("yes") with ZeroEmissionCarsAllowance
-  case object No  extends WithName("no") with ZeroEmissionCarsAllowance
+  case object Yes extends WithName("yes") with ZecAllowance
+  case object No  extends WithName("no") with ZecAllowance
 
-  val values: Seq[ZeroEmissionCarsAllowance] = Seq(
+  val values: Seq[ZecAllowance] = Seq(
     Yes,
     No
   )
 
-  implicit val enumerable: Enumerable[ZeroEmissionCarsAllowance] =
+  implicit val enumerable: Enumerable[ZecAllowance] =
     Enumerable(values.map(v => v.toString -> v): _*)
 }

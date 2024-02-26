@@ -20,7 +20,7 @@ import models.frontend.capitalAllowances.zeroEmissionCars._
 import play.api.libs.json.{Json, OFormat}
 
 final case class ZeroEmissionCarsDb(zeroEmissionCars: Boolean,
-                                    zecAllowance: Option[ZeroEmissionCarsAllowance],
+                                    zecAllowance: Option[ZecAllowance],
                                     zecTotalCostOfCar: Option[BigDecimal],
                                     zecOnlyForSelfEmployment: Option[ZecOnlyForSelfEmployment],
                                     zecUsedOutsideSE: Option[ZecUseOutsideSE],

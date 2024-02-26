@@ -34,7 +34,7 @@ object CapitalAllowancesAnswersGen {
 
   val zeroEmissionCarsAnswersGen: Gen[ZeroEmissionCarsAnswers] = for {
     zeroEmissionCars                        <- booleanGen
-    zeroEmissionCarsAllowance               <- Gen.option(Gen.oneOf(ZeroEmissionCarsAllowance.values))
+    zeroEmissionCarsAllowance               <- Gen.option(Gen.oneOf(ZecAllowance.values))
     zeroEmissionCarsTotalCostOfCar          <- Gen.option(bigDecimalGen)
     zeroEmissionCarsOnlyForSelfEmployment   <- Gen.option(Gen.oneOf(ZecOnlyForSelfEmployment.values))
     zeroEmissionCarsUsedOutsideSE           <- Gen.option(Gen.oneOf(ZecUseOutsideSE.values))
@@ -54,7 +54,7 @@ object CapitalAllowancesAnswersGen {
 
   val zeroEmissionCarsDbAnswersGen: Gen[ZeroEmissionCarsDb] = for {
     zeroEmissionCars                        <- booleanGen
-    zeroEmissionCarsAllowance               <- Gen.option(Gen.oneOf(ZeroEmissionCarsAllowance.values))
+    zeroEmissionCarsAllowance               <- Gen.option(Gen.oneOf(ZecAllowance.values))
     zeroEmissionCarsTotalCostOfCar          <- Gen.option(bigDecimalGen)
     zeroEmissionCarsOnlyForSelfEmployment   <- Gen.option(Gen.oneOf(ZecOnlyForSelfEmployment.values))
     zeroEmissionCarsUsedOutsideSE           <- Gen.option(Gen.oneOf(ZecUseOutsideSE.values))
