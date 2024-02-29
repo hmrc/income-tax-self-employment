@@ -283,4 +283,9 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     handleOptionalApiResult(capitalAllowancesService.getZeroEmissionCars(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
+  def getElectricVehicleChargePoints(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(
+      capitalAllowancesService.getElectricVehicleChargePoints(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
 }

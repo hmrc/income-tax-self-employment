@@ -19,7 +19,7 @@ package controllers
 import cats.data.EitherT
 import cats.implicits._
 import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
-import gens.CapitalAllowancesAnswersGen.{capitalAllowancesTailoringAnswersGen, zeroEmissionCarsAnswersGen}
+import gens.CapitalAllowancesAnswersGen.{capitalAllowancesTailoringAnswersGen, electricVehicleChargePointsAnswersGen, zeroEmissionCarsAnswersGen}
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
@@ -625,6 +625,36 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
           methodBlock = () => underTest.saveZeroEmissionCars(currTaxYear, businessId, nino)
         )
       }
+    }
+  }
+
+  "ElectricVehicleChargePoints" should {
+    s"Get return $NO_CONTENT if there is no answers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Get return answers" in {
+      val answers = genOne(electricVehicleChargePointsAnswersGen)
+      val underTest = new JourneyAnswersController(
+        auth = mockAuthorisedAction,
+        cc = stubControllerComponents,
+        abroadAnswersService = StubAbroadAnswersService(),
+        incomeService = StubIncomeAnswersService(),
+        expensesService = StubExpensesAnswersService(),
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getElectricVehicleChargePoints = Some(answers).asRight)
+      )
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.toJson(answers).toString(),
+        methodBlock = () => underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino)
+      )
     }
   }
 

@@ -89,9 +89,11 @@ object StubSelfEmploymentConnector {
     None,
     Some(
       AnnualAllowancesType.emptyAnnualAllowancesType.copy(
-        zeroEmissionsCarAllowance = Some(5000.00)
+        zeroEmissionsCarAllowance = Some(5000.00),
+        electricChargePointAllowance = Some(4000.00)
       )),
-    None)
+    None
+  )
 
   val api1965MatchedResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(
     Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"), None))))

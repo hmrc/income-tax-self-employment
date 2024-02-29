@@ -17,13 +17,14 @@
 package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
-import gens.CapitalAllowancesAnswersGen.{capitalAllowancesTailoringAnswersGen, zeroEmissionCarsDbAnswersGen}
+import gens.CapitalAllowancesAnswersGen.{capitalAllowancesTailoringAnswersGen, electricVehicleChargePointsDbAnswersGen, zeroEmissionCarsDbAnswersGen}
 import gens.{bigDecimalGen, genOne}
 import models.common.JourneyName.CapitalAllowancesTailoring
 import models.common.{JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import models.frontend.capitalAllowances.CapitalAllowances.{ZeroEmissionCar, ZeroEmissionGoodsVehicle}
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
+import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.{ZeroEmissionCarsAnswers, ZeroEmissionCarsJourneyAnswers}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -100,6 +101,28 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
         ))
       val result          = services.getZeroEmissionCars(journeyCtxWithNino).rightValue
       val expectedAnswers = ZeroEmissionCarsAnswers(dbAnswers, api1803SuccessResponse)
+
+      result shouldBe Some(expectedAnswers)
+    }
+  }
+
+  "getElectricVehicleChargePoints" should {
+    "return empty if no answers" in {
+      val result = service.getElectricVehicleChargePoints(journeyCtxWithNino).rightValue
+      assert(result === None)
+    }
+
+    "return answers if they exist" in {
+      val dbAnswers = genOne(electricVehicleChargePointsDbAnswersGen)
+      val journeyAnswers: JourneyAnswers =
+        mkJourneyAnswers(JourneyName.ElectricVehicleChargePoints, JourneyStatus.Completed, Json.toJsObject(dbAnswers))
+      val services = new CapitalAllowancesAnswersServiceImpl(
+        connector,
+        StubJourneyAnswersRepository(
+          getAnswer = Some(journeyAnswers)
+        ))
+      val result          = services.getElectricVehicleChargePoints(journeyCtxWithNino).rightValue
+      val expectedAnswers = ElectricVehicleChargePointsAnswers(dbAnswers, api1803SuccessResponse)
 
       result shouldBe Some(expectedAnswers)
     }
