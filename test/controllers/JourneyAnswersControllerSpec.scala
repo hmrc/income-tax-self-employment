@@ -656,6 +656,17 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino)
       )
     }
+
+    s"Save answers and return a $NO_CONTENT when successful" in {
+      forAll(electricVehicleChargePointsAnswersGen) { data =>
+        behave like testRoute(
+          request = buildRequest(data),
+          expectedStatus = NO_CONTENT,
+          expectedBody = "",
+          methodBlock = () => underTest.saveElectricVehicleChargePoints(currTaxYear, businessId, nino)
+        )
+      }
+    }
   }
 
   trait GetExpensesTest[T] {

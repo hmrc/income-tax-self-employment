@@ -69,4 +69,5 @@ GET         /:taxYear/:businessId/capital-allowances-tailoring/:nino/answers    
 POST        /:taxYear/:businessId/capital-allowances-zero-emission-cars/:nino/answers                    controllers.JourneyAnswersController.saveZeroEmissionCars(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/capital-allowances-zero-emission-cars/:nino/answers                    controllers.JourneyAnswersController.getZeroEmissionCars(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
+POST        /:taxYear/:businessId/capital-allowances-electric-vehicle-charge-points/:nino/answers        controllers.JourneyAnswersController.saveElectricVehicleChargePoints(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/capital-allowances-electric-vehicle-charge-points/:nino/answers        controllers.JourneyAnswersController.getElectricVehicleChargePoints(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
