@@ -18,15 +18,16 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import connectors.SelfEmploymentConnector
-import models.common.JourneyName.{CapitalAllowancesTailoring, ZeroEmissionCars}
+import models.common.JourneyName.{CapitalAllowancesTailoring, ElectricVehicleChargePoints, ZeroEmissionCars}
 import models.common._
 import models.connector.Api1802AnnualAllowancesBuilder
 import models.connector.api_1802.request.{AnnualAllowances, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.database.JourneyAnswers
-import models.database.capitalAllowances.ZeroEmissionCarsDb
+import models.database.capitalAllowances.{ElectricVehicleChargePointsDb, ZeroEmissionCarsDb}
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
+import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
 import play.api.libs.json.{Json, Writes}
 import repositories.JourneyAnswersRepository
@@ -41,6 +42,7 @@ trait CapitalAllowancesAnswersService {
       writes: Writes[A]): ApiResultT[Unit]
   def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]]
   def getZeroEmissionCars(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]]
+  def getElectricVehicleChargePoints(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ElectricVehicleChargePointsAnswers]]
 }
 
 @Singleton
@@ -75,20 +77,32 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
 
   def getZeroEmissionCars(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]] =
     for {
-      dbAnswers   <- getZeroEmissionCarsDbAnswers(ctx)
-      fullAnswers <- getFullZeroEmissionCarsAnswers(ctx, dbAnswers)
+      maybeData   <- getDbAnswers(ctx, ZeroEmissionCars)
+      dbAnswers   <- getPersistedAnswers[ZeroEmissionCarsDb](maybeData)
+      fullAnswers <- getZeroEmissionCarsWithApiAnswers(ctx, dbAnswers)
     } yield fullAnswers
 
-  private def getZeroEmissionCarsDbAnswers(ctx: JourneyContextWithNino): ApiResultT[Option[ZeroEmissionCarsDb]] =
-    for {
-      maybeData <- getDbAnswers(ctx, ZeroEmissionCars)
-      dbAnswers <- getPersistedAnswers[ZeroEmissionCarsDb](maybeData)
-    } yield dbAnswers
-
-  private def getFullZeroEmissionCarsAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[ZeroEmissionCarsDb])(implicit
+  private def getZeroEmissionCarsWithApiAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[ZeroEmissionCarsDb])(implicit
       hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]] = {
     val result = connector.getAnnualSummaries(ctx).map {
       case Right(annualSummaries) => dbAnswers.map(answers => ZeroEmissionCarsAnswers(answers, annualSummaries))
+      case Left(_)                => None
+    }
+    EitherT.liftF(result)
+  }
+
+  def getElectricVehicleChargePoints(ctx: JourneyContextWithNino)(implicit
+      hc: HeaderCarrier): ApiResultT[Option[ElectricVehicleChargePointsAnswers]] =
+    for {
+      maybeData   <- getDbAnswers(ctx, ElectricVehicleChargePoints)
+      dbAnswers   <- getPersistedAnswers[ElectricVehicleChargePointsDb](maybeData)
+      fullAnswers <- getElectricVehicleChargePointsWithApiAnswers(ctx, dbAnswers)
+    } yield fullAnswers
+
+  private def getElectricVehicleChargePointsWithApiAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[ElectricVehicleChargePointsDb])(implicit
+      hc: HeaderCarrier): ApiResultT[Option[ElectricVehicleChargePointsAnswers]] = {
+    val result = connector.getAnnualSummaries(ctx).map {
+      case Right(annualSummaries) => dbAnswers.map(answers => ElectricVehicleChargePointsAnswers(answers, annualSummaries))
       case Left(_)                => None
     }
     EitherT.liftF(result)

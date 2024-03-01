@@ -16,7 +16,13 @@
 
 package gens
 
-import models.database.capitalAllowances.ZeroEmissionCarsDb
+import models.database.capitalAllowances.{ElectricVehicleChargePointsDb, ZeroEmissionCarsDb}
+import models.frontend.capitalAllowances.electricVehicleChargePoints.{
+  ElectricVehicleChargePointsAnswers,
+  EvcpHowMuchDoYouWantToClaim,
+  EvcpOnlyForSelfEmployment,
+  EvcpUseOutsideSE
+}
 import models.frontend.capitalAllowances.zeroEmissionCars._
 import models.frontend.capitalAllowances.{CapitalAllowances, CapitalAllowancesTailoringAnswers}
 import org.scalacheck.Gen
@@ -73,4 +79,42 @@ object CapitalAllowancesAnswersGen {
   val zeroEmissionCarsJourneyAnswersGen: Gen[ZeroEmissionCarsJourneyAnswers] = for {
     zeroEmissionCarsClaimAmount <- bigDecimalGen
   } yield ZeroEmissionCarsJourneyAnswers(zeroEmissionCarsClaimAmount)
+
+  val electricVehicleChargePointsAnswersGen: Gen[ElectricVehicleChargePointsAnswers] = for {
+    evcpAllowance               <- booleanGen
+    chargePointTaxRelief        <- Gen.option(booleanGen)
+    amountSpentOnEvcp           <- Gen.option(bigDecimalGen)
+    evcpOnlyForSelfEmployment   <- Gen.option(Gen.oneOf(EvcpOnlyForSelfEmployment.values))
+    evcpUsedOutsideSE           <- Gen.option(Gen.oneOf(EvcpUseOutsideSE.values))
+    evcpUsedOutsideSEPercentage <- Gen.option(intGen)
+    evcpHowMuchDoYouWantToClaim <- Gen.option(Gen.oneOf(EvcpHowMuchDoYouWantToClaim.values))
+    evcpClaimAmount             <- Gen.option(bigDecimalGen)
+  } yield ElectricVehicleChargePointsAnswers(
+    evcpAllowance,
+    chargePointTaxRelief,
+    amountSpentOnEvcp,
+    evcpOnlyForSelfEmployment,
+    evcpUsedOutsideSE,
+    evcpUsedOutsideSEPercentage,
+    evcpHowMuchDoYouWantToClaim,
+    evcpClaimAmount
+  )
+
+  val electricVehicleChargePointsDbAnswersGen: Gen[ElectricVehicleChargePointsDb] = for {
+    evcpAllowance               <- booleanGen
+    chargePointTaxRelief        <- Gen.option(booleanGen)
+    amountSpentOnEvcp           <- Gen.option(bigDecimalGen)
+    evcpOnlyForSelfEmployment   <- Gen.option(Gen.oneOf(EvcpOnlyForSelfEmployment.values))
+    evcpUsedOutsideSE           <- Gen.option(Gen.oneOf(EvcpUseOutsideSE.values))
+    evcpUsedOutsideSEPercentage <- Gen.option(intGen)
+    evcpHowMuchDoYouWantToClaim <- Gen.option(Gen.oneOf(EvcpHowMuchDoYouWantToClaim.values))
+  } yield ElectricVehicleChargePointsDb(
+    evcpAllowance,
+    chargePointTaxRelief,
+    amountSpentOnEvcp,
+    evcpOnlyForSelfEmployment,
+    evcpUsedOutsideSE,
+    evcpUsedOutsideSEPercentage,
+    evcpHowMuchDoYouWantToClaim
+  )
 }

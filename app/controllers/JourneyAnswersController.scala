@@ -22,6 +22,7 @@ import models.common._
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
+import models.frontend.capitalAllowances.electricVehicleChargePoints.{ElectricVehicleChargePointsAnswers, ElectricVehicleChargePointsJourneyAnswers}
 import models.frontend.capitalAllowances.zeroEmissionCars.{ZeroEmissionCarsAnswers, ZeroEmissionCarsJourneyAnswers}
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
@@ -281,6 +282,20 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
   def getZeroEmissionCars(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(capitalAllowancesService.getZeroEmissionCars(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  def saveElectricVehicleChargePoints(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBodyWithCtx[ElectricVehicleChargePointsAnswers](taxYear, businessId, nino) { (ctx, value) =>
+      value.evcpClaimAmount map (claimAmount =>
+        capitalAllowancesService.saveAnswers(ctx, ElectricVehicleChargePointsJourneyAnswers(electricChargePointAllowance = claimAmount)))
+      for {
+        _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, ElectricVehicleChargePoints, value.toDbModel)
+      } yield NoContent
+    }
+  }
+  def getElectricVehicleChargePoints(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(
+      capitalAllowancesService.getElectricVehicleChargePoints(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
 }

@@ -17,6 +17,7 @@
 package models.connector
 
 import models.connector.api_1802.request.AnnualAllowances
+import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsJourneyAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsJourneyAnswers
 
 trait Api1802AnnualAllowancesBuilder[A] {
@@ -29,5 +30,9 @@ object Api1802AnnualAllowancesBuilder {
 
   implicit val zeroEmissionCars: Api1802AnnualAllowancesBuilder[ZeroEmissionCarsJourneyAnswers] =
     (answers: ZeroEmissionCarsJourneyAnswers) => AnnualAllowances.empty.copy(zeroEmissionsCarAllowance = Some(answers.zeroEmissionsCarAllowance))
+
+  implicit val electricVehicleChargePoints: Api1802AnnualAllowancesBuilder[ElectricVehicleChargePointsJourneyAnswers] =
+    (answers: ElectricVehicleChargePointsJourneyAnswers) =>
+      AnnualAllowances.empty.copy(electricChargePointAllowance = Some(answers.electricChargePointAllowance))
 
 }

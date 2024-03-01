@@ -22,6 +22,7 @@ import models.connector.Api1802AnnualAllowancesBuilder
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
+import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
 import play.api.libs.json.Writes
 import services.journeyAnswers.CapitalAllowancesAnswersService
@@ -30,11 +31,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class StubCapitalAllowancesAnswersAnswersService(saveAnswers: ApiResultT[Unit] = serviceUnitT,
-                                                      persistCapitalAllowancesTailoring: ApiResultT[Unit] = serviceUnitT,
-                                                      getCapitalAllowancesTailoring: Either[ServiceError, Option[CapitalAllowancesTailoringAnswers]] =
-                                                        Right(None),
-                                                      getZeroEmissionCars: Either[ServiceError, Option[ZeroEmissionCarsAnswers]] = Right(None))
+case class StubCapitalAllowancesAnswersAnswersService(
+    saveAnswers: ApiResultT[Unit] = serviceUnitT,
+    persistCapitalAllowancesTailoring: ApiResultT[Unit] = serviceUnitT,
+    getCapitalAllowancesTailoring: Either[ServiceError, Option[CapitalAllowancesTailoringAnswers]] = Right(None),
+    getZeroEmissionCars: Either[ServiceError, Option[ZeroEmissionCarsAnswers]] = Right(None),
+    getElectricVehicleChargePoints: Either[ServiceError, Option[ElectricVehicleChargePointsAnswers]] = Right(None))
     extends CapitalAllowancesAnswersService {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -49,4 +51,8 @@ case class StubCapitalAllowancesAnswersAnswersService(saveAnswers: ApiResultT[Un
 
   def getZeroEmissionCars(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]] =
     EitherT.fromEither[Future](getZeroEmissionCars)
+
+  def getElectricVehicleChargePoints(ctx: JourneyContextWithNino)(implicit
+      hc: HeaderCarrier): ApiResultT[Option[ElectricVehicleChargePointsAnswers]] =
+    EitherT.fromEither[Future](getElectricVehicleChargePoints)
 }
