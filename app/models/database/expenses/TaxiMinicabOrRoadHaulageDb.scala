@@ -16,10 +16,9 @@
 
 package models.database.expenses
 
-import models.frontend.expenses.goodsToSellOrUse.TaxiMinicabOrRoadHaulage
 import play.api.libs.json.{Json, OFormat}
 
-final case class TaxiMinicabOrRoadHaulageDb(taxiMinicabOrRoadHaulage: TaxiMinicabOrRoadHaulage)
+final case class TaxiMinicabOrRoadHaulageDb(taxiMinicabOrRoadHaulage: Boolean)
 
 object TaxiMinicabOrRoadHaulageDb {
   implicit val format: OFormat[TaxiMinicabOrRoadHaulageDb] = Json.format[TaxiMinicabOrRoadHaulageDb]
