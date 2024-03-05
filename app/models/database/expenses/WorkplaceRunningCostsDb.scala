@@ -16,16 +16,16 @@
 
 package models.database.expenses
 
-import models.frontend.expenses.workplaceRunningCosts.{LiveAtBusinessPremises, MoreThan25Hours, WfbpFlatRateOrActualCosts, WfhFlatRateOrActualCosts}
+import models.frontend.expenses.workplaceRunningCosts.{WfbpFlatRateOrActualCosts, WfhFlatRateOrActualCosts}
 import play.api.libs.json.{Json, OFormat}
 
-final case class WorkplaceRunningCostsDb(moreThan25Hours: Option[MoreThan25Hours],
+final case class WorkplaceRunningCostsDb(moreThan25Hours: Option[Boolean],
                                          wfhHours25To50: Option[Int],
                                          wfhHours51To100: Option[Int],
                                          wfhHours101Plus: Option[Int],
                                          wfhFlatRateOrActualCosts: Option[WfhFlatRateOrActualCosts],
                                          wfhClaimingAmount: Option[BigDecimal],
-                                         liveAtBusinessPremises: Option[LiveAtBusinessPremises],
+                                         liveAtBusinessPremises: Option[Boolean],
                                          businessPremisesAmount: Option[BigDecimal],
                                          wfbpExpensesAreDisallowable: Boolean,
                                          livingAtBusinessPremisesOnePerson: Option[Int],

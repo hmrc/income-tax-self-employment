@@ -25,7 +25,6 @@ import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
 import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
-import models.frontend.expenses.goodsToSellOrUse.TaxiMinicabOrRoadHaulage.Yes
 import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers}
 import models.frontend.expenses.tailoring.ExpensesTailoring.{NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
@@ -151,10 +150,10 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       override val connector =
         StubSelfEmploymentConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
       override val repo = StubJourneyAnswersRepository(getAnswer = goodsToSellOrUseJourneyAnswers
-        .copy(data = Json.toJson(TaxiMinicabOrRoadHaulageDb(Yes)).as[JsObject])
+        .copy(data = Json.toJson(TaxiMinicabOrRoadHaulageDb(true)).as[JsObject])
         .some)
       val result = underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value.futureValue
-      result shouldBe GoodsToSellOrUseAnswers(Yes, BigDecimal("100.0"), Some(BigDecimal("100.0"))).some.asRight
+      result shouldBe GoodsToSellOrUseAnswers(true, BigDecimal("100.0"), Some(BigDecimal("100.0"))).some.asRight
     }
   }
 

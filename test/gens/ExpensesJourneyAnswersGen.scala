@@ -21,7 +21,7 @@ import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
 import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
 import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
-import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers, TaxiMinicabOrRoadHaulage}
+import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers}
 import models.frontend.expenses.interest.InterestJourneyAnswers
 import models.frontend.expenses.irrecoverableDebts.IrrecoverableDebtsJourneyAnswers
 import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
@@ -40,7 +40,7 @@ object ExpensesJourneyAnswersGen {
   } yield GoodsToSellOrUseJourneyAnswers(amount, disallowableAmount)
 
   val goodsToSellOrUseAnswersGen: Gen[GoodsToSellOrUseAnswers] = for {
-    taxiMinicabOrRoadHaulage <- Gen.oneOf(TaxiMinicabOrRoadHaulage.values)
+    taxiMinicabOrRoadHaulage <- booleanGen
     amount                   <- bigDecimalGen
     disallowableAmount       <- Gen.option(bigDecimalGen)
   } yield GoodsToSellOrUseAnswers(taxiMinicabOrRoadHaulage, amount, disallowableAmount)
@@ -51,13 +51,13 @@ object ExpensesJourneyAnswersGen {
   } yield WorkplaceRunningCostsJourneyAnswers(wfhPremisesRunningCosts, wfbpPremisesRunningCostsDisallowable)
 
   val workplaceRunningCostsAnswersGen: Gen[WorkplaceRunningCostsAnswers] = for {
-    moreThan25Hours                         <- Gen.option(Gen.oneOf(MoreThan25Hours.values))
+    moreThan25Hours                         <- Gen.option(booleanGen)
     wfhHours25To50                          <- Gen.option(intGen)
     wfhHours51To100                         <- Gen.option(intGen)
     wfhHours101Plus                         <- Gen.option(intGen)
     wfhFlatRateOrActualCosts                <- Gen.option(Gen.oneOf(WfhFlatRateOrActualCosts.values))
     wfhClaimingAmount                       <- Gen.option(bigDecimalGen)
-    liveAtBusinessPremises                  <- Gen.option(Gen.oneOf(LiveAtBusinessPremises.values))
+    liveAtBusinessPremises                  <- Gen.option(booleanGen)
     businessPremisesAmount                  <- Gen.option(bigDecimalGen)
     businessPremisesDisallowableAmount      <- Gen.option(bigDecimalGen)
     livingAtBusinessPremisesOnePerson       <- Gen.option(intGen)

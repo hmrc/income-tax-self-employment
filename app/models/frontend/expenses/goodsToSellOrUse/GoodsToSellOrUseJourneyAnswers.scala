@@ -27,7 +27,7 @@ object GoodsToSellOrUseJourneyAnswers {
   implicit val formats: OFormat[GoodsToSellOrUseJourneyAnswers] = Json.format[GoodsToSellOrUseJourneyAnswers]
 }
 
-case class GoodsToSellOrUseAnswers(taxiMinicabOrRoadHaulage: TaxiMinicabOrRoadHaulage,
+case class GoodsToSellOrUseAnswers(taxiMinicabOrRoadHaulage: Boolean,
                                    goodsToSellOrUseAmount: BigDecimal,
                                    disallowableGoodsToSellOrUseAmount: Option[BigDecimal])
 
