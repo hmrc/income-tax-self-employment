@@ -22,45 +22,36 @@ import models.frontend.expenses.tailoring.individualCategories._
 import org.scalacheck.Gen
 
 object ExpensesTailoringAnswersGen {
-  val expensesCategoriesGen: Gen[ExpensesTailoring]                                = Gen.oneOf(ExpensesTailoring.values)
-  val officeSuppliesGen: Gen[OfficeSupplies]                                       = Gen.oneOf(OfficeSupplies.values)
-  val goodsToSellOrUseGen: Gen[GoodsToSellOrUse]                                   = Gen.oneOf(GoodsToSellOrUse.values)
-  val repairsAndMaintenanceGen: Gen[RepairsAndMaintenance]                         = Gen.oneOf(RepairsAndMaintenance.values)
-  val workFromHomeGen: Gen[WorkFromHome]                                           = Gen.oneOf(WorkFromHome.values)
-  val workFromBusinessPremisesGen: Gen[WorkFromBusinessPremises]                   = Gen.oneOf(WorkFromBusinessPremises.values)
-  val travelForWorkGen: Gen[TravelForWork]                                         = Gen.oneOf(TravelForWork.values)
-  val advertisingOrMarketingGen: Gen[AdvertisingOrMarketing]                       = Gen.oneOf(AdvertisingOrMarketing.values)
-  val entertainmentCostsGen: Gen[EntertainmentCosts]                               = Gen.oneOf(EntertainmentCosts.values)
-  val professionalServiceExpensesGen: Gen[ProfessionalServiceExpenses]             = Gen.oneOf(ProfessionalServiceExpenses.values)
-  val financialExpensesGen: Gen[FinancialExpenses]                                 = Gen.oneOf(FinancialExpenses.values)
-  val depreciationGen: Gen[Depreciation]                                           = Gen.oneOf(Depreciation.values)
-  val otherExpensesGen: Gen[OtherExpenses]                                         = Gen.oneOf(OtherExpenses.values)
-  val disallowableInterestGen: Gen[DisallowableInterest]                           = Gen.oneOf(DisallowableInterest.values)
-  val disallowableOtherFinancialChargesGen: Gen[DisallowableOtherFinancialCharges] = Gen.oneOf(DisallowableOtherFinancialCharges.values)
-  val disallowableIrrecoverableDebtsGen: Gen[DisallowableIrrecoverableDebts]       = Gen.oneOf(DisallowableIrrecoverableDebts.values)
-  val disallowableStaffCostsGen: Gen[DisallowableStaffCosts]                       = Gen.oneOf(DisallowableStaffCosts.values)
-  val disallowableSubcontractorCostsGen: Gen[DisallowableSubcontractorCosts]       = Gen.oneOf(DisallowableSubcontractorCosts.values)
-  val disallowableProfessionalFeesGen: Gen[DisallowableProfessionalFees]           = Gen.oneOf(DisallowableProfessionalFees.values)
+  val expensesCategoriesGen: Gen[ExpensesTailoring]                    = Gen.oneOf(ExpensesTailoring.values)
+  val officeSuppliesGen: Gen[OfficeSupplies]                           = Gen.oneOf(OfficeSupplies.values)
+  val goodsToSellOrUseGen: Gen[GoodsToSellOrUse]                       = Gen.oneOf(GoodsToSellOrUse.values)
+  val repairsAndMaintenanceGen: Gen[RepairsAndMaintenance]             = Gen.oneOf(RepairsAndMaintenance.values)
+  val workFromBusinessPremisesGen: Gen[WorkFromBusinessPremises]       = Gen.oneOf(WorkFromBusinessPremises.values)
+  val travelForWorkGen: Gen[TravelForWork]                             = Gen.oneOf(TravelForWork.values)
+  val advertisingOrMarketingGen: Gen[AdvertisingOrMarketing]           = Gen.oneOf(AdvertisingOrMarketing.values)
+  val professionalServiceExpensesGen: Gen[ProfessionalServiceExpenses] = Gen.oneOf(ProfessionalServiceExpenses.values)
+  val financialExpensesGen: Gen[FinancialExpenses]                     = Gen.oneOf(FinancialExpenses.values)
+  val otherExpensesGen: Gen[OtherExpenses]                             = Gen.oneOf(OtherExpenses.values)
 
   val expensesTailoringIndividualCategoriesAnswersGen: Gen[ExpensesTailoringIndividualCategoriesAnswers] = for {
     officeSupplies                    <- officeSuppliesGen
     goodsToSellOrUse                  <- goodsToSellOrUseGen
     repairsAndMaintenance             <- repairsAndMaintenanceGen
-    workFromHome                      <- workFromHomeGen
+    workFromHome                      <- booleanGen
     workFromBusinessPremises          <- workFromBusinessPremisesGen
     travelForWork                     <- travelForWorkGen
     advertisingOrMarketing            <- advertisingOrMarketingGen
-    entertainmentCosts                <- Gen.option(entertainmentCostsGen)
+    entertainmentCosts                <- Gen.option(booleanGen)
     professionalServiceExpenses       <- Gen.listOfN(3, professionalServiceExpensesGen)
     financialExpenses                 <- Gen.listOfN(3, financialExpensesGen)
-    depreciation                      <- depreciationGen
+    depreciation                      <- booleanGen
     otherExpenses                     <- otherExpensesGen
-    disallowableInterest              <- Gen.option(disallowableInterestGen)
-    disallowableOtherFinancialCharges <- Gen.option(disallowableOtherFinancialChargesGen)
-    disallowableIrrecoverableDebts    <- Gen.option(disallowableIrrecoverableDebtsGen)
-    disallowableStaffCosts            <- Gen.option(disallowableStaffCostsGen)
-    disallowableSubcontractorCosts    <- Gen.option(disallowableSubcontractorCostsGen)
-    disallowableProfessionalFees      <- Gen.option(disallowableProfessionalFeesGen)
+    disallowableInterest              <- Gen.option(booleanGen)
+    disallowableOtherFinancialCharges <- Gen.option(booleanGen)
+    disallowableIrrecoverableDebts    <- Gen.option(booleanGen)
+    disallowableStaffCosts            <- Gen.option(booleanGen)
+    disallowableSubcontractorCosts    <- Gen.option(booleanGen)
+    disallowableProfessionalFees      <- Gen.option(booleanGen)
   } yield ExpensesTailoringIndividualCategoriesAnswers(
     officeSupplies,
     goodsToSellOrUse,

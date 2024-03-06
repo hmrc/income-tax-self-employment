@@ -53,21 +53,21 @@ object ExpensesTailoringAnswers {
       officeSupplies: OfficeSupplies,
       goodsToSellOrUse: GoodsToSellOrUse,
       repairsAndMaintenance: RepairsAndMaintenance,
-      workFromHome: WorkFromHome,
+      workFromHome: Boolean,
       workFromBusinessPremises: WorkFromBusinessPremises,
       travelForWork: TravelForWork,
       advertisingOrMarketing: AdvertisingOrMarketing,
-      entertainmentCosts: Option[EntertainmentCosts],
+      entertainmentCosts: Option[Boolean],
       professionalServiceExpenses: List[ProfessionalServiceExpenses],
       financialExpenses: List[FinancialExpenses],
-      depreciation: Depreciation,
+      depreciation: Boolean,
       otherExpenses: OtherExpenses,
-      disallowableInterest: Option[DisallowableInterest],
-      disallowableOtherFinancialCharges: Option[DisallowableOtherFinancialCharges],
-      disallowableIrrecoverableDebts: Option[DisallowableIrrecoverableDebts],
-      disallowableStaffCosts: Option[DisallowableStaffCosts],
-      disallowableSubcontractorCosts: Option[DisallowableSubcontractorCosts],
-      disallowableProfessionalFees: Option[DisallowableProfessionalFees]
+      disallowableInterest: Option[Boolean],
+      disallowableOtherFinancialCharges: Option[Boolean],
+      disallowableIrrecoverableDebts: Option[Boolean],
+      disallowableStaffCosts: Option[Boolean],
+      disallowableSubcontractorCosts: Option[Boolean],
+      disallowableProfessionalFees: Option[Boolean]
   ) extends ExpensesTailoringAnswers {
     val expensesCategories: ExpensesTailoring = ExpensesTailoring.IndividualCategories
   }
