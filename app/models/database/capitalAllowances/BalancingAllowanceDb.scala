@@ -18,7 +18,7 @@ package models.database.capitalAllowances
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class BalancingAllowanceDb(balancingAllowance: Boolean, balancingAllowanceAmount: Option[BigDecimal])
+final case class BalancingAllowanceDb(balancingAllowance: Boolean)
 
 object BalancingAllowanceDb {
   implicit val format: OFormat[BalancingAllowanceDb] = Json.format[BalancingAllowanceDb]

@@ -29,8 +29,7 @@ object BalancingAllowanceJourneyAnswers {
 case class BalancingAllowanceAnswers(balancingAllowance: Boolean, balancingAllowanceAmount: Option[BigDecimal]) {
 
   def toDbModel: BalancingAllowanceDb = BalancingAllowanceDb(
-    balancingAllowance,
-    balancingAllowanceAmount
+    balancingAllowance
   )
 }
 
