@@ -22,6 +22,7 @@ import models.common._
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
+import models.frontend.capitalAllowances.balancingAllowance.{BalancingAllowanceAnswers, BalancingAllowanceJourneyAnswers}
 import models.frontend.capitalAllowances.electricVehicleChargePoints.{ElectricVehicleChargePointsAnswers, ElectricVehicleChargePointsJourneyAnswers}
 import models.frontend.capitalAllowances.zeroEmissionCars.{ZeroEmissionCarsAnswers, ZeroEmissionCarsJourneyAnswers}
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
@@ -296,6 +297,20 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def getElectricVehicleChargePoints(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(
       capitalAllowancesService.getElectricVehicleChargePoints(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  def saveBalancingAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBodyWithCtx[BalancingAllowanceAnswers](taxYear, businessId, nino) { (ctx, value) =>
+      value.balancingAllowanceAmount map (allowanceAmount =>
+        capitalAllowancesService.saveAnswers(ctx, BalancingAllowanceJourneyAnswers(allowanceOnSales = allowanceAmount)))
+      for {
+        _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, BalancingAllowance, value.toDbModel)
+      } yield NoContent
+    }
+  }
+
+  def getBalancingAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(capitalAllowancesService.getBalancingAllowance(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
 }

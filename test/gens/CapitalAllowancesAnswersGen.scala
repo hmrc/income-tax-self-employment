@@ -17,6 +17,7 @@
 package gens
 
 import models.database.capitalAllowances.{ElectricVehicleChargePointsDb, ZeroEmissionCarsDb}
+import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.{
   ElectricVehicleChargePointsAnswers,
   EvcpHowMuchDoYouWantToClaim,
@@ -117,4 +118,13 @@ object CapitalAllowancesAnswersGen {
     evcpUsedOutsideSEPercentage,
     evcpHowMuchDoYouWantToClaim
   )
+
+  val balancingAllowanceAnswersGen: Gen[BalancingAllowanceAnswers] = for {
+    balancingAllowance       <- booleanGen
+    balancingAllowanceAmount <- Gen.option(bigDecimalGen)
+  } yield BalancingAllowanceAnswers(
+    balancingAllowance,
+    balancingAllowanceAmount
+  )
+
 }
