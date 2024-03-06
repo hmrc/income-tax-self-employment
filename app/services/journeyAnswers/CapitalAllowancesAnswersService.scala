@@ -18,15 +18,16 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import connectors.SelfEmploymentConnector
-import models.common.JourneyName.{CapitalAllowancesTailoring, ElectricVehicleChargePoints, ZeroEmissionCars}
+import models.common.JourneyName.{BalancingAllowance, CapitalAllowancesTailoring, ElectricVehicleChargePoints, ZeroEmissionCars}
 import models.common._
 import models.connector.Api1802AnnualAllowancesBuilder
 import models.connector.api_1802.request.{AnnualAllowances, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.database.JourneyAnswers
-import models.database.capitalAllowances.{ElectricVehicleChargePointsDb, ZeroEmissionCarsDb}
+import models.database.capitalAllowances.{BalancingAllowanceDb, ElectricVehicleChargePointsDb, ZeroEmissionCarsDb}
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
+import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
 import play.api.libs.json.{Json, Writes}
@@ -43,6 +44,8 @@ trait CapitalAllowancesAnswersService {
   def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]]
   def getZeroEmissionCars(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]]
   def getElectricVehicleChargePoints(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ElectricVehicleChargePointsAnswers]]
+
+  def getBalancingAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]]
 }
 
 @Singleton
@@ -103,6 +106,22 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
       hc: HeaderCarrier): ApiResultT[Option[ElectricVehicleChargePointsAnswers]] = {
     val result = connector.getAnnualSummaries(ctx).map {
       case Right(annualSummaries) => dbAnswers.map(answers => ElectricVehicleChargePointsAnswers(answers, annualSummaries))
+      case Left(_)                => None
+    }
+    EitherT.liftF(result)
+  }
+
+  def getBalancingAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]] =
+    for {
+      maybeData   <- getDbAnswers(ctx, BalancingAllowance)
+      dbAnswers   <- getPersistedAnswers[BalancingAllowanceDb](maybeData)
+      fullAnswers <- getBalancingAllowanceWithApiAnswers(ctx, dbAnswers)
+    } yield fullAnswers
+
+  private def getBalancingAllowanceWithApiAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[BalancingAllowanceDb])(implicit
+      hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]] = {
+    val result = connector.getAnnualSummaries(ctx).map {
+      case Right(annualSummaries) => dbAnswers.map(answers => BalancingAllowanceAnswers(answers, annualSummaries))
       case Left(_)                => None
     }
     EitherT.liftF(result)

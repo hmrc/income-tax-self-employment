@@ -17,6 +17,7 @@
 package models.connector
 
 import models.connector.api_1802.request.AnnualAllowances
+import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceJourneyAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsJourneyAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsJourneyAnswers
 
@@ -35,4 +36,6 @@ object Api1802AnnualAllowancesBuilder {
     (answers: ElectricVehicleChargePointsJourneyAnswers) =>
       AnnualAllowances.empty.copy(electricChargePointAllowance = Some(answers.electricChargePointAllowance))
 
+  implicit val balancingAllowance: Api1802AnnualAllowancesBuilder[BalancingAllowanceJourneyAnswers] =
+    (answers: BalancingAllowanceJourneyAnswers) => AnnualAllowances.empty.copy(allowanceOnSales = Some(answers.allowanceOnSales))
 }
