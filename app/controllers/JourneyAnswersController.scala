@@ -16,6 +16,7 @@
 
 package controllers
 
+import cats.implicits.toTraverseOps
 import controllers.actions.AuthorisedAction
 import models.common.JourneyName._
 import models.common._
@@ -279,9 +280,9 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
   def saveZeroEmissionCars(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[ZeroEmissionCarsAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      value.zecClaimAmount map (claimAmount =>
-        capitalAllowancesService.saveAnswers(ctx, ZeroEmissionCarsJourneyAnswers(zeroEmissionsCarAllowance = claimAmount)))
       for {
+        _ <- value.zecClaimAmount.traverse(claimAmount =>
+          capitalAllowancesService.saveAnswers(ctx, ZeroEmissionCarsJourneyAnswers(zeroEmissionsCarAllowance = claimAmount)))
         _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, ZeroEmissionCars, value.toDbModel)
       } yield NoContent
     }
@@ -292,9 +293,9 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveElectricVehicleChargePoints(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[ElectricVehicleChargePointsAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      value.evcpClaimAmount map (claimAmount =>
-        capitalAllowancesService.saveAnswers(ctx, ElectricVehicleChargePointsJourneyAnswers(electricChargePointAllowance = claimAmount)))
       for {
+        _ <- value.evcpClaimAmount.traverse(claimAmount =>
+          capitalAllowancesService.saveAnswers(ctx, ElectricVehicleChargePointsJourneyAnswers(electricChargePointAllowance = claimAmount)))
         _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, ElectricVehicleChargePoints, value.toDbModel)
       } yield NoContent
     }
@@ -306,9 +307,9 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveBalancingAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[BalancingAllowanceAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      value.balancingAllowanceAmount map (allowanceAmount =>
-        capitalAllowancesService.saveAnswers(ctx, BalancingAllowanceJourneyAnswers(allowanceOnSales = allowanceAmount)))
       for {
+        _ <- value.balancingAllowanceAmount.traverse(allowanceAmount =>
+          capitalAllowancesService.saveAnswers(ctx, BalancingAllowanceJourneyAnswers(allowanceOnSales = allowanceAmount)))
         _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, BalancingAllowance, value.toDbModel)
       } yield NoContent
     }
@@ -320,9 +321,9 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveAnnualInvestmentAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[AnnualInvestmentAllowanceAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      value.annualInvestmentAllowanceAmount map (allowanceAmount =>
-        capitalAllowancesService.saveAnswers(ctx, AnnualInvestmentAllowanceJourneyAnswers(annualInvestmentAllowance = allowanceAmount)))
       for {
+        _ <- value.annualInvestmentAllowanceAmount.traverse(allowanceAmount =>
+          capitalAllowancesService.saveAnswers(ctx, AnnualInvestmentAllowanceJourneyAnswers(annualInvestmentAllowance = allowanceAmount)))
         _ <- capitalAllowancesService.persistAnswers(
           businessId,
           taxYear,
