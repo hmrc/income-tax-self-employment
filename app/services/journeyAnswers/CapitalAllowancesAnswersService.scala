@@ -149,7 +149,7 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
         dbAnswers.map(answers =>
           AnnualInvestmentAllowanceAnswers(
             answers.annualInvestmentAllowance,
-            annualSummaries.annualAllowances.flatMap(_.annualInvestmentAllowance)
+            if (answers.annualInvestmentAllowance) annualSummaries.annualAllowances.flatMap(_.annualInvestmentAllowance) else None
           ))
     }
     EitherT.liftF(result)
