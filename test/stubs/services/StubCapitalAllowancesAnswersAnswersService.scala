@@ -26,6 +26,7 @@ import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestm
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
+import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
 import play.api.libs.json.Writes
 import services.journeyAnswers.CapitalAllowancesAnswersService
 import stubs.serviceUnitT
@@ -38,6 +39,7 @@ case class StubCapitalAllowancesAnswersAnswersService(
     persistCapitalAllowancesTailoring: ApiResultT[Unit] = serviceUnitT,
     getCapitalAllowancesTailoring: Either[ServiceError, Option[CapitalAllowancesTailoringAnswers]] = Right(None),
     getZeroEmissionCars: Either[ServiceError, Option[ZeroEmissionCarsAnswers]] = Right(None),
+    getZeroEmissionGoodsVehicleCars: Either[ServiceError, Option[ZeroEmissionGoodsVehicleAnswers]] = Right(None),
     getElectricVehicleChargePoints: Either[ServiceError, Option[ElectricVehicleChargePointsAnswers]] = Right(None),
     getBalancingAllowance: Either[ServiceError, Option[BalancingAllowanceAnswers]] = Right(None),
     getAnnualInvestmentAllowance: Either[ServiceError, Option[AnnualInvestmentAllowanceAnswers]] = Right(None))
@@ -62,6 +64,9 @@ case class StubCapitalAllowancesAnswersAnswersService(
 
   def getBalancingAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]] =
     EitherT.fromEither[Future](getBalancingAllowance)
+
+  def getZeroEmissionGoodsVehicle(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionGoodsVehicleAnswers]] =
+    EitherT.fromEither[Future](getZeroEmissionGoodsVehicleCars)
 
   def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]] =
     EitherT.fromEither[Future](getAnnualInvestmentAllowance)

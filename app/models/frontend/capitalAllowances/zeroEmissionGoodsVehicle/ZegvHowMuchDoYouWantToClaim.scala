@@ -29,7 +29,6 @@ object ZegvHowMuchDoYouWantToClaim extends Enumerable.Implicits {
     LowerAmount
   )
 
-
   implicit val enumerable: Enumerable[ZegvHowMuchDoYouWantToClaim] =
     Enumerable(values.map(v => v.toString -> v): _*)
 }

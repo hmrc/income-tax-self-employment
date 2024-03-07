@@ -19,6 +19,13 @@ package controllers
 import cats.data.EitherT
 import cats.implicits._
 import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
+import gens.CapitalAllowancesAnswersGen.{
+  balancingAllowanceAnswersGen,
+  capitalAllowancesTailoringAnswersGen,
+  electricVehicleChargePointsAnswersGen,
+  zeroEmissionCarsAnswersGen,
+  zeroEmissionGoodsVehicleAnswersGen
+}
 import gens.CapitalAllowancesAnswersGen._
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen._
@@ -623,6 +630,47 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
           expectedStatus = NO_CONTENT,
           expectedBody = "",
           methodBlock = () => underTest.saveZeroEmissionCars(currTaxYear, businessId, nino)
+        )
+      }
+    }
+  }
+
+  "ZeroEmissionGoodsVehicle" should {
+    s"Get return $NO_CONTENT if there is no answers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.getZeroEmissionGoodsVehicle(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Get return answers" in {
+      val answers = genOne(zeroEmissionGoodsVehicleAnswersGen)
+      val underTest = new JourneyAnswersController(
+        auth = mockAuthorisedAction,
+        cc = stubControllerComponents,
+        abroadAnswersService = StubAbroadAnswersService(),
+        incomeService = StubIncomeAnswersService(),
+        expensesService = StubExpensesAnswersService(),
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getZeroEmissionGoodsVehicleCars = Some(answers).asRight)
+      )
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.toJson(answers).toString(),
+        methodBlock = () => underTest.getZeroEmissionGoodsVehicle(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Save answers and return a $NO_CONTENT when successful" in {
+      forAll(zeroEmissionGoodsVehicleAnswersGen) { data =>
+        behave like testRoute(
+          request = buildRequest(data),
+          expectedStatus = NO_CONTENT,
+          expectedBody = "",
+          methodBlock = () => underTest.saveZeroEmissionGoodsVehicle(currTaxYear, businessId, nino)
         )
       }
     }
