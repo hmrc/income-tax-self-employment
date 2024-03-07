@@ -26,6 +26,7 @@ object ZeroEmissionCarsJourneyAnswers {
   implicit val formats: OFormat[ZeroEmissionCarsJourneyAnswers] = Json.format[ZeroEmissionCarsJourneyAnswers]
 }
 
+// TODO LT Convert all to booleans
 case class ZeroEmissionCarsAnswers(zeroEmissionCars: Boolean,
                                    zecAllowance: Option[ZecAllowance],
                                    zecTotalCostOfCar: Option[BigDecimal],
