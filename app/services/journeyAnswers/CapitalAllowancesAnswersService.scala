@@ -18,7 +18,13 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import connectors.SelfEmploymentConnector
-import models.common.JourneyName.{BalancingAllowance, CapitalAllowancesTailoring, ElectricVehicleChargePoints, ZeroEmissionCars}
+import models.common.JourneyName.{
+  AnnualInvestmentAllowance,
+  BalancingAllowance,
+  CapitalAllowancesTailoring,
+  ElectricVehicleChargePoints,
+  ZeroEmissionCars
+}
 import models.common._
 import models.connector.Api1802AnnualAllowancesBuilder
 import models.connector.api_1802.request.{AnnualAllowances, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
@@ -27,6 +33,7 @@ import models.database.capitalAllowances.{BalancingAllowanceDb, ElectricVehicleC
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
+import models.frontend.capitalAllowances.annualInvestmentAllowance.{AnnualInvestmentAllowanceAnswers, AnnualInvestmentAllowanceDb}
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
@@ -44,8 +51,8 @@ trait CapitalAllowancesAnswersService {
   def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]]
   def getZeroEmissionCars(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]]
   def getElectricVehicleChargePoints(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ElectricVehicleChargePointsAnswers]]
-
   def getBalancingAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]]
+  def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]]
 }
 
 @Singleton
@@ -123,6 +130,27 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
     val result = connector.getAnnualSummaries(ctx).map {
       case Right(annualSummaries) => dbAnswers.map(answers => BalancingAllowanceAnswers(answers, annualSummaries))
       case Left(_)                => None
+    }
+    EitherT.liftF(result)
+  }
+
+  def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]] =
+    for {
+      maybeData   <- getDbAnswers(ctx, AnnualInvestmentAllowance)
+      dbAnswers   <- getPersistedAnswers[AnnualInvestmentAllowanceDb](maybeData)
+      fullAnswers <- getAnnualInvestmentAllowanceWithApiAnswers(ctx, dbAnswers)
+    } yield fullAnswers
+
+  private def getAnnualInvestmentAllowanceWithApiAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[AnnualInvestmentAllowanceDb])(implicit
+      hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]] = {
+    val result = connector.getAnnualSummaries(ctx).map {
+      case Left(_) => None
+      case Right(annualSummaries) =>
+        dbAnswers.map(answers =>
+          AnnualInvestmentAllowanceAnswers(
+            answers.annualInvestmentAllowance,
+            annualSummaries.annualAllowances.flatMap(_.annualInvestmentAllowance)
+          ))
     }
     EitherT.liftF(result)
   }

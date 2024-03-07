@@ -19,12 +19,7 @@ package controllers
 import cats.data.EitherT
 import cats.implicits._
 import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
-import gens.CapitalAllowancesAnswersGen.{
-  balancingAllowanceAnswersGen,
-  capitalAllowancesTailoringAnswersGen,
-  electricVehicleChargePointsAnswersGen,
-  zeroEmissionCarsAnswersGen
-}
+import gens.CapitalAllowancesAnswersGen._
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
@@ -710,6 +705,47 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
           expectedStatus = NO_CONTENT,
           expectedBody = "",
           methodBlock = () => underTest.saveBalancingAllowance(currTaxYear, businessId, nino)
+        )
+      }
+    }
+  }
+
+  "AnnualInvestmentAllowance" should {
+    s"Get return $NO_CONTENT if there is no answers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.getAnnualInvestmentAllowance(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Get return answers" in {
+      val answers = genOne(annualInvestmentAllowanceAnswersGen)
+      val underTest = new JourneyAnswersController(
+        auth = mockAuthorisedAction,
+        cc = stubControllerComponents,
+        abroadAnswersService = StubAbroadAnswersService(),
+        incomeService = StubIncomeAnswersService(),
+        expensesService = StubExpensesAnswersService(),
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getAnnualInvestmentAllowance = Some(answers).asRight)
+      )
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.toJson(answers).toString(),
+        methodBlock = () => underTest.getAnnualInvestmentAllowance(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Save answers and return a $NO_CONTENT when successful" in {
+      forAll(annualInvestmentAllowanceAnswersGen) { data =>
+        behave like testRoute(
+          request = buildRequest(data),
+          expectedStatus = NO_CONTENT,
+          expectedBody = "",
+          methodBlock = () => underTest.saveAnnualInvestmentAllowance(currTaxYear, businessId, nino)
         )
       }
     }
