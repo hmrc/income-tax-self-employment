@@ -22,6 +22,11 @@ import models.common._
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
+import models.frontend.capitalAllowances.annualInvestmentAllowance.{
+  AnnualInvestmentAllowanceAnswers,
+  AnnualInvestmentAllowanceDb,
+  AnnualInvestmentAllowanceJourneyAnswers
+}
 import models.frontend.capitalAllowances.balancingAllowance.{BalancingAllowanceAnswers, BalancingAllowanceJourneyAnswers}
 import models.frontend.capitalAllowances.electricVehicleChargePoints.{ElectricVehicleChargePointsAnswers, ElectricVehicleChargePointsJourneyAnswers}
 import models.frontend.capitalAllowances.zeroEmissionCars.{ZeroEmissionCarsAnswers, ZeroEmissionCarsJourneyAnswers}
@@ -311,6 +316,25 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def getBalancingAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(capitalAllowancesService.getBalancingAllowance(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  def saveAnnualInvestmentAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBodyWithCtx[AnnualInvestmentAllowanceAnswers](taxYear, businessId, nino) { (ctx, value) =>
+      value.annualInvestmentAllowanceAmount map (allowanceAmount =>
+        capitalAllowancesService.saveAnswers(ctx, AnnualInvestmentAllowanceJourneyAnswers(annualInvestmentAllowance = allowanceAmount)))
+      for {
+        _ <- capitalAllowancesService.persistAnswers(
+          businessId,
+          taxYear,
+          user.getMtditid,
+          AnnualInvestmentAllowance,
+          AnnualInvestmentAllowanceDb(value.annualInvestmentAllowance))
+      } yield NoContent
+    }
+  }
+
+  def getAnnualInvestmentAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(capitalAllowancesService.getAnnualInvestmentAllowance(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
 }

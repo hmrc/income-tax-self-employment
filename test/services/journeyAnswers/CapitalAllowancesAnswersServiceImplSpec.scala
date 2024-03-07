@@ -17,13 +17,19 @@
 package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
-import gens.CapitalAllowancesAnswersGen.{capitalAllowancesTailoringAnswersGen, electricVehicleChargePointsDbAnswersGen, zeroEmissionCarsDbAnswersGen}
+import gens.CapitalAllowancesAnswersGen.{
+  annualInvestmentAllowanceDbAnswersGen,
+  capitalAllowancesTailoringAnswersGen,
+  electricVehicleChargePointsDbAnswersGen,
+  zeroEmissionCarsDbAnswersGen
+}
 import gens.{bigDecimalGen, genOne}
 import models.common.JourneyName.CapitalAllowancesTailoring
 import models.common.{JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import models.frontend.capitalAllowances.CapitalAllowances.{ZeroEmissionCar, ZeroEmissionGoodsVehicle}
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
+import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.{ZeroEmissionCarsAnswers, ZeroEmissionCarsJourneyAnswers}
 import org.scalatest.matchers.should.Matchers
@@ -123,6 +129,30 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
         ))
       val result          = services.getElectricVehicleChargePoints(journeyCtxWithNino).rightValue
       val expectedAnswers = ElectricVehicleChargePointsAnswers(dbAnswers, api1803SuccessResponse)
+
+      result shouldBe Some(expectedAnswers)
+    }
+  }
+
+  "getAnnualInvestmentAllowance" should {
+    "return empty if no answers" in {
+      val result = service.getAnnualInvestmentAllowance(journeyCtxWithNino).rightValue
+      assert(result === None)
+    }
+
+    "return answers if they exist" in {
+      val dbAnswers = genOne(annualInvestmentAllowanceDbAnswersGen)
+      val journeyAnswers: JourneyAnswers =
+        mkJourneyAnswers(JourneyName.AnnualInvestmentAllowance, JourneyStatus.Completed, Json.toJsObject(dbAnswers))
+      val services = new CapitalAllowancesAnswersServiceImpl(
+        connector,
+        StubJourneyAnswersRepository(
+          getAnswer = Some(journeyAnswers)
+        ))
+      val result = services.getAnnualInvestmentAllowance(journeyCtxWithNino).rightValue
+      val expectedAnswers = AnnualInvestmentAllowanceAnswers(
+        dbAnswers.annualInvestmentAllowance,
+        api1803SuccessResponse.annualAllowances.flatMap(_.annualInvestmentAllowance))
 
       result shouldBe Some(expectedAnswers)
     }

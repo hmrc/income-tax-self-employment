@@ -22,6 +22,7 @@ import models.connector.Api1802AnnualAllowancesBuilder
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
+import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
@@ -38,7 +39,8 @@ case class StubCapitalAllowancesAnswersAnswersService(
     getCapitalAllowancesTailoring: Either[ServiceError, Option[CapitalAllowancesTailoringAnswers]] = Right(None),
     getZeroEmissionCars: Either[ServiceError, Option[ZeroEmissionCarsAnswers]] = Right(None),
     getElectricVehicleChargePoints: Either[ServiceError, Option[ElectricVehicleChargePointsAnswers]] = Right(None),
-    getBalancingAllowance: Either[ServiceError, Option[BalancingAllowanceAnswers]] = Right(None))
+    getBalancingAllowance: Either[ServiceError, Option[BalancingAllowanceAnswers]] = Right(None),
+    getAnnualInvestmentAllowance: Either[ServiceError, Option[AnnualInvestmentAllowanceAnswers]] = Right(None))
     extends CapitalAllowancesAnswersService {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -60,4 +62,7 @@ case class StubCapitalAllowancesAnswersAnswersService(
 
   def getBalancingAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]] =
     EitherT.fromEither[Future](getBalancingAllowance)
+
+  def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]] =
+    EitherT.fromEither[Future](getAnnualInvestmentAllowance)
 }
