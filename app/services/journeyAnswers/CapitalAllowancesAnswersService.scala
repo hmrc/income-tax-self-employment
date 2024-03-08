@@ -23,13 +23,14 @@ import models.common.JourneyName.{
   BalancingAllowance,
   CapitalAllowancesTailoring,
   ElectricVehicleChargePoints,
-  ZeroEmissionCars
+  ZeroEmissionCars,
+  ZeroEmissionGoodsVehicle
 }
 import models.common._
 import models.connector.Api1802AnnualAllowancesBuilder
 import models.connector.api_1802.request.{AnnualAllowances, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.database.JourneyAnswers
-import models.database.capitalAllowances.{BalancingAllowanceDb, ElectricVehicleChargePointsDb, ZeroEmissionCarsDb}
+import models.database.capitalAllowances.{BalancingAllowanceDb, ElectricVehicleChargePointsDb, ZeroEmissionCarsDb, ZeroEmissionGoodsVehicleDb}
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
@@ -37,6 +38,7 @@ import models.frontend.capitalAllowances.annualInvestmentAllowance.{AnnualInvest
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
+import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
 import play.api.libs.json.{Json, Writes}
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -50,6 +52,7 @@ trait CapitalAllowancesAnswersService {
       writes: Writes[A]): ApiResultT[Unit]
   def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]]
   def getZeroEmissionCars(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]]
+  def getZeroEmissionGoodsVehicle(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionGoodsVehicleAnswers]]
   def getElectricVehicleChargePoints(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ElectricVehicleChargePointsAnswers]]
   def getBalancingAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]]
   def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]]
@@ -96,6 +99,22 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
       hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]] = {
     val result = connector.getAnnualSummaries(ctx).map {
       case Right(annualSummaries) => dbAnswers.map(answers => ZeroEmissionCarsAnswers(answers, annualSummaries))
+      case Left(_)                => None
+    }
+    EitherT.liftF(result)
+  }
+
+  def getZeroEmissionGoodsVehicle(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionGoodsVehicleAnswers]] =
+    for {
+      maybeData   <- getDbAnswers(ctx, ZeroEmissionGoodsVehicle)
+      dbAnswers   <- getPersistedAnswers[ZeroEmissionGoodsVehicleDb](maybeData)
+      fullAnswers <- getZeroEmissionGoodsVehicleWithApiAnswers(ctx, dbAnswers)
+    } yield fullAnswers
+
+  private def getZeroEmissionGoodsVehicleWithApiAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[ZeroEmissionGoodsVehicleDb])(implicit
+      hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionGoodsVehicleAnswers]] = {
+    val result = connector.getAnnualSummaries(ctx).map {
+      case Right(annualSummaries) => dbAnswers.map(answers => ZeroEmissionGoodsVehicleAnswers(answers, annualSummaries))
       case Left(_)                => None
     }
     EitherT.liftF(result)

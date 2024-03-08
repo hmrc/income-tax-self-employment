@@ -26,6 +26,7 @@ import models.frontend.capitalAllowances.electricVehicleChargePoints.{
   EvcpUseOutsideSE
 }
 import models.frontend.capitalAllowances.zeroEmissionCars._
+import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.{ZegvHowMuchDoYouWantToClaim, ZegvUseOutsideSE, ZeroEmissionGoodsVehicleAnswers}
 import models.frontend.capitalAllowances.{CapitalAllowances, CapitalAllowancesTailoringAnswers}
 import org.scalacheck.Gen
 
@@ -58,6 +59,26 @@ object CapitalAllowancesAnswersGen {
     zeroEmissionCarsUsedOutsideSEPercentage,
     zecHowMuchDoYouWantToClaim,
     zeroEmissionCarsClaimAmount
+  )
+
+  val zeroEmissionGoodsVehicleAnswersGen: Gen[ZeroEmissionGoodsVehicleAnswers] = for {
+    zeroEmissionGoodsVehicle    <- booleanGen
+    zegvAllowance               <- Gen.option(booleanGen)
+    zegvTotalCostOfCar          <- Gen.option(bigDecimalGen)
+    zegvOnlyForSelfEmployment   <- Gen.option(booleanGen)
+    zegvUsedOutsideSE           <- Gen.option(Gen.oneOf(ZegvUseOutsideSE.values))
+    zegvUsedOutsideSEPercentage <- Gen.option(intGen)
+    zegvHowMuchDoYouWantToClaim <- Gen.option(Gen.oneOf(ZegvHowMuchDoYouWantToClaim.values))
+    zegvClaimAmount             <- Gen.option(bigDecimalGen)
+  } yield ZeroEmissionGoodsVehicleAnswers(
+    zeroEmissionGoodsVehicle,
+    zegvAllowance,
+    zegvTotalCostOfCar,
+    zegvOnlyForSelfEmployment,
+    zegvUsedOutsideSE,
+    zegvUsedOutsideSEPercentage,
+    zegvHowMuchDoYouWantToClaim,
+    zegvClaimAmount
   )
 
   val zeroEmissionCarsDbAnswersGen: Gen[ZeroEmissionCarsDb] = for {
