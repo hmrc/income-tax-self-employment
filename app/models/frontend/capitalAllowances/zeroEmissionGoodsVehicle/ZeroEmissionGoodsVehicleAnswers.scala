@@ -22,7 +22,7 @@ import models.connector.api_1803
 
 case class ZeroEmissionGoodsVehicleAnswers(zeroEmissionGoodsVehicle: Boolean,
                                            zegvAllowance: Option[Boolean],
-                                           zegvTotalCostOfCar: Option[BigDecimal],
+                                           zegvTotalCostOfVehicle: Option[BigDecimal],
                                            zegvOnlyForSelfEmployment: Option[Boolean],
                                            zegvUsedOutsideSE: Option[ZegvUseOutsideSE],
                                            zegvUsedOutsideSEPercentage: Option[Int],
@@ -31,7 +31,7 @@ case class ZeroEmissionGoodsVehicleAnswers(zeroEmissionGoodsVehicle: Boolean,
   def toDbModel: ZeroEmissionGoodsVehicleDb = ZeroEmissionGoodsVehicleDb(
     zeroEmissionGoodsVehicle,
     zegvAllowance,
-    zegvTotalCostOfCar,
+    zegvTotalCostOfVehicle,
     zegvOnlyForSelfEmployment,
     zegvUsedOutsideSE,
     zegvUsedOutsideSEPercentage,
@@ -46,7 +46,7 @@ object ZeroEmissionGoodsVehicleAnswers {
     new ZeroEmissionGoodsVehicleAnswers(
       zeroEmissionGoodsVehicle = dbAnswers.zeroEmissionGoodsVehicle,
       zegvAllowance = dbAnswers.zegvAllowance,
-      zegvTotalCostOfCar = dbAnswers.zegvTotalCostOfCar,
+      zegvTotalCostOfVehicle = dbAnswers.zegvTotalCostOfVehicle,
       zegvOnlyForSelfEmployment = dbAnswers.zegvOnlyForSelfEmployment,
       zegvUsedOutsideSE = dbAnswers.zegvUsedOutsideSE,
       zegvUsedOutsideSEPercentage = dbAnswers.zegvUsedOutsideSEPercentage,
