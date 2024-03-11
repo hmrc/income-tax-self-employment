@@ -21,7 +21,7 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class ZeroEmissionGoodsVehicleDb(zeroEmissionGoodsVehicle: Boolean,
                                             zegvAllowance: Option[Boolean],
-                                            zegvTotalCostOfCar: Option[BigDecimal],
+                                            zegvTotalCostOfVehicle: Option[BigDecimal],
                                             zegvOnlyForSelfEmployment: Option[Boolean],
                                             zegvUsedOutsideSE: Option[ZegvUseOutsideSE],
                                             zegvUsedOutsideSEPercentage: Option[Int],
