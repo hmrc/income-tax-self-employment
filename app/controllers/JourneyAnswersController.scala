@@ -58,6 +58,7 @@ import utils.Logging
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import cats.implicits._
+import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 
 @Singleton
 class JourneyAnswersController @Inject() (auth: AuthorisedAction,
@@ -351,6 +352,21 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def getAnnualInvestmentAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(capitalAllowancesService.getAnnualInvestmentAllowance(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  def saveWritingDownAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBodyWithCtx[WritingDownAllowanceAnswers](taxYear, businessId, nino) { (ctx, answers) =>
+      for {
+        maybeCurrent <- capitalAllowancesService.getAnnualSummaries(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino))
+        maybeAnnualAllowance = maybeCurrent.flatMap(_.annualAllowances.map(_.toApi1802AnnualAllowance))
+        _ <- capitalAllowancesService.saveAnnualAllowances(ctx, answers.toWritingDownDownstream(maybeAnnualAllowance))
+        _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, WritingDownAllowance, answers.toDbModel)
+      } yield NoContent
+    }
+  }
+
+  def getWritingDownAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(capitalAllowancesService.getWritingDownAllowance(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
 }

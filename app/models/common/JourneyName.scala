@@ -49,6 +49,7 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
   case object ZeroEmissionGoodsVehicle    extends JourneyName("capital-allowances-zero-emission-goods-vehicle")
   case object ElectricVehicleChargePoints extends JourneyName("capital-allowances-electric-vehicle-charge-points")
   case object BalancingAllowance          extends JourneyName("capital-allowances-balancing-allowance")
+  case object WritingDownAllowance        extends JourneyName("capital-allowances-writing-down-allowance")
   case object AnnualInvestmentAllowance   extends JourneyName("capital-allowances-annual-investment-allowance")
   case object SpecialTaxSites             extends JourneyName("capital-allowances-special-tax-sites")
 
