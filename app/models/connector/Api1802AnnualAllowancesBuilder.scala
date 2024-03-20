@@ -43,5 +43,4 @@ object Api1802AnnualAllowancesBuilder {
   implicit val annualInvestmentAllowance: Api1802AnnualAllowancesBuilder[AnnualInvestmentAllowanceJourneyAnswers] =
     (answers: AnnualInvestmentAllowanceJourneyAnswers) =>
       AnnualAllowances.empty.copy(annualInvestmentAllowance = Some(answers.annualInvestmentAllowance))
-
 }

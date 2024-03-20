@@ -39,13 +39,16 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class StubCapitalAllowancesAnswersAnswersService(
     saveAnswers: ApiResultT[Unit] = serviceUnitT,
+    saveAnnualAllowances: ApiResultT[Unit] = serviceUnitT,
+    getAnnualSummaries: Either[ServiceError, Option[SuccessResponseSchema]] = Right(None),
     persistCapitalAllowancesTailoring: ApiResultT[Unit] = serviceUnitT,
     getCapitalAllowancesTailoring: Either[ServiceError, Option[CapitalAllowancesTailoringAnswers]] = Right(None),
     getZeroEmissionCars: Either[ServiceError, Option[ZeroEmissionCarsAnswers]] = Right(None),
     getZeroEmissionGoodsVehicleCars: Either[ServiceError, Option[ZeroEmissionGoodsVehicleAnswers]] = Right(None),
     getElectricVehicleChargePoints: Either[ServiceError, Option[ElectricVehicleChargePointsAnswers]] = Right(None),
     getBalancingAllowance: Either[ServiceError, Option[BalancingAllowanceAnswers]] = Right(None),
-    getAnnualInvestmentAllowance: Either[ServiceError, Option[AnnualInvestmentAllowanceAnswers]] = Right(None))
+    getAnnualInvestmentAllowance: Either[ServiceError, Option[AnnualInvestmentAllowanceAnswers]] = Right(None),
+    getWritingDownAllowance: Either[ServiceError, Option[WritingDownAllowanceAnswers]] = Right(None))
     extends CapitalAllowancesAnswersService {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -74,9 +77,13 @@ case class StubCapitalAllowancesAnswersAnswersService(
   def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]] =
     EitherT.fromEither[Future](getAnnualInvestmentAllowance)
 
-  def saveAnnualAllowances(ctx: JourneyContextWithNino, updatedAnnualAllowances: AnnualAllowances)(implicit hc: HeaderCarrier): ApiResultT[Unit] = ???
+  def saveAnnualAllowances(ctx: JourneyContextWithNino, updatedAnnualAllowances: AnnualAllowances)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    saveAnnualAllowances
 
-  def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SuccessResponseSchema]] = ???
+  def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SuccessResponseSchema]] =
+    EitherT.fromEither[Future](getAnnualSummaries)
 
-  def getWritingDownAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WritingDownAllowanceAnswers]] = ???
+  def getWritingDownAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WritingDownAllowanceAnswers]] =
+    EitherT.fromEither[Future](getWritingDownAllowance)
+
 }

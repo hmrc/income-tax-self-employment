@@ -50,8 +50,8 @@ case class AnnualAllowancesType(
     allowanceOnSales = allowanceOnSales,
     capitalAllowanceSingleAssetPool = capitalAllowanceSingleAssetPool,
     electricChargePointAllowance = electricChargePointAllowance,
-    structuredBuildingAllowance = None,         // TODO fix me
-    enhancedStructuredBuildingAllowance = None, // TODO fix me
+    structuredBuildingAllowance = None,         // TODO SASS-6247 - fix all save and continue, we first need to GET before we call PUT
+    enhancedStructuredBuildingAllowance = None, // TODO SASS-6247 - fix all save and continue, we first need to GET before we call PUT
     zeroEmissionsCarAllowance = zeroEmissionsCarAllowance,
     tradingIncomeAllowance = tradingIncomeAllowance
   )

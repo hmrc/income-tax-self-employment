@@ -20,6 +20,7 @@ import models.connector.api_1802.request.AnnualAllowances
 import models.database.capitalAllowances.WritingDownAllowanceDb
 import play.api.libs.json.{Format, Json}
 import models.connector.api_1803
+
 final case class WritingDownAllowanceAnswers(
     wdaSpecialRate: Option[Boolean],
     wdaSpecialRateClaimAmount: Option[BigDecimal],

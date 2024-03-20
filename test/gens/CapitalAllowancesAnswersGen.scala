@@ -25,6 +25,7 @@ import models.frontend.capitalAllowances.electricVehicleChargePoints.{
   EvcpOnlyForSelfEmployment,
   EvcpUseOutsideSE
 }
+import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars._
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.{ZegvHowMuchDoYouWantToClaim, ZegvUseOutsideSE, ZeroEmissionGoodsVehicleAnswers}
 import models.frontend.capitalAllowances.{CapitalAllowances, CapitalAllowancesTailoringAnswers}
@@ -159,6 +160,19 @@ object CapitalAllowancesAnswersGen {
   } yield AnnualInvestmentAllowanceAnswers(
     annualInvestmentAllowance,
     annualInvestmentAllowanceAmount
+  )
+
+  val writingDownAllowanceGen: Gen[WritingDownAllowanceAnswers] = for {
+    wdaSpecialRateClaimAmount  <- Gen.option(bigDecimalGen)
+    wdaMainRateClaimAmount     <- Gen.option(bigDecimalGen)
+    wdaSingleAssetClaimAmounts <- Gen.option(bigDecimalGen)
+  } yield WritingDownAllowanceAnswers(
+    Some(true),
+    wdaSpecialRateClaimAmount,
+    Some(true),
+    wdaMainRateClaimAmount,
+    Some(true),
+    wdaSingleAssetClaimAmounts
   )
 
 }
