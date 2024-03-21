@@ -80,3 +80,6 @@ GET         /:taxYear/:businessId/capital-allowances-balancing-allowance/:nino/a
 
 POST        /:taxYear/:businessId/capital-allowances-annual-investment-allowance/:nino/answers           controllers.JourneyAnswersController.saveAnnualInvestmentAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/capital-allowances-annual-investment-allowance/:nino/answers           controllers.JourneyAnswersController.getAnnualInvestmentAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
+POST        /:taxYear/:businessId/capital-allowances-writing-down-allowance/:nino/answers                controllers.JourneyAnswersController.saveWritingDownAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+GET         /:taxYear/:businessId/capital-allowances-writing-down-allowance/:nino/answers                controllers.JourneyAnswersController.getWritingDownAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

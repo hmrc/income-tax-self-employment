@@ -16,6 +16,7 @@
 
 package models.connector.api_1803
 
+import models.connector.api_1802.request.AnnualAllowances
 import play.api.libs.json._
 
 /** Represents the Swagger definition for annualAllowancesType.
@@ -38,7 +39,23 @@ case class AnnualAllowancesType(
     enhancedStructuredBuildingAllowance: Option[List[StructuredBuildingAllowanceTypeInner]],
     zeroEmissionsCarAllowance: Option[BigDecimal],
     tradingIncomeAllowance: Option[BigDecimal]
-)
+) {
+  def toApi1802AnnualAllowance: AnnualAllowances = AnnualAllowances(
+    annualInvestmentAllowance = annualInvestmentAllowance,
+    capitalAllowanceMainPool = capitalAllowanceMainPool,
+    capitalAllowanceSpecialRatePool = capitalAllowanceSpecialRatePool,
+    zeroEmissionGoodsVehicleAllowance = zeroEmissionGoodsVehicleAllowance,
+    businessPremisesRenovationAllowance = businessPremisesRenovationAllowance,
+    enhanceCapitalAllowance = enhanceCapitalAllowance,
+    allowanceOnSales = allowanceOnSales,
+    capitalAllowanceSingleAssetPool = capitalAllowanceSingleAssetPool,
+    electricChargePointAllowance = electricChargePointAllowance,
+    structuredBuildingAllowance = None,         // TODO SASS-6247 - fix all save and continue, we first need to GET before we call PUT
+    enhancedStructuredBuildingAllowance = None, // TODO SASS-6247 - fix all save and continue, we first need to GET before we call PUT
+    zeroEmissionsCarAllowance = zeroEmissionsCarAllowance,
+    tradingIncomeAllowance = tradingIncomeAllowance
+  )
+}
 
 object AnnualAllowancesType {
   implicit lazy val annualAllowancesTypeJsonFormat: Format[AnnualAllowancesType] = Json.format[AnnualAllowancesType]

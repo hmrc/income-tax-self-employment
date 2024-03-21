@@ -799,6 +799,47 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
+  "WritingDownAllowance" should {
+    s"Get return $NO_CONTENT if there is no answers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.getWritingDownAllowance(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Get return answers" in {
+      val answers = genOne(writingDownAllowanceGen)
+      val underTest = new JourneyAnswersController(
+        auth = mockAuthorisedAction,
+        cc = stubControllerComponents,
+        abroadAnswersService = StubAbroadAnswersService(),
+        incomeService = StubIncomeAnswersService(),
+        expensesService = StubExpensesAnswersService(),
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getWritingDownAllowance = Some(answers).asRight)
+      )
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.toJson(answers).toString(),
+        methodBlock = () => underTest.getWritingDownAllowance(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Save answers and return a $NO_CONTENT when successful" in {
+      forAll(writingDownAllowanceGen) { data =>
+        behave like testRoute(
+          request = buildRequest(data),
+          expectedStatus = NO_CONTENT,
+          expectedBody = "",
+          methodBlock = () => underTest.saveWritingDownAllowance(currTaxYear, businessId, nino)
+        )
+      }
+    }
+  }
+
   trait GetExpensesTest[T] {
     val expensesService: ExpensesAnswersService = mock[ExpensesAnswersService]
     val journeyAnswers: T
