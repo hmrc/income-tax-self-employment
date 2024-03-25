@@ -18,15 +18,7 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import connectors.SelfEmploymentConnector
-import models.common.JourneyName.{
-  AnnualInvestmentAllowance,
-  BalancingAllowance,
-  CapitalAllowancesTailoring,
-  ElectricVehicleChargePoints,
-  WritingDownAllowance,
-  ZeroEmissionCars,
-  ZeroEmissionGoodsVehicle
-}
+import models.common.JourneyName.{AnnualInvestmentAllowance, BalancingAllowance, CapitalAllowancesTailoring, ElectricVehicleChargePoints, SpecialTaxSites, WritingDownAllowance, ZeroEmissionCars, ZeroEmissionGoodsVehicle}
 import models.common._
 import models.connector.api_1802.request.{AnnualAllowances, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.{Api1802AnnualAllowancesBuilder, api_1803}
@@ -61,6 +53,7 @@ trait CapitalAllowancesAnswersService {
   def getBalancingAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]]
   def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]]
   def getWritingDownAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WritingDownAllowanceAnswers]]
+  def getSpecialTaxSites(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]]
 
 }
 
@@ -200,6 +193,22 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
       hc: HeaderCarrier): ApiResultT[Option[WritingDownAllowanceAnswers]] = {
     val result = connector.getAnnualSummaries(ctx).map {
       case Right(annualSummaries) => dbAnswers.map(_ => WritingDownAllowanceAnswers(annualSummaries))
+      case Left(_)                => None
+    }
+    EitherT.liftF(result)
+  }
+
+  def getSpecialTaxSites(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]] =
+    for {
+      maybeData   <- getDbAnswers(ctx, SpecialTaxSites)
+      dbAnswers   <- getPersistedAnswers[SpecialTaxSitesDb](maybeData)
+      fullAnswers <- getSpecialTaxSitesWithApiAnswers(ctx, dbAnswers)
+    } yield fullAnswers
+
+  private def getSpecialTaxSitesWithApiAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[SpecialTaxSitesDb])(implicit
+                                                                                                                            hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]] = {
+    val result = connector.getAnnualSummaries(ctx).map {
+      case Right(annualSummaries) => dbAnswers.map(_ => SpecialTaxSitesAnswers(annualSummaries))
       case Left(_)                => None
     }
     EitherT.liftF(result)

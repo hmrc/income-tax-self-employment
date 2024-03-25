@@ -25,8 +25,12 @@ import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
+import java.time.format.DateTimeFormatter
+
 package object connector {
   type ApiResponse[A] = Either[DownstreamError, A]
+
+  val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
   implicit def httpReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[A]] = (method: String, url: String, response: HttpResponse) => {
     ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
