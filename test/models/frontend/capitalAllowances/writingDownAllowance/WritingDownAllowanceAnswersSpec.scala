@@ -16,6 +16,7 @@
 
 package models.frontend.capitalAllowances.writingDownAllowance
 
+import data.api1802.AnnualAllowancesData
 import models.connector.api_1802.request.AnnualAllowances
 import models.database.capitalAllowances.WritingDownAllowanceDb
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -51,21 +52,7 @@ class WritingDownAllowanceAnswersSpec extends AnyWordSpecLike {
     }
 
     "convert to AnnualAllowances with previous answers" in {
-      val previous = AnnualAllowances(
-        annualInvestmentAllowance = Some(1),
-        capitalAllowanceMainPool = Some(2),
-        capitalAllowanceSpecialRatePool = Some(3),
-        zeroEmissionGoodsVehicleAllowance = Some(4),
-        businessPremisesRenovationAllowance = Some(5),
-        enhanceCapitalAllowance = Some(6),
-        allowanceOnSales = Some(7),
-        capitalAllowanceSingleAssetPool = Some(8),
-        electricChargePointAllowance = Some(9),
-        structuredBuildingAllowance = None,
-        enhancedStructuredBuildingAllowance = None,
-        zeroEmissionsCarAllowance = Some(10),
-        tradingIncomeAllowance = Some(11)
-      )
+      val previous = AnnualAllowancesData.example
 
       val result = answers.toDownStream(Some(previous))
       assert(

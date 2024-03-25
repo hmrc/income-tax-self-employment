@@ -50,5 +50,5 @@ case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boolean],
 }
 
 object NewSpecialTaxSite {
-  implicit val formats: Format[NewSpecialTaxSite] = Json.format[NewSpecialTaxSite]
+  implicit val format: Format[NewSpecialTaxSite] = Json.format[NewSpecialTaxSite]
 }

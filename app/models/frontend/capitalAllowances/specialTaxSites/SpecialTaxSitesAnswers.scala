@@ -53,7 +53,7 @@ case class SpecialTaxSitesAnswers(specialTaxSites: Boolean,
 }
 
 object SpecialTaxSitesAnswers extends Logging {
-  implicit val formats: Format[SpecialTaxSitesAnswers] = Json.format[SpecialTaxSitesAnswers]
+  implicit val format: Format[SpecialTaxSitesAnswers] = Json.format[SpecialTaxSitesAnswers]
 
   def apply(dbModel: SpecialTaxSitesDb, annualSummaries: api_1803.SuccessResponseSchema): Option[SpecialTaxSitesAnswers] = {
     val enhancedStructuredBuildingAllowance = annualSummaries.annualAllowances.flatMap(_.enhancedStructuredBuildingAllowance).getOrElse(Nil)
