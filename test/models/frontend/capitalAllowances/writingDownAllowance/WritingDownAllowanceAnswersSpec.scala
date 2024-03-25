@@ -17,7 +17,6 @@
 package models.frontend.capitalAllowances.writingDownAllowance
 
 import data.api1802.AnnualAllowancesData
-import models.connector.api_1802.request.AnnualAllowances
 import models.database.capitalAllowances.WritingDownAllowanceDb
 import org.scalatest.wordspec.AnyWordSpecLike
 
