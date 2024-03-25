@@ -43,9 +43,9 @@ case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boolean],
     } yield FirstYear(qualifyingDate = startDate.format(dateFormatter), qualifyingAmountExpenditure = claimAmount)
 
   def toBuildingAllowance(existingSiteClaimingAmount: BigDecimal): Option[BuildingAllowance] =
-    for {
-      location <- specialTaxSiteLocation.map(_.toBuilding)
-    } yield BuildingAllowance(amount = existingSiteClaimingAmount, firstYear = toFirstYear, building = location)
+    specialTaxSiteLocation.map(_.toBuilding).map { location =>
+      BuildingAllowance(amount = existingSiteClaimingAmount, firstYear = toFirstYear, building = location)
+    }
 
 }
 
