@@ -382,7 +382,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def getSpecialTaxSites(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleOptionalApiResult(capitalAllowancesService.getWritingDownAllowance(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+    handleOptionalApiResult(capitalAllowancesService.getSpecialTaxSites(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
 }
