@@ -17,6 +17,7 @@
 package models.frontend.capitalAllowances.specialTaxSites
 
 import models.connector.api_1802.request.Building
+import models.connector.api_1803.StructuredBuildingAllowanceTypeInnerBuilding
 import play.api.libs.json.{Json, OFormat}
 
 case class SpecialTaxSiteLocation(buildingName: Option[String], buildingNumber: Option[String], postCode: String) {
@@ -30,4 +31,11 @@ case class SpecialTaxSiteLocation(buildingName: Option[String], buildingNumber: 
 
 object SpecialTaxSiteLocation {
   implicit val format: OFormat[SpecialTaxSiteLocation] = Json.format[SpecialTaxSiteLocation]
+
+  def apply(building: StructuredBuildingAllowanceTypeInnerBuilding): SpecialTaxSiteLocation =
+    new SpecialTaxSiteLocation(
+      building.name,
+      building.number,
+      building.postCode
+    )
 }

@@ -17,8 +17,12 @@
 package models.frontend.capitalAllowances.specialTaxSites
 
 import models.connector.api_1802.request.AnnualAllowances
+import models.connector.{api_1803, dateFormatter}
 import models.database.capitalAllowances.SpecialTaxSitesDb
 import play.api.libs.json.{Format, Json}
+import utils.Logging
+
+import java.time.LocalDate
 
 case class SpecialTaxSitesAnswers(specialTaxSites: Boolean,
                                   newSpecialTaxSites: List[NewSpecialTaxSite],
@@ -48,6 +52,38 @@ case class SpecialTaxSitesAnswers(specialTaxSites: Boolean,
   }
 }
 
-object SpecialTaxSitesAnswers {
+object SpecialTaxSitesAnswers extends Logging {
   implicit val formats: Format[SpecialTaxSitesAnswers] = Json.format[SpecialTaxSitesAnswers]
+
+  def apply(dbModel: SpecialTaxSitesDb, annualSummaries: api_1803.SuccessResponseSchema): Option[SpecialTaxSitesAnswers] = {
+    val enhancedStructuredBuildingAllowance = annualSummaries.annualAllowances.flatMap(_.enhancedStructuredBuildingAllowance).getOrElse(Nil)
+    val sitesFromDb                         = dbModel.newSpecialTaxSites
+
+    // TODO Get back to this code at the end once we figure out what we do when data change out of our sight (via Software etc.)
+    if (enhancedStructuredBuildingAllowance.size != sitesFromDb.size) {
+      logger.warn("Mismatch between the number of special tax sites in the database and the number of special tax sites in the response from the API")
+      None
+    } else {
+      val newSpecialTaxSites = sitesFromDb.zip(enhancedStructuredBuildingAllowance).map { case (site, buildingAllowance) =>
+        NewSpecialTaxSite(
+          contractForBuildingConstruction = site.contractForBuildingConstruction,
+          contractStartDate = site.contractStartDate,
+          constructionStartDate = site.constructionStartDate,
+          qualifyingUseStartDate = buildingAllowance.firstYear.map(_.qualifyingDate).map(date => LocalDate.parse(date, dateFormatter)),
+          specialTaxSiteLocation = Some(SpecialTaxSiteLocation.apply(buildingAllowance.building)),
+          newSiteClaimingAmount = buildingAllowance.firstYear.map(_.qualifyingAmountExpenditure)
+        )
+      }
+      val answers = new SpecialTaxSitesAnswers(
+        specialTaxSites = dbModel.specialTaxSites,
+        newSpecialTaxSites = newSpecialTaxSites,
+        haveYouUsedStsAllowanceBefore = dbModel.haveYouUsedStsAllowanceBefore,
+        continueClaimingAllowanceForExistingSite = dbModel.continueClaimingAllowanceForExistingSite,
+        existingSiteClaimingAmount =
+          enhancedStructuredBuildingAllowance.headOption.map(_.amount).getOrElse(BigDecimal(0)) // TODO Figure out how to set it properly
+      )
+      Some(answers)
+    }
+
+  }
 }

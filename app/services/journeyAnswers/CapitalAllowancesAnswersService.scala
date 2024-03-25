@@ -18,7 +18,16 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import connectors.SelfEmploymentConnector
-import models.common.JourneyName.{AnnualInvestmentAllowance, BalancingAllowance, CapitalAllowancesTailoring, ElectricVehicleChargePoints, SpecialTaxSites, WritingDownAllowance, ZeroEmissionCars, ZeroEmissionGoodsVehicle}
+import models.common.JourneyName.{
+  AnnualInvestmentAllowance,
+  BalancingAllowance,
+  CapitalAllowancesTailoring,
+  ElectricVehicleChargePoints,
+  SpecialTaxSites,
+  WritingDownAllowance,
+  ZeroEmissionCars,
+  ZeroEmissionGoodsVehicle
+}
 import models.common._
 import models.connector.api_1802.request.{AnnualAllowances, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.{Api1802AnnualAllowancesBuilder, api_1803}
@@ -30,6 +39,7 @@ import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.capitalAllowances.annualInvestmentAllowance.{AnnualInvestmentAllowanceAnswers, AnnualInvestmentAllowanceDb}
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
+import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
@@ -206,9 +216,9 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
     } yield fullAnswers
 
   private def getSpecialTaxSitesWithApiAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[SpecialTaxSitesDb])(implicit
-                                                                                                                            hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]] = {
+      hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]] = {
     val result = connector.getAnnualSummaries(ctx).map {
-      case Right(annualSummaries) => dbAnswers.map(_ => SpecialTaxSitesAnswers(annualSummaries))
+      case Right(annualSummaries) => dbAnswers.flatMap(dbModel => SpecialTaxSitesAnswers(dbModel, annualSummaries))
       case Left(_)                => None
     }
     EitherT.liftF(result)
