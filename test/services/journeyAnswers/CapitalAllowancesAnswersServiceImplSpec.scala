@@ -17,12 +17,7 @@
 package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
-import gens.CapitalAllowancesAnswersGen.{
-  annualInvestmentAllowanceDbAnswersGen,
-  capitalAllowancesTailoringAnswersGen,
-  electricVehicleChargePointsDbAnswersGen,
-  zeroEmissionCarsDbAnswersGen
-}
+import gens.CapitalAllowancesAnswersGen._
 import gens.{bigDecimalGen, genOne}
 import models.common.JourneyName.CapitalAllowancesTailoring
 import models.common.{JourneyName, JourneyStatus}

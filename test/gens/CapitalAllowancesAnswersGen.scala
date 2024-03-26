@@ -25,11 +25,14 @@ import models.frontend.capitalAllowances.electricVehicleChargePoints.{
   EvcpOnlyForSelfEmployment,
   EvcpUseOutsideSE
 }
+import models.frontend.capitalAllowances.specialTaxSites.{NewSpecialTaxSite, SpecialTaxSiteLocation, SpecialTaxSitesAnswers}
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars._
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.{ZegvHowMuchDoYouWantToClaim, ZegvUseOutsideSE, ZeroEmissionGoodsVehicleAnswers}
 import models.frontend.capitalAllowances.{CapitalAllowances, CapitalAllowancesTailoringAnswers}
 import org.scalacheck.Gen
+
+import java.time.LocalDate
 
 object CapitalAllowancesAnswersGen {
   val capitalAllowancesTailoringGen: Gen[CapitalAllowances] = Gen.oneOf(CapitalAllowances.accrualAllowances)
@@ -174,5 +177,29 @@ object CapitalAllowancesAnswersGen {
     Some(true),
     wdaSingleAssetClaimAmounts
   )
+
+  val specialTaxSitesGen: Gen[SpecialTaxSitesAnswers] = for {
+    claimingAmount             <- Gen.option(bigDecimalGen)
+    existingSiteClaimingAmount <- bigDecimalGen
+  } yield {
+    val newSpecialTaxSites = List(
+      NewSpecialTaxSite(
+        contractForBuildingConstruction = Some(true),
+        contractStartDate = Some(LocalDate.now()),
+        constructionStartDate = Some(LocalDate.now()),
+        qualifyingUseStartDate = Some(LocalDate.now()),
+        specialTaxSiteLocation = Some(SpecialTaxSiteLocation(Some("name"), Some("number"), "AA11AA")),
+        newSiteClaimingAmount = claimingAmount
+      )
+    )
+
+    SpecialTaxSitesAnswers(
+      specialTaxSites = true,
+      newSpecialTaxSites = Some(newSpecialTaxSites),
+      doYouHaveAContinuingClaim = Some(true),
+      continueClaimingAllowanceForExistingSite = Some(true),
+      existingSiteClaimingAmount = Some(existingSiteClaimingAmount)
+    )
+  }
 
 }

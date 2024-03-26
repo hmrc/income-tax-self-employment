@@ -27,6 +27,7 @@ import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
+import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
@@ -48,8 +49,9 @@ case class StubCapitalAllowancesAnswersAnswersService(
     getElectricVehicleChargePoints: Either[ServiceError, Option[ElectricVehicleChargePointsAnswers]] = Right(None),
     getBalancingAllowance: Either[ServiceError, Option[BalancingAllowanceAnswers]] = Right(None),
     getAnnualInvestmentAllowance: Either[ServiceError, Option[AnnualInvestmentAllowanceAnswers]] = Right(None),
-    getWritingDownAllowance: Either[ServiceError, Option[WritingDownAllowanceAnswers]] = Right(None))
-    extends CapitalAllowancesAnswersService {
+    getWritingDownAllowance: Either[ServiceError, Option[WritingDownAllowanceAnswers]] = Right(None),
+    getSpecialTaxSites: Either[ServiceError, Option[SpecialTaxSitesAnswers]] = Right(None)
+) extends CapitalAllowancesAnswersService {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
   def saveAnswers[A: Api1802AnnualAllowancesBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
@@ -85,5 +87,8 @@ case class StubCapitalAllowancesAnswersAnswersService(
 
   def getWritingDownAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WritingDownAllowanceAnswers]] =
     EitherT.fromEither[Future](getWritingDownAllowance)
+
+  def getSpecialTaxSites(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]] =
+    EitherT.fromEither[Future](getSpecialTaxSites)
 
 }

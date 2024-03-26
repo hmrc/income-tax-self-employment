@@ -840,6 +840,47 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
+  "SpecialTaxSites" should {
+    s"Get return $NO_CONTENT if there is no answers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.getSpecialTaxSites(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Get return answers" in {
+      val answers = genOne(specialTaxSitesGen)
+      val underTest = new JourneyAnswersController(
+        auth = mockAuthorisedAction,
+        cc = stubControllerComponents,
+        abroadAnswersService = StubAbroadAnswersService(),
+        incomeService = StubIncomeAnswersService(),
+        expensesService = StubExpensesAnswersService(),
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getSpecialTaxSites = Some(answers).asRight)
+      )
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.toJson(answers).toString(),
+        methodBlock = () => underTest.getSpecialTaxSites(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Save answers and return a $NO_CONTENT when successful" in {
+      forAll(specialTaxSitesGen) { data =>
+        behave like testRoute(
+          request = buildRequest(data),
+          expectedStatus = NO_CONTENT,
+          expectedBody = "",
+          methodBlock = () => underTest.saveSpecialTaxSites(currTaxYear, businessId, nino)
+        )
+      }
+    }
+  }
+
   trait GetExpensesTest[T] {
     val expensesService: ExpensesAnswersService = mock[ExpensesAnswersService]
     val journeyAnswers: T

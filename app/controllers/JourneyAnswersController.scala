@@ -58,6 +58,7 @@ import utils.Logging
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import cats.implicits._
+import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 
 @Singleton
@@ -359,7 +360,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
       for {
         maybeCurrent <- capitalAllowancesService.getAnnualSummaries(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino))
         maybeAnnualAllowance = maybeCurrent.flatMap(_.annualAllowances.map(_.toApi1802AnnualAllowance))
-        _ <- capitalAllowancesService.saveAnnualAllowances(ctx, answers.toWritingDownDownstream(maybeAnnualAllowance))
+        _ <- capitalAllowancesService.saveAnnualAllowances(ctx, answers.toDownStream(maybeAnnualAllowance))
         _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, WritingDownAllowance, answers.toDbModel)
       } yield NoContent
     }
@@ -367,6 +368,21 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def getWritingDownAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(capitalAllowancesService.getWritingDownAllowance(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  def saveSpecialTaxSites(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBodyWithCtx[SpecialTaxSitesAnswers](taxYear, businessId, nino) { (ctx, answers) =>
+      for {
+        maybeCurrent <- capitalAllowancesService.getAnnualSummaries(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino))
+        maybeAnnualAllowance = maybeCurrent.flatMap(_.annualAllowances.map(_.toApi1802AnnualAllowance))
+        _ <- capitalAllowancesService.saveAnnualAllowances(ctx, answers.toDownStream(maybeAnnualAllowance))
+        _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, SpecialTaxSites, answers.toDbModel)
+      } yield NoContent
+    }
+  }
+
+  def getSpecialTaxSites(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(capitalAllowancesService.getSpecialTaxSites(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
 }

@@ -83,3 +83,6 @@ GET         /:taxYear/:businessId/capital-allowances-annual-investment-allowance
 
 POST        /:taxYear/:businessId/capital-allowances-writing-down-allowance/:nino/answers                controllers.JourneyAnswersController.saveWritingDownAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/capital-allowances-writing-down-allowance/:nino/answers                controllers.JourneyAnswersController.getWritingDownAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
+POST        /:taxYear/:businessId/capital-allowances-special-tax-sites/:nino/answers                     controllers.JourneyAnswersController.saveSpecialTaxSites(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+GET         /:taxYear/:businessId/capital-allowances-special-tax-sites/:nino/answers                     controllers.JourneyAnswersController.getSpecialTaxSites(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
