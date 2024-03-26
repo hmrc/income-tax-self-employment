@@ -24,7 +24,7 @@ import play.api.libs.json.{Format, Json}
 import java.time.LocalDate
 
 case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boolean],
-                             contractStartDate: Option[LocalDate], // TODO: Not mapped yet, waiting for Business where it should be send
+                             contractStartDate: Option[LocalDate],     // TODO: Not mapped yet, waiting for Business where it should be send
                              constructionStartDate: Option[LocalDate], // TODO: Not mapped yet, waiting for Business where it should be send
                              qualifyingUseStartDate: Option[LocalDate],
                              specialTaxSiteLocation: Option[SpecialTaxSiteLocation],
