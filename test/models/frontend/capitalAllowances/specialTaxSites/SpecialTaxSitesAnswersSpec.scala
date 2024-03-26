@@ -24,15 +24,15 @@ import org.scalatest.wordspec.AnyWordSpecLike
 class SpecialTaxSitesAnswersSpec extends AnyWordSpecLike {
   val answers = SpecialTaxSitesAnswers(
     true,
-    Nil,
-    false,
-    false,
-    1.0
+    Some(Nil),
+    Some(false),
+    Some(false),
+    Some(1.0)
   )
 
   "toDbModel" should {
     "create db model" in {
-      assert(answers.toDbModel === SpecialTaxSitesDb(true, Nil, false, false))
+      assert(answers.toDbModel === SpecialTaxSitesDb(true, Some(Nil), Some(false), Some(false)))
     }
   }
 
@@ -51,23 +51,24 @@ class SpecialTaxSitesAnswersSpec extends AnyWordSpecLike {
     "create SpecialTaxSitesAnswers" in {
       val dbModel = SpecialTaxSitesDb(
         true,
-        List(
-          NewSpecialTaxSiteDb(
-            None,
-            None,
-            None
-          )),
-        false,
-        false)
+        Some(
+          List(
+            NewSpecialTaxSiteDb(
+              None,
+              None,
+              None
+            ))),
+        Some(false),
+        Some(false))
       val result = SpecialTaxSitesAnswers.apply(dbModel, SuccessResponseSchemaData.example)
       assert(
-        result === Some(
-          SpecialTaxSitesAnswers(
-            true,
-            List(NewSpecialTaxSite(None, None, None, None, Some(SpecialTaxSiteLocation(Some("name"), None, "postCode")), None)),
-            false,
-            false,
-            1.0)))
+        result === Some(SpecialTaxSitesAnswers(
+          true,
+          Some(List(NewSpecialTaxSite(None, None, None, None, Some(SpecialTaxSiteLocation(Some("name"), None, "postCode")), None))),
+          Some(false),
+          Some(false),
+          Some(1.0)
+        )))
     }
   }
 }

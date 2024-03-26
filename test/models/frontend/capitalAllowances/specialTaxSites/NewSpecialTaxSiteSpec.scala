@@ -47,7 +47,7 @@ class NewSpecialTaxSiteSpec extends AnyWordSpecLike {
 
   "toBuildingAllowance" should {
     "create building allowance" in {
-      val buildingAllowance = site.toBuildingAllowance(BigDecimal(10000))
+      val buildingAllowance = site.toBuildingAllowance
       assert(
         buildingAllowance === Some(
           BuildingAllowance(

@@ -20,9 +20,9 @@ import play.api.libs.json.{Format, Json}
 
 final case class SpecialTaxSitesDb(
     specialTaxSites: Boolean,
-    newSpecialTaxSites: List[NewSpecialTaxSiteDb],
-    haveYouUsedStsAllowanceBefore: Boolean,
-    continueClaimingAllowanceForExistingSite: Boolean
+    newSpecialTaxSites: Option[List[NewSpecialTaxSiteDb]],
+    haveYouUsedStsAllowanceBefore: Option[Boolean],
+    continueClaimingAllowanceForExistingSite: Option[Boolean]
 )
 
 object SpecialTaxSitesDb {

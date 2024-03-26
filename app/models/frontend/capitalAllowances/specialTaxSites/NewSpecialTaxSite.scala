@@ -24,8 +24,8 @@ import play.api.libs.json.{Format, Json}
 import java.time.LocalDate
 
 case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boolean],
-                             contractStartDate: Option[LocalDate],
-                             constructionStartDate: Option[LocalDate],
+                             contractStartDate: Option[LocalDate], // TODO: Not mapped yet, waiting for Business where it should be send
+                             constructionStartDate: Option[LocalDate], // TODO: Not mapped yet, waiting for Business where it should be send
                              qualifyingUseStartDate: Option[LocalDate],
                              specialTaxSiteLocation: Option[SpecialTaxSiteLocation],
                              newSiteClaimingAmount: Option[BigDecimal]) {
@@ -42,9 +42,9 @@ case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boolean],
       claimAmount <- newSiteClaimingAmount
     } yield FirstYear(qualifyingDate = startDate.format(dateFormatter), qualifyingAmountExpenditure = claimAmount)
 
-  def toBuildingAllowance(existingSiteClaimingAmount: BigDecimal): Option[BuildingAllowance] =
+  def toBuildingAllowance: Option[BuildingAllowance] =
     specialTaxSiteLocation.map(_.toBuilding).map { location =>
-      BuildingAllowance(amount = existingSiteClaimingAmount, firstYear = toFirstYear, building = location)
+      BuildingAllowance(amount = newSiteClaimingAmount.getOrElse(BigDecimal(0)), firstYear = toFirstYear, building = location)
     }
 
 }

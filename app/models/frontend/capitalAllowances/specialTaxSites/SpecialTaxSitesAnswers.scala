@@ -25,21 +25,22 @@ import utils.Logging
 import java.time.LocalDate
 
 case class SpecialTaxSitesAnswers(specialTaxSites: Boolean,
-                                  newSpecialTaxSites: List[NewSpecialTaxSite],
-                                  doYouHaveAContinuingClaim: Boolean,
-                                  continueClaimingAllowanceForExistingSite: Boolean,
-                                  existingSiteClaimingAmount: BigDecimal) {
+                                  newSpecialTaxSites: Option[List[NewSpecialTaxSite]],
+                                  doYouHaveAContinuingClaim: Option[Boolean],
+                                  continueClaimingAllowanceForExistingSite: Option[Boolean],
+                                  existingSiteClaimingAmount: Option[BigDecimal] // TODO: Not mapped yet, waiting for Business where it should be send
+) {
   def toDbModel: SpecialTaxSitesDb = SpecialTaxSitesDb(
     specialTaxSites,
-    newSpecialTaxSites.map(_.toDbModel),
+    newSpecialTaxSites.map(sites => sites.map(_.toDbModel)),
     doYouHaveAContinuingClaim,
     continueClaimingAllowanceForExistingSite
   )
 
   def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances = {
     val enhancedStructuredBuildingAllowance = if (specialTaxSites) {
-      val updated = newSpecialTaxSites.map { site =>
-        site.toBuildingAllowance(existingSiteClaimingAmount)
+      val updated = newSpecialTaxSites.getOrElse(Nil).map { site =>
+        site.toBuildingAllowance
       }
       Some(updated.flatten)
     } else {
@@ -64,7 +65,7 @@ object SpecialTaxSitesAnswers extends Logging {
       logger.warn("Mismatch between the number of special tax sites in the database and the number of special tax sites in the response from the API")
     }
 
-    val newSpecialTaxSites = sitesFromDb.zip(enhancedStructuredBuildingAllowance).map { case (site, buildingAllowance) =>
+    val newSpecialTaxSites = sitesFromDb.getOrElse(Nil).zip(enhancedStructuredBuildingAllowance).map { case (site, buildingAllowance) =>
       NewSpecialTaxSite(
         contractForBuildingConstruction = site.contractForBuildingConstruction,
         contractStartDate = site.contractStartDate,
@@ -76,11 +77,10 @@ object SpecialTaxSitesAnswers extends Logging {
     }
     val answers = new SpecialTaxSitesAnswers(
       specialTaxSites = dbModel.specialTaxSites,
-      newSpecialTaxSites = newSpecialTaxSites,
+      newSpecialTaxSites = Some(newSpecialTaxSites),
       doYouHaveAContinuingClaim = dbModel.haveYouUsedStsAllowanceBefore,
       continueClaimingAllowanceForExistingSite = dbModel.continueClaimingAllowanceForExistingSite,
-      existingSiteClaimingAmount =
-        enhancedStructuredBuildingAllowance.headOption.map(_.amount).getOrElse(BigDecimal(0)) // TODO Figure out how to set it properly
+      existingSiteClaimingAmount = enhancedStructuredBuildingAllowance.headOption.map(_.amount)
     )
     Some(answers)
 
