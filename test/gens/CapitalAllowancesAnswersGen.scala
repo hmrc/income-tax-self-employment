@@ -196,7 +196,7 @@ object CapitalAllowancesAnswersGen {
     SpecialTaxSitesAnswers(
       specialTaxSites = true,
       newSpecialTaxSites = newSpecialTaxSites,
-      haveYouUsedStsAllowanceBefore = true,
+      doYouHaveAContinuingClaim = true,
       continueClaimingAllowanceForExistingSite = true,
       existingSiteClaimingAmount = existingSiteClaimingAmount
     )

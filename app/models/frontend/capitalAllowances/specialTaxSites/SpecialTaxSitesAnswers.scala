@@ -26,13 +26,13 @@ import java.time.LocalDate
 
 case class SpecialTaxSitesAnswers(specialTaxSites: Boolean,
                                   newSpecialTaxSites: List[NewSpecialTaxSite],
-                                  haveYouUsedStsAllowanceBefore: Boolean,
+                                  doYouHaveAContinuingClaim: Boolean,
                                   continueClaimingAllowanceForExistingSite: Boolean,
                                   existingSiteClaimingAmount: BigDecimal) {
   def toDbModel: SpecialTaxSitesDb = SpecialTaxSitesDb(
     specialTaxSites,
     newSpecialTaxSites.map(_.toDbModel),
-    haveYouUsedStsAllowanceBefore,
+    doYouHaveAContinuingClaim,
     continueClaimingAllowanceForExistingSite
   )
 
@@ -77,7 +77,7 @@ object SpecialTaxSitesAnswers extends Logging {
       val answers = new SpecialTaxSitesAnswers(
         specialTaxSites = dbModel.specialTaxSites,
         newSpecialTaxSites = newSpecialTaxSites,
-        haveYouUsedStsAllowanceBefore = dbModel.haveYouUsedStsAllowanceBefore,
+        doYouHaveAContinuingClaim = dbModel.haveYouUsedStsAllowanceBefore,
         continueClaimingAllowanceForExistingSite = dbModel.continueClaimingAllowanceForExistingSite,
         existingSiteClaimingAmount =
           enhancedStructuredBuildingAllowance.headOption.map(_.amount).getOrElse(BigDecimal(0)) // TODO Figure out how to set it properly
