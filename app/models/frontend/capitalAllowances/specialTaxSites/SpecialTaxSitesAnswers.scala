@@ -62,28 +62,27 @@ object SpecialTaxSitesAnswers extends Logging {
     // TODO Get back to this code at the end once we figure out what we do when data change out of our sight (via Software etc.)
     if (enhancedStructuredBuildingAllowance.size != sitesFromDb.size) {
       logger.warn("Mismatch between the number of special tax sites in the database and the number of special tax sites in the response from the API")
-      None
-    } else {
-      val newSpecialTaxSites = sitesFromDb.zip(enhancedStructuredBuildingAllowance).map { case (site, buildingAllowance) =>
-        NewSpecialTaxSite(
-          contractForBuildingConstruction = site.contractForBuildingConstruction,
-          contractStartDate = site.contractStartDate,
-          constructionStartDate = site.constructionStartDate,
-          qualifyingUseStartDate = buildingAllowance.firstYear.map(_.qualifyingDate).map(date => LocalDate.parse(date, dateFormatter)),
-          specialTaxSiteLocation = Some(SpecialTaxSiteLocation.apply(buildingAllowance.building)),
-          newSiteClaimingAmount = buildingAllowance.firstYear.map(_.qualifyingAmountExpenditure)
-        )
-      }
-      val answers = new SpecialTaxSitesAnswers(
-        specialTaxSites = dbModel.specialTaxSites,
-        newSpecialTaxSites = newSpecialTaxSites,
-        doYouHaveAContinuingClaim = dbModel.haveYouUsedStsAllowanceBefore,
-        continueClaimingAllowanceForExistingSite = dbModel.continueClaimingAllowanceForExistingSite,
-        existingSiteClaimingAmount =
-          enhancedStructuredBuildingAllowance.headOption.map(_.amount).getOrElse(BigDecimal(0)) // TODO Figure out how to set it properly
-      )
-      Some(answers)
     }
+
+    val newSpecialTaxSites = sitesFromDb.zip(enhancedStructuredBuildingAllowance).map { case (site, buildingAllowance) =>
+      NewSpecialTaxSite(
+        contractForBuildingConstruction = site.contractForBuildingConstruction,
+        contractStartDate = site.contractStartDate,
+        constructionStartDate = site.constructionStartDate,
+        qualifyingUseStartDate = buildingAllowance.firstYear.map(_.qualifyingDate).map(date => LocalDate.parse(date, dateFormatter)),
+        specialTaxSiteLocation = Some(SpecialTaxSiteLocation.apply(buildingAllowance.building)),
+        newSiteClaimingAmount = buildingAllowance.firstYear.map(_.qualifyingAmountExpenditure)
+      )
+    }
+    val answers = new SpecialTaxSitesAnswers(
+      specialTaxSites = dbModel.specialTaxSites,
+      newSpecialTaxSites = newSpecialTaxSites,
+      doYouHaveAContinuingClaim = dbModel.haveYouUsedStsAllowanceBefore,
+      continueClaimingAllowanceForExistingSite = dbModel.continueClaimingAllowanceForExistingSite,
+      existingSiteClaimingAmount =
+        enhancedStructuredBuildingAllowance.headOption.map(_.amount).getOrElse(BigDecimal(0)) // TODO Figure out how to set it properly
+    )
+    Some(answers)
 
   }
 }
