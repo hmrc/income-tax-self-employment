@@ -20,6 +20,7 @@ import models.connector.api_1802.request.AnnualAllowances
 import models.database.capitalAllowances.WritingDownAllowanceDb
 import play.api.libs.json.{Format, Json}
 import models.connector.api_1803
+import models.frontend.FrontendAnswers
 
 final case class WritingDownAllowanceAnswers(
     wdaSpecialRate: Option[Boolean],
@@ -28,12 +29,13 @@ final case class WritingDownAllowanceAnswers(
     wdaMainRateClaimAmount: Option[BigDecimal],
     wdaSingleAsset: Option[Boolean],
     wdaSingleAssetClaimAmounts: Option[BigDecimal]
-) {
-  def toDbModel: WritingDownAllowanceDb = WritingDownAllowanceDb(
-    wdaSpecialRate,
-    wdaMainRate,
-    wdaSingleAsset
-  )
+) extends FrontendAnswers[WritingDownAllowanceDb] {
+  def toDbModel: Option[WritingDownAllowanceDb] = Some(
+    WritingDownAllowanceDb(
+      wdaSpecialRate,
+      wdaMainRate,
+      wdaSingleAsset
+    ))
 
   def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances =
     current
