@@ -19,6 +19,7 @@ package models.frontend.capitalAllowances.specialTaxSites
 import models.connector.api_1802.request.AnnualAllowances
 import models.connector.{api_1803, dateFormatter}
 import models.database.capitalAllowances.SpecialTaxSitesDb
+import models.frontend.FrontendAnswers
 import play.api.libs.json.{Format, Json}
 import utils.Logging
 
@@ -29,13 +30,14 @@ case class SpecialTaxSitesAnswers(specialTaxSites: Boolean,
                                   doYouHaveAContinuingClaim: Option[Boolean],
                                   continueClaimingAllowanceForExistingSite: Option[Boolean],
                                   existingSiteClaimingAmount: Option[BigDecimal] // TODO: Not mapped yet, waiting for Business where it should be send
-) {
-  def toDbModel: SpecialTaxSitesDb = SpecialTaxSitesDb(
-    specialTaxSites,
-    newSpecialTaxSites.map(sites => sites.map(_.toDbModel)),
-    doYouHaveAContinuingClaim,
-    continueClaimingAllowanceForExistingSite
-  )
+) extends FrontendAnswers[SpecialTaxSitesDb] {
+  def toDbModel: Option[SpecialTaxSitesDb] = Some(
+    SpecialTaxSitesDb(
+      specialTaxSites,
+      newSpecialTaxSites.map(sites => sites.map(_.toDbModel)),
+      doYouHaveAContinuingClaim,
+      continueClaimingAllowanceForExistingSite
+    ))
 
   def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances = {
     val enhancedStructuredBuildingAllowance = if (specialTaxSites) {
@@ -56,7 +58,7 @@ case class SpecialTaxSitesAnswers(specialTaxSites: Boolean,
 object SpecialTaxSitesAnswers extends Logging {
   implicit val format: Format[SpecialTaxSitesAnswers] = Json.format[SpecialTaxSitesAnswers]
 
-  def apply(dbModel: SpecialTaxSitesDb, annualSummaries: api_1803.SuccessResponseSchema): Option[SpecialTaxSitesAnswers] = {
+  def apply(dbModel: SpecialTaxSitesDb, annualSummaries: api_1803.SuccessResponseSchema): SpecialTaxSitesAnswers = {
     val enhancedStructuredBuildingAllowance = annualSummaries.annualAllowances.flatMap(_.enhancedStructuredBuildingAllowance).getOrElse(Nil)
     val sitesFromDb                         = dbModel.newSpecialTaxSites
 
@@ -75,14 +77,13 @@ object SpecialTaxSitesAnswers extends Logging {
         newSiteClaimingAmount = buildingAllowance.firstYear.map(_.qualifyingAmountExpenditure)
       )
     }
-    val answers = new SpecialTaxSitesAnswers(
+
+    new SpecialTaxSitesAnswers(
       specialTaxSites = dbModel.specialTaxSites,
       newSpecialTaxSites = Some(newSpecialTaxSites),
       doYouHaveAContinuingClaim = dbModel.haveYouUsedStsAllowanceBefore,
       continueClaimingAllowanceForExistingSite = dbModel.continueClaimingAllowanceForExistingSite,
       existingSiteClaimingAmount = enhancedStructuredBuildingAllowance.headOption.map(_.amount)
     )
-    Some(answers)
-
   }
 }
