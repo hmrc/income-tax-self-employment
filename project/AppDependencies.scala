@@ -18,8 +18,8 @@ import sbt._
 
 object AppDependencies {
 
-  private val bootstrapVersion = "7.21.0"
-  private val hmrcMongoVersion = "1.2.0"
+  private val bootstrapVersion = "8.4.0"
+  private val hmrcMongoVersion = "1.8.0"
 
   val jacksonAndPlayExclusions = Seq(
     ExclusionRule(organization = "com.fasterxml.jackson.core"),
@@ -30,8 +30,8 @@ object AppDependencies {
   )
 
   val compile: Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"                  %% "bootstrap-backend-play-28" % bootstrapVersion,
-    "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-28"        % hmrcMongoVersion,
+    "uk.gov.hmrc"                  %% "bootstrap-backend-play-30" % bootstrapVersion,
+    "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
     "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.14.2",
     "org.typelevel"                %% "cats-core"                 % "2.9.0",
     "com.beachape"                 %% "enumeratum"                % "1.7.3",
@@ -40,9 +40,9 @@ object AppDependencies {
   )
 
   val test: Seq[ModuleID] = Seq(
-    "uk.gov.hmrc"            %% "bootstrap-test-play-28"  % bootstrapVersion,
-    "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-28" % hmrcMongoVersion,
-    "com.typesafe.play"      %% "play-test"               % current,
+    "uk.gov.hmrc"            %% "bootstrap-test-play-30"  % bootstrapVersion,
+    "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30" % hmrcMongoVersion,
+    "org.playframework"      %% "play-test"               % current,
     "org.scalatest"          %% "scalatest"               % "3.2.15",
     "org.scalatestplus"      %% "scalacheck-1-15"         % "3.2.10.0",
     "org.scalatestplus"      %% "mockito-3-4"             % "3.2.10.0",
@@ -50,7 +50,7 @@ object AppDependencies {
     "org.typelevel"          %% "cats-core"               % "2.9.0",
     "com.vladsch.flexmark"    % "flexmark-all"            % "0.64.6",
     "org.scalatestplus.play" %% "scalatestplus-play"      % "5.1.0",
-    "com.github.tomakehurst"  % "wiremock-jre8"           % "2.35.0",
+    "com.github.tomakehurst"  % "wiremock-jre8-standalone"           % "2.35.1",
     "org.scalamock"          %% "scalamock"               % "5.2.0"
   ).map(_ % s"$Test, $IntegrationTest")
 

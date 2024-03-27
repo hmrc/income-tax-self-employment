@@ -52,7 +52,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
     val repo           = StubJourneyAnswersRepository()
     lazy val underTest = new ExpensesAnswersServiceImpl(connector, repo)
 
-    implicit val hc = HeaderCarrier()
+    implicit val hc: HeaderCarrier = HeaderCarrier()
   }
 
   "save ExpensesTailoringNoExpensesAnswers" should {
