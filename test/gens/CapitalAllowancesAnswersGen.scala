@@ -47,9 +47,9 @@ object CapitalAllowancesAnswersGen {
 
   val zeroEmissionCarsAnswersGen: Gen[ZeroEmissionCarsAnswers] = for {
     zeroEmissionCars                        <- booleanGen
-    zeroEmissionCarsAllowance               <- Gen.option(Gen.oneOf(ZecAllowance.values))
+    zeroEmissionCarsAllowance               <- Gen.option(booleanGen)
     zeroEmissionCarsTotalCostOfCar          <- Gen.option(bigDecimalGen)
-    zeroEmissionCarsOnlyForSelfEmployment   <- Gen.option(Gen.oneOf(ZecOnlyForSelfEmployment.values))
+    zeroEmissionCarsOnlyForSelfEmployment   <- Gen.option(booleanGen)
     zeroEmissionCarsUsedOutsideSE           <- Gen.option(Gen.oneOf(ZecUseOutsideSE.values))
     zeroEmissionCarsUsedOutsideSEPercentage <- Gen.option(intGen)
     zecHowMuchDoYouWantToClaim              <- Gen.option(Gen.oneOf(ZecHowMuchDoYouWantToClaim.values))
@@ -64,6 +64,28 @@ object CapitalAllowancesAnswersGen {
     zecHowMuchDoYouWantToClaim,
     zeroEmissionCarsClaimAmount
   )
+
+  val zeroEmissionCarsDbAnswersGen: Gen[ZeroEmissionCarsDb] = for {
+    zeroEmissionCars                        <- booleanGen
+    zeroEmissionCarsAllowance               <- Gen.option(booleanGen)
+    zeroEmissionCarsTotalCostOfCar          <- Gen.option(bigDecimalGen)
+    zeroEmissionCarsOnlyForSelfEmployment   <- Gen.option(booleanGen)
+    zeroEmissionCarsUsedOutsideSE           <- Gen.option(Gen.oneOf(ZecUseOutsideSE.values))
+    zeroEmissionCarsUsedOutsideSEPercentage <- Gen.option(intGen)
+    zecHowMuchDoYouWantToClaim              <- Gen.option(Gen.oneOf(ZecHowMuchDoYouWantToClaim.values))
+  } yield ZeroEmissionCarsDb(
+    zeroEmissionCars,
+    zeroEmissionCarsAllowance,
+    zeroEmissionCarsTotalCostOfCar,
+    zeroEmissionCarsOnlyForSelfEmployment,
+    zeroEmissionCarsUsedOutsideSE,
+    zeroEmissionCarsUsedOutsideSEPercentage,
+    zecHowMuchDoYouWantToClaim
+  )
+
+  val zeroEmissionCarsJourneyAnswersGen: Gen[ZeroEmissionCarsJourneyAnswers] = for {
+    zeroEmissionCarsClaimAmount <- bigDecimalGen
+  } yield ZeroEmissionCarsJourneyAnswers(zeroEmissionCarsClaimAmount)
 
   val zeroEmissionGoodsVehicleAnswersGen: Gen[ZeroEmissionGoodsVehicleAnswers] = for {
     zeroEmissionGoodsVehicle    <- booleanGen
@@ -84,28 +106,6 @@ object CapitalAllowancesAnswersGen {
     zegvHowMuchDoYouWantToClaim,
     zegvClaimAmount
   )
-
-  val zeroEmissionCarsDbAnswersGen: Gen[ZeroEmissionCarsDb] = for {
-    zeroEmissionCars                        <- booleanGen
-    zeroEmissionCarsAllowance               <- Gen.option(Gen.oneOf(ZecAllowance.values))
-    zeroEmissionCarsTotalCostOfCar          <- Gen.option(bigDecimalGen)
-    zeroEmissionCarsOnlyForSelfEmployment   <- Gen.option(Gen.oneOf(ZecOnlyForSelfEmployment.values))
-    zeroEmissionCarsUsedOutsideSE           <- Gen.option(Gen.oneOf(ZecUseOutsideSE.values))
-    zeroEmissionCarsUsedOutsideSEPercentage <- Gen.option(intGen)
-    zecHowMuchDoYouWantToClaim              <- Gen.option(Gen.oneOf(ZecHowMuchDoYouWantToClaim.values))
-  } yield ZeroEmissionCarsDb(
-    zeroEmissionCars,
-    zeroEmissionCarsAllowance,
-    zeroEmissionCarsTotalCostOfCar,
-    zeroEmissionCarsOnlyForSelfEmployment,
-    zeroEmissionCarsUsedOutsideSE,
-    zeroEmissionCarsUsedOutsideSEPercentage,
-    zecHowMuchDoYouWantToClaim
-  )
-
-  val zeroEmissionCarsJourneyAnswersGen: Gen[ZeroEmissionCarsJourneyAnswers] = for {
-    zeroEmissionCarsClaimAmount <- bigDecimalGen
-  } yield ZeroEmissionCarsJourneyAnswers(zeroEmissionCarsClaimAmount)
 
   val electricVehicleChargePointsAnswersGen: Gen[ElectricVehicleChargePointsAnswers] = for {
     evcpAllowance               <- booleanGen

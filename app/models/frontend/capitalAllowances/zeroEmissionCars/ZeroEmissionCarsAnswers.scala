@@ -27,9 +27,9 @@ object ZeroEmissionCarsJourneyAnswers {
 }
 
 case class ZeroEmissionCarsAnswers(zeroEmissionCars: Boolean,
-                                   zecAllowance: Option[ZecAllowance],
+                                   zecAllowance: Option[Boolean],
                                    zecTotalCostOfCar: Option[BigDecimal],
-                                   zecOnlyForSelfEmployment: Option[ZecOnlyForSelfEmployment],
+                                   zecOnlyForSelfEmployment: Option[Boolean],
                                    zecUsedOutsideSE: Option[ZecUseOutsideSE],
                                    zecUsedOutsideSEPercentage: Option[Int],
                                    zecHowMuchDoYouWantToClaim: Option[ZecHowMuchDoYouWantToClaim],
@@ -58,7 +58,7 @@ object ZeroEmissionCarsAnswers {
       zecUsedOutsideSE = dbAnswers.zecUsedOutsideSE,
       zecUsedOutsideSEPercentage = dbAnswers.zecUsedOutsideSEPercentage,
       zecHowMuchDoYouWantToClaim = dbAnswers.zecHowMuchDoYouWantToClaim,
-      zecClaimAmount = if (dbAnswers.zeroEmissionCars && dbAnswers.zecAllowance.contains(ZecAllowance.Yes)) {
+      zecClaimAmount = if (dbAnswers.zeroEmissionCars && dbAnswers.zecAllowance.getOrElse(false)) {
         annualSummaries.annualAllowances.flatMap(_.zeroEmissionsCarAllowance)
       } else {
         None
