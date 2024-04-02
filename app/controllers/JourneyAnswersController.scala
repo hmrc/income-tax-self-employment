@@ -20,7 +20,7 @@ import cats.implicits._
 import controllers.actions.AuthorisedAction
 import models.common.JourneyName._
 import models.common._
-import models.database.capitalAllowances.{SpecialTaxSitesDb, StructuresBuildingsDb, WritingDownAllowanceDb}
+import models.database.capitalAllowances.{SpecialTaxSitesDb, NewStructuresBuildingsDb, WritingDownAllowanceDb}
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
 import models.frontend.FrontendAnswers
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
@@ -33,7 +33,7 @@ import models.frontend.capitalAllowances.annualInvestmentAllowance.{
 import models.frontend.capitalAllowances.balancingAllowance.{BalancingAllowanceAnswers, BalancingAllowanceJourneyAnswers}
 import models.frontend.capitalAllowances.electricVehicleChargePoints.{ElectricVehicleChargePointsAnswers, ElectricVehicleChargePointsJourneyAnswers}
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
-import models.frontend.capitalAllowances.structuresBuildings.StructuresBuildingsAnswers
+import models.frontend.capitalAllowances.structuresBuildings.NewStructuresBuildingsAnswers
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.{ZeroEmissionCarsAnswers, ZeroEmissionCarsJourneyAnswers}
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
@@ -401,7 +401,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def saveStructuresBuildings(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    saveCapitalAllowancesAnswers[StructuresBuildingsDb, StructuresBuildingsAnswers](
+    saveCapitalAllowancesAnswers[NewStructuresBuildingsDb, NewStructuresBuildingsAnswers](
       StructuresBuildings,
       taxYear,
       businessId,

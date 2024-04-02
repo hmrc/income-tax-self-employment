@@ -41,7 +41,7 @@ import models.frontend.capitalAllowances.annualInvestmentAllowance.{AnnualInvest
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
-import models.frontend.capitalAllowances.structuresBuildings.StructuresBuildingsAnswers
+import models.frontend.capitalAllowances.structuresBuildings.NewStructuresBuildingsAnswers
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
@@ -66,7 +66,7 @@ trait CapitalAllowancesAnswersService {
   def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]]
   def getWritingDownAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WritingDownAllowanceAnswers]]
   def getSpecialTaxSites(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]]
-  def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[StructuresBuildingsAnswers]]
+  def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NewStructuresBuildingsAnswers]]
 }
 
 @Singleton
@@ -226,17 +226,17 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
     EitherT.liftF(result)
   }
 
-  def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[StructuresBuildingsAnswers]] =
+  def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NewStructuresBuildingsAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, StructuresBuildings)
-      dbAnswers   <- getPersistedAnswers[StructuresBuildingsDb](maybeData)
+      dbAnswers   <- getPersistedAnswers[NewStructuresBuildingsDb](maybeData)
       fullAnswers <- getStructureBuildingsAnswers(ctx, dbAnswers)
     } yield fullAnswers
 
-  private def getStructureBuildingsAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[StructuresBuildingsDb])(implicit
-      hc: HeaderCarrier): ApiResultT[Option[StructuresBuildingsAnswers]] = {
+  private def getStructureBuildingsAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[NewStructuresBuildingsDb])(implicit
+                                                                                                                     hc: HeaderCarrier): ApiResultT[Option[NewStructuresBuildingsAnswers]] = {
     val result = connector.getAnnualSummaries(ctx).map {
-      case Right(annualSummaries) => dbAnswers.map(dbModel => StructuresBuildingsAnswers(dbModel, annualSummaries))
+      case Right(annualSummaries) => dbAnswers.map(dbModel => NewStructuresBuildingsAnswers(dbModel, annualSummaries))
       case Left(_)                => None
     }
     EitherT.liftF(result)

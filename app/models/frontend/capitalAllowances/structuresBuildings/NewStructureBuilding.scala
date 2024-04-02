@@ -14,31 +14,19 @@
  * limitations under the License.
  */
 
-package models.frontend.capitalAllowances.specialTaxSites
+package models.frontend.capitalAllowances.structuresBuildings
 
 import models.connector.api_1802.request.{BuildingAllowance, FirstYear}
 import models.connector.dateFormatter
-import models.database.capitalAllowances.NewSpecialTaxSiteDb
 import play.api.libs.json.{Format, Json}
 
 import java.time.LocalDate
 
-case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boolean],
-                             contractStartDate: Option[LocalDate],
-                             constructionStartDate: Option[LocalDate],
-                             qualifyingUseStartDate: Option[LocalDate],
-                             specialTaxSiteLocation: Option[SpecialTaxSiteLocation],
-                             newSiteClaimingAmount: Option[BigDecimal]) {
-
-  def toDbModel: Option[NewSpecialTaxSiteDb] = Some(
-    NewSpecialTaxSiteDb(
-      contractForBuildingConstruction,
-      contractStartDate,
-      constructionStartDate
-    ))
-
+case class NewStructureBuilding(qualifyingUse: Option[LocalDate] = None,
+                                newStructureBuildingLocation: Option[StructuresBuildingsLocation] = None,
+                                newStructureBuildingClaimingAmount: Option[BigDecimal] = None) {
   private def toFirstYear: Option[FirstYear] =
-    qualifyingUseStartDate.map(startDate =>
+    qualifyingUse.map(startDate =>
       FirstYear(
         qualifyingDate = startDate.format(dateFormatter),
         qualifyingAmountExpenditure = BigDecimal(0.0)
@@ -46,12 +34,11 @@ case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boolean],
 
   def toBuildingAllowance: Option[BuildingAllowance] =
     for {
-      location <- specialTaxSiteLocation.map(_.toBuilding)
-      amount   <- newSiteClaimingAmount
+      location <- newStructureBuildingLocation.map(_.toBuilding)
+      amount   <- newStructureBuildingClaimingAmount
     } yield BuildingAllowance(amount = amount, firstYear = toFirstYear, building = location)
-
 }
 
-object NewSpecialTaxSite {
-  implicit val format: Format[NewSpecialTaxSite] = Json.format[NewSpecialTaxSite]
+object NewStructureBuilding {
+  implicit val formats: Format[NewStructureBuilding] = Json.format[NewStructureBuilding]
 }

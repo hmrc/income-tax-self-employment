@@ -28,7 +28,7 @@ import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestm
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
-import models.frontend.capitalAllowances.structuresBuildings.StructuresBuildingsAnswers
+import models.frontend.capitalAllowances.structuresBuildings.NewStructuresBuildingsAnswers
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
@@ -52,7 +52,7 @@ case class StubCapitalAllowancesAnswersAnswersService(
     getAnnualInvestmentAllowance: Either[ServiceError, Option[AnnualInvestmentAllowanceAnswers]] = Right(None),
     getWritingDownAllowance: Either[ServiceError, Option[WritingDownAllowanceAnswers]] = Right(None),
     getSpecialTaxSites: Either[ServiceError, Option[SpecialTaxSitesAnswers]] = Right(None),
-    getStructuresBuildings: Either[ServiceError, Option[StructuresBuildingsAnswers]] = Right(None)
+    getStructuresBuildings: Either[ServiceError, Option[NewStructuresBuildingsAnswers]] = Right(None)
 ) extends CapitalAllowancesAnswersService {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -93,7 +93,7 @@ case class StubCapitalAllowancesAnswersAnswersService(
   def getSpecialTaxSites(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]] =
     EitherT.fromEither[Future](getSpecialTaxSites)
 
-  def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[StructuresBuildingsAnswers]] =
+  def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NewStructuresBuildingsAnswers]] =
     EitherT.fromEither[Future](getStructuresBuildings)
 
 }

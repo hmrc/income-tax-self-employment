@@ -28,17 +28,14 @@ import java.time.LocalDate
 case class SpecialTaxSitesAnswers(
     specialTaxSites: Boolean,
     newSpecialTaxSites: Option[List[NewSpecialTaxSite]],
-    doYouHaveAContinuingClaim: Option[Boolean],                // TODO, we store it in db as a temp solution. Waiting for API
-    continueClaimingAllowanceForExistingSite: Option[Boolean], // TODO, we store it in db as a temp solution. Waiting for API
-    existingSiteClaimingAmount: Option[BigDecimal]             // TODO, we store it in db as a temp solution. Waiting for API
+    doYouHaveAContinuingClaim: Option[Boolean],                // TODO, we ignore this question until business decide what to do
+    continueClaimingAllowanceForExistingSite: Option[Boolean], // TODO, we ignore this question until business decide what to do
+    existingSiteClaimingAmount: Option[BigDecimal]             // TODO, we ignore this question until business decide what to do
 ) extends FrontendAnswers[SpecialTaxSitesDb] {
   def toDbModel: Option[SpecialTaxSitesDb] = Some(
     SpecialTaxSitesDb(
       specialTaxSites,
-      newSpecialTaxSites.map(sites => sites.flatMap(_.toDbModel)),
-      doYouHaveAContinuingClaim,
-      continueClaimingAllowanceForExistingSite,
-      existingSiteClaimingAmount
+      newSpecialTaxSites.map(sites => sites.flatMap(_.toDbModel))
     ))
 
   def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances = {
@@ -83,9 +80,9 @@ object SpecialTaxSitesAnswers extends Logging {
     new SpecialTaxSitesAnswers(
       specialTaxSites = dbModel.specialTaxSites,
       newSpecialTaxSites = Some(newSpecialTaxSites),
-      doYouHaveAContinuingClaim = dbModel.haveYouUsedStsAllowanceBefore,
-      continueClaimingAllowanceForExistingSite = dbModel.continueClaimingAllowanceForExistingSite,
-      existingSiteClaimingAmount = dbModel.existingSiteClaimingAmount
+      doYouHaveAContinuingClaim = None,
+      continueClaimingAllowanceForExistingSite = None,
+      existingSiteClaimingAmount = None
     )
   }
 }
