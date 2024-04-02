@@ -16,13 +16,13 @@
 
 package models.database.capitalAllowances
 
-import models.frontend.capitalAllowances.electricVehicleChargePoints.{EvcpHowMuchDoYouWantToClaim, EvcpOnlyForSelfEmployment, EvcpUseOutsideSE}
+import models.frontend.capitalAllowances.electricVehicleChargePoints.{EvcpHowMuchDoYouWantToClaim, EvcpUseOutsideSE}
 import play.api.libs.json.{Json, OFormat}
 
 final case class ElectricVehicleChargePointsDb(evcpAllowance: Boolean,
                                                chargePointTaxRelief: Option[Boolean],
                                                amountSpentOnEvcp: Option[BigDecimal],
-                                               evcpOnlyForSelfEmployment: Option[EvcpOnlyForSelfEmployment],
+                                               evcpOnlyForSelfEmployment: Option[Boolean],
                                                evcpUsedOutsideSE: Option[EvcpUseOutsideSE],
                                                evcpUsedOutsideSEPercentage: Option[Int],
                                                evcpHowMuchDoYouWantToClaim: Option[EvcpHowMuchDoYouWantToClaim])
