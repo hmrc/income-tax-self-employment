@@ -53,7 +53,7 @@ class NewSpecialTaxSiteSpec extends AnyWordSpecLike {
         buildingAllowance === Some(
           BuildingAllowance(
             BigDecimal(10000),
-            Some(models.connector.api_1802.request.FirstYear("2023-03-03", BigDecimal(10000))),
+            Some(models.connector.api_1802.request.FirstYear("2023-03-03", BigDecimal(0.0))),
             Building(Some("name"), Some("number"), "AA11AA")
           ))
       )
