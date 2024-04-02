@@ -28,13 +28,15 @@ final case class NewStructuresBuildingsAnswers(
     structuresBuildingsAllowance: Boolean,
     structuresBuildingsEligibleClaim: Option[Boolean],
     structuresBuildingsPreviousClaimUse: Option[Boolean],
+    structuresBuildingsClaimed: Option[Boolean],
     newStructuresBuildings: Option[List[NewStructureBuilding]]
 ) extends FrontendAnswers[NewStructuresBuildingsDb] {
   def toDbModel: Option[NewStructuresBuildingsDb] = Some(
     NewStructuresBuildingsDb(
       structuresBuildingsAllowance,
       structuresBuildingsEligibleClaim,
-      structuresBuildingsPreviousClaimUse
+      structuresBuildingsPreviousClaimUse,
+      structuresBuildingsClaimed
     ))
 
   def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances = {
@@ -67,9 +69,10 @@ object NewStructuresBuildingsAnswers {
     })
 
     new NewStructuresBuildingsAnswers(
-      structuresBuildingsAllowance = dbModel.allowance,
-      structuresBuildingsEligibleClaim = dbModel.eligibleToClaim,
-      structuresBuildingsPreviousClaimUse = dbModel.previousClaim,
+      structuresBuildingsAllowance = dbModel.structuresBuildingsAllowance,
+      structuresBuildingsEligibleClaim = dbModel.structuresBuildingsEligibleClaim,
+      structuresBuildingsPreviousClaimUse = dbModel.structuresBuildingsPreviousClaimUse,
+      structuresBuildingsClaimed = dbModel.structuresBuildingsClaimed,
       newStructuresBuildings = buildings
     )
   }

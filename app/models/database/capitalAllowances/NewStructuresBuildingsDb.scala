@@ -19,9 +19,10 @@ package models.database.capitalAllowances
 import play.api.libs.json.{Format, Json}
 
 final case class NewStructuresBuildingsDb(
-    allowance: Boolean,
-    eligibleToClaim: Option[Boolean],
-    previousClaim: Option[Boolean]
+    structuresBuildingsAllowance: Boolean,
+    structuresBuildingsEligibleClaim: Option[Boolean],
+    structuresBuildingsPreviousClaimUse: Option[Boolean],
+    structuresBuildingsClaimed: Option[Boolean]
 )
 
 object NewStructuresBuildingsDb {
