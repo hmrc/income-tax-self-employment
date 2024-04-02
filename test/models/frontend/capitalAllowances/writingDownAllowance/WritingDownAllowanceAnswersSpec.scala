@@ -18,6 +18,7 @@ package models.frontend.capitalAllowances.writingDownAllowance
 
 import data.api1802.AnnualAllowancesData
 import models.database.capitalAllowances.WritingDownAllowanceDb
+import org.scalatest.OptionValues._
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class WritingDownAllowanceAnswersSpec extends AnyWordSpecLike {
@@ -32,7 +33,7 @@ class WritingDownAllowanceAnswersSpec extends AnyWordSpecLike {
 
   "toDbModel" should {
     "convert to WritingDownAllowanceDb" in {
-      val result = answers.toDbModel
+      val result = answers.toDbModel.value
       assert(result === WritingDownAllowanceDb(Some(true), Some(true), Some(true)))
     }
   }

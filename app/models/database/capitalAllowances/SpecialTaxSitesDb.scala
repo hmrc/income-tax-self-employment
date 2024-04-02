@@ -21,9 +21,9 @@ import play.api.libs.json.{Format, Json}
 final case class SpecialTaxSitesDb(
     specialTaxSites: Boolean,
     newSpecialTaxSites: Option[List[NewSpecialTaxSiteDb]],
-    haveYouUsedStsAllowanceBefore: Option[Boolean],  // TODO, we store it in db as a temp solution. Waiting for API
-    continueClaimingAllowanceForExistingSite: Option[Boolean],  // TODO, we store it in db as a temp solution. Waiting for API
-    existingSiteClaimingAmount: Option[BigDecimal] // TODO, we store it in db as a temp solution. Waiting for API
+    haveYouUsedStsAllowanceBefore: Option[Boolean],            // TODO, we store it in db as a temp solution. Waiting for API
+    continueClaimingAllowanceForExistingSite: Option[Boolean], // TODO, we store it in db as a temp solution. Waiting for API
+    existingSiteClaimingAmount: Option[BigDecimal]             // TODO, we store it in db as a temp solution. Waiting for API
 )
 
 object SpecialTaxSitesDb {

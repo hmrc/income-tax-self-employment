@@ -25,7 +25,11 @@ import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageD
 import models.frontend.FrontendAnswers
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
-import models.frontend.capitalAllowances.annualInvestmentAllowance.{AnnualInvestmentAllowanceAnswers, AnnualInvestmentAllowanceDb, AnnualInvestmentAllowanceJourneyAnswers}
+import models.frontend.capitalAllowances.annualInvestmentAllowance.{
+  AnnualInvestmentAllowanceAnswers,
+  AnnualInvestmentAllowanceDb,
+  AnnualInvestmentAllowanceJourneyAnswers
+}
 import models.frontend.capitalAllowances.balancingAllowance.{BalancingAllowanceAnswers, BalancingAllowanceJourneyAnswers}
 import models.frontend.capitalAllowances.electricVehicleChargePoints.{ElectricVehicleChargePointsAnswers, ElectricVehicleChargePointsJourneyAnswers}
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers

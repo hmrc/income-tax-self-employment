@@ -17,9 +17,8 @@
 package models.frontend
 
 import models.connector.api_1802.request.AnnualAllowances
-import play.api.libs.json.Writes
 
-abstract class FrontendAnswers[A: Writes] {
+abstract class FrontendAnswers[A] {
   def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances
 
   def toDbModel: Option[A]

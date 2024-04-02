@@ -32,7 +32,7 @@ class SpecialTaxSitesAnswersSpec extends AnyWordSpecLike {
 
   "toDbModel" should {
     "create db model" in {
-      assert(answers.toDbModel === SpecialTaxSitesDb(true, Some(Nil), Some(false), Some(false)))
+      assert(answers.toDbModel === Some(SpecialTaxSitesDb(true, Some(Nil), Some(false), Some(false), Some(BigDecimal(1.0)))))
     }
   }
 
@@ -59,16 +59,17 @@ class SpecialTaxSitesAnswersSpec extends AnyWordSpecLike {
               None
             ))),
         Some(false),
-        Some(false))
+        Some(false),
+        Some(BigDecimal(1.0)))
       val result = SpecialTaxSitesAnswers.apply(dbModel, SuccessResponseSchemaData.example)
       assert(
-        result === Some(SpecialTaxSitesAnswers(
+        result === SpecialTaxSitesAnswers(
           true,
           Some(List(NewSpecialTaxSite(None, None, None, None, Some(SpecialTaxSiteLocation(Some("name"), None, "postCode")), None))),
           Some(false),
           Some(false),
           Some(1.0)
-        )))
+        ))
     }
   }
 }
