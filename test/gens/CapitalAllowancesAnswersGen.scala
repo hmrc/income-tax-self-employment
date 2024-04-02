@@ -22,7 +22,6 @@ import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAn
 import models.frontend.capitalAllowances.electricVehicleChargePoints.{
   ElectricVehicleChargePointsAnswers,
   EvcpHowMuchDoYouWantToClaim,
-  EvcpOnlyForSelfEmployment,
   EvcpUseOutsideSE
 }
 import models.frontend.capitalAllowances.specialTaxSites.{NewSpecialTaxSite, SpecialTaxSiteLocation, SpecialTaxSitesAnswers}
@@ -111,7 +110,7 @@ object CapitalAllowancesAnswersGen {
     evcpAllowance               <- booleanGen
     chargePointTaxRelief        <- Gen.option(booleanGen)
     amountSpentOnEvcp           <- Gen.option(bigDecimalGen)
-    evcpOnlyForSelfEmployment   <- Gen.option(Gen.oneOf(EvcpOnlyForSelfEmployment.values))
+    evcpOnlyForSelfEmployment   <- Gen.option(booleanGen)
     evcpUsedOutsideSE           <- Gen.option(Gen.oneOf(EvcpUseOutsideSE.values))
     evcpUsedOutsideSEPercentage <- Gen.option(intGen)
     evcpHowMuchDoYouWantToClaim <- Gen.option(Gen.oneOf(EvcpHowMuchDoYouWantToClaim.values))
@@ -131,7 +130,7 @@ object CapitalAllowancesAnswersGen {
     evcpAllowance               <- booleanGen
     chargePointTaxRelief        <- Gen.option(booleanGen)
     amountSpentOnEvcp           <- Gen.option(bigDecimalGen)
-    evcpOnlyForSelfEmployment   <- Gen.option(Gen.oneOf(EvcpOnlyForSelfEmployment.values))
+    evcpOnlyForSelfEmployment   <- Gen.option(booleanGen)
     evcpUsedOutsideSE           <- Gen.option(Gen.oneOf(EvcpUseOutsideSE.values))
     evcpUsedOutsideSEPercentage <- Gen.option(intGen)
     evcpHowMuchDoYouWantToClaim <- Gen.option(Gen.oneOf(EvcpHowMuchDoYouWantToClaim.values))
