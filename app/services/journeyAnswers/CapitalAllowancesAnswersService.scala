@@ -234,7 +234,7 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
     } yield fullAnswers
 
   private def getStructureBuildingsAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[NewStructuresBuildingsDb])(implicit
-                                                                                                                     hc: HeaderCarrier): ApiResultT[Option[NewStructuresBuildingsAnswers]] = {
+      hc: HeaderCarrier): ApiResultT[Option[NewStructuresBuildingsAnswers]] = {
     val result = connector.getAnnualSummaries(ctx).map {
       case Right(annualSummaries) => dbAnswers.map(dbModel => NewStructuresBuildingsAnswers(dbModel, annualSummaries))
       case Left(_)                => None
