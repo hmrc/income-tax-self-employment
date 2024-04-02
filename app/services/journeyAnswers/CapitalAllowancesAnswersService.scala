@@ -66,8 +66,7 @@ trait CapitalAllowancesAnswersService {
   def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]]
   def getWritingDownAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WritingDownAllowanceAnswers]]
   def getSpecialTaxSites(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]]
-  def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]]
-
+  def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[StructuresBuildingsAnswers]]
 }
 
 @Singleton
@@ -227,7 +226,7 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
     EitherT.liftF(result)
   }
 
-  def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]] =
+  def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[StructuresBuildingsAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, StructuresBuildings)
       dbAnswers   <- getPersistedAnswers[StructuresBuildingsDb](maybeData)

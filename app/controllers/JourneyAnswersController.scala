@@ -16,20 +16,21 @@
 
 package controllers
 
-import cats.implicits.toTraverseOps
+import cats.implicits._
 import controllers.actions.AuthorisedAction
 import models.common.JourneyName._
 import models.common._
+import models.database.capitalAllowances.{SpecialTaxSitesDb, StructuresBuildingsDb, WritingDownAllowanceDb}
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
+import models.frontend.FrontendAnswers
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
-import models.frontend.capitalAllowances.annualInvestmentAllowance.{
-  AnnualInvestmentAllowanceAnswers,
-  AnnualInvestmentAllowanceDb,
-  AnnualInvestmentAllowanceJourneyAnswers
-}
+import models.frontend.capitalAllowances.annualInvestmentAllowance.{AnnualInvestmentAllowanceAnswers, AnnualInvestmentAllowanceDb, AnnualInvestmentAllowanceJourneyAnswers}
 import models.frontend.capitalAllowances.balancingAllowance.{BalancingAllowanceAnswers, BalancingAllowanceJourneyAnswers}
 import models.frontend.capitalAllowances.electricVehicleChargePoints.{ElectricVehicleChargePointsAnswers, ElectricVehicleChargePointsJourneyAnswers}
+import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
+import models.frontend.capitalAllowances.structuresBuildings.StructuresBuildingsAnswers
+import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.{ZeroEmissionCarsAnswers, ZeroEmissionCarsJourneyAnswers}
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
@@ -50,23 +51,15 @@ import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Format.GenericFormat
+import play.api.libs.json.{Reads, Writes}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import services.journeyAnswers._
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.Logging
-import cats.implicits._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import cats.implicits._
-import models.database.capitalAllowances.{SpecialTaxSitesDb, StructuresBuildingsDb, WritingDownAllowanceDb}
-import models.frontend.FrontendAnswers
-import models.frontend.capitalAllowances.CapitalAllowances.StructuresAndBuildings
-import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
-import models.frontend.capitalAllowances.structuresBuildings.StructuresBuildingsAnswers
-import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
-import play.api.libs.json.{Reads, Writes}
-import uk.gov.hmrc.http.HeaderCarrier
 
 @Singleton
 class JourneyAnswersController @Inject() (auth: AuthorisedAction,

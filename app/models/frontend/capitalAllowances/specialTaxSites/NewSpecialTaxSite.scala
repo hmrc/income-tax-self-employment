@@ -24,17 +24,18 @@ import play.api.libs.json.{Format, Json}
 import java.time.LocalDate
 
 case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boolean],
-                             contractStartDate: Option[LocalDate],     // TODO: Not mapped yet, waiting for Business where it should be send
-                             constructionStartDate: Option[LocalDate], // TODO: Not mapped yet, waiting for Business where it should be send
+                             contractStartDate: Option[LocalDate],
+                             constructionStartDate: Option[LocalDate],
                              qualifyingUseStartDate: Option[LocalDate],
                              specialTaxSiteLocation: Option[SpecialTaxSiteLocation],
                              newSiteClaimingAmount: Option[BigDecimal]) {
 
-  def toDbModel: NewSpecialTaxSiteDb = NewSpecialTaxSiteDb(
-    contractForBuildingConstruction,
-    contractStartDate,
-    constructionStartDate
-  )
+  def toDbModel: Option[NewSpecialTaxSiteDb] = Some(
+    NewSpecialTaxSiteDb(
+      contractForBuildingConstruction,
+      contractStartDate,
+      constructionStartDate
+    ))
 
   private def toFirstYear: Option[FirstYear] =
     for {
@@ -43,9 +44,10 @@ case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boolean],
     } yield FirstYear(qualifyingDate = startDate.format(dateFormatter), qualifyingAmountExpenditure = claimAmount)
 
   def toBuildingAllowance: Option[BuildingAllowance] =
-    specialTaxSiteLocation.map(_.toBuilding).map { location =>
-      BuildingAllowance(amount = newSiteClaimingAmount.getOrElse(BigDecimal(0)), firstYear = toFirstYear, building = location)
-    }
+    for {
+      location <- specialTaxSiteLocation.map(_.toBuilding)
+      amount   <- newSiteClaimingAmount
+    } yield BuildingAllowance(amount = amount, firstYear = toFirstYear, building = location)
 
 }
 

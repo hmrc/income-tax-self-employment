@@ -25,18 +25,20 @@ import utils.Logging
 
 import java.time.LocalDate
 
-case class SpecialTaxSitesAnswers(specialTaxSites: Boolean,
-                                  newSpecialTaxSites: Option[List[NewSpecialTaxSite]],
-                                  doYouHaveAContinuingClaim: Option[Boolean],
-                                  continueClaimingAllowanceForExistingSite: Option[Boolean],
-                                  existingSiteClaimingAmount: Option[BigDecimal] // TODO: Not mapped yet, waiting for Business where it should be send
+case class SpecialTaxSitesAnswers(
+    specialTaxSites: Boolean,
+    newSpecialTaxSites: Option[List[NewSpecialTaxSite]],
+    doYouHaveAContinuingClaim: Option[Boolean],                // TODO, we store it in db as a temp solution. Waiting for API
+    continueClaimingAllowanceForExistingSite: Option[Boolean], // TODO, we store it in db as a temp solution. Waiting for API
+    existingSiteClaimingAmount: Option[BigDecimal]             // TODO, we store it in db as a temp solution. Waiting for API
 ) extends FrontendAnswers[SpecialTaxSitesDb] {
   def toDbModel: Option[SpecialTaxSitesDb] = Some(
     SpecialTaxSitesDb(
       specialTaxSites,
-      newSpecialTaxSites.map(sites => sites.map(_.toDbModel)),
+      newSpecialTaxSites.map(sites => sites.flatMap(_.toDbModel)),
       doYouHaveAContinuingClaim,
-      continueClaimingAllowanceForExistingSite
+      continueClaimingAllowanceForExistingSite,
+      existingSiteClaimingAmount
     ))
 
   def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances = {
@@ -83,7 +85,7 @@ object SpecialTaxSitesAnswers extends Logging {
       newSpecialTaxSites = Some(newSpecialTaxSites),
       doYouHaveAContinuingClaim = dbModel.haveYouUsedStsAllowanceBefore,
       continueClaimingAllowanceForExistingSite = dbModel.continueClaimingAllowanceForExistingSite,
-      existingSiteClaimingAmount = enhancedStructuredBuildingAllowance.headOption.map(_.amount)
+      existingSiteClaimingAmount = dbModel.existingSiteClaimingAmount
     )
   }
 }
