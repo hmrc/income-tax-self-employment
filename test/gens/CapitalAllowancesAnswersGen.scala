@@ -26,6 +26,7 @@ import models.frontend.capitalAllowances.electricVehicleChargePoints.{
   EvcpUseOutsideSE
 }
 import models.frontend.capitalAllowances.specialTaxSites.{NewSpecialTaxSite, SpecialTaxSiteLocation, SpecialTaxSitesAnswers}
+import models.frontend.capitalAllowances.structuresBuildings.{NewStructureBuilding, NewStructuresBuildingsAnswers, StructuresBuildingsLocation}
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars._
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.{ZegvHowMuchDoYouWantToClaim, ZegvUseOutsideSE, ZeroEmissionGoodsVehicleAnswers}
@@ -201,5 +202,21 @@ object CapitalAllowancesAnswersGen {
       existingSiteClaimingAmount = Some(existingSiteClaimingAmount)
     )
   }
+
+  val structuresBuildingsWithYeses: Gen[NewStructuresBuildingsAnswers] = for {
+    newStructureBuildingClaimingAmount <- bigDecimalGen
+  } yield NewStructuresBuildingsAnswers(
+    structuresBuildingsAllowance = true,
+    structuresBuildingsEligibleClaim = Some(true),
+    structuresBuildingsPreviousClaimUse = Some(true),
+    structuresBuildingsClaimed = Some(true),
+    newStructuresBuildings = Some(List(
+      NewStructureBuilding(
+        qualifyingUse = Some(LocalDate.now()),
+        newStructureBuildingLocation = Some(StructuresBuildingsLocation(Some("name"), Some("number"), "AA11AA")),
+        newStructureBuildingClaimingAmount = Some(newStructureBuildingClaimingAmount)
+      )
+    ))
+  )
 
 }
