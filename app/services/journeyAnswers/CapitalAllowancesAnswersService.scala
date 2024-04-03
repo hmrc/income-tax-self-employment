@@ -226,13 +226,12 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
     EitherT.liftF(result)
   }
 
-  def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NewStructuresBuildingsAnswers]] = {
+  def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NewStructuresBuildingsAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, StructuresBuildings)
       dbAnswers   <- getPersistedAnswers[NewStructuresBuildingsDb](maybeData)
       fullAnswers <- getStructureBuildingsAnswers(ctx, dbAnswers)
     } yield fullAnswers
-  }
 
   private def getStructureBuildingsAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[NewStructuresBuildingsDb])(implicit
       hc: HeaderCarrier): ApiResultT[Option[NewStructuresBuildingsAnswers]] = {
