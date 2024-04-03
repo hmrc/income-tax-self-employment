@@ -18,13 +18,15 @@ package models.logging
 
 import models.connector.IFSApiName
 import play.api.Logger
-import play.api.libs.json.Writes
+import play.api.libs.json.{Json, Writes}
 
 final case class ConnectorRequestInfo(method: String, url: String, apiId: IFSApiName) {
   private def apiIdStr = s"API#${apiId.entryName}"
 
-  def logRequestWithBody[A: Writes](logger: Logger, body: A): Unit =
-    logger.info(s"Connector: Sending Request $apiIdStr $method $url\nRequest Body: ${implicitly[Writes[A]].writes(body)}")
+  def logRequestWithBody[A: Writes](logger: Logger, body: A): Unit = {
+    val jsonBody = implicitly[Writes[A]].writes(body)
+    logger.info(s"Connector: Sending Request $apiIdStr $method $url:\n===\n${Json.prettyPrint(jsonBody)}\n===")
+  }
 
   def logRequest(logger: Logger): Unit =
     logger.info(s"Connector: Sending Request $apiIdStr $method $url")

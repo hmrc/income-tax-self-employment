@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package models.database.capitalAllowances
+package models.frontend
 
-import play.api.libs.json.{Format, Json}
+import models.connector.api_1802.request.AnnualAllowances
 
-final case class SpecialTaxSitesDb(
-    specialTaxSites: Boolean,
-    newSpecialTaxSites: Option[List[NewSpecialTaxSiteDb]]
-)
+abstract class FrontendAnswers[A] {
+  def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances
 
-object SpecialTaxSitesDb {
-  implicit val format: Format[SpecialTaxSitesDb] = Json.format[SpecialTaxSitesDb]
+  def toDbModel: Option[A]
 }

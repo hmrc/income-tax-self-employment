@@ -19,6 +19,7 @@ package models.frontend.capitalAllowances.specialTaxSites
 import models.connector.api_1802.request.{Building, BuildingAllowance}
 import models.connector.dateFormatter
 import models.database.capitalAllowances.NewSpecialTaxSiteDb
+import org.scalatest.OptionValues._
 import org.scalatest.wordspec.AnyWordSpecLike
 
 import java.time.LocalDate
@@ -35,7 +36,7 @@ class NewSpecialTaxSiteSpec extends AnyWordSpecLike {
 
   "toDbModel" should {
     "create db model" in {
-      val dbModel = site.toDbModel
+      val dbModel = site.toDbModel.value
       assert(
         dbModel === NewSpecialTaxSiteDb(
           Some(true),
@@ -52,7 +53,7 @@ class NewSpecialTaxSiteSpec extends AnyWordSpecLike {
         buildingAllowance === Some(
           BuildingAllowance(
             BigDecimal(10000),
-            Some(models.connector.api_1802.request.FirstYear("2023-03-03", BigDecimal(10000))),
+            Some(models.connector.api_1802.request.FirstYear("2023-03-03", BigDecimal(0.0))),
             Building(Some("name"), Some("number"), "AA11AA")
           ))
       )
