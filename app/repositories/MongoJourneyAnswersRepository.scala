@@ -115,6 +115,8 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
   }
 
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] = {
+    logger.info(s"Repository: ctx=${ctx.toString} persisting answers:\n===\n${Json.prettyPrint(newData)}\n===")
+
     val filter  = filterJourney(ctx)
     val bson    = BsonDocument(Json.stringify(newData))
     val update  = createUpsert(ctx)("data", bson, JourneyStatus.NotStarted)
@@ -123,8 +125,11 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     handleUpdateExactlyOne(ctx, collection.updateOne(filter, update, options).toFuture())
   }
 
-  def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] =
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] = {
+    logger.info(s"Repository: ctx=${ctx.toString} persisting new status=$status")
+
     handleUpdateExactlyOne(ctx, upsertStatus(ctx, status))
+  }
 
   private[repositories] def upsertStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
     val filter  = filterJourney(ctx)

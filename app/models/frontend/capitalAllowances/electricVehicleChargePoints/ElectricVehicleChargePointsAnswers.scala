@@ -29,7 +29,7 @@ object ElectricVehicleChargePointsJourneyAnswers {
 case class ElectricVehicleChargePointsAnswers(evcpAllowance: Boolean,
                                               chargePointTaxRelief: Option[Boolean],
                                               amountSpentOnEvcp: Option[BigDecimal],
-                                              evcpOnlyForSelfEmployment: Option[EvcpOnlyForSelfEmployment],
+                                              evcpOnlyForSelfEmployment: Option[Boolean],
                                               evcpUsedOutsideSE: Option[EvcpUseOutsideSE],
                                               evcpUsedOutsideSEPercentage: Option[Int],
                                               evcpHowMuchDoYouWantToClaim: Option[EvcpHowMuchDoYouWantToClaim],

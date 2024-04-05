@@ -16,11 +16,13 @@
 
 package controllers
 
-import cats.implicits.toTraverseOps
+import cats.implicits._
 import controllers.actions.AuthorisedAction
 import models.common.JourneyName._
 import models.common._
+import models.database.capitalAllowances.{SpecialTaxSitesDb, NewStructuresBuildingsDb, WritingDownAllowanceDb}
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
+import models.frontend.FrontendAnswers
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.capitalAllowances.annualInvestmentAllowance.{
@@ -30,6 +32,9 @@ import models.frontend.capitalAllowances.annualInvestmentAllowance.{
 }
 import models.frontend.capitalAllowances.balancingAllowance.{BalancingAllowanceAnswers, BalancingAllowanceJourneyAnswers}
 import models.frontend.capitalAllowances.electricVehicleChargePoints.{ElectricVehicleChargePointsAnswers, ElectricVehicleChargePointsJourneyAnswers}
+import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
+import models.frontend.capitalAllowances.structuresBuildings.NewStructuresBuildingsAnswers
+import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.{ZeroEmissionCarsAnswers, ZeroEmissionCarsJourneyAnswers}
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
@@ -50,16 +55,15 @@ import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import models.frontend.income.IncomeJourneyAnswers
 import play.api.libs.json.Format.GenericFormat
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.libs.json.{Reads, Writes}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import services.journeyAnswers._
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.Logging
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
-import cats.implicits._
-import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
-import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class JourneyAnswersController @Inject() (auth: AuthorisedAction,
@@ -355,15 +359,28 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     handleOptionalApiResult(capitalAllowancesService.getAnnualInvestmentAllowance(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
-  def saveWritingDownAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    getBodyWithCtx[WritingDownAllowanceAnswers](taxYear, businessId, nino) { (ctx, answers) =>
+  private def saveCapitalAllowancesAnswers[DbAnswers: Writes, A <: FrontendAnswers[DbAnswers]: Reads](
+      journeyName: JourneyName,
+      taxYear: TaxYear,
+      businessId: BusinessId,
+      nino: Nino)(implicit hc: HeaderCarrier, user: AuthorisedAction.User[AnyContent]): Future[Result] =
+    getBodyWithCtx[A](taxYear, businessId, nino) { (ctx, answers) =>
       for {
-        maybeCurrent <- capitalAllowancesService.getAnnualSummaries(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino))
+        maybeCurrent <- capitalAllowancesService.getAnnualSummaries(JourneyContextWithNino(ctx.taxYear, ctx.businessId, ctx.mtditid, ctx.nino))
         maybeAnnualAllowance = maybeCurrent.flatMap(_.annualAllowances.map(_.toApi1802AnnualAllowance))
         _ <- capitalAllowancesService.saveAnnualAllowances(ctx, answers.toDownStream(maybeAnnualAllowance))
-        _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, WritingDownAllowance, answers.toDbModel)
+        _ <- answers.toDbModel.traverse(dbAnswers =>
+          capitalAllowancesService.persistAnswers(ctx.businessId, ctx.taxYear, ctx.mtditid, journeyName, dbAnswers))
       } yield NoContent
     }
+
+  def saveWritingDownAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    saveCapitalAllowancesAnswers[WritingDownAllowanceDb, WritingDownAllowanceAnswers](
+      WritingDownAllowance,
+      taxYear,
+      businessId,
+      nino
+    )
   }
 
   def getWritingDownAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
@@ -371,18 +388,29 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def saveSpecialTaxSites(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    getBodyWithCtx[SpecialTaxSitesAnswers](taxYear, businessId, nino) { (ctx, answers) =>
-      for {
-        maybeCurrent <- capitalAllowancesService.getAnnualSummaries(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino))
-        maybeAnnualAllowance = maybeCurrent.flatMap(_.annualAllowances.map(_.toApi1802AnnualAllowance))
-        _ <- capitalAllowancesService.saveAnnualAllowances(ctx, answers.toDownStream(maybeAnnualAllowance))
-        _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, SpecialTaxSites, answers.toDbModel)
-      } yield NoContent
-    }
+    saveCapitalAllowancesAnswers[SpecialTaxSitesDb, SpecialTaxSitesAnswers](
+      SpecialTaxSites,
+      taxYear,
+      businessId,
+      nino
+    )
   }
 
   def getSpecialTaxSites(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(capitalAllowancesService.getSpecialTaxSites(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  def saveStructuresBuildings(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    saveCapitalAllowancesAnswers[NewStructuresBuildingsDb, NewStructuresBuildingsAnswers](
+      StructuresBuildings,
+      taxYear,
+      businessId,
+      nino
+    )
+  }
+
+  def getStructuresBuildings(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(capitalAllowancesService.getStructuresBuildings(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
 }

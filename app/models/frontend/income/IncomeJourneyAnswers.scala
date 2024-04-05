@@ -48,6 +48,8 @@ object IncomeJourneyAnswers {
       turnoverIncomeAmount = periodicSummaryDetails.financials.incomes.flatMap(_.turnover).getOrElse(BigDecimal(0)), // TODO What if it's None?
       otherIncomeAmount = annualSummaries.annualAdjustments.flatMap(_.outstandingBusinessIncome),
       notTaxableAmount = annualSummaries.annualAdjustments.flatMap(_.includedNonTaxableProfits),
-      tradingAllowanceAmount = annualSummaries.annualAllowances.flatMap(_.annualInvestmentAllowance)
+      tradingAllowanceAmount = annualSummaries.annualAllowances.flatMap(
+        _.annualInvestmentAllowance
+      ) // TODO should tradingAllowanceAmount have 'if (tradingAllowance == declareExpenses) None else ...'
     )
 }

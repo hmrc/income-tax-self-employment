@@ -19,13 +19,6 @@ package controllers
 import cats.data.EitherT
 import cats.implicits._
 import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
-import gens.CapitalAllowancesAnswersGen.{
-  balancingAllowanceAnswersGen,
-  capitalAllowancesTailoringAnswersGen,
-  electricVehicleChargePointsAnswersGen,
-  zeroEmissionCarsAnswersGen,
-  zeroEmissionGoodsVehicleAnswersGen
-}
 import gens.CapitalAllowancesAnswersGen._
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen._
@@ -51,12 +44,14 @@ import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCosts
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
+import org.scalacheck.Gen
 import org.scalamock.handlers.{CallHandler2, CallHandler3}
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
-import play.api.libs.json.Json
-import services.journeyAnswers.ExpensesAnswersService
+import play.api.libs.json.{Json, Writes}
+import play.api.mvc.{Action, AnyContent}
+import services.journeyAnswers.{CapitalAllowancesAnswersService, ExpensesAnswersService}
 import stubs.services.{StubAbroadAnswersService, StubCapitalAllowancesAnswersAnswersService, StubExpensesAnswersService, StubIncomeAnswersService}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
@@ -74,14 +69,57 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
   )
 
-  "SelfEmploymentAbroadAnswers" should {
+  private def checkNoContent(action: Action[AnyContent]) =
+    behave like testRoute(
+      request = buildRequestNoContent,
+      expectedStatus = NO_CONTENT,
+      expectedBody = "",
+      methodBlock = () => action
+    )
+
+  private def mkJourneyAnswersController(capitalAllowancesService: CapitalAllowancesAnswersService) =
+    new JourneyAnswersController(
+      auth = mockAuthorisedAction,
+      cc = stubControllerComponents,
+      abroadAnswersService = StubAbroadAnswersService(),
+      incomeService = StubIncomeAnswersService(),
+      expensesService = StubExpensesAnswersService(),
+      capitalAllowancesService = capitalAllowancesService
+    )
+
+  private def checkGetAndSave[A: Writes](actionForGetNoContent: Action[AnyContent],
+                                         actionForGet: Action[AnyContent],
+                                         expectedBodyForGet: String,
+                                         dataGen: Gen[A],
+                                         actionForSave: Action[AnyContent]): Unit = {
     s"Get return $NO_CONTENT if there is no answers" in {
+      checkNoContent(actionForGetNoContent)
+    }
+
+    s"Get return answers" in {
       behave like testRoute(
         request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.getSelfEmploymentAbroad(currTaxYear, businessId, nino)
+        expectedStatus = OK,
+        expectedBody = expectedBodyForGet,
+        methodBlock = () => actionForGet
       )
+    }
+
+    s"Save answers and return a $NO_CONTENT when successful" in {
+      forAll(dataGen) { data =>
+        behave like testRoute(
+          request = buildRequest(data),
+          expectedStatus = NO_CONTENT,
+          expectedBody = "",
+          methodBlock = () => actionForSave
+        )
+      }
+    }
+  }
+
+  "SelfEmploymentAbroadAnswers" should {
+    s"Get return $NO_CONTENT if there is no answers" in {
+      checkNoContent(underTest.getSelfEmploymentAbroad(currTaxYear, businessId, nino))
     }
 
     "Get return answers" in {
@@ -115,12 +153,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "IncomeAnswers" should {
     s"Get return $NO_CONTENT if there is no answers" in {
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.getIncomeAnswers(currTaxYear, businessId, nino)
-      )
+      checkNoContent(underTest.getIncomeAnswers(currTaxYear, businessId, nino))
     }
 
     s"Get return answers" in {
@@ -181,12 +214,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save ExpensesTailoringNoExpenses return a $NO_CONTENT when successful" in {
-      behave like testRoute(
-        request = buildRequest(NoExpensesAnswers),
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.saveExpensesTailoringNoExpenses(currTaxYear, businessId)
-      )
+      checkNoContent(underTest.saveExpensesTailoringNoExpenses(currTaxYear, businessId))
     }
 
     s"Save ExpensesTailoringIndividualCategories return a $NO_CONTENT when successful" in {
@@ -212,12 +240,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "GoodsToSellOrUse" should {
     s"Get return $NO_CONTENT if there is no answers" in {
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.getGoodsToSellOrUse(currTaxYear, businessId, nino)
-      )
+      checkNoContent(underTest.getGoodsToSellOrUse(currTaxYear, businessId, nino))
     }
 
     s"Get answers and return a $OK when successful" in new GetExpensesTest[GoodsToSellOrUseAnswers] {
@@ -244,12 +267,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "WorkplaceRunningCosts" should {
     s"Get return $NO_CONTENT if there is no answers" in {
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.getWorkplaceRunningCosts(currTaxYear, businessId, nino)
-      )
+      checkNoContent(underTest.getWorkplaceRunningCosts(currTaxYear, businessId, nino))
     }
 
     s"Get answers and return a $OK when successful" in new GetExpensesTest[WorkplaceRunningCostsAnswers] {
@@ -556,11 +574,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "CapitalAllowancesTailoring" should {
     s"Get return $NO_CONTENT if there is no answers" in {
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.getCapitalAllowancesTailoring(currTaxYear, businessId, nino)
+      checkNoContent(
+        underTest.getCapitalAllowancesTailoring(currTaxYear, businessId, nino)
       )
     }
 
@@ -596,11 +611,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "ZeroEmissionCars" should {
     s"Get return $NO_CONTENT if there is no answers" in {
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.getZeroEmissionCars(currTaxYear, businessId, nino)
+      checkNoContent(
+        underTest.getZeroEmissionCars(currTaxYear, businessId, nino)
       )
     }
 
@@ -637,11 +649,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "ZeroEmissionGoodsVehicle" should {
     s"Get return $NO_CONTENT if there is no answers" in {
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.getZeroEmissionGoodsVehicle(currTaxYear, businessId, nino)
+      checkNoContent(
+        underTest.getZeroEmissionGoodsVehicle(currTaxYear, businessId, nino)
       )
     }
 
@@ -678,12 +687,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "ElectricVehicleChargePoints" should {
     s"Get return $NO_CONTENT if there is no answers" in {
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino)
-      )
+      checkNoContent(underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino))
     }
 
     s"Get return answers" in {
@@ -719,12 +723,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "BalancingAllowance" should {
     s"Get return $NO_CONTENT if there is no answers" in {
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.getBalancingAllowance(currTaxYear, businessId, nino)
-      )
+      checkNoContent(underTest.getBalancingAllowance(currTaxYear, businessId, nino))
     }
 
     s"Get return answers" in {
@@ -760,12 +759,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "AnnualInvestmentAllowance" should {
     s"Get return $NO_CONTENT if there is no answers" in {
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.getAnnualInvestmentAllowance(currTaxYear, businessId, nino)
-      )
+      checkNoContent(underTest.getAnnualInvestmentAllowance(currTaxYear, businessId, nino))
     }
 
     s"Get return answers" in {
@@ -801,12 +795,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "WritingDownAllowance" should {
     s"Get return $NO_CONTENT if there is no answers" in {
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.getWritingDownAllowance(currTaxYear, businessId, nino)
-      )
+      checkNoContent(underTest.getWritingDownAllowance(currTaxYear, businessId, nino))
     }
 
     s"Get return answers" in {
@@ -841,44 +830,29 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "SpecialTaxSites" should {
-    s"Get return $NO_CONTENT if there is no answers" in {
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.getSpecialTaxSites(currTaxYear, businessId, nino)
-      )
-    }
+    val answers           = genOne(specialTaxSitesGen)
+    def underTestWithData = mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getSpecialTaxSites = Some(answers).asRight))
 
-    s"Get return answers" in {
-      val answers = genOne(specialTaxSitesGen)
-      val underTest = new JourneyAnswersController(
-        auth = mockAuthorisedAction,
-        cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(),
-        expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getSpecialTaxSites = Some(answers).asRight)
-      )
+    checkGetAndSave(
+      actionForGetNoContent = underTest.getSpecialTaxSites(currTaxYear, businessId, nino),
+      actionForGet = underTestWithData.getSpecialTaxSites(currTaxYear, businessId, nino),
+      expectedBodyForGet = Json.toJson(answers).toString(),
+      dataGen = specialTaxSitesGen,
+      actionForSave = underTest.saveSpecialTaxSites(currTaxYear, businessId, nino)
+    )
+  }
 
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = OK,
-        expectedBody = Json.toJson(answers).toString(),
-        methodBlock = () => underTest.getSpecialTaxSites(currTaxYear, businessId, nino)
-      )
-    }
+  "StructuresBuildings" should {
+    val answers           = genOne(structuresBuildingsWithYeses)
+    def underTestWithData = mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getStructuresBuildings = Some(answers).asRight))
 
-    s"Save answers and return a $NO_CONTENT when successful" in {
-      forAll(specialTaxSitesGen) { data =>
-        behave like testRoute(
-          request = buildRequest(data),
-          expectedStatus = NO_CONTENT,
-          expectedBody = "",
-          methodBlock = () => underTest.saveSpecialTaxSites(currTaxYear, businessId, nino)
-        )
-      }
-    }
+    checkGetAndSave(
+      actionForGetNoContent = underTest.getStructuresBuildings(currTaxYear, businessId, nino),
+      actionForGet = underTestWithData.getStructuresBuildings(currTaxYear, businessId, nino),
+      expectedBodyForGet = Json.toJson(answers).toString(),
+      dataGen = structuresBuildingsWithYeses,
+      actionForSave = underTest.saveStructuresBuildings(currTaxYear, businessId, nino)
+    )
   }
 
   trait GetExpensesTest[T] {

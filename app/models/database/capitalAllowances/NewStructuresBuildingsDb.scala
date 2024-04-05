@@ -18,11 +18,13 @@ package models.database.capitalAllowances
 
 import play.api.libs.json.{Format, Json}
 
-final case class SpecialTaxSitesDb(
-    specialTaxSites: Boolean,
-    newSpecialTaxSites: Option[List[NewSpecialTaxSiteDb]]
+final case class NewStructuresBuildingsDb(
+    structuresBuildingsAllowance: Boolean,
+    structuresBuildingsEligibleClaim: Option[Boolean],
+    structuresBuildingsPreviousClaimUse: Option[Boolean],
+    structuresBuildingsClaimed: Option[Boolean]
 )
 
-object SpecialTaxSitesDb {
-  implicit val format: Format[SpecialTaxSitesDb] = Json.format[SpecialTaxSitesDb]
+object NewStructuresBuildingsDb {
+  implicit val format: Format[NewStructuresBuildingsDb] = Json.format[NewStructuresBuildingsDb]
 }

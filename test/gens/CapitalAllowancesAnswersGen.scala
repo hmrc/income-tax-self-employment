@@ -22,10 +22,10 @@ import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAn
 import models.frontend.capitalAllowances.electricVehicleChargePoints.{
   ElectricVehicleChargePointsAnswers,
   EvcpHowMuchDoYouWantToClaim,
-  EvcpOnlyForSelfEmployment,
   EvcpUseOutsideSE
 }
 import models.frontend.capitalAllowances.specialTaxSites.{NewSpecialTaxSite, SpecialTaxSiteLocation, SpecialTaxSitesAnswers}
+import models.frontend.capitalAllowances.structuresBuildings.{NewStructureBuilding, NewStructuresBuildingsAnswers, StructuresBuildingsLocation}
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars._
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.{ZegvHowMuchDoYouWantToClaim, ZegvUseOutsideSE, ZeroEmissionGoodsVehicleAnswers}
@@ -47,9 +47,9 @@ object CapitalAllowancesAnswersGen {
 
   val zeroEmissionCarsAnswersGen: Gen[ZeroEmissionCarsAnswers] = for {
     zeroEmissionCars                        <- booleanGen
-    zeroEmissionCarsAllowance               <- Gen.option(Gen.oneOf(ZecAllowance.values))
+    zeroEmissionCarsAllowance               <- Gen.option(booleanGen)
     zeroEmissionCarsTotalCostOfCar          <- Gen.option(bigDecimalGen)
-    zeroEmissionCarsOnlyForSelfEmployment   <- Gen.option(Gen.oneOf(ZecOnlyForSelfEmployment.values))
+    zeroEmissionCarsOnlyForSelfEmployment   <- Gen.option(booleanGen)
     zeroEmissionCarsUsedOutsideSE           <- Gen.option(Gen.oneOf(ZecUseOutsideSE.values))
     zeroEmissionCarsUsedOutsideSEPercentage <- Gen.option(intGen)
     zecHowMuchDoYouWantToClaim              <- Gen.option(Gen.oneOf(ZecHowMuchDoYouWantToClaim.values))
@@ -64,6 +64,28 @@ object CapitalAllowancesAnswersGen {
     zecHowMuchDoYouWantToClaim,
     zeroEmissionCarsClaimAmount
   )
+
+  val zeroEmissionCarsDbAnswersGen: Gen[ZeroEmissionCarsDb] = for {
+    zeroEmissionCars                        <- booleanGen
+    zeroEmissionCarsAllowance               <- Gen.option(booleanGen)
+    zeroEmissionCarsTotalCostOfCar          <- Gen.option(bigDecimalGen)
+    zeroEmissionCarsOnlyForSelfEmployment   <- Gen.option(booleanGen)
+    zeroEmissionCarsUsedOutsideSE           <- Gen.option(Gen.oneOf(ZecUseOutsideSE.values))
+    zeroEmissionCarsUsedOutsideSEPercentage <- Gen.option(intGen)
+    zecHowMuchDoYouWantToClaim              <- Gen.option(Gen.oneOf(ZecHowMuchDoYouWantToClaim.values))
+  } yield ZeroEmissionCarsDb(
+    zeroEmissionCars,
+    zeroEmissionCarsAllowance,
+    zeroEmissionCarsTotalCostOfCar,
+    zeroEmissionCarsOnlyForSelfEmployment,
+    zeroEmissionCarsUsedOutsideSE,
+    zeroEmissionCarsUsedOutsideSEPercentage,
+    zecHowMuchDoYouWantToClaim
+  )
+
+  val zeroEmissionCarsJourneyAnswersGen: Gen[ZeroEmissionCarsJourneyAnswers] = for {
+    zeroEmissionCarsClaimAmount <- bigDecimalGen
+  } yield ZeroEmissionCarsJourneyAnswers(zeroEmissionCarsClaimAmount)
 
   val zeroEmissionGoodsVehicleAnswersGen: Gen[ZeroEmissionGoodsVehicleAnswers] = for {
     zeroEmissionGoodsVehicle    <- booleanGen
@@ -85,33 +107,11 @@ object CapitalAllowancesAnswersGen {
     zegvClaimAmount
   )
 
-  val zeroEmissionCarsDbAnswersGen: Gen[ZeroEmissionCarsDb] = for {
-    zeroEmissionCars                        <- booleanGen
-    zeroEmissionCarsAllowance               <- Gen.option(Gen.oneOf(ZecAllowance.values))
-    zeroEmissionCarsTotalCostOfCar          <- Gen.option(bigDecimalGen)
-    zeroEmissionCarsOnlyForSelfEmployment   <- Gen.option(Gen.oneOf(ZecOnlyForSelfEmployment.values))
-    zeroEmissionCarsUsedOutsideSE           <- Gen.option(Gen.oneOf(ZecUseOutsideSE.values))
-    zeroEmissionCarsUsedOutsideSEPercentage <- Gen.option(intGen)
-    zecHowMuchDoYouWantToClaim              <- Gen.option(Gen.oneOf(ZecHowMuchDoYouWantToClaim.values))
-  } yield ZeroEmissionCarsDb(
-    zeroEmissionCars,
-    zeroEmissionCarsAllowance,
-    zeroEmissionCarsTotalCostOfCar,
-    zeroEmissionCarsOnlyForSelfEmployment,
-    zeroEmissionCarsUsedOutsideSE,
-    zeroEmissionCarsUsedOutsideSEPercentage,
-    zecHowMuchDoYouWantToClaim
-  )
-
-  val zeroEmissionCarsJourneyAnswersGen: Gen[ZeroEmissionCarsJourneyAnswers] = for {
-    zeroEmissionCarsClaimAmount <- bigDecimalGen
-  } yield ZeroEmissionCarsJourneyAnswers(zeroEmissionCarsClaimAmount)
-
   val electricVehicleChargePointsAnswersGen: Gen[ElectricVehicleChargePointsAnswers] = for {
     evcpAllowance               <- booleanGen
     chargePointTaxRelief        <- Gen.option(booleanGen)
     amountSpentOnEvcp           <- Gen.option(bigDecimalGen)
-    evcpOnlyForSelfEmployment   <- Gen.option(Gen.oneOf(EvcpOnlyForSelfEmployment.values))
+    evcpOnlyForSelfEmployment   <- Gen.option(booleanGen)
     evcpUsedOutsideSE           <- Gen.option(Gen.oneOf(EvcpUseOutsideSE.values))
     evcpUsedOutsideSEPercentage <- Gen.option(intGen)
     evcpHowMuchDoYouWantToClaim <- Gen.option(Gen.oneOf(EvcpHowMuchDoYouWantToClaim.values))
@@ -131,7 +131,7 @@ object CapitalAllowancesAnswersGen {
     evcpAllowance               <- booleanGen
     chargePointTaxRelief        <- Gen.option(booleanGen)
     amountSpentOnEvcp           <- Gen.option(bigDecimalGen)
-    evcpOnlyForSelfEmployment   <- Gen.option(Gen.oneOf(EvcpOnlyForSelfEmployment.values))
+    evcpOnlyForSelfEmployment   <- Gen.option(booleanGen)
     evcpUsedOutsideSE           <- Gen.option(Gen.oneOf(EvcpUseOutsideSE.values))
     evcpUsedOutsideSEPercentage <- Gen.option(intGen)
     evcpHowMuchDoYouWantToClaim <- Gen.option(Gen.oneOf(EvcpHowMuchDoYouWantToClaim.values))
@@ -201,5 +201,21 @@ object CapitalAllowancesAnswersGen {
       existingSiteClaimingAmount = Some(existingSiteClaimingAmount)
     )
   }
+
+  val structuresBuildingsWithYeses: Gen[NewStructuresBuildingsAnswers] = for {
+    newStructureBuildingClaimingAmount <- bigDecimalGen
+  } yield NewStructuresBuildingsAnswers(
+    structuresBuildingsAllowance = true,
+    structuresBuildingsEligibleClaim = Some(true),
+    structuresBuildingsPreviousClaimUse = Some(true),
+    structuresBuildingsClaimed = Some(true),
+    newStructuresBuildings = Some(List(
+      NewStructureBuilding(
+        qualifyingUse = Some(LocalDate.now()),
+        newStructureBuildingLocation = Some(StructuresBuildingsLocation(Some("name"), Some("number"), "AA11AA")),
+        newStructureBuildingClaimingAmount = Some(newStructureBuildingClaimingAmount)
+      )
+    ))
+  )
 
 }

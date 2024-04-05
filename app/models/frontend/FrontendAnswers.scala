@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,12 @@
  * limitations under the License.
  */
 
-package models.frontend.capitalAllowances.zeroEmissionCars
+package models.frontend
 
-import models.common.{Enumerable, WithName}
+import models.connector.api_1802.request.AnnualAllowances
 
-sealed trait ZecAllowance
+abstract class FrontendAnswers[A] {
+  def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances
 
-object ZecAllowance extends Enumerable.Implicits {
-
-  case object Yes extends WithName("yes") with ZecAllowance
-  case object No  extends WithName("no") with ZecAllowance
-
-  val values: Seq[ZecAllowance] = Seq(
-    Yes,
-    No
-  )
-
-  implicit val enumerable: Enumerable[ZecAllowance] =
-    Enumerable(values.map(v => v.toString -> v): _*)
+  def toDbModel: Option[A]
 }
