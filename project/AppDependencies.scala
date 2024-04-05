@@ -49,8 +49,9 @@ object AppDependencies {
     "org.mockito"            %% "mockito-scala"           % "1.16.42",
     "org.typelevel"          %% "cats-core"               % "2.9.0",
     "com.vladsch.flexmark"    % "flexmark-all"            % "0.64.6",
-    "org.scalatestplus.play" %% "scalatestplus-play"      % "5.1.0",
+    "org.scalatestplus.play" %% "scalatestplus-play"      % "7.0.1",
     "com.github.tomakehurst"  % "wiremock-jre8-standalone"           % "2.35.1",
+    "org.mockito" %% "mockito-scala" % "1.17.31",
     "org.scalamock"          %% "scalamock"               % "5.2.0"
   ).map(_ % s"$Test, $IntegrationTest")
 
