@@ -16,7 +16,7 @@
 
 import play.sbt.routes.RoutesKeys
 
-lazy val appName = "income-tax-pensions"
+lazy val appName = "income-tax-self-employment"
 
 ThisBuild / majorVersion := 0
 ThisBuild / scalaVersion := "2.13.12"
