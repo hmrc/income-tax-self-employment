@@ -16,6 +16,4 @@
 
 package controllers
 
-class CopyrightClass {
-
-}
+class CopyrightClass
