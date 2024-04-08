@@ -46,7 +46,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers {
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "getAnswers" should {
     "return empty answers if there is no answers submitted" in new TestCase() {

@@ -16,6 +16,11 @@
 
 import play.sbt.routes.RoutesKeys
 
+lazy val appName = "income-tax-self-employment"
+
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "2.13.12"
+
 val additionalScalacOptions = if (sys.props.getOrElse("PLAY_ENV", "") == "Dev") Seq() else Seq("-Xfatal-warnings")
 
 lazy val compileOpts = Seq(
@@ -31,13 +36,11 @@ lazy val compileOpts = Seq(
   "-Wconf:src=routes/.*:s"
 ) ++ additionalScalacOptions
 
-lazy val microservice = Project("income-tax-self-employment", file("."))
+lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) // Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(PlayKeys.playDefaultPort := 10900)
   .settings(
-    majorVersion := 0,
-    scalaVersion := "2.13.8",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     // https://www.scala-lang.org/2021/01/12/configuring-and-suppressing-warnings.html
     // suppress warnings in generated routes files

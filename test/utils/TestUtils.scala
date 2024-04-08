@@ -16,12 +16,12 @@
 
 package utils
 
-import akka.actor.ActorSystem
-import akka.stream.SystemMaterializer
 import com.codahale.metrics.SharedMetricRegistries
 import config.AppConfig
 import controllers.actions.AuthorisedAction
 import controllers.actions.AuthorisedAction.{EnrolmentIdentifiers, EnrolmentKeys}
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.SystemMaterializer
 import org.scalamock.handlers.CallHandler4
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.BeforeAndAfterEach
