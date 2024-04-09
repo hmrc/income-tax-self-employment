@@ -19,11 +19,15 @@ package models.domain
 import models.common.{AccountingType, BusinessId, TradingName}
 import play.api.libs.json._
 
+/** @param isPrepop
+  *   \- isPrepop is true when the data were modified via software and will not be possible to modify using our application, it's false if a standard
+  *   journey possible to be modified by our app
+  */
 case class TradesJourneyStatuses(businessId: BusinessId,
                                  tradingName: Option[TradingName],
                                  accountingType: AccountingType,
                                  journeyStatuses: List[JourneyNameAndStatus])
-
+x
 object TradesJourneyStatuses {
   implicit val format: OFormat[TradesJourneyStatuses] = Json.format[TradesJourneyStatuses]
 }

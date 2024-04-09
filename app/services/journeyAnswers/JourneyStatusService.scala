@@ -18,6 +18,7 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
+import config.AppConfig
 import connectors.SelfEmploymentConnector
 import models.common._
 import models.connector.api_1171
@@ -37,7 +38,7 @@ trait JourneyStatusService {
 }
 
 @Singleton
-class JourneyStatusServiceImpl @Inject() (businessConnector: SelfEmploymentConnector, repository: JourneyAnswersRepository)(implicit
+class JourneyStatusServiceImpl @Inject() (businessConnector: SelfEmploymentConnector, repository: JourneyAnswersRepository, appConfig: AppConfig)(implicit
     ec: ExecutionContext)
     extends JourneyStatusService {
 
@@ -60,6 +61,7 @@ class JourneyStatusServiceImpl @Inject() (businessConnector: SelfEmploymentConne
       businessesResp <- EitherT(businessConnector.getBusinesses(IdType.Nino, nino.value))
       businesses = getBusinesses(businessesResp)
       taskList <- repository.getAll(taxYear, mtditid, businesses)
+      isPrepop = appConfig.isPrepopNino(nino)
     } yield taskList
   }
 }

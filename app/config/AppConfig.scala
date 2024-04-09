@@ -16,6 +16,7 @@
 
 package config
 
+import models.common.Nino
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
@@ -27,6 +28,8 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val authBaseUrl: String      = servicesConfig.baseUrl("auth")
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
+  val prepopNinos: List[String] =
+    config.getOptional[String]("prepop.ninos").getOrElse("").split(",").toList // Temporarily solution until proper API is ready
 
   val ifsEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
 
@@ -36,4 +39,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
 
   val cacheTtl: Int = Duration(servicesConfig.getString("mongodb.timeToLive")).toDays.toInt
+
+  def isPrepopNino(nino: Nino): Boolean = prepopNinos.contains(nino.value.toUpperCase())
 }
