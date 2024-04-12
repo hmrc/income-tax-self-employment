@@ -15,6 +15,7 @@ POST        /:taxYear/:businessId/self-employment-abroad/:nino/answers          
 
 POST        /:taxYear/:businessId/income/:nino/answers                                                   controllers.JourneyAnswersController.saveIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/income/:nino/answers                                                   controllers.JourneyAnswersController.getIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+GET         /:taxYear/:businessId/income-prepop/:nino/answers                                            controllers.JourneyAnswersController.getIncomePrepopAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/:businessId/expenses-categories/none/answers                                       controllers.JourneyAnswersController.saveExpensesTailoringNoExpenses(taxYear: TaxYear, businessId: BusinessId)
 POST        /:taxYear/:businessId/expenses-categories/categories/answers                                 controllers.JourneyAnswersController.saveExpensesTailoringIndividualCategories(taxYear: TaxYear, businessId: BusinessId)

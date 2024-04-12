@@ -18,12 +18,17 @@ package services.journeyAnswers
 
 import cats.implicits._
 import connectors.SelfEmploymentConnector
-import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
+import gens.IncomeJourneyAnswersGen.{incomeJourneyAnswersGen, incomePrepopAnswersGen}
 import models.common.{JourneyContextWithNino, JourneyName, JourneyStatus}
+import models.connector.api_1786
+import models.connector.api_1786.IncomesType
 import models.database.JourneyAnswers
 import models.database.income.IncomeStorageAnswers
+import models.error.DownstreamError.SingleDownstreamError
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError.InvalidJsonFormatError
-import models.frontend.income.IncomeJourneyAnswers
+import models.error.{DownstreamError, ServiceError}
+import models.frontend.income.{IncomeJourneyAnswers, IncomePrepopAnswers}
 import org.mockito.IdiomaticMockito.StubbingOps
 import org.mockito.Mockito.times
 import org.mockito.MockitoSugar.{mock, never, verify}
@@ -33,7 +38,9 @@ import org.scalatest.OptionValues._
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.{JsObject, Json}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import services.journeyAnswers.IncomeAnswersServiceImplSpec._
 import stubs.connectors.StubSelfEmploymentConnector
 import stubs.connectors.StubSelfEmploymentConnector._
@@ -48,6 +55,26 @@ import scala.concurrent.Future
 class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
+  "getPrepopAnswers" should {
+    val filledIncomes: IncomesType = IncomesType(Some(100), Some(50))
+    "return empty answers if there is no answers submitted" in new TestCase() {
+      service.getPrepopAnswers(journeyCtxWithNino).value.futureValue shouldBe IncomePrepopAnswers(None, None).asRight
+    }
+
+    "return error if error is returned from the Connector" in new TestCase(connector = StubSelfEmploymentConnector(getPeriodicSummaryDetailResult =
+      Future(SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError).asLeft))) {
+      val result: Either[ServiceError, IncomePrepopAnswers] = service.getPrepopAnswers(journeyCtxWithNino).value.futureValue
+      val error: ServiceError                               = result.left.value
+      error shouldBe a[DownstreamError]
+    }
+
+    "return IncomePrepopAnswers" in new TestCase(connector = StubSelfEmploymentConnector(getPeriodicSummaryDetailResult = Future.successful(
+      api_1786.SuccessResponseSchema(currTaxYearStart, currTaxYearEnd, api_1786.FinancialsType(None, filledIncomes.some)).asRight))) {
+      val result: Either[ServiceError, IncomePrepopAnswers] = service.getPrepopAnswers(journeyCtxWithNino).value.futureValue
+      result.value shouldBe IncomePrepopAnswers(filledIncomes.turnover, filledIncomes.other)
+    }
+  }
+
   "getAnswers" should {
     "return empty answers if there is no answers submitted" in new TestCase() {
       service.getAnswers(journeyCtxWithNino).value.futureValue shouldBe None.asRight
@@ -56,7 +83,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
     "return error if cannot read IncomeJourneyAnswers" in new TestCase(
       repo = StubJourneyAnswersRepository(getAnswer = Some(brokenJourneyAnswers))
     ) {
-      val result = service.getAnswers(journeyCtxWithNino).value.futureValue
+      val result = await(service.getAnswers(journeyCtxWithNino).value)
       val error  = result.left.value
       error shouldBe a[InvalidJsonFormatError]
     }
@@ -157,6 +184,12 @@ object IncomeAnswersServiceImplSpec {
 
   val sampleIncomeJourneyAnswers: JourneyAnswers = brokenJourneyAnswers.copy(
     data = Json.toJson(sampleIncomeJourneyAnswersData).as[JsObject]
+  )
+
+  val sampleIncomePrepopAnswersData: IncomePrepopAnswers = gens.genOne(incomePrepopAnswersGen)
+
+  val sampleIncomePrepopAnswers: JourneyAnswers = brokenJourneyAnswers.copy(
+    data = Json.toJson(sampleIncomePrepopAnswersData).as[JsObject]
   )
 
 }

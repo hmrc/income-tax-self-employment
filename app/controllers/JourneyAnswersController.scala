@@ -20,7 +20,7 @@ import cats.implicits._
 import controllers.actions.AuthorisedAction
 import models.common.JourneyName._
 import models.common._
-import models.database.capitalAllowances.{SpecialTaxSitesDb, NewStructuresBuildingsDb, WritingDownAllowanceDb}
+import models.database.capitalAllowances.{NewStructuresBuildingsDb, SpecialTaxSitesDb, WritingDownAllowanceDb}
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
 import models.frontend.FrontendAnswers
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
@@ -87,6 +87,9 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   // Income
+  def getIncomePrepopAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResultT(incomeService.getPrepopAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
   def getIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(incomeService.getAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }

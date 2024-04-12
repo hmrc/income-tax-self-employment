@@ -22,7 +22,7 @@ import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
 import gens.CapitalAllowancesAnswersGen._
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen._
-import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
+import gens.IncomeJourneyAnswersGen.{incomeJourneyAnswersGen, incomePrepopAnswersGen}
 import gens.SelfEmploymentAbroadAnswersGen.selfEmploymentAbroadAnswersGen
 import gens.genOne
 import models.common.JourneyContextWithNino
@@ -44,6 +44,7 @@ import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCosts
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
+import models.frontend.income.IncomePrepopAnswers
 import org.scalacheck.Gen
 import org.scalamock.handlers.{CallHandler2, CallHandler3}
 import org.scalatest.prop.TableDrivenPropertyChecks
@@ -181,6 +182,27 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         expectedStatus = NO_CONTENT,
         expectedBody = "",
         methodBlock = () => underTest.saveIncomeAnswers(currTaxYear, businessId, nino)
+      )
+    }
+  }
+
+  "getIncomePrepopAnswers" should {
+    s"return answers from downstream" in {
+      val answers: IncomePrepopAnswers = genOne(incomePrepopAnswersGen)
+      val underTest = new JourneyAnswersController(
+        auth = mockAuthorisedAction,
+        cc = stubControllerComponents,
+        abroadAnswersService = StubAbroadAnswersService(),
+        incomeService = StubIncomeAnswersService(getPrepopAnswersRes = answers.asRight),
+        expensesService = StubExpensesAnswersService(),
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
+      )
+
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.toJson(answers).toString(),
+        methodBlock = () => underTest.getIncomePrepopAnswers(currTaxYear, businessId, nino)
       )
     }
   }

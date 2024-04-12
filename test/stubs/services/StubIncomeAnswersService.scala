@@ -20,7 +20,7 @@ import cats.data.EitherT
 import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
 import models.error.ServiceError
-import models.frontend.income.IncomeJourneyAnswers
+import models.frontend.income.{IncomeJourneyAnswers, IncomePrepopAnswers}
 import services.journeyAnswers.IncomeAnswersService
 import stubs.serviceUnitT
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,7 +28,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
 
 case class StubIncomeAnswersService(incomeJourneyAnswersRes: ApiResultT[Unit] = serviceUnitT,
-                                    getAnswersRes: Either[ServiceError, Option[IncomeJourneyAnswers]] = Right(None))
+                                    getAnswersRes: Either[ServiceError, Option[IncomeJourneyAnswers]] = Right(None),
+                                    getPrepopAnswersRes: Either[ServiceError, IncomePrepopAnswers] = Right(IncomePrepopAnswers(None, None)))
     extends IncomeAnswersService {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -37,5 +38,8 @@ case class StubIncomeAnswersService(incomeJourneyAnswersRes: ApiResultT[Unit] = 
 
   def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[IncomeJourneyAnswers]] =
     EitherT.fromEither[Future](getAnswersRes)
+
+  def getPrepopAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[IncomePrepopAnswers] =
+    EitherT.fromEither[Future](getPrepopAnswersRes)
 
 }
