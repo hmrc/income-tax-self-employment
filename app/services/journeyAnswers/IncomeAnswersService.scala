@@ -49,9 +49,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
     extends IncomeAnswersService {
 
   def getPrepopAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[IncomePrepopAnswers] =
-    for {
-      periodicSummaryDetails <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
-    } yield IncomePrepopAnswers(periodicSummaryDetails)
+    EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError].map(periodicSummaryDetails => IncomePrepopAnswers(periodicSummaryDetails))
 
   def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[IncomeJourneyAnswers]] =
     for {
