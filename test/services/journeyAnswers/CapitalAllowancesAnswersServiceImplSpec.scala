@@ -43,7 +43,7 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
   val connector: StubSelfEmploymentConnector =
     StubSelfEmploymentConnector(
       createAmendSEAnnualSubmissionResult = Future.successful(api1802SuccessResponse.asRight),
-      getAnnualSummaries = Future.successful(api1803SuccessResponse.asRight)
+      getAnnualSummariesResult = Future.successful(api1803SuccessResponse.asRight)
     )
   val service = new CapitalAllowancesAnswersServiceImpl(connector, StubJourneyAnswersRepository())
 

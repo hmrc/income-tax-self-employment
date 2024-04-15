@@ -68,6 +68,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class JourneyAnswersController @Inject() (auth: AuthorisedAction,
                                           cc: ControllerComponents,
+                                          prepopAnswersService: PrepopAnswersService,
                                           abroadAnswersService: AbroadAnswersService,
                                           incomeService: IncomeAnswersService,
                                           expensesService: ExpensesAnswersService,
@@ -86,10 +87,15 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     }
   }
 
-  // Income
+  // Prepop
   def getIncomePrepopAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResultT(incomeService.getPrepopAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+    handleApiResultT(prepopAnswersService.getIncomeAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
+  def getAdjustmentsPrepopAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResultT(prepopAnswersService.getAdjustmentsAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  // Income
   def getIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(incomeService.getAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }

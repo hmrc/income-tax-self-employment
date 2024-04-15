@@ -42,11 +42,10 @@ case class StubSelfEmploymentConnector(
     createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(api1894SuccessResponse.asRight),
     amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(api1895SuccessResponse.asRight),
     createAmendSEAnnualSubmissionResult: Future[Api1802Response] = Future.successful(api1802SuccessResponse.asRight),
-    getAnnualSummaries: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight),
+    getAnnualSummariesResult: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight),
     listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
-    getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight),
-    getAnnualSummariesResult: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight)
-) extends SelfEmploymentConnector {
+    getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight))
+    extends SelfEmploymentConnector {
 
   override def createSEPeriodSummary(
       data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] =
