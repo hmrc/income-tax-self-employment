@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.frontend.income
+package models.frontend.prepop
 
 import models.connector.api_1786
 import play.api.libs.json.{Json, OFormat}

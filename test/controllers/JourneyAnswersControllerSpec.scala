@@ -44,7 +44,6 @@ import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCosts
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
-import models.frontend.income.IncomePrepopAnswers
 import org.scalacheck.Gen
 import org.scalamock.handlers.{CallHandler2, CallHandler3}
 import org.scalatest.prop.TableDrivenPropertyChecks
@@ -53,7 +52,7 @@ import play.api.http.Status._
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent}
 import services.journeyAnswers.{CapitalAllowancesAnswersService, ExpensesAnswersService}
-import stubs.services.{StubAbroadAnswersService, StubCapitalAllowancesAnswersAnswersService, StubExpensesAnswersService, StubIncomeAnswersService}
+import stubs.services._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
@@ -67,10 +66,11 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     abroadAnswersService = StubAbroadAnswersService(),
     incomeService = StubIncomeAnswersService(),
     expensesService = StubExpensesAnswersService(),
-    capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
+    capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+    prepopAnswersService = StubPrepopAnswersService()
   )
 
-  private def checkNoContent(action: Action[AnyContent]) =
+  private def checkNoContent(action: Action[AnyContent]): Unit =
     behave like testRoute(
       request = buildRequestNoContent,
       expectedStatus = NO_CONTENT,
@@ -85,7 +85,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       abroadAnswersService = StubAbroadAnswersService(),
       incomeService = StubIncomeAnswersService(),
       expensesService = StubExpensesAnswersService(),
-      capitalAllowancesService = capitalAllowancesService
+      capitalAllowancesService = capitalAllowancesService,
+      prepopAnswersService = StubPrepopAnswersService()
     )
 
   private def checkGetAndSave[A: Writes](actionForGetNoContent: Action[AnyContent],
@@ -131,7 +132,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(getAnswersRes = Some(answers).asRight),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -165,7 +167,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(getAnswersRes = Some(answers).asRight),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -186,23 +189,23 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
-  "getIncomePrepopAnswers" should {
-    s"return answers from downstream" in {
-      val answers: IncomePrepopAnswers = genOne(incomePrepopAnswersGen)
-      val underTest = new JourneyAnswersController(
-        auth = mockAuthorisedAction,
-        cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(getPrepopAnswersRes = answers.asRight),
-        expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
-      )
-
+  "PrepopAnswers" should {
+    val incomePrepopAnswers = genOne(incomePrepopAnswersGen)
+    val prepopStubbedUnderTest = new JourneyAnswersController(
+      auth = mockAuthorisedAction,
+      cc = stubControllerComponents,
+      abroadAnswersService = StubAbroadAnswersService(),
+      incomeService = StubIncomeAnswersService(),
+      expensesService = StubExpensesAnswersService(),
+      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+      prepopAnswersService = StubPrepopAnswersService(getIncomeAnswersResult = incomePrepopAnswers.asRight)
+    )
+    s"getIncomeAnswers from downstream" in {
       behave like testRoute(
         request = buildRequestNoContent,
         expectedStatus = OK,
-        expectedBody = Json.toJson(answers).toString(),
-        methodBlock = () => underTest.getIncomePrepopAnswers(currTaxYear, businessId, nino)
+        expectedBody = Json.toJson(incomePrepopAnswers).toString(),
+        methodBlock = () => prepopStubbedUnderTest.getIncomePrepopAnswers(currTaxYear, businessId, nino)
       )
     }
   }
@@ -224,7 +227,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
           abroadAnswersService = StubAbroadAnswersService(),
           incomeService = StubIncomeAnswersService(),
           expensesService = StubExpensesAnswersService(getTailoringJourneyAnswers = journeyAnswers),
-          capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
+          capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+          prepopAnswersService = StubPrepopAnswersService()
         )
         behave like testRoute(
           request = buildRequestNoContent,
@@ -609,7 +613,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getCapitalAllowancesTailoring = Some(answers).asRight)
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getCapitalAllowancesTailoring = Some(answers).asRight),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -646,7 +651,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getZeroEmissionCars = Some(answers).asRight)
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getZeroEmissionCars = Some(answers).asRight),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -684,7 +690,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getZeroEmissionGoodsVehicleCars = Some(answers).asRight)
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getZeroEmissionGoodsVehicleCars = Some(answers).asRight),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -720,7 +727,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getElectricVehicleChargePoints = Some(answers).asRight)
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getElectricVehicleChargePoints = Some(answers).asRight),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -756,7 +764,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getBalancingAllowance = Some(answers).asRight)
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getBalancingAllowance = Some(answers).asRight),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -792,7 +801,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getAnnualInvestmentAllowance = Some(answers).asRight)
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getAnnualInvestmentAllowance = Some(answers).asRight),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -828,7 +838,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getWritingDownAllowance = Some(answers).asRight)
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getWritingDownAllowance = Some(answers).asRight),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -887,7 +898,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       abroadAnswersService = StubAbroadAnswersService(),
       incomeService = StubIncomeAnswersService(),
       expensesService = expensesService,
-      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
+      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+      prepopAnswersService = StubPrepopAnswersService()
     )
 
     def mockExpensesService(): CallHandler3[JourneyContextWithNino, Api1786ExpensesResponseParser[T], HeaderCarrier, ApiResultT[T]] =

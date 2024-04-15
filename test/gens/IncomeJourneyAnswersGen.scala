@@ -16,7 +16,8 @@
 
 package gens
 
-import models.frontend.income.{HowMuchTradingAllowance, IncomeJourneyAnswers, IncomePrepopAnswers, TradingAllowance}
+import models.frontend.income.{HowMuchTradingAllowance, IncomeJourneyAnswers, TradingAllowance}
+import models.frontend.prepop.IncomePrepopAnswers
 import org.scalacheck.Gen
 
 object IncomeJourneyAnswersGen {
