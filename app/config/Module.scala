@@ -28,6 +28,7 @@ class Module extends AbstractModule {
   override def configure(): Unit = {
     bind(classOf[AppConfig]).asEagerSingleton()
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
+    bind(classOf[PrepopAnswersService]).to(classOf[PrepopAnswersServiceImpl])
     bind(classOf[AbroadAnswersService]).to(classOf[AbroadAnswersServiceImpl])
     bind(classOf[IncomeAnswersService]).to(classOf[IncomeAnswersServiceImpl])
     bind(classOf[ExpensesAnswersService]).to(classOf[ExpensesAnswersServiceImpl])

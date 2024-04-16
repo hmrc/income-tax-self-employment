@@ -22,7 +22,7 @@ import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
 import gens.CapitalAllowancesAnswersGen._
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen._
-import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
+import gens.IncomeJourneyAnswersGen.{incomeJourneyAnswersGen, incomePrepopAnswersGen}
 import gens.SelfEmploymentAbroadAnswersGen.selfEmploymentAbroadAnswersGen
 import gens.genOne
 import models.common.JourneyContextWithNino
@@ -52,7 +52,7 @@ import play.api.http.Status._
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent}
 import services.journeyAnswers.{CapitalAllowancesAnswersService, ExpensesAnswersService}
-import stubs.services.{StubAbroadAnswersService, StubCapitalAllowancesAnswersAnswersService, StubExpensesAnswersService, StubIncomeAnswersService}
+import stubs.services._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
@@ -66,10 +66,11 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     abroadAnswersService = StubAbroadAnswersService(),
     incomeService = StubIncomeAnswersService(),
     expensesService = StubExpensesAnswersService(),
-    capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
+    capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+    prepopAnswersService = StubPrepopAnswersService()
   )
 
-  private def checkNoContent(action: Action[AnyContent]) =
+  private def checkNoContent(action: Action[AnyContent]): Unit =
     behave like testRoute(
       request = buildRequestNoContent,
       expectedStatus = NO_CONTENT,
@@ -84,7 +85,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       abroadAnswersService = StubAbroadAnswersService(),
       incomeService = StubIncomeAnswersService(),
       expensesService = StubExpensesAnswersService(),
-      capitalAllowancesService = capitalAllowancesService
+      capitalAllowancesService = capitalAllowancesService,
+      prepopAnswersService = StubPrepopAnswersService()
     )
 
   private def checkGetAndSave[A: Writes](actionForGetNoContent: Action[AnyContent],
@@ -130,7 +132,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(getAnswersRes = Some(answers).asRight),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -164,7 +167,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(getAnswersRes = Some(answers).asRight),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -181,6 +185,27 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         expectedStatus = NO_CONTENT,
         expectedBody = "",
         methodBlock = () => underTest.saveIncomeAnswers(currTaxYear, businessId, nino)
+      )
+    }
+  }
+
+  "PrepopAnswers" should {
+    val incomePrepopAnswers = genOne(incomePrepopAnswersGen)
+    val prepopStubbedUnderTest = new JourneyAnswersController(
+      auth = mockAuthorisedAction,
+      cc = stubControllerComponents,
+      abroadAnswersService = StubAbroadAnswersService(),
+      incomeService = StubIncomeAnswersService(),
+      expensesService = StubExpensesAnswersService(),
+      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+      prepopAnswersService = StubPrepopAnswersService(getIncomeAnswersResult = incomePrepopAnswers.asRight)
+    )
+    s"getIncomeAnswers from downstream" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = Json.toJson(incomePrepopAnswers).toString(),
+        methodBlock = () => prepopStubbedUnderTest.getIncomePrepopAnswers(currTaxYear, businessId, nino)
       )
     }
   }
@@ -202,7 +227,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
           abroadAnswersService = StubAbroadAnswersService(),
           incomeService = StubIncomeAnswersService(),
           expensesService = StubExpensesAnswersService(getTailoringJourneyAnswers = journeyAnswers),
-          capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
+          capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+          prepopAnswersService = StubPrepopAnswersService()
         )
         behave like testRoute(
           request = buildRequestNoContent,
@@ -587,7 +613,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getCapitalAllowancesTailoring = Some(answers).asRight)
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getCapitalAllowancesTailoring = Some(answers).asRight),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -624,7 +651,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getZeroEmissionCars = Some(answers).asRight)
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getZeroEmissionCars = Some(answers).asRight),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -662,7 +690,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         abroadAnswersService = StubAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getZeroEmissionGoodsVehicleCars = Some(answers).asRight)
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getZeroEmissionGoodsVehicleCars = Some(answers).asRight),
+        prepopAnswersService = StubPrepopAnswersService()
       )
 
       behave like testRoute(
@@ -686,147 +715,58 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "ElectricVehicleChargePoints" should {
-    s"Get return $NO_CONTENT if there is no answers" in {
-      checkNoContent(underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino))
-    }
+    val answers = genOne(electricVehicleChargePointsAnswersGen)
+    def underTestWithData =
+      mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getElectricVehicleChargePoints = Some(answers).asRight))
 
-    s"Get return answers" in {
-      val answers = genOne(electricVehicleChargePointsAnswersGen)
-      val underTest = new JourneyAnswersController(
-        auth = mockAuthorisedAction,
-        cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(),
-        expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getElectricVehicleChargePoints = Some(answers).asRight)
-      )
-
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = OK,
-        expectedBody = Json.toJson(answers).toString(),
-        methodBlock = () => underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino)
-      )
-    }
-
-    s"Save answers and return a $NO_CONTENT when successful" in {
-      forAll(electricVehicleChargePointsAnswersGen) { data =>
-        behave like testRoute(
-          request = buildRequest(data),
-          expectedStatus = NO_CONTENT,
-          expectedBody = "",
-          methodBlock = () => underTest.saveElectricVehicleChargePoints(currTaxYear, businessId, nino)
-        )
-      }
-    }
+    checkGetAndSave(
+      actionForGetNoContent = underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino),
+      actionForGet = underTestWithData.getElectricVehicleChargePoints(currTaxYear, businessId, nino),
+      expectedBodyForGet = Json.toJson(answers).toString(),
+      dataGen = electricVehicleChargePointsAnswersGen,
+      actionForSave = underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino)
+    )
   }
 
   "BalancingAllowance" should {
-    s"Get return $NO_CONTENT if there is no answers" in {
-      checkNoContent(underTest.getBalancingAllowance(currTaxYear, businessId, nino))
-    }
+    val answers = genOne(balancingAllowanceAnswersGen)
+    def underTestWithData =
+      mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getBalancingAllowance = Some(answers).asRight))
 
-    s"Get return answers" in {
-      val answers = genOne(balancingAllowanceAnswersGen)
-      val underTest = new JourneyAnswersController(
-        auth = mockAuthorisedAction,
-        cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(),
-        expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getBalancingAllowance = Some(answers).asRight)
-      )
-
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = OK,
-        expectedBody = Json.toJson(answers).toString(),
-        methodBlock = () => underTest.getBalancingAllowance(currTaxYear, businessId, nino)
-      )
-    }
-
-    s"Save answers and return a $NO_CONTENT when successful" in {
-      forAll(balancingAllowanceAnswersGen) { data =>
-        behave like testRoute(
-          request = buildRequest(data),
-          expectedStatus = NO_CONTENT,
-          expectedBody = "",
-          methodBlock = () => underTest.saveBalancingAllowance(currTaxYear, businessId, nino)
-        )
-      }
-    }
+    checkGetAndSave(
+      actionForGetNoContent = underTest.getBalancingAllowance(currTaxYear, businessId, nino),
+      actionForGet = underTestWithData.getBalancingAllowance(currTaxYear, businessId, nino),
+      expectedBodyForGet = Json.toJson(answers).toString(),
+      dataGen = balancingAllowanceAnswersGen,
+      actionForSave = underTest.saveBalancingAllowance(currTaxYear, businessId, nino)
+    )
   }
 
   "AnnualInvestmentAllowance" should {
-    s"Get return $NO_CONTENT if there is no answers" in {
-      checkNoContent(underTest.getAnnualInvestmentAllowance(currTaxYear, businessId, nino))
-    }
+    val answers = genOne(annualInvestmentAllowanceAnswersGen)
+    def underTestWithData =
+      mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getAnnualInvestmentAllowance = Some(answers).asRight))
 
-    s"Get return answers" in {
-      val answers = genOne(annualInvestmentAllowanceAnswersGen)
-      val underTest = new JourneyAnswersController(
-        auth = mockAuthorisedAction,
-        cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(),
-        expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getAnnualInvestmentAllowance = Some(answers).asRight)
-      )
-
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = OK,
-        expectedBody = Json.toJson(answers).toString(),
-        methodBlock = () => underTest.getAnnualInvestmentAllowance(currTaxYear, businessId, nino)
-      )
-    }
-
-    s"Save answers and return a $NO_CONTENT when successful" in {
-      forAll(annualInvestmentAllowanceAnswersGen) { data =>
-        behave like testRoute(
-          request = buildRequest(data),
-          expectedStatus = NO_CONTENT,
-          expectedBody = "",
-          methodBlock = () => underTest.saveAnnualInvestmentAllowance(currTaxYear, businessId, nino)
-        )
-      }
-    }
+    checkGetAndSave(
+      actionForGetNoContent = underTest.getAnnualInvestmentAllowance(currTaxYear, businessId, nino),
+      actionForGet = underTestWithData.getAnnualInvestmentAllowance(currTaxYear, businessId, nino),
+      expectedBodyForGet = Json.toJson(answers).toString(),
+      dataGen = annualInvestmentAllowanceAnswersGen,
+      actionForSave = underTest.saveAnnualInvestmentAllowance(currTaxYear, businessId, nino)
+    )
   }
 
   "WritingDownAllowance" should {
-    s"Get return $NO_CONTENT if there is no answers" in {
-      checkNoContent(underTest.getWritingDownAllowance(currTaxYear, businessId, nino))
-    }
+    val answers           = genOne(writingDownAllowanceGen)
+    def underTestWithData = mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getWritingDownAllowance = Some(answers).asRight))
 
-    s"Get return answers" in {
-      val answers = genOne(writingDownAllowanceGen)
-      val underTest = new JourneyAnswersController(
-        auth = mockAuthorisedAction,
-        cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(),
-        expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getWritingDownAllowance = Some(answers).asRight)
-      )
-
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = OK,
-        expectedBody = Json.toJson(answers).toString(),
-        methodBlock = () => underTest.getWritingDownAllowance(currTaxYear, businessId, nino)
-      )
-    }
-
-    s"Save answers and return a $NO_CONTENT when successful" in {
-      forAll(writingDownAllowanceGen) { data =>
-        behave like testRoute(
-          request = buildRequest(data),
-          expectedStatus = NO_CONTENT,
-          expectedBody = "",
-          methodBlock = () => underTest.saveWritingDownAllowance(currTaxYear, businessId, nino)
-        )
-      }
-    }
+    checkGetAndSave(
+      actionForGetNoContent = underTest.getWritingDownAllowance(currTaxYear, businessId, nino),
+      actionForGet = underTestWithData.getWritingDownAllowance(currTaxYear, businessId, nino),
+      expectedBodyForGet = Json.toJson(answers).toString(),
+      dataGen = writingDownAllowanceGen,
+      actionForSave = underTest.saveWritingDownAllowance(currTaxYear, businessId, nino)
+    )
   }
 
   "SpecialTaxSites" should {
@@ -865,7 +805,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       abroadAnswersService = StubAbroadAnswersService(),
       incomeService = StubIncomeAnswersService(),
       expensesService = expensesService,
-      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService()
+      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+      prepopAnswersService = StubPrepopAnswersService()
     )
 
     def mockExpensesService(): CallHandler3[JourneyContextWithNino, Api1786ExpensesResponseParser[T], HeaderCarrier, ApiResultT[T]] =

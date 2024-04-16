@@ -17,11 +17,17 @@
 package gens
 
 import models.frontend.income.{HowMuchTradingAllowance, IncomeJourneyAnswers, TradingAllowance}
+import models.frontend.prepop.IncomePrepopAnswers
 import org.scalacheck.Gen
 
 object IncomeJourneyAnswersGen {
   private val tradingAllowanceGen: Gen[TradingAllowance]               = Gen.oneOf(TradingAllowance.values)
   private val howMuchTradingAllowanceGen: Gen[HowMuchTradingAllowance] = Gen.oneOf(HowMuchTradingAllowance.values)
+
+  val incomePrepopAnswersGen: Gen[IncomePrepopAnswers] = for {
+    turnoverIncome <- Gen.option(bigDecimalGen)
+    otherIncome    <- Gen.option(bigDecimalGen)
+  } yield IncomePrepopAnswers(turnoverIncome, otherIncome)
 
   val incomeJourneyAnswersGen: Gen[IncomeJourneyAnswers] = for {
     incomeNotCountedAsTurnover <- booleanGen

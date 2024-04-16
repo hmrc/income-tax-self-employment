@@ -42,10 +42,9 @@ case class StubSelfEmploymentConnector(
     createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(api1894SuccessResponse.asRight),
     amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(api1895SuccessResponse.asRight),
     createAmendSEAnnualSubmissionResult: Future[Api1802Response] = Future.successful(api1802SuccessResponse.asRight),
-    getAnnualSummaries: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight),
+    getAnnualSummariesResult: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight),
     listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
-    getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight),
-    getAnnualSummariesResult: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight)
+    getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight)
 ) extends SelfEmploymentConnector {
 
   override def createSEPeriodSummary(
@@ -108,9 +107,10 @@ object StubSelfEmploymentConnector {
       api_1786.FinancialsType(
         Some(
           DeductionsType.empty.copy(
-            costOfGoods = Some(SelfEmploymentDeductionsDetailTypePosNeg(amount = BigDecimal(100.00), disallowableAmount = BigDecimal(100.00).some)),
+            costOfGoods =
+              Some(SelfEmploymentDeductionsDetailTypePosNeg(amount = BigDecimal(100.00).some, disallowableAmount = BigDecimal(100.00).some)),
             premisesRunningCosts =
-              Some(SelfEmploymentDeductionsDetailTypePosNeg(amount = BigDecimal(100.00), disallowableAmount = BigDecimal(100.00).some))
+              Some(SelfEmploymentDeductionsDetailTypePosNeg(amount = BigDecimal(100.00).some, disallowableAmount = BigDecimal(100.00).some))
           )),
         None
       )

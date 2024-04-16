@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package service
+package services
 
 import bulders.BusinessDataBuilder.{aBusiness, aGetBusinessDataResponse, aTaxPayerDisplayResponse}
 import connectors.SelfEmploymentConnector
@@ -25,7 +25,6 @@ import models.database.JourneyState
 import models.database.JourneyState.JourneyStateData
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
-import services.BusinessService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 

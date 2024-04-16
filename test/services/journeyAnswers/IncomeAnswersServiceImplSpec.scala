@@ -18,12 +18,13 @@ package services.journeyAnswers
 
 import cats.implicits._
 import connectors.SelfEmploymentConnector
-import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
+import gens.IncomeJourneyAnswersGen.{incomeJourneyAnswersGen, incomePrepopAnswersGen}
 import models.common.{JourneyContextWithNino, JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import models.database.income.IncomeStorageAnswers
 import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
+import models.frontend.prepop.IncomePrepopAnswers
 import org.mockito.IdiomaticMockito.StubbingOps
 import org.mockito.Mockito.times
 import org.mockito.MockitoSugar.{mock, never, verify}
@@ -34,6 +35,7 @@ import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsObject, Json}
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import services.journeyAnswers.IncomeAnswersServiceImplSpec._
 import stubs.connectors.StubSelfEmploymentConnector
 import stubs.connectors.StubSelfEmploymentConnector._
@@ -56,7 +58,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
     "return error if cannot read IncomeJourneyAnswers" in new TestCase(
       repo = StubJourneyAnswersRepository(getAnswer = Some(brokenJourneyAnswers))
     ) {
-      val result = service.getAnswers(journeyCtxWithNino).value.futureValue
+      val result = await(service.getAnswers(journeyCtxWithNino).value)
       val error  = result.left.value
       error shouldBe a[InvalidJsonFormatError]
     }
@@ -157,6 +159,12 @@ object IncomeAnswersServiceImplSpec {
 
   val sampleIncomeJourneyAnswers: JourneyAnswers = brokenJourneyAnswers.copy(
     data = Json.toJson(sampleIncomeJourneyAnswersData).as[JsObject]
+  )
+
+  val sampleIncomePrepopAnswersData: IncomePrepopAnswers = gens.genOne(incomePrepopAnswersGen)
+
+  val sampleIncomePrepopAnswers: JourneyAnswers = brokenJourneyAnswers.copy(
+    data = Json.toJson(sampleIncomePrepopAnswersData).as[JsObject]
   )
 
 }

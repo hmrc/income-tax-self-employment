@@ -20,7 +20,7 @@ import cats.implicits._
 import controllers.actions.AuthorisedAction
 import models.common.JourneyName._
 import models.common._
-import models.database.capitalAllowances.{SpecialTaxSitesDb, NewStructuresBuildingsDb, WritingDownAllowanceDb}
+import models.database.capitalAllowances.{NewStructuresBuildingsDb, SpecialTaxSitesDb, WritingDownAllowanceDb}
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
 import models.frontend.FrontendAnswers
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
@@ -68,6 +68,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class JourneyAnswersController @Inject() (auth: AuthorisedAction,
                                           cc: ControllerComponents,
+                                          prepopAnswersService: PrepopAnswersService,
                                           abroadAnswersService: AbroadAnswersService,
                                           incomeService: IncomeAnswersService,
                                           expensesService: ExpensesAnswersService,
@@ -84,6 +85,11 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     getBodyWithCtx[SelfEmploymentAbroadAnswers](taxYear, businessId, nino) { (ctx, value) =>
       abroadAnswersService.persistAnswers(ctx, value).map(_ => NoContent)
     }
+  }
+
+  // Prepop
+  def getIncomePrepopAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResultT(prepopAnswersService.getIncomeAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   // Income
