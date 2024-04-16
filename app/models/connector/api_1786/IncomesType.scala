@@ -26,7 +26,8 @@ import play.api.libs.json._
   */
 case class IncomesType(
     turnover: Option[BigDecimal],
-    other: Option[BigDecimal]
+    other: Option[BigDecimal],
+    taxTakenOffTradingIncome: Option[BigDecimal]
 )
 
 object IncomesType {

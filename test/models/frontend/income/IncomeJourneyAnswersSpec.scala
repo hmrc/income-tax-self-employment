@@ -35,7 +35,10 @@ class IncomeJourneyAnswersSpec extends AnyWordSpec with Matchers {
         howMuchTradingAllowance = None
       )
       val periodicSummaryDetails =
-        api_1786.SuccessResponseSchema(currTaxYearStart, currTaxYearEnd, api_1786.FinancialsType(None, Some(IncomesType(Some(100.00), Some(50.00)))))
+        api_1786.SuccessResponseSchema(
+          currTaxYearStart,
+          currTaxYearEnd,
+          api_1786.FinancialsType(None, Some(IncomesType(Some(100.00), Some(50.00), None))))
 
       val annualSummaries = api_1803.SuccessResponseSchema(None, None, None)
 
