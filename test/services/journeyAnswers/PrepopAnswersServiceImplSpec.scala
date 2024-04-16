@@ -47,14 +47,16 @@ import scala.concurrent.Future
 class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
+  private val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
+
   "getIncomeAnswers" should {
-    val filledIncomes: IncomesType = IncomesType(Some(100), Some(50))
+    val filledIncomes: IncomesType = IncomesType(Some(100), Some(50), None)
     "return empty answers if there is no answers submitted" in new TestCase() {
       service.getIncomeAnswers(journeyCtxWithNino).value.futureValue shouldBe IncomePrepopAnswers(None, None).asRight
     }
 
-    "return error if error is returned from the Connector" in new TestCase(connector = StubSelfEmploymentConnector(getPeriodicSummaryDetailResult =
-      Future(SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError).asLeft))) {
+    "return error if error is returned from the Connector" in new TestCase(connector =
+      StubSelfEmploymentConnector(getPeriodicSummaryDetailResult = Future(downstreamError.asLeft))) {
       val result: Either[ServiceError, IncomePrepopAnswers] = service.getIncomeAnswers(journeyCtxWithNino).value.futureValue
       val error: ServiceError                               = result.left.value
       error shouldBe a[DownstreamError]
@@ -73,8 +75,8 @@ class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
       service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue shouldBe AdjustmentsPrepopAnswers.emptyAnswers.asRight
     }
 
-    "return error if error is returned from the Connector" in new TestCase(connector = StubSelfEmploymentConnector(getAnnualSummariesResult =
-      Future(SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError).asLeft))) {
+    "return error if error is returned from the Connector" in new TestCase(connector =
+      StubSelfEmploymentConnector(getAnnualSummariesResult = Future(downstreamError.asLeft))) {
       val result: Either[ServiceError, AdjustmentsPrepopAnswers] = service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue
       val error: ServiceError                                    = result.left.value
       error shouldBe a[DownstreamError]
@@ -108,9 +110,7 @@ object PrepopAnswersServiceImplSpec {
   val sampleIncomePrepopAnswers: JourneyAnswers = getJourneyAnswers(JourneyName.IncomePrepop).copy(
     data = Json.toJson(gens.genOne(incomePrepopAnswersGen)).as[JsObject]
   )
-
   val sampleAdjustmentsPrepopAnswers: JourneyAnswers = getJourneyAnswers(JourneyName.AdjustmentsPrepop).copy(
     data = Json.toJson(gens.genOne(adjustmentsPrepopAnswersGen)).as[JsObject]
   )
-
 }

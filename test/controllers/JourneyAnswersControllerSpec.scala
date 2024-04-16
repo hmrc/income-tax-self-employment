@@ -728,151 +728,58 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "ElectricVehicleChargePoints" should {
-    s"Get return $NO_CONTENT if there is no answers" in {
-      checkNoContent(underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino))
-    }
+    val answers = genOne(electricVehicleChargePointsAnswersGen)
+    def underTestWithData =
+      mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getElectricVehicleChargePoints = Some(answers).asRight))
 
-    s"Get return answers" in {
-      val answers = genOne(electricVehicleChargePointsAnswersGen)
-      val underTest = new JourneyAnswersController(
-        auth = mockAuthorisedAction,
-        cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(),
-        expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getElectricVehicleChargePoints = Some(answers).asRight),
-        prepopAnswersService = StubPrepopAnswersService()
-      )
-
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = OK,
-        expectedBody = Json.toJson(answers).toString(),
-        methodBlock = () => underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino)
-      )
-    }
-
-    s"Save answers and return a $NO_CONTENT when successful" in {
-      forAll(electricVehicleChargePointsAnswersGen) { data =>
-        behave like testRoute(
-          request = buildRequest(data),
-          expectedStatus = NO_CONTENT,
-          expectedBody = "",
-          methodBlock = () => underTest.saveElectricVehicleChargePoints(currTaxYear, businessId, nino)
-        )
-      }
-    }
+    checkGetAndSave(
+      actionForGetNoContent = underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino),
+      actionForGet = underTestWithData.getElectricVehicleChargePoints(currTaxYear, businessId, nino),
+      expectedBodyForGet = Json.toJson(answers).toString(),
+      dataGen = electricVehicleChargePointsAnswersGen,
+      actionForSave = underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino)
+    )
   }
 
   "BalancingAllowance" should {
-    s"Get return $NO_CONTENT if there is no answers" in {
-      checkNoContent(underTest.getBalancingAllowance(currTaxYear, businessId, nino))
-    }
+    val answers = genOne(balancingAllowanceAnswersGen)
+    def underTestWithData =
+      mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getBalancingAllowance = Some(answers).asRight))
 
-    s"Get return answers" in {
-      val answers = genOne(balancingAllowanceAnswersGen)
-      val underTest = new JourneyAnswersController(
-        auth = mockAuthorisedAction,
-        cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(),
-        expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getBalancingAllowance = Some(answers).asRight),
-        prepopAnswersService = StubPrepopAnswersService()
-      )
-
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = OK,
-        expectedBody = Json.toJson(answers).toString(),
-        methodBlock = () => underTest.getBalancingAllowance(currTaxYear, businessId, nino)
-      )
-    }
-
-    s"Save answers and return a $NO_CONTENT when successful" in {
-      forAll(balancingAllowanceAnswersGen) { data =>
-        behave like testRoute(
-          request = buildRequest(data),
-          expectedStatus = NO_CONTENT,
-          expectedBody = "",
-          methodBlock = () => underTest.saveBalancingAllowance(currTaxYear, businessId, nino)
-        )
-      }
-    }
+    checkGetAndSave(
+      actionForGetNoContent = underTest.getBalancingAllowance(currTaxYear, businessId, nino),
+      actionForGet = underTestWithData.getBalancingAllowance(currTaxYear, businessId, nino),
+      expectedBodyForGet = Json.toJson(answers).toString(),
+      dataGen = balancingAllowanceAnswersGen,
+      actionForSave = underTest.saveBalancingAllowance(currTaxYear, businessId, nino)
+    )
   }
 
   "AnnualInvestmentAllowance" should {
-    s"Get return $NO_CONTENT if there is no answers" in {
-      checkNoContent(underTest.getAnnualInvestmentAllowance(currTaxYear, businessId, nino))
-    }
+    val answers = genOne(annualInvestmentAllowanceAnswersGen)
+    def underTestWithData =
+      mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getAnnualInvestmentAllowance = Some(answers).asRight))
 
-    s"Get return answers" in {
-      val answers = genOne(annualInvestmentAllowanceAnswersGen)
-      val underTest = new JourneyAnswersController(
-        auth = mockAuthorisedAction,
-        cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(),
-        expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getAnnualInvestmentAllowance = Some(answers).asRight),
-        prepopAnswersService = StubPrepopAnswersService()
-      )
-
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = OK,
-        expectedBody = Json.toJson(answers).toString(),
-        methodBlock = () => underTest.getAnnualInvestmentAllowance(currTaxYear, businessId, nino)
-      )
-    }
-
-    s"Save answers and return a $NO_CONTENT when successful" in {
-      forAll(annualInvestmentAllowanceAnswersGen) { data =>
-        behave like testRoute(
-          request = buildRequest(data),
-          expectedStatus = NO_CONTENT,
-          expectedBody = "",
-          methodBlock = () => underTest.saveAnnualInvestmentAllowance(currTaxYear, businessId, nino)
-        )
-      }
-    }
+    checkGetAndSave(
+      actionForGetNoContent = underTest.getAnnualInvestmentAllowance(currTaxYear, businessId, nino),
+      actionForGet = underTestWithData.getAnnualInvestmentAllowance(currTaxYear, businessId, nino),
+      expectedBodyForGet = Json.toJson(answers).toString(),
+      dataGen = annualInvestmentAllowanceAnswersGen,
+      actionForSave = underTest.saveAnnualInvestmentAllowance(currTaxYear, businessId, nino)
+    )
   }
 
   "WritingDownAllowance" should {
-    s"Get return $NO_CONTENT if there is no answers" in {
-      checkNoContent(underTest.getWritingDownAllowance(currTaxYear, businessId, nino))
-    }
+    val answers           = genOne(writingDownAllowanceGen)
+    def underTestWithData = mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getWritingDownAllowance = Some(answers).asRight))
 
-    s"Get return answers" in {
-      val answers = genOne(writingDownAllowanceGen)
-      val underTest = new JourneyAnswersController(
-        auth = mockAuthorisedAction,
-        cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(),
-        expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getWritingDownAllowance = Some(answers).asRight),
-        prepopAnswersService = StubPrepopAnswersService()
-      )
-
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = OK,
-        expectedBody = Json.toJson(answers).toString(),
-        methodBlock = () => underTest.getWritingDownAllowance(currTaxYear, businessId, nino)
-      )
-    }
-
-    s"Save answers and return a $NO_CONTENT when successful" in {
-      forAll(writingDownAllowanceGen) { data =>
-        behave like testRoute(
-          request = buildRequest(data),
-          expectedStatus = NO_CONTENT,
-          expectedBody = "",
-          methodBlock = () => underTest.saveWritingDownAllowance(currTaxYear, businessId, nino)
-        )
-      }
-    }
+    checkGetAndSave(
+      actionForGetNoContent = underTest.getWritingDownAllowance(currTaxYear, businessId, nino),
+      actionForGet = underTestWithData.getWritingDownAllowance(currTaxYear, businessId, nino),
+      expectedBodyForGet = Json.toJson(answers).toString(),
+      dataGen = writingDownAllowanceGen,
+      actionForSave = underTest.saveWritingDownAllowance(currTaxYear, businessId, nino)
+    )
   }
 
   "SpecialTaxSites" should {

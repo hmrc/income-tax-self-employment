@@ -44,14 +44,14 @@ object Api1786ExpensesResponseParser {
   implicit val goodsToSellOrUseParser: Api1786ExpensesResponseParser[GoodsToSellOrUseJourneyAnswers] =
     (response: SuccessResponseSchema) =>
       GoodsToSellOrUseJourneyAnswers(
-        goodsToSellOrUseAmount = response.financials.deductions.flatMap(_.costOfGoods.map(_.amount)).getOrElse(noneFound),
+        goodsToSellOrUseAmount = response.financials.deductions.flatMap(_.costOfGoods.flatMap(_.amount)).getOrElse(noneFound),
         disallowableGoodsToSellOrUseAmount = response.financials.deductions.flatMap(_.costOfGoods.flatMap(_.disallowableAmount))
       )
 
   implicit val repairsAndMaintenanceCostsParser: Api1786ExpensesResponseParser[RepairsAndMaintenanceCostsJourneyAnswers] =
     (response: SuccessResponseSchema) =>
       RepairsAndMaintenanceCostsJourneyAnswers(
-        repairsAndMaintenanceAmount = response.financials.deductions.flatMap(_.maintenanceCosts.map(_.amount)).getOrElse(noneFound),
+        repairsAndMaintenanceAmount = response.financials.deductions.flatMap(_.maintenanceCosts.flatMap(_.amount)).getOrElse(noneFound),
         repairsAndMaintenanceDisallowableAmount = response.financials.deductions.flatMap(_.maintenanceCosts.flatMap(_.disallowableAmount))
       )
 
@@ -85,7 +85,7 @@ object Api1786ExpensesResponseParser {
   implicit val interestParser: Api1786ExpensesResponseParser[InterestJourneyAnswers] =
     (response: SuccessResponseSchema) =>
       InterestJourneyAnswers(
-        interestAmount = response.financials.deductions.flatMap(_.interest.map(_.amount)).getOrElse(noneFound),
+        interestAmount = response.financials.deductions.flatMap(_.interest.flatMap(_.amount)).getOrElse(noneFound),
         interestDisallowableAmount = response.financials.deductions.flatMap(_.interest.flatMap(_.disallowableAmount))
       )
 
@@ -99,7 +99,7 @@ object Api1786ExpensesResponseParser {
   implicit val depreciationCostsParser: Api1786ExpensesResponseParser[DepreciationCostsJourneyAnswers] =
     (response: SuccessResponseSchema) =>
       DepreciationCostsJourneyAnswers(
-        depreciationDisallowableAmount = response.financials.deductions.flatMap(_.depreciation.map(_.amount)).getOrElse(noneFound)
+        depreciationDisallowableAmount = response.financials.deductions.flatMap(_.depreciation.flatMap(_.amount)).getOrElse(noneFound)
       )
 
   implicit val asOneTotalAnswersParser: Api1786ExpensesResponseParser[ExpensesTailoringAnswers.AsOneTotalAnswers] =
@@ -118,7 +118,7 @@ object Api1786ExpensesResponseParser {
   implicit val financialChargesParser: Api1786ExpensesResponseParser[FinancialChargesJourneyAnswers] =
     (response: SuccessResponseSchema) =>
       FinancialChargesJourneyAnswers(
-        financialChargesAmount = response.financials.deductions.flatMap(_.financialCharges.map(_.amount)).getOrElse(noneFound),
+        financialChargesAmount = response.financials.deductions.flatMap(_.financialCharges.flatMap(_.amount)).getOrElse(noneFound),
         financialChargesDisallowableAmount = response.financials.deductions.flatMap(_.financialCharges.flatMap(_.disallowableAmount))
       )
 
@@ -132,7 +132,7 @@ object Api1786ExpensesResponseParser {
   implicit val irrecoverableDebtsParser: Api1786ExpensesResponseParser[IrrecoverableDebtsJourneyAnswers] =
     (response: SuccessResponseSchema) =>
       IrrecoverableDebtsJourneyAnswers(
-        irrecoverableDebtsAmount = response.financials.deductions.flatMap(_.badDebt.map(_.amount)).getOrElse(noneFound),
+        irrecoverableDebtsAmount = response.financials.deductions.flatMap(_.badDebt.flatMap(_.amount)).getOrElse(noneFound),
         irrecoverableDebtsDisallowableAmount = response.financials.deductions.flatMap(_.badDebt.flatMap(_.disallowableAmount))
       )
 }

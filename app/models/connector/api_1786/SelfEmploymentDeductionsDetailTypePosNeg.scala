@@ -25,7 +25,7 @@ import play.api.libs.json._
   *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   */
 case class SelfEmploymentDeductionsDetailTypePosNeg(
-    amount: BigDecimal,
+    amount: Option[BigDecimal],
     disallowableAmount: Option[BigDecimal]
 )
 

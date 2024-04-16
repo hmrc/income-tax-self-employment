@@ -37,7 +37,7 @@ object GoodsToSellOrUseAnswers {
   def apply(dbTaxiAnswer: TaxiMinicabOrRoadHaulageDb, periodicSummaryDetails: api_1786.SuccessResponseSchema): GoodsToSellOrUseAnswers =
     GoodsToSellOrUseAnswers(
       taxiMinicabOrRoadHaulage = dbTaxiAnswer.taxiMinicabOrRoadHaulage,
-      goodsToSellOrUseAmount = periodicSummaryDetails.financials.deductions.flatMap(_.costOfGoods.map(_.amount)).getOrElse(noneFound),
+      goodsToSellOrUseAmount = periodicSummaryDetails.financials.deductions.flatMap(_.costOfGoods.flatMap(_.amount)).getOrElse(noneFound),
       disallowableGoodsToSellOrUseAmount = periodicSummaryDetails.financials.deductions.flatMap(_.costOfGoods.flatMap(_.disallowableAmount))
     )
 }
