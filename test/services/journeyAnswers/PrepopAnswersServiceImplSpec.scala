@@ -48,7 +48,7 @@ class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
   private val downstreamError    = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
 
   "getIncomeAnswers" should {
-    val filledIncomes: IncomesType = IncomesType(Some(100), Some(50))
+    val filledIncomes: IncomesType = IncomesType(Some(100), Some(50), None)
     "return empty answers if there is no answers submitted" in new TestCase() {
       service.getIncomeAnswers(journeyCtxWithNino).value.futureValue shouldBe IncomePrepopAnswers(None, None).asRight
     }
