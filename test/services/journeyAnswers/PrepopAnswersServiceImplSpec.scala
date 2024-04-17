@@ -18,34 +18,34 @@ package services.journeyAnswers
 
 import cats.implicits._
 import connectors.SelfEmploymentConnector
-import gens.IncomeJourneyAnswersGen.incomePrepopAnswersGen
-import models.common.{JourneyName, JourneyStatus}
-import models.connector.api_1786
+import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
+import gens.genOne
 import models.connector.api_1786.IncomesType
-import models.database.JourneyAnswers
+import models.connector.api_1803.AnnualAdjustmentsType
+import models.connector.{api_1786, api_1803}
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.{DownstreamError, ServiceError}
-import models.frontend.prepop.IncomePrepopAnswers
+import models.frontend.prepop.AdjustmentsPrepopAnswers.fromAnnualAdjustmentsType
+import models.frontend.prepop.{AdjustmentsPrepopAnswers, IncomePrepopAnswers}
 import org.mockito.matchers.MacroBasedMatchers
 import org.scalatest.EitherValues._
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status.INTERNAL_SERVER_ERROR
-import play.api.libs.json.{JsObject, Json}
 import services.journeyAnswers.PrepopAnswersServiceImplSpec._
 import stubs.connectors.StubSelfEmploymentConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
-import utils.EitherTTestOps.convertScalaFuture
 
-import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers {
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  private val downstreamError    = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
+
+  private val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
 
   "getIncomeAnswers" should {
     val filledIncomes: IncomesType = IncomesType(Some(100), Some(50), None)
@@ -66,27 +66,31 @@ class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
       result.value shouldBe IncomePrepopAnswers(filledIncomes.turnover, filledIncomes.other)
     }
   }
+
+  "getAdjustmentsAnswers" should {
+    val annualAdjustmentsType: AnnualAdjustmentsType = genOne(annualAdjustmentsTypeGen)
+    "return empty answers if there is no answers submitted" in new TestCase() {
+      service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue shouldBe AdjustmentsPrepopAnswers.emptyAnswers.asRight
+    }
+
+    "return error if error is returned from the Connector" in new TestCase(connector =
+      StubSelfEmploymentConnector(getAnnualSummariesResult = Future(downstreamError.asLeft))) {
+      val result: Either[ServiceError, AdjustmentsPrepopAnswers] = service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue
+      val error: ServiceError                                    = result.left.value
+      error shouldBe a[DownstreamError]
+    }
+
+    "return IncomePrepopAnswers" in new TestCase(connector = StubSelfEmploymentConnector(getAnnualSummariesResult =
+      Future.successful(api_1803.SuccessResponseSchema(annualAdjustmentsType.some, None, None).asRight))) {
+      val result         = service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue
+      val expectedAnswer = fromAnnualAdjustmentsType(annualAdjustmentsType)
+      result.value shouldBe expectedAnswer
+    }
+  }
 }
 
 object PrepopAnswersServiceImplSpec {
   abstract class TestCase(val connector: SelfEmploymentConnector = StubSelfEmploymentConnector()) {
     val service = new PrepopAnswersServiceImpl(connector)
   }
-
-  def getJourneyAnswers(journey: JourneyName): JourneyAnswers = JourneyAnswers(
-    mtditid,
-    businessId,
-    currTaxYear,
-    journey,
-    JourneyStatus.Completed,
-    JsObject.empty,
-    Instant.now(),
-    Instant.now(),
-    Instant.now()
-  )
-
-  val sampleIncomePrepopAnswers: JourneyAnswers = getJourneyAnswers(JourneyName.IncomePrepop).copy(
-    data = Json.toJson(gens.genOne(incomePrepopAnswersGen)).as[JsObject]
-  )
-
 }

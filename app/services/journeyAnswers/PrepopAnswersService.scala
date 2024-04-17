@@ -22,7 +22,7 @@ import connectors.SelfEmploymentConnector
 import models.common._
 import models.domain.ApiResultT
 import models.error.ServiceError
-import models.frontend.prepop.IncomePrepopAnswers
+import models.frontend.prepop.{AdjustmentsPrepopAnswers, IncomePrepopAnswers}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTOps._
 
@@ -31,11 +31,15 @@ import scala.concurrent.ExecutionContext
 
 trait PrepopAnswersService {
   def getIncomeAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[IncomePrepopAnswers]
+  def getAdjustmentsAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[AdjustmentsPrepopAnswers]
 }
 
 @Singleton
 class PrepopAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector)(implicit ec: ExecutionContext) extends PrepopAnswersService {
 
   def getIncomeAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[IncomePrepopAnswers] =
-    EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError].map(periodicSummaryDetails => IncomePrepopAnswers(periodicSummaryDetails))
+    EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError].map(IncomePrepopAnswers(_))
+
+  def getAdjustmentsAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[AdjustmentsPrepopAnswers] =
+    EitherT(connector.getAnnualSummaries(ctx)).leftAs[ServiceError].map(AdjustmentsPrepopAnswers(_))
 }

@@ -20,19 +20,19 @@ import play.api.libs.json._
 
 /** Represents the Swagger definition for annualAdjustmentsType.
   */
-case class AnnualAdjustmentsType(
-    includedNonTaxableProfits: Option[BigDecimal],
-    basisAdjustment: Option[BigDecimal],
-    overlapReliefUsed: Option[BigDecimal],
-    accountingAdjustment: Option[BigDecimal],
-    averagingAdjustment: Option[BigDecimal],
-    lossBroughtForward: Option[BigDecimal],
-    outstandingBusinessIncome: Option[BigDecimal],
-    balancingChargeBpra: Option[BigDecimal],
-    balancingChargeOther: Option[BigDecimal],
-    goodsAndServicesOwnUse: Option[BigDecimal]
-)
+case class AnnualAdjustmentsType(includedNonTaxableProfits: Option[BigDecimal],
+                                 basisAdjustment: Option[BigDecimal],
+                                 overlapReliefUsed: Option[BigDecimal],
+                                 accountingAdjustment: Option[BigDecimal],
+                                 averagingAdjustment: Option[BigDecimal],
+                                 outstandingBusinessIncome: Option[BigDecimal],
+                                 balancingChargeBpra: Option[BigDecimal],
+                                 balancingChargeOther: Option[BigDecimal],
+                                 goodsAndServicesOwnUse: Option[BigDecimal],
+                                 transitionProfitAmount: Option[BigDecimal],
+                                 transitionProfitAccelerationAmount: Option[BigDecimal])
 
 object AnnualAdjustmentsType {
   implicit lazy val annualAdjustmentsTypeJsonFormat: Format[AnnualAdjustmentsType] = Json.format[AnnualAdjustmentsType]
+  def emptyAnnualAdjustmentsType = AnnualAdjustmentsType(None, None, None, None, None, None, None, None, None, None, None)
 }

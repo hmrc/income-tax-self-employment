@@ -91,6 +91,9 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def getIncomePrepopAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleApiResultT(prepopAnswersService.getIncomeAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
+  def getAdjustmentsPrepopAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResultT(prepopAnswersService.getAdjustmentsAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
 
   // Income
   def getIncomeAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>

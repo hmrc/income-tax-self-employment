@@ -18,13 +18,12 @@ package services.journeyAnswers
 
 import cats.implicits._
 import connectors.SelfEmploymentConnector
-import gens.IncomeJourneyAnswersGen.{incomeJourneyAnswersGen, incomePrepopAnswersGen}
+import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import models.common.{JourneyContextWithNino, JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import models.database.income.IncomeStorageAnswers
 import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
-import models.frontend.prepop.IncomePrepopAnswers
 import org.mockito.IdiomaticMockito.StubbingOps
 import org.mockito.Mockito.times
 import org.mockito.MockitoSugar.{mock, never, verify}
@@ -159,12 +158,6 @@ object IncomeAnswersServiceImplSpec {
 
   val sampleIncomeJourneyAnswers: JourneyAnswers = brokenJourneyAnswers.copy(
     data = Json.toJson(sampleIncomeJourneyAnswersData).as[JsObject]
-  )
-
-  val sampleIncomePrepopAnswersData: IncomePrepopAnswers = gens.genOne(incomePrepopAnswersGen)
-
-  val sampleIncomePrepopAnswers: JourneyAnswers = brokenJourneyAnswers.copy(
-    data = Json.toJson(sampleIncomePrepopAnswersData).as[JsObject]
   )
 
 }
