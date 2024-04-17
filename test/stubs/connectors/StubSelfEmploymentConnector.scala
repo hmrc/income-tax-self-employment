@@ -69,7 +69,7 @@ case class StubSelfEmploymentConnector(
     getPeriodicSummaryDetailResult
 
   def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] =
-    Future.successful(api1803SuccessResponse.asRight)
+    getAnnualSummariesResult
 }
 
 object StubSelfEmploymentConnector {

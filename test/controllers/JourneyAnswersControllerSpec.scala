@@ -23,7 +23,7 @@ import gens.CapitalAllowancesAnswersGen._
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
-import gens.PrepopJourneyAnswersGen.{adjustmentsPrepopAnswersGen, incomePrepopAnswersGen}
+import gens.PrepopJourneyAnswersGen.{annualAdjustmentsTypeGen, incomePrepopAnswersGen}
 import gens.SelfEmploymentAbroadAnswersGen.selfEmploymentAbroadAnswersGen
 import gens.genOne
 import models.common.JourneyContextWithNino
@@ -45,6 +45,7 @@ import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCosts
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
+import models.frontend.prepop.AdjustmentsPrepopAnswers.fromAnnualAdjustmentsType
 import org.scalacheck.Gen
 import org.scalamock.handlers.{CallHandler2, CallHandler3}
 import org.scalatest.prop.TableDrivenPropertyChecks
@@ -192,7 +193,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "PrepopAnswers" should {
     val incomePrepopAnswers      = genOne(incomePrepopAnswersGen)
-    val adjustmentsPrepopAnswers = genOne(adjustmentsPrepopAnswersGen)
+    val adjustmentsPrepopAnswers = fromAnnualAdjustmentsType(genOne(annualAdjustmentsTypeGen))
     val prepopStubbedUnderTest = new JourneyAnswersController(
       auth = mockAuthorisedAction,
       cc = stubControllerComponents,

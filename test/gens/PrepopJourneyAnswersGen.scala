@@ -16,7 +16,8 @@
 
 package gens
 
-import models.frontend.prepop.{AdjustmentsPrepopAnswers, IncomePrepopAnswers}
+import models.connector.api_1803.AnnualAdjustmentsType
+import models.frontend.prepop.IncomePrepopAnswers
 import org.scalacheck.Gen
 
 object PrepopJourneyAnswersGen {
@@ -26,28 +27,30 @@ object PrepopJourneyAnswersGen {
     otherIncome    <- Gen.option(bigDecimalGen)
   } yield IncomePrepopAnswers(turnoverIncome, otherIncome)
 
-  val adjustmentsPrepopAnswersGen: Gen[AdjustmentsPrepopAnswers] = for {
-    includedNonTaxableProfits <- Gen.option(bigDecimalGen)
-    basisAdjustment           <- Gen.option(bigDecimalGen)
-    overlapReliefUsed         <- Gen.option(bigDecimalGen)
-    accountingAdjustment      <- Gen.option(bigDecimalGen)
-    averagingAdjustment       <- Gen.option(bigDecimalGen)
-    lossBroughtForward        <- Gen.option(bigDecimalGen)
-    outstandingBusinessIncome <- Gen.option(bigDecimalGen)
-    balancingChargeBpra       <- Gen.option(bigDecimalGen)
-    balancingChargeOther      <- Gen.option(bigDecimalGen)
-    goodsAndServicesOwnUse    <- Gen.option(bigDecimalGen)
-  } yield AdjustmentsPrepopAnswers(
+  val annualAdjustmentsTypeGen: Gen[AnnualAdjustmentsType] = for {
+    includedNonTaxableProfits          <- Gen.option(bigDecimalGen)
+    basisAdjustment                    <- Gen.option(bigDecimalGen)
+    overlapReliefUsed                  <- Gen.option(bigDecimalGen)
+    accountingAdjustment               <- Gen.option(bigDecimalGen)
+    averagingAdjustment                <- Gen.option(bigDecimalGen)
+    outstandingBusinessIncome          <- Gen.option(bigDecimalGen)
+    balancingChargeBpra                <- Gen.option(bigDecimalGen)
+    balancingChargeOther               <- Gen.option(bigDecimalGen)
+    goodsAndServicesOwnUse             <- Gen.option(bigDecimalGen)
+    transitionProfitAmount             <- Gen.option(bigDecimalGen)
+    transitionProfitAccelerationAmount <- Gen.option(bigDecimalGen)
+  } yield AnnualAdjustmentsType(
     includedNonTaxableProfits,
     basisAdjustment,
     overlapReliefUsed,
     accountingAdjustment,
     averagingAdjustment,
-    lossBroughtForward,
     outstandingBusinessIncome,
     balancingChargeBpra,
     balancingChargeOther,
-    goodsAndServicesOwnUse
+    goodsAndServicesOwnUse,
+    transitionProfitAmount,
+    transitionProfitAccelerationAmount
   )
 
 }
