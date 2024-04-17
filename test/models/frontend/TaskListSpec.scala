@@ -66,12 +66,14 @@ class TaskListSpec extends AnyWordSpecLike {
             TradesJourneyStatuses(
               businessId1,
               BusinessDataBuilder.aBusiness.tradingName.map(TradingName(_)),
+              TypeOfBusiness(BusinessDataBuilder.aBusiness.typeOfBusiness),
               AccountingType(BusinessDataBuilder.aBusiness.accountingType.getOrElse("")),
               Nil
             ),
             TradesJourneyStatuses(
               businessId2,
               BusinessDataBuilder.aBusiness.tradingName.map(TradingName(_)),
+              TypeOfBusiness(BusinessDataBuilder.aBusiness.typeOfBusiness),
               AccountingType(BusinessDataBuilder.aBusiness.accountingType.getOrElse("")),
               Nil
             )
