@@ -34,6 +34,7 @@ object BusinessDataBuilder {
     TradesJourneyStatuses(
       BusinessId(aBusiness.businessId),
       aBusiness.tradingName.map(TradingName(_)),
+      TypeOfBusiness(aBusiness.typeOfBusiness),
       AccountingType(aBusiness.accountingType.getOrElse("")),
       List(
         JourneyNameAndStatus(JourneyName.Income, JourneyStatus.Completed),

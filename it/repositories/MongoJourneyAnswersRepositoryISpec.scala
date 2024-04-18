@@ -122,12 +122,14 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
           TradesJourneyStatuses(
             BusinessId(incomeCtx.businessId.value),
             TradingName("string").some,
+            TypeOfBusiness("self-employment"),
             AccountingType("ACCRUAL"),
             List(JourneyNameAndStatus(Income, Completed))
           ),
           TradesJourneyStatuses(
             BusinessId("business2"),
             TradingName("some other business").some,
+            TypeOfBusiness("self-employment"),
             AccountingType("CASH"),
             List(JourneyNameAndStatus(Income, InProgress))
           )
