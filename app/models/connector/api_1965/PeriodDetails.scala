@@ -18,7 +18,7 @@ package models.connector.api_1965
 
 import play.api.libs.json.{Json, OFormat}
 
-case class PeriodDetails(transactionReference: Option[String], from: Option[String], to: Option[String], periodCreationDate: Option[String])
+case class PeriodDetails(transactionReference: Option[String], from: Option[String], to: Option[String])
 
 object PeriodDetails {
   implicit val formats: OFormat[PeriodDetails] = Json.format[PeriodDetails]
