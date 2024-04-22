@@ -27,13 +27,22 @@ object CreateAmendSEAnnualSubmissionRequestBody {
 
   def mkRequest(annualAdjustments: Option[AnnualAdjustments],
                 annualAllowances: Option[AnnualAllowances],
-                annualNonFinancials: Option[AnnualNonFinancials]): Option[CreateAmendSEAnnualSubmissionRequestBody] =
-    Option.when(
-      annualAdjustments.exists(_.isDefined) ||
-        annualAllowances.exists(_.isDefined) ||
-        annualNonFinancials.isDefined
-    )(
-      CreateAmendSEAnnualSubmissionRequestBody(annualAdjustments, annualAllowances, annualNonFinancials)
-    )
+                annualNonFinancials: Option[AnnualNonFinancials]): Option[CreateAmendSEAnnualSubmissionRequestBody] = {
+    val hasAnnualAdjustments   = annualAdjustments.exists(_.isDefined)
+    val hasAnnualAllowances    = annualAllowances.exists(_.isDefined)
+    val hasAnnualNonFinancials = annualNonFinancials.isDefined
+
+    if (hasAnnualAdjustments || hasAnnualAllowances || hasAnnualNonFinancials) {
+      Some(
+        CreateAmendSEAnnualSubmissionRequestBody(
+          if (hasAnnualAdjustments) annualAdjustments else None,
+          if (hasAnnualAllowances) annualAllowances else None,
+          if (hasAnnualNonFinancials) annualNonFinancials else None
+        )
+      )
+    } else {
+      None
+    }
+  }
 
 }
