@@ -32,7 +32,9 @@ case class AnnualAllowances(annualInvestmentAllowance: Option[BigDecimal],
                             structuredBuildingAllowance: Option[List[BuildingAllowance]],
                             enhancedStructuredBuildingAllowance: Option[List[BuildingAllowance]],
                             zeroEmissionsCarAllowance: Option[BigDecimal],
-                            tradingIncomeAllowance: Option[BigDecimal])
+                            tradingIncomeAllowance: Option[BigDecimal]) {
+  def isDefined: Boolean = this != AnnualAllowances.empty
+}
 
 object AnnualAllowances {
   implicit val format: OFormat[AnnualAllowances] = Json.format[AnnualAllowances]

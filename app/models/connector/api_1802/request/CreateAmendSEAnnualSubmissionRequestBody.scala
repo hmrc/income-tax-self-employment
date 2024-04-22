@@ -24,4 +24,16 @@ case class CreateAmendSEAnnualSubmissionRequestBody(annualAdjustments: Option[An
 
 object CreateAmendSEAnnualSubmissionRequestBody {
   implicit val formats: OFormat[CreateAmendSEAnnualSubmissionRequestBody] = Json.format[CreateAmendSEAnnualSubmissionRequestBody]
+
+  def mkRequest(annualAdjustments: Option[AnnualAdjustments],
+                annualAllowances: Option[AnnualAllowances],
+                annualNonFinancials: Option[AnnualNonFinancials]): Option[CreateAmendSEAnnualSubmissionRequestBody] =
+    Option.when(
+      annualAdjustments.exists(_.isDefined) ||
+        annualAllowances.exists(_.isDefined) ||
+        annualNonFinancials.isDefined
+    )(
+      CreateAmendSEAnnualSubmissionRequestBody(annualAdjustments, annualAllowances, annualNonFinancials)
+    )
+
 }
