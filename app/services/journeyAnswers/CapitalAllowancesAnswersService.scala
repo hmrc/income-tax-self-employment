@@ -51,6 +51,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+import cats.implicits._
 
 trait CapitalAllowancesAnswersService {
   def saveAnnualAllowances(ctx: JourneyContextWithNino, updatedAnnualAllowances: AnnualAllowances)(implicit hc: HeaderCarrier): ApiResultT[Unit]
@@ -75,9 +76,9 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentCo
     extends CapitalAllowancesAnswersService {
 
   def saveAnnualAllowances(ctx: JourneyContextWithNino, updatedAnnualAllowances: AnnualAllowances)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
-    val upsertBody  = CreateAmendSEAnnualSubmissionRequestBody(None, Some(updatedAnnualAllowances), None)
-    val requestData = CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, upsertBody)
-    val result      = connector.createAmendSEAnnualSubmission(requestData).map(_ => ())
+    val maybeUpsertBody  = CreateAmendSEAnnualSubmissionRequestBody.mkRequest(None, Some(updatedAnnualAllowances), None)
+    val maybeRequestData = maybeUpsertBody.map(CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, _))
+    val result           = maybeRequestData.traverse(requestData => connector.createAmendSEAnnualSubmission(requestData)).void
     EitherT.right[ServiceError](result)
   }
 

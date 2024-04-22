@@ -27,7 +27,9 @@ case class AnnualAdjustments(includedNonTaxableProfits: Option[BigDecimal],
                              outstandingBusinessIncome: Option[BigDecimal],
                              balancingChargeBpra: Option[BigDecimal],
                              balancingChargeOther: Option[BigDecimal],
-                             goodsAndServicesOwnUse: Option[BigDecimal])
+                             goodsAndServicesOwnUse: Option[BigDecimal]) {
+  def isDefined: Boolean = this != AnnualAdjustments.empty
+}
 
 object AnnualAdjustments {
   implicit val format: OFormat[AnnualAdjustments] = Json.format[AnnualAdjustments]
