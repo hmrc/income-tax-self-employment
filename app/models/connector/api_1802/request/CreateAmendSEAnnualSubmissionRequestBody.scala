@@ -31,18 +31,15 @@ object CreateAmendSEAnnualSubmissionRequestBody {
     val hasAnnualAdjustments   = annualAdjustments.exists(_.isDefined)
     val hasAnnualAllowances    = annualAllowances.exists(_.isDefined)
     val hasAnnualNonFinancials = annualNonFinancials.isDefined
+    val hasAtLeastOneData      = annualAdjustments.exists(_.isDefined) || annualAllowances.exists(_.isDefined) || annualNonFinancials.isDefined
 
-    if (hasAnnualAdjustments || hasAnnualAllowances || hasAnnualNonFinancials) {
-      Some(
-        CreateAmendSEAnnualSubmissionRequestBody(
-          if (hasAnnualAdjustments) annualAdjustments else None,
-          if (hasAnnualAllowances) annualAllowances else None,
-          if (hasAnnualNonFinancials) annualNonFinancials else None
-        )
+    Option.when(hasAtLeastOneData)(
+      CreateAmendSEAnnualSubmissionRequestBody(
+        if (hasAnnualAdjustments) annualAdjustments else None,
+        if (hasAnnualAllowances) annualAllowances else None,
+        if (hasAnnualNonFinancials) annualNonFinancials else None
       )
-    } else {
-      None
-    }
+    )
   }
 
 }
