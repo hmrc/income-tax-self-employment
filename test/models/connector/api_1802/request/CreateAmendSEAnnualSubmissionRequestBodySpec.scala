@@ -32,21 +32,24 @@ class CreateAmendSEAnnualSubmissionRequestBodySpec extends AnyWordSpecLike {
     "create an object if at least one value in AnnualAdjustments is defined" in {
       val adjustments = AnnualAdjustments.empty.copy(includedNonTaxableProfits = Some(1.0)).some
       assert(
-        mkRequest(adjustments, None, None) === CreateAmendSEAnnualSubmissionRequestBody(adjustments, None, None).some
+        mkRequest(adjustments, AnnualAllowances.empty.some, None) === CreateAmendSEAnnualSubmissionRequestBody(adjustments, None, None).some
       )
     }
 
     "create an object if at least one value in AnnualAllowances is defined" in {
       val allowances = AnnualAllowances.empty.copy(annualInvestmentAllowance = Some(1.0)).some
       assert(
-        mkRequest(None, allowances, None) === CreateAmendSEAnnualSubmissionRequestBody(None, allowances, None).some
+        mkRequest(AnnualAdjustments.empty.some, allowances, None) === CreateAmendSEAnnualSubmissionRequestBody(None, allowances, None).some
       )
     }
 
     "create an object if AnnualNonFinancials is defined" in {
       val financials = AnnualNonFinancials(false, false, None).some
       assert(
-        mkRequest(None, None, financials) === CreateAmendSEAnnualSubmissionRequestBody(None, None, financials).some
+        mkRequest(AnnualAdjustments.empty.some, AnnualAllowances.empty.some, financials) === CreateAmendSEAnnualSubmissionRequestBody(
+          None,
+          None,
+          financials).some
       )
     }
 
