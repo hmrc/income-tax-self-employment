@@ -76,10 +76,10 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
     val maybeUpsertData = upsertBody.map(CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, _))
 
     val result = for {
-      _        <- repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, Income), Json.toJson(storageAnswers))
       response <- EitherT(connector.listSEPeriodSummary(ctx)).leftAs[ServiceError]
       _        <- upsertPeriodSummary(response, ctx, answers)
       _        <- maybeUpsertData.traverse(upsertData => EitherT(connector.createAmendSEAnnualSubmission(upsertData))).leftAs[ServiceError]
+      _        <- repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, Income), Json.toJson(storageAnswers))
     } yield ()
 
     result.leftAs[ServiceError]
