@@ -61,7 +61,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
           getAnswer = Some(JourneyAnswers(mtditid, businessId, taxYear, JourneyName.ExpensesTailoring, Completed, JsObject.empty, now, now, now))
         )
       )
-      val result = underTest.get(expenseTailoringCtx)
+      val result = underTest.get(expensesTailoringCtx)
       result.value.futureValue shouldBe Completed.asRight
     }
   }

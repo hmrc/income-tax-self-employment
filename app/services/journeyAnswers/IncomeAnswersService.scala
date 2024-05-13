@@ -19,7 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.SelfEmploymentConnector
-import models.common.JourneyName.Income
+import models.common.JourneyName.{ExpensesTailoring, Income}
 import models.common.TaxYear.{endDate, startDate}
 import models.common._
 import models.connector.api_1802.request._
@@ -30,6 +30,7 @@ import models.database.income.IncomeStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.income.IncomeJourneyAnswers
+import models.frontend.income.TradingAllowance.UseTradingAllowance
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -80,13 +81,21 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       _        <- upsertPeriodSummary(response, ctx, answers)
       _        <- maybeUpsertData.traverse(upsertData => EitherT(connector.createAmendSEAnnualSubmission(upsertData))).leftAs[ServiceError]
       _        <- repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, Income), Json.toJson(storageAnswers))
+      _        <- maybeDeleteExpenses(ctx, answers)
     } yield ()
 
     result.leftAs[ServiceError]
   }
 
+  private def maybeDeleteExpenses(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers): EitherT[Future, ServiceError, Unit] =
+    if (answers.tradingAllowance == UseTradingAllowance) {
+      repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(ExpensesTailoring), Some("expenses-"))
+    } else {
+      EitherT.rightT[Future, ServiceError](())
+    }
+
   private def upsertPeriodSummary(response: ListSEPeriodSummariesResponse, ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit
-      hc: HeaderCarrier) = {
+      hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
     import ctx._
 
     val noSubmissionExists = response.periods.forall(_.isEmpty)

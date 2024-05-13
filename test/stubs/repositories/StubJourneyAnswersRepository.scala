@@ -32,7 +32,8 @@ case class StubJourneyAnswersRepository(
     getAnswer: Option[JourneyAnswers] = None,
     upsertDateField: Either[ServiceError, Unit] = Right(()),
     upsertStatusField: Either[ServiceError, Unit] = Right(()),
-    getAllResult: Either[ServiceError, TaskList] = Right(TaskList.empty)
+    getAllResult: Either[ServiceError, TaskList] = Right(TaskList.empty),
+    deleteOneOrMoreJourneys: Either[ServiceError, Unit] = Right(())
 ) extends JourneyAnswersRepository {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -43,6 +44,9 @@ case class StubJourneyAnswersRepository(
     EitherT.fromEither[Future](upsertStatusField)
 
   def testOnlyClearAllData(): ApiResultT[Unit] = ???
+
+  def deleteOneOrMoreJourneys(ctx: models.common.JourneyContext, multiplePrefix: Option[String]): ApiResultT[Unit] =
+    EitherT.fromEither[Future](deleteOneOrMoreJourneys)
 
   def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]] =
     EitherT.rightT[Future, ServiceError](getAnswer)

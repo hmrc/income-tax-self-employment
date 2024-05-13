@@ -67,7 +67,8 @@ object BaseSpec {
   val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
   val tradeDetailsCtx: JourneyContext            = journeyCtxWithNino.toJourneyContext(TradeDetails)
   val incomeCtx: JourneyContext                  = journeyCtxWithNino.toJourneyContext(JourneyName.Income)
-  val expenseTailoringCtx: JourneyContext        = journeyCtxWithNino.toJourneyContext(JourneyName.ExpensesTailoring)
+  val expensesTailoringCtx: JourneyContext       = journeyCtxWithNino.toJourneyContext(JourneyName.ExpensesTailoring)
+  val goodsToSellOrUseCtx: JourneyContext        = journeyCtxWithNino.toJourneyContext(JourneyName.GoodsToSellOrUse)
 
   // operations
   def mkNow(): Instant                 = Instant.now().truncatedTo(ChronoUnit.SECONDS)

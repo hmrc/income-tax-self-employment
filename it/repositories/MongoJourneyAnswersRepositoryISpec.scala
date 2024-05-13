@@ -207,6 +207,34 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
     }
   }
 
+  "deleteOneOrMoreJourneys" should {
+    "clear specific journey in the absence of prefix" in {
+      val res = (for {
+        _        <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
+        _        <- repository.deleteOneOrMoreJourneys(incomeCtx)
+        inserted <- repository.get(incomeCtx)
+      } yield inserted).rightValue
+
+      res shouldBe None
+    }
+
+    "clear all journeys starting with prefix" in {
+      val (incomeJourney, expensesTailoringJourney, goodsToSellOrUseJourney) = (for {
+        _                 <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
+        _                 <- repository.upsertAnswers(expensesTailoringCtx, Json.obj("field" -> "value"))
+        _                 <- repository.upsertAnswers(goodsToSellOrUseCtx, Json.obj("field" -> "value"))
+        _                 <- repository.deleteOneOrMoreJourneys(incomeCtx, Some("expenses-"))
+        income            <- repository.get(incomeCtx)
+        expensesTailoring <- repository.get(expensesTailoringCtx)
+        goodsToSellOrUse  <- repository.get(goodsToSellOrUseCtx)
+      } yield (income, expensesTailoring, goodsToSellOrUse)).rightValue
+
+      incomeJourney should not be None
+      expensesTailoringJourney shouldBe None
+      goodsToSellOrUseJourney shouldBe None
+    }
+  }
+
   "upsertStatus" should {
     "return correct UpdateResult for insert and update" in {
       val ctx = JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income)
