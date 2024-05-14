@@ -30,7 +30,7 @@ import models.database.income.IncomeStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.income.IncomeJourneyAnswers
-import models.frontend.income.TradingAllowance.UseTradingAllowance
+import models.frontend.income.TradingAllowance.{DeclareExpenses, UseTradingAllowance}
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -88,10 +88,9 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
   }
 
   private def maybeDeleteExpenses(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers): EitherT[Future, ServiceError, Unit] =
-    if (answers.tradingAllowance == UseTradingAllowance) {
-      repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(ExpensesTailoring), Some("expenses-"))
-    } else {
-      EitherT.rightT[Future, ServiceError](())
+    answers.tradingAllowance match {
+      case UseTradingAllowance => repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(ExpensesTailoring), Some("expenses-"))
+      case DeclareExpenses     => EitherT.rightT[Future, ServiceError](())
     }
 
   private def upsertPeriodSummary(response: ListSEPeriodSummariesResponse, ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit
