@@ -25,6 +25,7 @@ import models.error.ServiceError
 import models.frontend.TaskList
 import org.mongodb.scala._
 import org.mongodb.scala.bson._
+import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Projections.exclude
 import org.mongodb.scala.model._
 import org.mongodb.scala.result.UpdateResult
@@ -46,6 +47,7 @@ trait JourneyAnswersRepository {
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit]
   def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit]
   def testOnlyClearAllData(): ApiResultT[Unit]
+  def deleteOneOrMoreJourneys(ctx: JourneyContext, multiplePrefix: Option[String] = None): ApiResultT[Unit]
 }
 
 @Singleton
@@ -82,14 +84,25 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
         .toFuture()
         .void)
 
-  private def filterJourney(ctx: JourneyContext) = Filters.and(
-    Filters.eq("mtditid", ctx.mtditid.value),
-    Filters.eq("taxYear", ctx.taxYear.endYear),
-    Filters.eq("businessId", ctx.businessId.value),
-    Filters.eq("journey", ctx.journey.entryName)
-  )
+  def deleteOneOrMoreJourneys(ctx: JourneyContext, multiplePrefix: Option[String] = None): ApiResultT[Unit] =
+    EitherT.right[ServiceError](
+      collection
+        .deleteMany(filterJourney(ctx, multiplePrefix))
+        .toFuture()
+        .void)
 
-  private def filterAllJourneys(taxYear: TaxYear, mtditid: Mtditid) = Filters.and(
+  private def filterJourney(ctx: JourneyContext, prefix: Option[String] = None): Bson =
+    Filters.and(
+      Filters.eq("mtditid", ctx.mtditid.value),
+      Filters.eq("taxYear", ctx.taxYear.endYear),
+      Filters.eq("businessId", ctx.businessId.value),
+      prefix match {
+        case Some(p) => Filters.regex("journey", s"^$p.*")
+        case None    => Filters.eq("journey", ctx.journey.entryName)
+      }
+    )
+
+  private def filterAllJourneys(taxYear: TaxYear, mtditid: Mtditid): Bson = Filters.and(
     Filters.eq("mtditid", mtditid.value),
     Filters.eq("taxYear", taxYear.endYear)
   )
