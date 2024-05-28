@@ -31,6 +31,7 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
   case object Income                      extends JourneyName("income")
   case object IncomePrepop                extends JourneyName("income-prepop")
   case object AdjustmentsPrepop           extends JourneyName("adjustments-prepop")
+  case object CapitalAllowancePrepop      extends JourneyName("capital-allowance-prepop")
   case object BusinessDetailsPrepop       extends JourneyName("business-details-prepop")
   case object ExpensesTailoring           extends JourneyName("expenses-categories")
   case object GoodsToSellOrUse            extends JourneyName("expenses-goods-to-sell-or-use")
