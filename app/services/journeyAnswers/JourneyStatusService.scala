@@ -21,7 +21,7 @@ import cats.implicits._
 import connectors.SelfEmploymentConnector
 import models.common._
 import models.connector.api_1171
-import models.domain.{ApiResultT, Business}
+import models.domain.{ApiResultT, Business, JourneyStatusAndLink}
 import models.error.ServiceError
 import models.frontend.TaskList
 import repositories.JourneyAnswersRepository
@@ -34,6 +34,7 @@ trait JourneyStatusService {
   def set(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit]
   def get(ctx: JourneyContext): ApiResultT[JourneyStatus]
   def getTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList]
+  def getCommonTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[Seq[List[JourneyStatusAndLink]]]
 }
 
 @Singleton
@@ -62,4 +63,10 @@ class JourneyStatusServiceImpl @Inject() (businessConnector: SelfEmploymentConne
       taskList <- repository.getAll(taxYear, mtditid, businesses)
     } yield taskList
   }
+
+  // TODO do I need to package the response into different businesses (Seq[List[_]] is a placeholder)?
+  def getCommonTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[Seq[List[JourneyStatusAndLink]]] =
+    getTaskList(taxYear, mtditid, nino).map(_.businesses.map(journeyList =>
+      JourneyStatusAndLink.getStatusAndLinksFromJourneys(taxYear, journeyList.businessId, journeyList.journeyStatuses)))
+
 }
