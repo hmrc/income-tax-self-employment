@@ -51,8 +51,7 @@ trait JourneyAnswersRepository {
 }
 
 @Singleton
-class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent,
-                                               appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
+class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[JourneyAnswers](
       collectionName = "journey-answers",
       mongoComponent = mongo,
@@ -92,22 +91,6 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent,
         .toFuture()
         .void)
 
-  private def filterJourney(ctx: JourneyContext, prefix: Option[String] = None): Bson =
-    Filters.and(
-      Filters.eq("mtditid", ctx.mtditid.value),
-      Filters.eq("taxYear", ctx.taxYear.endYear),
-      Filters.eq("businessId", ctx.businessId.value),
-      prefix match {
-        case Some(p) => Filters.regex("journey", s"^$p.*")
-        case None    => Filters.eq("journey", ctx.journey.entryName)
-      }
-    )
-
-  private def filterAllJourneys(taxYear: TaxYear, mtditid: Mtditid): Bson = Filters.and(
-    Filters.eq("mtditid", mtditid.value),
-    Filters.eq("taxYear", taxYear.endYear)
-  )
-
   def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]] = {
     val filter = filterJourney(ctx)
     EitherT.right[ServiceError](
@@ -128,6 +111,11 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent,
         .map(answers => TaskList.fromJourneyAnswers(answers.toList, businesses)))
   }
 
+  private def filterAllJourneys(taxYear: TaxYear, mtditid: Mtditid): Bson = Filters.and(
+    Filters.eq("mtditid", mtditid.value),
+    Filters.eq("taxYear", taxYear.endYear)
+  )
+
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] = {
     logger.info(s"Repository: ctx=${ctx.toString} persisting answers:\n===\n${Json.prettyPrint(newData)}\n===")
 
@@ -137,20 +125,6 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent,
     val options = new UpdateOptions().upsert(true)
 
     handleUpdateExactlyOne(ctx, collection.updateOne(filter, update, options).toFuture())
-  }
-
-  def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] = {
-    logger.info(s"Repository: ctx=${ctx.toString} persisting new status=$status")
-
-    handleUpdateExactlyOne(ctx, upsertStatus(ctx, status))
-  }
-
-  private[repositories] def upsertStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
-    val filter  = filterJourney(ctx)
-    val update  = createUpsertStatus(ctx)(status)
-    val options = new UpdateOptions().upsert(true)
-
-    collection.updateOne(filter, update, options).toFuture()
   }
 
   private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
@@ -169,6 +143,31 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent,
       Updates.setOnInsert("expireAt", expireAt)
     )
   }
+
+  def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] = {
+    logger.info(s"Repository: ctx=${ctx.toString} persisting new status=$status")
+
+    handleUpdateExactlyOne(ctx, upsertStatus(ctx, status))
+  }
+
+  private[repositories] def upsertStatus(ctx: JourneyContext, status: JourneyStatus): Future[UpdateResult] = {
+    val filter  = filterJourney(ctx)
+    val update  = createUpsertStatus(ctx)(status)
+    val options = new UpdateOptions().upsert(true)
+
+    collection.updateOne(filter, update, options).toFuture()
+  }
+
+  private def filterJourney(ctx: JourneyContext, prefix: Option[String] = None): Bson =
+    Filters.and(
+      Filters.eq("mtditid", ctx.mtditid.value),
+      Filters.eq("taxYear", ctx.taxYear.endYear),
+      Filters.eq("businessId", ctx.businessId.value),
+      prefix match {
+        case Some(p) => Filters.regex("journey", s"^$p.*")
+        case None    => Filters.eq("journey", ctx.journey.entryName)
+      }
+    )
 
   private def createUpsertStatus(ctx: JourneyContext)(status: JourneyStatus) = {
     val now      = Instant.now(clock)
