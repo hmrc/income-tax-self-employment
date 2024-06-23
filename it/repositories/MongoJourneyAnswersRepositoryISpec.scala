@@ -19,6 +19,7 @@ package repositories
 import bulders.BusinessDataBuilder.aBusiness
 import cats.data.EitherT
 import cats.implicits._
+import config.AppConfig
 import models.common.JourneyName._
 import models.common.JourneyStatus._
 import models.common._
@@ -26,7 +27,9 @@ import models.database.JourneyAnswers
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import models.error.ServiceError
 import models.frontend.TaskList
+import org.mockito.MockitoSugar.when
 import org.scalatest.EitherValues._
+import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import support.MongoTestSupport
@@ -41,7 +44,11 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
   private val now   = mkNow()
   private val clock = mkClock(now)
 
-  override val repository = new MongoJourneyAnswersRepository(mongoComponent, clock)
+  private val mockAppConfig = mock[AppConfig]
+  when(mockAppConfig.mongoTTL) thenReturn 28
+  private val TTLinSeconds = mockAppConfig.mongoTTL * 3600 * 24
+
+  override val repository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, clock)
 
   override def beforeEach(): Unit = {
     clock.reset(now)
@@ -145,7 +152,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
         inserted <- repository.get(incomeCtx)
       } yield inserted.value).rightValue
 
-      val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
+      val expectedExpireAt = now.plusSeconds(TTLinSeconds)
       result shouldBe JourneyAnswers(
         mtditid,
         businessId,
@@ -166,7 +173,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
         updated <- repository.get(incomeCtx)
       } yield updated.value).rightValue
 
-      val expectedExpireAt = ExpireAtCalculator.calculateExpireAt(now)
+      val expectedExpireAt = now.plusSeconds(TTLinSeconds)
       result shouldBe JourneyAnswers(
         mtditid,
         businessId,
