@@ -18,6 +18,7 @@ package repositories
 
 import cats.data.EitherT
 import cats.implicits._
+import config.AppConfig
 import models.common._
 import models.database.JourneyAnswers
 import models.domain.{ApiResultT, Business}
@@ -31,12 +32,11 @@ import org.mongodb.scala.model._
 import org.mongodb.scala.result.UpdateResult
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json}
-import repositories.ExpireAtCalculator.calculateExpireAt
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import utils.Logging
 
-import java.time.{Clock, Instant}
+import java.time.{Clock, Instant, ZoneOffset}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -51,7 +51,7 @@ trait JourneyAnswersRepository {
 }
 
 @Singleton
-class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clock)(implicit ec: ExecutionContext)
+class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig: AppConfig, clock: Clock)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[JourneyAnswers](
       collectionName = "journey-answers",
       mongoComponent = mongo,
@@ -59,10 +59,10 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
       replaceIndexes = true,
       indexes = Seq(
         IndexModel(
-          Indexes.ascending("expireAt"),
+          Indexes.ascending("updatedAt"),
           IndexOptions()
-            .name("expireAt")
-            .expireAfter(0, TimeUnit.SECONDS)
+            .expireAfter(appConfig.mongoTTL, TimeUnit.DAYS)
+            .name("UserDataTTL")
         ),
         IndexModel(
           Indexes.ascending("mtditid", "taxYear", "businessId", "journey"),
@@ -91,22 +91,6 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
         .toFuture()
         .void)
 
-  private def filterJourney(ctx: JourneyContext, prefix: Option[String] = None): Bson =
-    Filters.and(
-      Filters.eq("mtditid", ctx.mtditid.value),
-      Filters.eq("taxYear", ctx.taxYear.endYear),
-      Filters.eq("businessId", ctx.businessId.value),
-      prefix match {
-        case Some(p) => Filters.regex("journey", s"^$p.*")
-        case None    => Filters.eq("journey", ctx.journey.entryName)
-      }
-    )
-
-  private def filterAllJourneys(taxYear: TaxYear, mtditid: Mtditid): Bson = Filters.and(
-    Filters.eq("mtditid", mtditid.value),
-    Filters.eq("taxYear", taxYear.endYear)
-  )
-
   def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]] = {
     val filter = filterJourney(ctx)
     EitherT.right[ServiceError](
@@ -127,6 +111,11 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
         .map(answers => TaskList.fromJourneyAnswers(answers.toList, businesses)))
   }
 
+  private def filterAllJourneys(taxYear: TaxYear, mtditid: Mtditid): Bson = Filters.and(
+    Filters.eq("mtditid", mtditid.value),
+    Filters.eq("taxYear", taxYear.endYear)
+  )
+
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] = {
     logger.info(s"Repository: ctx=${ctx.toString} persisting answers:\n===\n${Json.prettyPrint(newData)}\n===")
 
@@ -136,6 +125,23 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     val options = new UpdateOptions().upsert(true)
 
     handleUpdateExactlyOne(ctx, collection.updateOne(filter, update, options).toFuture())
+  }
+
+  private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
+    val now      = Instant.now(clock)
+    val expireAt = now.atZone(ZoneOffset.UTC).plusDays(appConfig.mongoTTL).toInstant
+
+    Updates.combine(
+      Updates.set(fieldName, value),
+      Updates.set("updatedAt", now),
+      Updates.setOnInsert("mtditid", ctx.mtditid.value),
+      Updates.setOnInsert("taxYear", ctx.taxYear.endYear),
+      Updates.setOnInsert("businessId", ctx.businessId.value),
+      Updates.setOnInsert("status", statusOnInsert.entryName),
+      Updates.setOnInsert("journey", ctx.journey.entryName),
+      Updates.setOnInsert("createdAt", now),
+      Updates.setOnInsert("expireAt", expireAt)
+    )
   }
 
   def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] = {
@@ -152,26 +158,20 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, clock: Clo
     collection.updateOne(filter, update, options).toFuture()
   }
 
-  private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
-    val now      = Instant.now(clock)
-    val expireAt = calculateExpireAt(now)
-
-    Updates.combine(
-      Updates.set(fieldName, value),
-      Updates.set("updatedAt", now),
-      Updates.setOnInsert("mtditid", ctx.mtditid.value),
-      Updates.setOnInsert("taxYear", ctx.taxYear.endYear),
-      Updates.setOnInsert("businessId", ctx.businessId.value),
-      Updates.setOnInsert("status", statusOnInsert.entryName),
-      Updates.setOnInsert("journey", ctx.journey.entryName),
-      Updates.setOnInsert("createdAt", now),
-      Updates.setOnInsert("expireAt", expireAt)
+  private def filterJourney(ctx: JourneyContext, prefix: Option[String] = None): Bson =
+    Filters.and(
+      Filters.eq("mtditid", ctx.mtditid.value),
+      Filters.eq("taxYear", ctx.taxYear.endYear),
+      Filters.eq("businessId", ctx.businessId.value),
+      prefix match {
+        case Some(p) => Filters.regex("journey", s"^$p.*")
+        case None    => Filters.eq("journey", ctx.journey.entryName)
+      }
     )
-  }
 
   private def createUpsertStatus(ctx: JourneyContext)(status: JourneyStatus) = {
     val now      = Instant.now(clock)
-    val expireAt = calculateExpireAt(now)
+    val expireAt = now.atZone(ZoneOffset.UTC).plusDays(appConfig.mongoTTL).toInstant
 
     Updates.combine(
       Updates.set("status", status.entryName),
