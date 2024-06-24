@@ -18,7 +18,7 @@ package controllers
 
 import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
 import models.common.{JourneyName, JourneyStatus}
-import models.domain.JourneyNameAndStatus
+import models.domain.{JourneyNameAndStatus, JourneyStatusAndLink}
 import models.frontend.{JourneyStatusData, TaskList}
 import play.api.http.Status.{NO_CONTENT, OK}
 import play.api.libs.json.Json
@@ -73,13 +73,14 @@ class JourneyStatusControllerSpec extends ControllerBehaviours {
 
   "getCommonTaskList" should {
     "return a list of all " in {
+      val expectedResult = Seq(List(JourneyStatusAndLink()))
       behave like testRoute(
         request = buildRequestNoContent,
         expectedStatus = OK,
         expectedBody = Json
-          .toJson(TaskList.empty)
+          .toJson(expectedResult)
           .toString(),
-        methodBlock = () => underTest.getTaskList(currTaxYear, nino)
+        methodBlock = () => underTest.getCommonTaskList(currTaxYear, nino)
       )
     }
   }

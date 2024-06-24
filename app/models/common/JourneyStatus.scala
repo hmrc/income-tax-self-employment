@@ -17,9 +17,12 @@
 package models.common
 
 import enumeratum._
+import models.commonTaskList.TaskStatus
 
 sealed abstract class JourneyStatus(override val entryName: String) extends EnumEntry {
   override def toString: String = entryName
+
+  def toCommonTaskListStatus: TaskStatus
 }
 
 object JourneyStatus extends Enum[JourneyStatus] with utils.PlayJsonEnum[JourneyStatus] {
@@ -27,14 +30,22 @@ object JourneyStatus extends Enum[JourneyStatus] with utils.PlayJsonEnum[Journey
   val values: IndexedSeq[JourneyStatus] = findValues
 
   /** This status is used if there are no answers persisted */
-  case object CheckOurRecords extends JourneyStatus("checkOurRecords")
+  case object CheckOurRecords extends JourneyStatus("checkOurRecords") {
+    override def toCommonTaskListStatus: TaskStatus = TaskStatus.CheckNow()
+  }
 
   /** It is used to indicate the answers were submitted, but the 'Have you completed' question has not been answered */
-  case object NotStarted extends JourneyStatus("notStarted")
+  case object NotStarted extends JourneyStatus("notStarted") {
+    override def toCommonTaskListStatus: TaskStatus = TaskStatus.NotStarted()
+  }
 
   /** The completion page has been passed with answer No */
-  case object InProgress extends JourneyStatus("inProgress")
+  case object InProgress extends JourneyStatus("inProgress") {
+    override def toCommonTaskListStatus: TaskStatus = TaskStatus.InProgress()
+  }
 
   /** The completion page has been passed with answer Yes */
-  case object Completed extends JourneyStatus("completed")
+  case object Completed extends JourneyStatus("completed") {
+    override def toCommonTaskListStatus: TaskStatus = TaskStatus.Completed()
+  }
 }
