@@ -35,5 +35,5 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
 
-  lazy val mongoTTL: Int = Duration(servicesConfig.getString("mongodb.timeToLive")).toDays.toInt
+  val mongoTTL: Int = Duration(servicesConfig.getString("mongodb.timeToLive")).toDays.toInt
 }
