@@ -22,4 +22,6 @@ case class TaskListModel(taskList: Seq[TaskListSection])
 
 object TaskListModel {
   implicit val format: OFormat[TaskListModel] = Json.format[TaskListModel]
+
+  val empty = TaskListModel(Nil)
 }

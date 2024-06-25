@@ -17,20 +17,22 @@
 package stubs.services
 
 import cats.data.EitherT
-import models.common.{JourneyContext, JourneyStatus, Mtditid, Nino, TaxYear}
+import cats.implicits._
+import models.common._
+import models.commonTaskList.TaskListModel
 import models.domain.ApiResultT
+import models.error.ServiceError
 import models.frontend.TaskList
 import services.journeyAnswers.JourneyStatusService
 import uk.gov.hmrc.http.HeaderCarrier
-import cats.implicits._
-import models.error.ServiceError
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class StubJourneyStatusService(
     setRes: Either[ServiceError, Unit] = ().asRight[ServiceError],
     getRes: Either[ServiceError, JourneyStatus] = JourneyStatus.CheckOurRecords.asRight[ServiceError],
-    getTaskListRes: Either[ServiceError, TaskList] = TaskList.empty.asRight[ServiceError]
+    getTaskListRes: Either[ServiceError, TaskList] = TaskList.empty.asRight[ServiceError],
+    getCommonTaskListRes: Either[ServiceError, TaskListModel] = TaskListModel.empty.asRight[ServiceError]
 ) extends JourneyStatusService {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -40,4 +42,7 @@ case class StubJourneyStatusService(
 
   def getTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
     EitherT.fromEither[Future](getTaskListRes)
+
+  def getCommonTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskListModel] =
+    EitherT.fromEither[Future](getCommonTaskListRes)
 }

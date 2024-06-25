@@ -42,7 +42,7 @@ object TaskStatus extends TaskStatus {
   }
 
   case class CannotStartYet() extends WithName("cannotStartYet") with TaskStatus
-  object CannotStartYet { // TODO 8772 this isn't in tailor-returns-FE. Need to let them know
+  object CannotStartYet {
     implicit val nonStrictReads: Reads[CannotStartYet] = Reads.pure(CannotStartYet())
     implicit val writes: OWrites[CannotStartYet]       = OWrites[CannotStartYet](_ => Json.obj())
   }

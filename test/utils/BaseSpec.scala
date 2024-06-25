@@ -37,9 +37,6 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
   protected implicit val ec: ExecutionContext = ExecutionContext.Implicits.global
   protected implicit val hc: HeaderCarrier    = HeaderCarrier()
 
-  protected val businessId: BusinessId = BusinessId("someBusinessId")
-  protected val nino: Nino             = Nino("someNino")
-
   protected val stubControllerComponents: ControllerComponents = Helpers.stubControllerComponents()
 
   protected val defaultActionBuilder: DefaultActionBuilder = DefaultActionBuilder(stubControllerComponents.parsers.default)
@@ -54,7 +51,7 @@ object BaseSpec {
   val taxYear: TaxYear       = TaxYear(2024)
   val taxYearStart: String   = TaxYear.startDate(taxYear)
   val taxYearEnd: String     = TaxYear.endDate(taxYear)
-  val businessId: BusinessId = BusinessId("someBusinessId")
+  val businessId: BusinessId = BusinessId("SJPR05893938418")
   val nino: Nino             = Nino("nino")
   val mtditid: Mtditid       = Mtditid("1234567890")
 

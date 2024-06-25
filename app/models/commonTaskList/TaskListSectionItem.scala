@@ -18,7 +18,7 @@ package models.commonTaskList
 
 import cats.implicits.catsSyntaxOptionId
 import models.common.{BusinessId, TaxYear}
-import models.commonTaskList.TaskStatus.CheckNow
+import models.commonTaskList.TaskStatus._
 import models.domain.JourneyNameAndStatus
 import play.api.libs.json.{Json, OFormat}
 
@@ -28,13 +28,17 @@ object TaskListSectionItem {
   implicit val format: OFormat[TaskListSectionItem] = Json.format[TaskListSectionItem]
 
   def fromJourneys(taxYear: TaxYear, businessId: BusinessId, savedJourneys: Seq[JourneyNameAndStatus]): Seq[TaskListSectionItem] =
-    SelfEmploymentTitles.values.map { journey => // TODO 8771 only get tailored and default journeys
+    SelfEmploymentTitles.values.map { journey => // TODO only get default and tailored journeys, not all
       val maybeJourneyStatus: Option[JourneyNameAndStatus] = savedJourneys.find(_.name.entryName == journey.journeyName)
       maybeJourneyStatus match {
         case Some(nameAndStatus) => // Status means submission exists -> NotStarted, InProgress or Completed
           TaskListSectionItem(journey, nameAndStatus.journeyStatus.toCommonTaskListStatus, journey.getHref(taxYear, businessId, toCYA = true).some)
         case None => // No status -> CheckOurRecords or CannotStartYet
-          TaskListSectionItem(journey, CheckNow(), journey.getHref(taxYear, businessId).some) // TODO 8772 add logic for CannotStartYet status
+          TaskListSectionItem(
+            journey,
+            CheckNow(),
+            journey.getHref(taxYear, businessId).some
+          ) // TODO move logic for CannotStartYet status from FE to BE
       }
     }
 }

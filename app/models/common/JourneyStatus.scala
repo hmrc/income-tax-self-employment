@@ -48,4 +48,9 @@ object JourneyStatus extends Enum[JourneyStatus] with utils.PlayJsonEnum[Journey
   case object Completed extends JourneyStatus("completed") {
     override def toCommonTaskListStatus: TaskStatus = TaskStatus.Completed()
   }
+
+  /** The completion page has been passed with answer Yes */
+  case object CannotStartYet extends JourneyStatus("cannotStartYet") {
+    override def toCommonTaskListStatus: TaskStatus = TaskStatus.CannotStartYet()
+  }
 }
