@@ -47,6 +47,17 @@ class JourneyStatusControllerSpec extends ControllerBehaviours {
     }
   }
 
+  "setStatus" should {
+    "set a new status" in {
+      behave like testRoute(
+        request = buildRequest(JourneyStatusData(JourneyStatus.Completed)),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.setStatus(businessId, JourneyName.Income, currTaxYear)
+      )
+    }
+  }
+
   "getTaskList" should {
     "return task list" in {
       behave like testRoute(
@@ -56,17 +67,6 @@ class JourneyStatusControllerSpec extends ControllerBehaviours {
           .toJson(TaskList.empty)
           .toString(),
         methodBlock = () => underTest.getTaskList(currTaxYear, nino)
-      )
-    }
-  }
-
-  "setStatus" should {
-    "set a new status" in {
-      behave like testRoute(
-        request = buildRequest(JourneyStatusData(JourneyStatus.Completed)),
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => underTest.setStatus(businessId, JourneyName.Income, currTaxYear)
       )
     }
   }

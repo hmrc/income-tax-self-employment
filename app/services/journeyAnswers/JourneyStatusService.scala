@@ -20,6 +20,7 @@ import cats.data.EitherT
 import cats.implicits._
 import connectors.SelfEmploymentConnector
 import models.common._
+import models.commonTaskList.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem}
 import models.connector.api_1171
 import models.domain.{ApiResultT, Business}
 import models.error.ServiceError
@@ -34,6 +35,7 @@ trait JourneyStatusService {
   def set(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit]
   def get(ctx: JourneyContext): ApiResultT[JourneyStatus]
   def getTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList]
+  def getCommonTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskListModel]
 }
 
 @Singleton
@@ -62,4 +64,15 @@ class JourneyStatusServiceImpl @Inject() (businessConnector: SelfEmploymentConne
       taskList <- repository.getAll(taxYear, mtditid, businesses)
     } yield taskList
   }
+
+  def getCommonTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskListModel] =
+    getTaskList(taxYear, mtditid, nino).map { data =>
+      val selfEmploymentJourneyItems: Seq[TaskListSectionItem] = // This combines lists of journeys for all business IDs
+        data.businesses.flatMap(journeyList => TaskListSectionItem.fromJourneys(taxYear, journeyList.businessId, journeyList.journeyStatuses))
+      val selfEmploymentSections
+          : Seq[TaskListSection] = // Until business finishes mapping self employment to common TL, all are returned in one section
+        Seq(TaskListSection(SectionTitle.SelfEmploymentTitle(), selfEmploymentJourneyItems.some))
+      TaskListModel(selfEmploymentSections)
+    }
+
 }
