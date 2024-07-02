@@ -53,7 +53,7 @@ class JourneyStatusServiceImpl @Inject() (businessConnector: SelfEmploymentConne
     } yield status
 
   def getTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] = {
-    def getBusinesses(businessesResp: api_1171.SuccessResponseSchema) =
+    def getBusinesses(businessesResp: api_1171.SuccessResponseSchema): List[Business] =
       businessesResp.taxPayerDisplayResponse.businessData.getOrElse(Nil).map { details =>
         Business.mkBusiness(details, businessesResp.taxPayerDisplayResponse.yearOfMigration)
       }
