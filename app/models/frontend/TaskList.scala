@@ -21,7 +21,9 @@ import models.database.JourneyAnswers
 import models.domain.{Business, JourneyNameAndStatus, TradesJourneyStatuses}
 import play.api.libs.json.{Json, OFormat}
 
-final case class TaskList(tradeDetails: Option[JourneyNameAndStatus], businesses: List[TradesJourneyStatuses])
+final case class TaskList(tradeDetails: Option[JourneyNameAndStatus],
+                          businesses: List[TradesJourneyStatuses],
+                          nationalInsuranceContributions: List[JourneyNameAndStatus] = Nil)
 
 object TaskList {
   implicit val format: OFormat[TaskList] = Json.format[TaskList]
@@ -51,6 +53,6 @@ object TaskList {
       )
     }
 
-    TaskList(tradingDetailsStatus, perBusinessStatuses)
+    TaskList(tradingDetailsStatus, perBusinessStatuses) // TODO SASS-8713 Remove default Nil and get NIC Statuses from database
   }
 }
