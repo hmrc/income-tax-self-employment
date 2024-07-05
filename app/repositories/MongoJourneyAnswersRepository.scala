@@ -121,13 +121,13 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
 
     val filter  = filterJourney(ctx)
     val bson    = BsonDocument(Json.stringify(newData))
-    val update  = createUpsert(ctx)("data", bson, JourneyStatus.NotStarted)
+    val update  = createUpsert(ctx)("data", bson, JourneyStatus.InProgress)
     val options = new UpdateOptions().upsert(true)
 
     handleUpdateExactlyOne(ctx, collection.updateOne(filter, update, options).toFuture())
   }
 
-  private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus) = {
+  private def createUpsert(ctx: JourneyContext)(fieldName: String, value: BsonValue, statusOnInsert: JourneyStatus): Bson = {
     val now      = Instant.now(clock)
     val expireAt = now.atZone(ZoneOffset.UTC).plusDays(appConfig.mongoTTL).toInstant
 
@@ -169,7 +169,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
       }
     )
 
-  private def createUpsertStatus(ctx: JourneyContext)(status: JourneyStatus) = {
+  private def createUpsertStatus(ctx: JourneyContext)(status: JourneyStatus): Bson = {
     val now      = Instant.now(clock)
     val expireAt = now.atZone(ZoneOffset.UTC).plusDays(appConfig.mongoTTL).toInstant
 
@@ -189,7 +189,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
   private def handleUpdateExactlyOne(ctx: JourneyContext, result: Future[UpdateResult])(implicit
       logger: Logger,
       ec: ExecutionContext): ApiResultT[Unit] = {
-    def insertedSuccessfully(result: UpdateResult) =
+    def insertedSuccessfully(result: UpdateResult): Boolean =
       result.getModifiedCount == 0 && result.getMatchedCount == 0 && Option(result.getUpsertedId).nonEmpty
     def updatedSuccessfully(result: UpdateResult) = result.getModifiedCount == 1
 
