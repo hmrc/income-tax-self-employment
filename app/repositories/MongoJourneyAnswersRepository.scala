@@ -118,10 +118,10 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
 
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] = {
     logger.info(s"Repository: ctx=${ctx.toString} persisting answers:\n===\n${Json.prettyPrint(newData)}\n===")
-
+    // When answers are submitted but no status yet submitted, journey status is set to NotStarted. This is then handled by the frontend.
     val filter  = filterJourney(ctx)
     val bson    = BsonDocument(Json.stringify(newData))
-    val update  = createUpsert(ctx)("data", bson, JourneyStatus.InProgress)
+    val update  = createUpsert(ctx)("data", bson, JourneyStatus.NotStarted)
     val options = new UpdateOptions().upsert(true)
 
     handleUpdateExactlyOne(ctx, collection.updateOne(filter, update, options).toFuture())

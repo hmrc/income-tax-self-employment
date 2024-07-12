@@ -58,7 +58,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
   "setStatus" should {
     "set trade details journey status with trade-details businessId" in {
       val result = (for {
-        _      <- repository.setStatus(tradeDetailsCtx, InProgress)
+        _      <- repository.setStatus(tradeDetailsCtx, NotStarted)
         answer <- repository.get(tradeDetailsCtx)
       } yield answer).rightValue
 
@@ -67,7 +67,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
         BusinessId("trade-details"),
         tradeDetailsCtx.taxYear,
         TradeDetails,
-        InProgress,
+        NotStarted,
         JsObject.empty,
         result.value.expireAt,
         result.value.createdAt,
@@ -77,7 +77,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
 
     "set business id for income journey" in {
       val result = (for {
-        _      <- repository.setStatus(incomeCtx, InProgress)
+        _      <- repository.setStatus(incomeCtx, NotStarted)
         answer <- repository.get(incomeCtx)
       } yield answer).rightValue
 
@@ -86,7 +86,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
         incomeCtx.businessId,
         incomeCtx.taxYear,
         Income,
-        InProgress,
+        NotStarted,
         JsObject.empty,
         result.value.expireAt,
         result.value.createdAt,
@@ -103,11 +103,11 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
 
     "return trade details without businesses" in {
       val result = (for {
-        _        <- repository.setStatus(tradeDetailsCtx, InProgress)
+        _        <- repository.setStatus(tradeDetailsCtx, NotStarted)
         taskList <- repository.getAll(tradeDetailsCtx.taxYear, tradeDetailsCtx.mtditid, Nil)
       } yield taskList).value.futureValue.value
 
-      result shouldBe TaskList(JourneyNameAndStatus(TradeDetails, InProgress).some, Nil)
+      result shouldBe TaskList(JourneyNameAndStatus(TradeDetails, NotStarted).some, Nil)
     }
 
     "return task list with businesses" in {
@@ -119,7 +119,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val result = (for {
         _        <- repository.setStatus(tradeDetailsCtx, CheckOurRecords)
         _        <- repository.setStatus(incomeCtx, Completed)
-        _        <- repository.setStatus(incomeCtx.copy(_businessId = BusinessId("business2")), InProgress)
+        _        <- repository.setStatus(incomeCtx.copy(_businessId = BusinessId("business2")), NotStarted)
         taskList <- repository.getAll(tradeDetailsCtx.taxYear, tradeDetailsCtx.mtditid, businesses)
       } yield taskList).rightValue
 
@@ -138,7 +138,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
             TradingName("some other business").some,
             TypeOfBusiness("self-employment"),
             AccountingType("CASH"),
-            List(JourneyNameAndStatus(Income, InProgress))
+            List(JourneyNameAndStatus(Income, NotStarted))
           )
         )
       )
@@ -158,7 +158,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
         businessId,
         currTaxYear,
         JourneyName.Income,
-        InProgress,
+        NotStarted,
         Json.obj("field" -> "value"),
         expectedExpireAt,
         now,
@@ -179,7 +179,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
         businessId,
         currTaxYear,
         JourneyName.Income,
-        InProgress,
+        NotStarted,
         Json.obj("field" -> "updated"),
         expectedExpireAt,
         now,
@@ -247,7 +247,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val ctx = JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income)
       val result = (for {
         beginning     <- repository.get(ctx)
-        createdResult <- EitherT.right[ServiceError](repository.upsertStatus(ctx, InProgress))
+        createdResult <- EitherT.right[ServiceError](repository.upsertStatus(ctx, NotStarted))
         created       <- repository.get(ctx)
         updatedResult <- EitherT.right[ServiceError](repository.upsertStatus(ctx, Completed))
         updated       <- repository.get(ctx)
@@ -259,7 +259,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       assert(createdResult.getModifiedCount == 0)
       assert(createdResult.getMatchedCount == 0)
       assert(Option(createdResult.getUpsertedId) !== None)
-      assert(created.value.status === InProgress)
+      assert(created.value.status === NotStarted)
 
       assert(updatedResult.getModifiedCount == 1)
       assert(updatedResult.getMatchedCount == 1)
