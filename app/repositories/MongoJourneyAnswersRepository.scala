@@ -121,7 +121,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
 
     val filter  = filterJourney(ctx)
     val bson    = BsonDocument(Json.stringify(newData))
-    val update  = createUpsert(ctx)("data", bson, JourneyStatus.InProgress)
+    val update  = createUpsert(ctx)("data", bson, JourneyStatus.NotStarted)
     val options = new UpdateOptions().upsert(true)
 
     handleUpdateExactlyOne(ctx, collection.updateOne(filter, update, options).toFuture())
