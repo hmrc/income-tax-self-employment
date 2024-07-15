@@ -23,12 +23,12 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class TaskList(tradeDetails: Option[JourneyNameAndStatus],
                           businesses: List[TradesJourneyStatuses],
-                          nationalInsuranceContributions: List[JourneyNameAndStatus] = Nil)
+                          nationalInsuranceContributions: Option[JourneyNameAndStatus] = None)
 
 object TaskList {
   implicit val format: OFormat[TaskList] = Json.format[TaskList]
 
-  val empty: TaskList = TaskList(None, Nil)
+  val empty: TaskList = TaskList(None, Nil, None)
 
   def fromJourneyAnswers(userJourneyAnswers: List[JourneyAnswers], businesses: List[Business]): TaskList = {
     val groupedByBusinessId: Map[BusinessId, Seq[JourneyAnswers]] = userJourneyAnswers.groupBy(_.businessId)
@@ -53,6 +53,6 @@ object TaskList {
       )
     }
 
-    TaskList(tradingDetailsStatus, perBusinessStatuses) // TODO SASS-8713 Remove default Nil and get NIC Statuses from database
+    TaskList(tradingDetailsStatus, perBusinessStatuses) // TODO SASS-8713 Remove default None and get NIC Statuses from database
   }
 }
