@@ -23,7 +23,7 @@ import play.api.libs.json.{Json, OFormat}
 
 final case class TaskList(tradeDetails: Option[JourneyNameAndStatus],
                           businesses: List[TradesJourneyStatuses],
-                          nationalInsuranceContributions: Option[JourneyNameAndStatus] = None)
+                          nationalInsuranceContributions: Option[JourneyNameAndStatus])
 
 object TaskList {
   implicit val format: OFormat[TaskList] = Json.format[TaskList]
@@ -53,6 +53,12 @@ object TaskList {
       )
     }
 
-    TaskList(tradingDetailsStatus, perBusinessStatuses) // TODO SASS-8713 Remove default None and get NIC Statuses from database
+    val nationalInsuranceStatus = groupedByBusinessId
+      .get(BusinessId.nationalInsuranceContributions)
+      .flatMap(
+        _.toList.headOption
+          .map(a => JourneyNameAndStatus(a.journey, a.status)))
+
+    TaskList(tradingDetailsStatus, perBusinessStatuses, nationalInsuranceStatus)
   }
 }

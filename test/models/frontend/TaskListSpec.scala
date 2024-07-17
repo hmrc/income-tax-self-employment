@@ -77,7 +77,8 @@ class TaskListSpec extends AnyWordSpecLike {
               AccountingType(BusinessDataBuilder.aBusiness.accountingType.getOrElse("")),
               Nil
             )
-          )
+          ),
+          None
         ))
     }
   }
