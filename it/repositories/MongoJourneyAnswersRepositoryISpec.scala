@@ -98,7 +98,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
   "getAll" should {
     "return an empty task list" in {
       val result = repository.getAll(currTaxYear, mtditid, List.empty).value.futureValue.value
-      result shouldBe TaskList(None, Nil)
+      result shouldBe TaskList(None, Nil, None)
     }
 
     "return trade details without businesses" in {
@@ -107,7 +107,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
         taskList <- repository.getAll(tradeDetailsCtx.taxYear, tradeDetailsCtx.mtditid, Nil)
       } yield taskList).value.futureValue.value
 
-      result shouldBe TaskList(JourneyNameAndStatus(TradeDetails, NotStarted).some, Nil)
+      result shouldBe TaskList(JourneyNameAndStatus(TradeDetails, NotStarted).some, Nil, None)
     }
 
     "return task list with businesses" in {
@@ -140,7 +140,8 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
             AccountingType("CASH"),
             List(JourneyNameAndStatus(Income, NotStarted))
           )
-        )
+        ),
+        None
       )
     }
   }

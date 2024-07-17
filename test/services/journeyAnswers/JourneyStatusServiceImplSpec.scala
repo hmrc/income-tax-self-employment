@@ -80,7 +80,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
     }
 
     "return a task list" in {
-      val taskList = TaskList(Some(JourneyNameAndStatus(JourneyName.Income, JourneyStatus.NotStarted)), Nil)
+      val taskList = TaskList(Some(JourneyNameAndStatus(JourneyName.Income, JourneyStatus.NotStarted)), Nil, None)
       val underTest = new JourneyStatusServiceImpl(
         businessConnector,
         repository.copy(
@@ -97,7 +97,8 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
     "create TaskListModel from saved journey statuses" in {
       val taskList = TaskList(
         Some(JourneyNameAndStatus(JourneyName.TradeDetails, JourneyStatus.Completed)),
-        aTradesJourneyStatusesSeq.map(_.copy(journeyStatuses = allCompetedJourneyStatuses.toList))
+        aTradesJourneyStatusesSeq.map(_.copy(journeyStatuses = allCompetedJourneyStatuses.toList)),
+        Some(JourneyNameAndStatus(JourneyName.NationalInsuranceContributions, JourneyStatus.Completed))
       )
       val underTest = new JourneyStatusServiceImpl(
         businessConnector,
