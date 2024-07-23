@@ -20,6 +20,7 @@ import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.SelfEmploymentConnector
 import connectors.SelfEmploymentConnector._
 import models.common.{IdType, JourneyContextWithNino}
+import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
@@ -70,6 +71,14 @@ case class StubSelfEmploymentConnector(
 
   def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] =
     getAnnualSummariesResult
+
+  def getDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response] = ???
+
+  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response] = ???
+
+  def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): Future[Api1638Response] = ???
 }
 
 object StubSelfEmploymentConnector {

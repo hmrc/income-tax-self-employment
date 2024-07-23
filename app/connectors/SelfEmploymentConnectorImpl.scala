@@ -23,6 +23,7 @@ import models.common.TaxYear.{asTys, endDate, startDate}
 import models.common._
 import models.connector.IntegrationContext.IFSHeaderCarrier
 import models.connector._
+import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
@@ -43,6 +44,13 @@ trait SelfEmploymentConnector {
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response]
   def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response]
   def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response]
+
+  def getDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response]
+  def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): Future[Api1638Response]
+  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response]
+
 }
 
 object SelfEmploymentConnector {
@@ -53,6 +61,7 @@ object SelfEmploymentConnector {
   type Api1894Response = ApiResponse[api_1894.response.CreateSEPeriodSummaryResponse]
   type Api1895Response = ApiResponse[api_1895.response.AmendSEPeriodSummaryResponse]
   type Api1965Response = ApiResponse[api_1965.ListSEPeriodSummariesResponse]
+  type Api1638Response = ApiResponse[api_1638.RequestSchemaAPI1638]
 }
 
 @Singleton
@@ -74,6 +83,9 @@ class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppCon
     s"${baseUrl(nino, incomeSourceId, taxYear)}/periodic-summaries?from=${startDate(taxYear)}&to=${endDate(taxYear)}"
   private def periodicSummaryDetailUrl(nino: Nino, incomeSourceId: BusinessId, taxYear: TaxYear) =
     s"${baseUrl(nino, incomeSourceId, taxYear)}/periodic-summary-detail?from=${startDate(taxYear)}&to=${endDate(taxYear)}"
+
+  private def disclosuresSubmission(nino: Nino, taxYear: TaxYear) =
+    s"${appConfig.ifsBaseUrl}/income-tax/disclosures/$nino/${taxYear.toYYYY_YY}"
 
   // TODO Move to GetBusinessDetailsConnector
   def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response] = {
@@ -117,4 +129,17 @@ class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppCon
     val context = mkIFSMetadata(IFSApiName.Api1803, url)
     get[Api1803Response](http, context)
   }
+
+  def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): Future[Api1638Response] = {
+    val url     = disclosuresSubmission(ctx.nino, ctx.taxYear)
+    val context = mkIFSMetadata(IFSApiName.Api1638, url)
+    put[RequestSchemaAPI1638, Api1638Response](http, context, data)
+  }
+
+  def getDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response] = ???
+
+  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response] = ???
+
 }
