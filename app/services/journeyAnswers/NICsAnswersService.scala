@@ -39,10 +39,10 @@ class NICsAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector)(impl
   def saveAnswers(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       maybeClass2Nics <- getNicsRequestBody(ctx, answers)
-      _               <- upsertData(maybeClass2Nics, ctx)
+      _               <- upsertOrDeleteData(maybeClass2Nics, ctx)
     } yield ()
 
-  private def upsertData(maybeClass2Nics: Option[RequestSchemaAPI1638], ctx: JourneyContextWithNino)(implicit
+  private def upsertOrDeleteData(maybeClass2Nics: Option[RequestSchemaAPI1638], ctx: JourneyContextWithNino)(implicit
       hc: HeaderCarrier): ApiResultT[RequestSchemaAPI1638] = {
     val result = maybeClass2Nics match {
       case Some(data) => connector.upsertDisclosuresSubmission(ctx, data)

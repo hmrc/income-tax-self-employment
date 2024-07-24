@@ -27,6 +27,7 @@ import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
+import models.error.DownstreamError
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.Logging
 
@@ -45,12 +46,11 @@ trait SelfEmploymentConnector {
   def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response]
   def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response]
 
-  def getDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response]
+  def getDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1639Response]
   def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): Future[Api1638Response]
   def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response]
-
 }
 
 object SelfEmploymentConnector {
@@ -62,6 +62,7 @@ object SelfEmploymentConnector {
   type Api1895Response = ApiResponse[api_1895.response.AmendSEPeriodSummaryResponse]
   type Api1965Response = ApiResponse[api_1965.ListSEPeriodSummariesResponse]
   type Api1638Response = ApiResponse[api_1638.RequestSchemaAPI1638]
+  type Api1639Response = ApiResponse[api_1639.SuccessResponseAPI1639]
 }
 
 @Singleton
@@ -138,8 +139,19 @@ class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppCon
     put[RequestSchemaAPI1638, Api1638Response](http, context, data)
   }
 
-  def getDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response] = ???
+  def getDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1639Response] = {
+    val url     = disclosuresSubmission(ctx.nino, ctx.taxYear)
+    val context = mkIFSMetadata(IFSApiName.Api1639, url)
+    get[Api1639Response](http, context)
+  }
 
-  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response] = ???
+  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response] = {
+    val url     = disclosuresSubmission(ctx.nino, ctx.taxYear)
+    val context = mkIFSMetadata(IFSApiName.Api1640, url)
+
+    delete[Either[DownstreamError, Unit]](http, context)
+
+    ???
+  }
 
 }

@@ -18,6 +18,7 @@ package models.connector.api_1638
 
 import models.frontend.nics.NICsAnswers
 import play.api.libs.json._
+import models.connector.api_1639
 
 /** Represents the Swagger definition for requestSchemaAPI1638.
   */
@@ -35,12 +36,29 @@ object RequestSchemaAPI1638 {
     * @return
     *   None if the object needs to be DELETED or Some() if it needs to be updated via PUT
     */
-  def mkRequestBody(answers: NICsAnswers, existingData: RequestSchemaAPI1638): Option[RequestSchemaAPI1638] =
+  def mkRequestBody(answers: NICsAnswers, existingDataFromGet: api_1639.SuccessResponseAPI1639): Option[RequestSchemaAPI1638] = {
+    val bodyForPut = RequestSchemaAPI1638(
+      taxAvoidance = existingDataFromGet.taxAvoidance.map { taxAvoidance =>
+        taxAvoidance.map { taxAvoidanceInner =>
+          RequestSchemaAPI1638TaxAvoidanceInner(
+            srn = taxAvoidanceInner.srn,
+            taxYear = taxAvoidanceInner.taxYear
+          )
+        }
+      },
+      class2Nics = existingDataFromGet.class2Nics.map { class2Nics =>
+        RequestSchemaAPI1638Class2Nics(
+          class2VoluntaryContributions = class2Nics.class2VoluntaryContributions
+        )
+      }
+    )
+
     if (answers.class2NICs) {
-      Some(existingData.copy(class2Nics = Some(RequestSchemaAPI1638Class2Nics(Some(true)))))
-    } else if (existingData.taxAvoidance.isDefined) {
-      Some(existingData.copy(class2Nics = Some(RequestSchemaAPI1638Class2Nics(None))))
+      Some(bodyForPut.copy(class2Nics = Some(RequestSchemaAPI1638Class2Nics(Some(true)))))
+    } else if (bodyForPut.taxAvoidance.isDefined) {
+      Some(bodyForPut.copy(class2Nics = Some(RequestSchemaAPI1638Class2Nics(None))))
     } else {
       None
     }
+  }
 }

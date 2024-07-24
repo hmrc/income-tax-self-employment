@@ -21,7 +21,7 @@ import connectors.DownstreamParser.CommonDownstreamParser
 import models.error.DownstreamError
 import models.logging.ConnectorResponseInfo
 import play.api.Logger
-import play.api.http.Status.{CREATED, OK}
+import play.api.http.Status.{ACCEPTED, CREATED, NOT_FOUND, NO_CONTENT, OK}
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
@@ -36,7 +36,7 @@ package object connector {
     ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
 
     response.status match {
-      case OK | CREATED =>
+      case OK | CREATED | ACCEPTED =>
         response.json
           .validate[A]
           .fold[Either[DownstreamError, A]](
@@ -45,6 +45,15 @@ package object connector {
           )
 
       case _ => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+    }
+  }
+
+  implicit def httpUnitReads(implicit logger: Logger): HttpReads[ApiResponse[Unit]] = (method: String, url: String, response: HttpResponse) => {
+    ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
+
+    response.status match {
+      case NOT_FOUND | NO_CONTENT | OK | ACCEPTED => Right(())
+      case _                                      => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
     }
   }
 

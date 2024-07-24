@@ -52,4 +52,13 @@ package object connectors {
     ConnectorRequestInfo("PUT", context.url, context.api).logRequestWithBody(logger, body)
     http.PUT[Req, Resp](context.url, body)(writes, reads, context.enrichedHeaderCarrier, ec)
   }
+
+  def delete[Resp: HttpReads](http: HttpClient, context: IntegrationContext)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext,
+      logger: Logger): Future[Resp] = {
+    val reads = implicitly[HttpReads[Resp]]
+    ConnectorRequestInfo("DELETE", context.url, context.api).logRequest(logger)
+    http.DELETE[Resp](context.url)(reads, context.enrichedHeaderCarrier, ec)
+  }
 }
