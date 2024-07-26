@@ -27,7 +27,6 @@ import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
-import models.error.DownstreamError
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.Logging
 
@@ -50,7 +49,7 @@ trait SelfEmploymentConnector {
   def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): Future[Api1638Response]
-  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response]
+  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ApiResponse[Unit]]
 }
 
 object SelfEmploymentConnector {
@@ -145,13 +144,11 @@ class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppCon
     get[Api1639Response](http, context)
   }
 
-  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response] = {
+  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ApiResponse[Unit]] = {
     val url     = disclosuresSubmission(ctx.nino, ctx.taxYear)
     val context = mkIFSMetadata(IFSApiName.Api1640, url)
 
-    delete[Either[DownstreamError, Unit]](http, context)
-
-    ???
+    delete(http, context)
   }
 
 }

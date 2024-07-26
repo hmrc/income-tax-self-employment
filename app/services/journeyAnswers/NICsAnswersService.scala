@@ -43,9 +43,9 @@ class NICsAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector)(impl
     } yield ()
 
   private def upsertOrDeleteData(maybeClass2Nics: Option[RequestSchemaAPI1638], ctx: JourneyContextWithNino)(implicit
-      hc: HeaderCarrier): ApiResultT[RequestSchemaAPI1638] = {
+      hc: HeaderCarrier): ApiResultT[Unit] = {
     val result = maybeClass2Nics match {
-      case Some(data) => connector.upsertDisclosuresSubmission(ctx, data)
+      case Some(data) => connector.upsertDisclosuresSubmission(ctx, data).map(_.map(_ => ()))
       case None       => connector.deleteDisclosuresSubmission(ctx)
     }
 

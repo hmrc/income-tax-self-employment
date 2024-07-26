@@ -17,13 +17,11 @@
 package models.connector.api_1639
 
 import play.api.libs.json._
-import java.time.OffsetDateTime
 
 /**
   * Represents the Swagger definition for successResponseAPI1639.
   */
 case class SuccessResponseAPI1639(
-  submittedOn: OffsetDateTime,
   taxAvoidance: Option[List[SuccessResponseAPI1639TaxAvoidanceInner]],
   class2Nics: Option[SuccessResponseAPI1639Class2Nics]
 )
