@@ -22,15 +22,15 @@ import models.database.income.IncomeStorageAnswers
 import play.api.libs.json.{Json, OFormat}
 
 case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
-                                nonTurnoverIncomeAmount: Option[BigDecimal],
-                                turnoverIncomeAmount: BigDecimal,
+                                nonTurnoverIncomeAmount: Option[BigDecimal], // amend, create
+                                turnoverIncomeAmount: BigDecimal, // amend, create
                                 anyOtherIncome: Boolean,
-                                otherIncomeAmount: Option[BigDecimal],
+                                otherIncomeAmount: Option[BigDecimal], // upsert
                                 turnoverNotTaxable: Option[Boolean],
-                                notTaxableAmount: Option[BigDecimal],
+                                notTaxableAmount: Option[BigDecimal], // upsert
                                 tradingAllowance: TradingAllowance,
                                 howMuchTradingAllowance: Option[HowMuchTradingAllowance],
-                                tradingAllowanceAmount: Option[BigDecimal])
+                                tradingAllowanceAmount: Option[BigDecimal]) // upsert
 
 object IncomeJourneyAnswers {
   implicit val formats: OFormat[IncomeJourneyAnswers] = Json.format[IncomeJourneyAnswers]

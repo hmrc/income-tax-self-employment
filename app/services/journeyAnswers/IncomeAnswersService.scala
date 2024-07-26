@@ -22,9 +22,10 @@ import connectors.SelfEmploymentConnector
 import models.common.JourneyName.{ExpensesTailoring, Income}
 import models.common.TaxYear.{endDate, startDate}
 import models.common._
+import models.connector.api_1786.DeductionsType
 import models.connector.api_1802.request._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
-import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
+import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Deductions, Incomes}
 import models.connector.api_1965.ListSEPeriodSummariesResponse
 import models.database.income.IncomeStorageAnswers
 import models.domain.ApiResultT
@@ -70,9 +71,10 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
     val storageAnswers = IncomeStorageAnswers.fromJourneyAnswers(answers)
 
     val upsertBody = CreateAmendSEAnnualSubmissionRequestBody.mkRequest(
-      Some(AnnualAdjustments.empty.copy(includedNonTaxableProfits = answers.notTaxableAmount, outstandingBusinessIncome = answers.otherIncomeAmount)),
-      Some(AnnualAllowances.empty.copy(tradingIncomeAllowance = answers.tradingAllowanceAmount)),
-      None
+      annualAdjustments = Some(
+        AnnualAdjustments.empty.copy(includedNonTaxableProfits = answers.notTaxableAmount, outstandingBusinessIncome = answers.otherIncomeAmount)),
+      annualAllowances = Some(AnnualAllowances.empty.copy(tradingIncomeAllowance = answers.tradingAllowanceAmount)),
+      annualNonFinancials = None
     )
     val maybeUpsertData = upsertBody.map(CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, _))
 
@@ -103,15 +105,28 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       val createIncome = IncomesType(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount)
       val createBody   = CreateSEPeriodSummaryRequestBody(startDate(taxYear), endDate(taxYear), Some(FinancialsType(createIncome.some, None)))
       val createData   = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, createBody)
-      connector.createSEPeriodSummary(createData)
-    } else {
-      val amendIncome = Incomes(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount, None)
-      val amendBody   = AmendSEPeriodSummaryRequestBody(amendIncome.some, None)
-      val amendData   = AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, amendBody)
 
-      connector.amendSEPeriodSummary(amendData)
+      EitherT(connector.createSEPeriodSummary(createData)).leftAs[ServiceError].void
+    } else {
+      val amendIncome = Incomes(
+        turnover = answers.turnoverIncomeAmount.some,
+        other = answers.nonTurnoverIncomeAmount,
+        taxTakenOffTradingIncome = None
+      )
+
+      for {
+        periodicSummaryDetails <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
+        existingDeductions: Option[DeductionsType] = periodicSummaryDetails.financials.deductions
+        updatedDeductions = answers.tradingAllowance match {
+          case UseTradingAllowance => None
+          case DeclareExpenses     => existingDeductions
+        }
+        amendBody = AmendSEPeriodSummaryRequestBody(amendIncome.some, updatedDeductions.map(Deductions.fromApi1786))
+        amendData = AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, amendBody)
+        _ <- EitherT(connector.amendSEPeriodSummary(amendData)).leftAs[ServiceError]
+      } yield ()
     }
 
-    EitherT(result).leftAs[ServiceError].void
+    result
   }
 }

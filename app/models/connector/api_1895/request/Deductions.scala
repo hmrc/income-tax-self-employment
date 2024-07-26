@@ -16,6 +16,7 @@
 
 package models.connector.api_1895.request
 
+import models.connector.api_1786.DeductionsType
 import play.api.libs.json.{Format, Json}
 
 case class Deductions(costOfGoods: Option[SelfEmploymentDeductionsDetailPosNegType],
@@ -37,4 +38,6 @@ case class Deductions(costOfGoods: Option[SelfEmploymentDeductionsDetailPosNegTy
 
 object Deductions {
   implicit lazy val deductionsTypeJsonFormat: Format[Deductions] = Json.format[Deductions]
+
+  def fromApi1786(source: DeductionsType): Deductions = ???
 }
