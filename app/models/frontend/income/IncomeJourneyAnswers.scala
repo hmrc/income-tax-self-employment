@@ -16,14 +16,13 @@
 
 package models.frontend.income
 
-import models.connector.api_1803
-import models.connector.api_1786
+import models.connector.{api_1786, api_1803}
 import models.database.income.IncomeStorageAnswers
 import play.api.libs.json.{Json, OFormat}
 
 case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
                                 nonTurnoverIncomeAmount: Option[BigDecimal], // amend, create
-                                turnoverIncomeAmount: BigDecimal, // amend, create
+                                turnoverIncomeAmount: BigDecimal,            // amend, create
                                 anyOtherIncome: Boolean,
                                 otherIncomeAmount: Option[BigDecimal], // upsert
                                 turnoverNotTaxable: Option[Boolean],

@@ -40,7 +40,8 @@ object Deductions {
   implicit lazy val deductionsTypeJsonFormat: Format[Deductions] = Json.format[Deductions]
 
   def fromApi1786(source: DeductionsType): Deductions =
-    Deductions(costOfGoods = SelfEmploymentDeductionsDetailPosNegType.fromApi1786(source.costOfGoods),
+    Deductions(
+      costOfGoods = SelfEmploymentDeductionsDetailPosNegType.fromApi1786(source.costOfGoods),
       constructionIndustryScheme = SelfEmploymentDeductionsDetailType.fromApi1786(source.constructionIndustryScheme),
       staffCosts = SelfEmploymentDeductionsDetailType.fromApi1786(source.staffCosts),
       travelCosts = SelfEmploymentDeductionsDetailType.fromApi1786(source.travelCosts),
