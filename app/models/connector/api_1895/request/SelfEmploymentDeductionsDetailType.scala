@@ -17,6 +17,7 @@
 package models.connector.api_1895.request
 
 import play.api.libs.json.{Format, Json}
+import models.connector.api_1786.{SelfEmploymentDeductionsDetailType => SelfEmploymentDeductionsDetailType1786}
 
 /** Represents the Swagger definition for selfEmploymentDeductionsDetailType.
   *
@@ -32,4 +33,6 @@ object SelfEmploymentDeductionsDetailType {
   implicit lazy val selfEmploymentDeductionsDetailTypeJsonFormat: Format[SelfEmploymentDeductionsDetailType] =
     Json.format[SelfEmploymentDeductionsDetailType]
 
+  def fromApi1786(source: Option[SelfEmploymentDeductionsDetailType1786]): Option[SelfEmploymentDeductionsDetailType] =
+    source.map(x => SelfEmploymentDeductionsDetailType(x.amount, x.disallowableAmount))
 }

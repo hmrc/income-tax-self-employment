@@ -22,7 +22,6 @@ import connectors.SelfEmploymentConnector
 import models.common.JourneyName.{ExpensesTailoring, Income}
 import models.common.TaxYear.{endDate, startDate}
 import models.common._
-import models.connector.api_1786.DeductionsType
 import models.connector.api_1802.request._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Deductions, Incomes}
@@ -116,10 +115,9 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
 
       for {
         periodicSummaryDetails <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
-        existingDeductions: Option[DeductionsType] = periodicSummaryDetails.financials.deductions
         updatedDeductions = answers.tradingAllowance match {
           case UseTradingAllowance => None
-          case DeclareExpenses     => existingDeductions
+          case DeclareExpenses     => periodicSummaryDetails.financials.deductions
         }
         amendBody = AmendSEPeriodSummaryRequestBody(amendIncome.some, updatedDeductions.map(Deductions.fromApi1786))
         amendData = AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, amendBody)

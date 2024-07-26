@@ -39,5 +39,22 @@ case class Deductions(costOfGoods: Option[SelfEmploymentDeductionsDetailPosNegTy
 object Deductions {
   implicit lazy val deductionsTypeJsonFormat: Format[Deductions] = Json.format[Deductions]
 
-  def fromApi1786(source: DeductionsType): Deductions = ???
+  def fromApi1786(source: DeductionsType): Deductions =
+    Deductions(costOfGoods = SelfEmploymentDeductionsDetailPosNegType.fromApi1786(source.costOfGoods),
+      constructionIndustryScheme = SelfEmploymentDeductionsDetailType.fromApi1786(source.constructionIndustryScheme),
+      staffCosts = SelfEmploymentDeductionsDetailType.fromApi1786(source.staffCosts),
+      travelCosts = SelfEmploymentDeductionsDetailType.fromApi1786(source.travelCosts),
+      premisesRunningCosts = SelfEmploymentDeductionsDetailPosNegType.fromApi1786(source.premisesRunningCosts),
+      maintenanceCosts = SelfEmploymentDeductionsDetailPosNegType.fromApi1786(source.maintenanceCosts),
+      adminCosts = SelfEmploymentDeductionsDetailType.fromApi1786(source.adminCosts),
+      businessEntertainmentCosts = SelfEmploymentDeductionsDetailType.fromApi1786(source.businessEntertainmentCosts),
+      advertisingCosts = SelfEmploymentDeductionsDetailType.fromApi1786(source.advertisingCosts),
+      interest = SelfEmploymentDeductionsDetailPosNegType.fromApi1786(source.interest),
+      financialCharges = SelfEmploymentDeductionsDetailPosNegType.fromApi1786(source.financialCharges),
+      badDebt = SelfEmploymentDeductionsDetailPosNegType.fromApi1786(source.badDebt),
+      professionalFees = SelfEmploymentDeductionsDetailAllowablePosNegType.fromApi1786(source.professionalFees),
+      depreciation = SelfEmploymentDeductionsDetailPosNegType.fromApi1786(source.depreciation),
+      other = SelfEmploymentDeductionsDetailType.fromApi1786(source.other),
+      simplifiedExpenses = source.simplifiedExpenses
+    )
 }
