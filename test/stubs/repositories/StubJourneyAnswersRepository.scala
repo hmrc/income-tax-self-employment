@@ -24,13 +24,12 @@ import models.domain.{ApiResultT, Business}
 import models.error.ServiceError
 import models.frontend.TaskList
 import models.jsonAs
-import play.api.libs.json.{JsObject, JsValue, Json, Reads}
+import org.scalatest.EitherValues._
+import play.api.libs.json.{JsObject, JsValue, Reads}
 import repositories.JourneyAnswersRepository
-import services.journeyAnswers.getPersistedAnswers
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
-import org.scalatest.EitherValues._
 
 case class StubJourneyAnswersRepository(
     getAnswer: Option[JourneyAnswers] = None,
