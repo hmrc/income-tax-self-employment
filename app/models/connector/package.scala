@@ -16,13 +16,12 @@
 
 package models
 
-import cats.implicits.catsSyntaxEitherId
 import connectors.DownstreamParser
 import connectors.DownstreamParser.CommonDownstreamParser
 import models.error.DownstreamError
 import models.logging.ConnectorResponseInfo
 import play.api.Logger
-import play.api.http.Status.{ACCEPTED, CREATED, NOT_FOUND, NO_CONTENT, OK}
+import play.api.http.Status._
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
@@ -34,6 +33,8 @@ package object connector {
 
   val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
+  /** It treats any non OK/Created/Accepted as an error
+    */
   implicit def commonReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[A]] = (method: String, url: String, response: HttpResponse) => {
     ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
 
@@ -43,6 +44,8 @@ package object connector {
     }
   }
 
+  /** It treats any non OK/Created/Accepted as an error, and return Unit otherwise
+    */
   def commonNoBodyResponse(implicit logger: Logger): HttpReads[ApiResponse[Unit]] = (method: String, url: String, response: HttpResponse) => {
     ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
 
@@ -52,6 +55,8 @@ package object connector {
     }
   }
 
+  /** It treats NOT_FOUND / OK / CREATED / ACCEPTED as correct response and returns None
+    */
   def commonGetReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[Option[A]]] =
     (method: String, url: String, response: HttpResponse) => {
       ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
@@ -63,6 +68,8 @@ package object connector {
       }
     }
 
+  /** It treats NOT_FOUND / NO_CONTENT / OK / ACCEPTED as correct response and returns None
+    */
   def commonDeleteReads(implicit logger: Logger): HttpReads[ApiResponse[Unit]] = (method: String, url: String, response: HttpResponse) => {
     ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
 

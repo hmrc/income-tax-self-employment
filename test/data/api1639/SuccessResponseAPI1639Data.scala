@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-package models.connector.api_1638
+package data.api1639
 
-import play.api.libs.json._
+import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics}
 
-/** Represents the Swagger definition for errorResponse_failures_inner.
-  * @param code
-  *   Keys for all the errors returned
-  * @param reason
-  *   A simple description for the failure
-  */
-case class ErrorResponseFailuresInner(
-    code: String,
-    reason: String
-)
-
-object ErrorResponseFailuresInner {
-  implicit lazy val errorResponseFailuresInnerJsonFormat: Format[ErrorResponseFailuresInner] = Json.format[ErrorResponseFailuresInner]
+object SuccessResponseAPI1639Data {
+  val class2NicsTrue = SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))
 }

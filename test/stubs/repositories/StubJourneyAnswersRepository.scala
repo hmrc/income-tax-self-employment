@@ -23,10 +23,12 @@ import models.database.JourneyAnswers
 import models.domain.{ApiResultT, Business}
 import models.error.ServiceError
 import models.frontend.TaskList
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Reads}
 import repositories.JourneyAnswersRepository
+import services.journeyAnswers.getPersistedAnswers
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
 
 case class StubJourneyAnswersRepository(
     getAnswer: Option[JourneyAnswers] = None,
@@ -53,4 +55,10 @@ case class StubJourneyAnswersRepository(
 
   def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): ApiResultT[TaskList] =
     EitherT.fromEither[Future](getAllResult)
+
+  def getAnswers[A: Reads](ctx: JourneyContext)(implicit ct: ClassTag[A]): ApiResultT[Option[A]] =
+    for {
+      row            <- get(ctx)
+      maybeDbAnswers <- getPersistedAnswers[A](row)
+    } yield maybeDbAnswers
 }

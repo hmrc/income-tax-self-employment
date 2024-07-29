@@ -17,6 +17,7 @@
 package models.frontend.nics
 
 import models.connector.api_1639.SuccessResponseAPI1639
+import models.database.nics.NICsStorageAnswers
 import play.api.libs.json.{Format, Json}
 
 case class NICsAnswers(class2NICs: Boolean)
@@ -24,15 +25,15 @@ case class NICsAnswers(class2NICs: Boolean)
 object NICsAnswers {
   implicit val formats: Format[NICsAnswers] = Json.format[NICsAnswers]
 
-  def fromApi1639(maybeExistingAnswers: Option[SuccessResponseAPI1639]): Option[NICsAnswers] = {
+  def mkPriorData(maybeApiAnswers: Option[SuccessResponseAPI1639], maybeDbAnswers: Option[NICsStorageAnswers]): Option[NICsAnswers] = {
     val existingClass2Nics = for {
-      answers     <- maybeExistingAnswers
+      answers     <- maybeApiAnswers
       nicsAnswers <- answers.class2Nics
       class2Nics  <- nicsAnswers.class2VoluntaryContributions
     } yield class2Nics
 
-    existingClass2Nics.map(NICsAnswers(_))
-
+    val maybeNics = existingClass2Nics.map(NICsAnswers(_))
+    maybeNics.orElse(maybeDbAnswers.map(x => NICsAnswers(x.class2NICs)))
   }
 
 }

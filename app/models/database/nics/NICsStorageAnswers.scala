@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
-package models.connector.api_1638
+package models.database.nics
 
-import play.api.libs.json._
-import scala.collection.immutable.Set
+import models.frontend.nics.NICsAnswers
+import play.api.libs.json.{Json, OFormat}
 
-/** Represents the Swagger definition for errorResponse.
+/** The API does not support false. We store only false here.
   */
-case class ErrorResponse(
-    failures: Set[ErrorResponseFailuresInner]
-)
+final case class NICsStorageAnswers(class2NICs: Boolean)
 
-object ErrorResponse {
-  implicit lazy val errorResponseJsonFormat: Format[ErrorResponse] = Json.format[ErrorResponse]
+object NICsStorageAnswers {
+  implicit val format: OFormat[NICsStorageAnswers] = Json.format[NICsStorageAnswers]
+
+  def fromJourneyAnswers(answers: NICsAnswers): NICsStorageAnswers =
+    NICsStorageAnswers(answers.class2NICs)
 }
