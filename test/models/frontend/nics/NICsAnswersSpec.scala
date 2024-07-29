@@ -34,12 +34,12 @@ class NICsAnswersSpec extends AnyWordSpecLike {
     }
 
     "return class2 from the DB if does not exist in API" in {
-      val result = NICsAnswers.mkPriorData(None, Some(NICsStorageAnswers(false))).value
+      val result = NICsAnswers.mkPriorData(None, Some(NICsStorageAnswers(Some(false)))).value
       assert(result === NICsAnswers(false))
     }
 
     "ignore value from DB if it exist in the API" in {
-      val result = NICsAnswers.mkPriorData(Some(class2NicsTrue), Some(NICsStorageAnswers(false))).value
+      val result = NICsAnswers.mkPriorData(Some(class2NicsTrue), Some(NICsStorageAnswers(Some(false)))).value
       assert(result === NICsAnswers(true))
     }
 

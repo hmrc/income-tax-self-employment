@@ -33,7 +33,7 @@ object NICsAnswers {
     } yield class2Nics
 
     val maybeNics = existingClass2Nics.map(NICsAnswers(_))
-    maybeNics.orElse(maybeDbAnswers.map(x => NICsAnswers(x.class2NICs)))
+    maybeNics.orElse(maybeDbAnswers.flatMap(_.class2NICs.map(NICsAnswers(_))))
   }
 
 }

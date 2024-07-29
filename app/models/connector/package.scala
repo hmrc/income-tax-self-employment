@@ -33,7 +33,7 @@ package object connector {
 
   val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
-  /** It treats any non OK/Created/Accepted as an error
+  /** It treats any non OK / CREATED / ACCEPTED as an error
     */
   implicit def commonReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[A]] = (method: String, url: String, response: HttpResponse) => {
     ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
@@ -44,14 +44,14 @@ package object connector {
     }
   }
 
-  /** It treats any non OK/Created/Accepted as an error, and return Unit otherwise
+  /** It treats any non OK / CREATED / NO_CONTENT / ACCEPTED as an error, and return Unit otherwise
     */
   def commonNoBodyResponse(implicit logger: Logger): HttpReads[ApiResponse[Unit]] = (method: String, url: String, response: HttpResponse) => {
     ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
 
     response.status match {
-      case OK | CREATED | ACCEPTED => Right(())
-      case _                       => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+      case OK | NO_CONTENT | CREATED | ACCEPTED => Right(())
+      case _                                    => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
     }
   }
 
@@ -63,7 +63,7 @@ package object connector {
 
       response.status match {
         case OK | CREATED | ACCEPTED => toA(response, method, url).map(Some(_))
-        case NOT_FOUND               => Right(None)
+        case NOT_FOUND | NO_CONTENT  => Right(None)
         case _                       => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
       }
     }

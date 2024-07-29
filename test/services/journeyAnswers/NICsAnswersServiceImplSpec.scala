@@ -23,7 +23,7 @@ import models.database.nics.NICsStorageAnswers
 import models.frontend.nics.NICsAnswers
 import org.scalatest.EitherValues._
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import stubs.connectors.StubSelfEmploymentConnector
 import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec.{currTaxYearEnd, hc, journeyCtxWithNino}
@@ -41,13 +41,13 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
 
       assert(result.isRight)
       assert(connector.upsertDisclosuresSubmissionData === Some(RequestSchemaAPI1638(None, Some(RequestSchemaAPI1638Class2Nics(Some(true))))))
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(answers)))
+      assert(repository.lastUpsertedAnswer === Some(JsObject.empty))
     }
 
     val disclosuresWithOtherFields =
       SuccessResponseAPI1639(Some(List(SuccessResponseAPI1639TaxAvoidanceInner("srn", currTaxYearEnd.toUpperCase))), None)
 
-    "setting class2 does not override other fields" in new StubbedService {
+    "setting class2 does not override other fields and true is not stored in DB" in new StubbedService {
       override val connector = StubSelfEmploymentConnector(getDisclosuresSubmissionResult = Some(disclosuresWithOtherFields).asRight)
       val answers            = NICsAnswers(true)
 
@@ -59,7 +59,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
           RequestSchemaAPI1638(
             Some(List(RequestSchemaAPI1638TaxAvoidanceInner("srn", currTaxYearEnd.toUpperCase()))),
             Some(RequestSchemaAPI1638Class2Nics(Some(true))))))
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(answers)))
+      assert(repository.lastUpsertedAnswer === Some(JsObject.empty))
     }
 
     "settings class2 to None when class2 is false and there are other fields in the object" in new StubbedService {
@@ -77,7 +77,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
           )
         )
       )
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(answers)))
+      assert(repository.lastUpsertedAnswer === Some(Json.toJson(NICsStorageAnswers(Some(false)))))
     }
 
     "call DELETE if setting to false and the object is empty" in new StubbedService {
@@ -104,7 +104,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
       override val connector = StubSelfEmploymentConnector(getDisclosuresSubmissionResult =
         Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))).asRight)
       override val repository = StubJourneyAnswersRepository(
-        getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(false))))
+        getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(Some(false)))))
       )
 
       val result = service.getAnswers(journeyCtxWithNino).value.futureValue.value
@@ -114,7 +114,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
 
     "return database version if no API data exist" in new StubbedService {
       override val repository = StubJourneyAnswersRepository(
-        getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(false))))
+        getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(Some(false)))))
       )
 
       val result = service.getAnswers(journeyCtxWithNino).value.futureValue.value

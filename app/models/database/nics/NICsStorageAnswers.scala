@@ -21,11 +21,14 @@ import play.api.libs.json.{Json, OFormat}
 
 /** The API does not support false. We store only false here.
   */
-final case class NICsStorageAnswers(class2NICs: Boolean)
+final case class NICsStorageAnswers(class2NICs: Option[Boolean])
 
 object NICsStorageAnswers {
   implicit val format: OFormat[NICsStorageAnswers] = Json.format[NICsStorageAnswers]
 
+  /** We send class2=true to API, so we don't store it. We don't send false, so we must store it based on our rule to store everything not sent
+    * downstream
+    */
   def fromJourneyAnswers(answers: NICsAnswers): NICsStorageAnswers =
-    NICsStorageAnswers(answers.class2NICs)
+    if (answers.class2NICs) NICsStorageAnswers(None) else NICsStorageAnswers(Some(false))
 }
