@@ -65,6 +65,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       maybeDbAnswers <- getPersistedAnswers[IncomeStorageAnswers](row)
     } yield maybeDbAnswers
 
+  // TODO: We need to confirm what actual APIs in QA returns for this, based on that we may have to change `annualNonFinancials` value. SASS-9292 is the ticket for this.
   def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     import ctx._
     val storageAnswers = IncomeStorageAnswers.fromJourneyAnswers(answers)
@@ -73,7 +74,8 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       annualAdjustments = Some(
         AnnualAdjustments.empty.copy(includedNonTaxableProfits = answers.notTaxableAmount, outstandingBusinessIncome = answers.otherIncomeAmount)),
       annualAllowances = Some(AnnualAllowances.empty.copy(tradingIncomeAllowance = answers.tradingAllowanceAmount)),
-      annualNonFinancials = None
+      annualNonFinancials =
+        None // TODO: Verify in QA if we need to set it to empty or copy values if exists. And link between annualNonFinancials and annualAllowances
     )
     val maybeUpsertData = upsertBody.map(CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, _))
 
@@ -94,6 +96,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       case DeclareExpenses     => EitherT.rightT[Future, ServiceError](())
     }
 
+  // TODO: We need to confirm what actual APIs in QA returns for this, based on that we may have to change `taxTakenOffTradingIncome` value. SASS-9292 is the ticket for this.
   private def upsertPeriodSummary(response: ListSEPeriodSummariesResponse, ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit
       hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
     import ctx._
@@ -110,7 +113,8 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       val amendIncome = Incomes(
         turnover = answers.turnoverIncomeAmount.some,
         other = answers.nonTurnoverIncomeAmount,
-        taxTakenOffTradingIncome = None
+        taxTakenOffTradingIncome =
+          None // TODO: Verify in QA if we need to set it to empty or copy values if exists. And link between taxTakenOffTradingIncome and amendIncome.
       )
 
       for {
