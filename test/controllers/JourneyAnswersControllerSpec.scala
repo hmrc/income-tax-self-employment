@@ -45,6 +45,7 @@ import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCosts
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
+import models.frontend.nics.NICsAnswers
 import models.frontend.prepop.AdjustmentsPrepopAnswers.fromAnnualAdjustmentsType
 import org.scalacheck.Gen
 import org.scalamock.handlers.{CallHandler2, CallHandler3}
@@ -62,16 +63,24 @@ import scala.concurrent.Future
 
 class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckPropertyChecks with TableDrivenPropertyChecks {
 
-  val underTest = new JourneyAnswersController(
-    auth = mockAuthorisedAction,
-    cc = stubControllerComponents,
-    abroadAnswersService = StubAbroadAnswersService(),
-    incomeService = StubIncomeAnswersService(),
-    expensesService = StubExpensesAnswersService(),
-    capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
-    prepopAnswersService = StubPrepopAnswersService(),
-    nicsAnswersService = StubNICsAnswersService()
-  )
+  private def mkUnderTest(abroadAnswersService: StubAbroadAnswersService = StubAbroadAnswersService(),
+                          incomeService: StubIncomeAnswersService = StubIncomeAnswersService(),
+                          expensesService: StubExpensesAnswersService = StubExpensesAnswersService(),
+                          capitalAllowancesService: StubCapitalAllowancesAnswersAnswersService = StubCapitalAllowancesAnswersAnswersService(),
+                          prepopAnswersService: StubPrepopAnswersService = StubPrepopAnswersService(),
+                          nicsAnswersService: StubNICsAnswersService = StubNICsAnswersService()): JourneyAnswersController =
+    new JourneyAnswersController(
+      auth = mockAuthorisedAction,
+      cc = stubControllerComponents,
+      abroadAnswersService = abroadAnswersService,
+      incomeService = incomeService,
+      expensesService = expensesService,
+      capitalAllowancesService = capitalAllowancesService,
+      prepopAnswersService = prepopAnswersService,
+      nicsAnswersService = nicsAnswersService
+    )
+
+  val underTest = mkUnderTest()
 
   private def checkNoContent(action: Action[AnyContent]): Unit =
     behave like testRoute(
@@ -93,23 +102,15 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       nicsAnswersService = StubNICsAnswersService()
     )
 
+  // TODO It's better to use lower testNoContent + testGetReturnAnswers + testSaveAnswers directly
   private def checkGetAndSave[A: Writes](actionForGetNoContent: Action[AnyContent],
                                          actionForGet: Action[AnyContent],
                                          expectedBodyForGet: String,
                                          dataGen: Gen[A],
                                          actionForSave: Action[AnyContent]): Unit = {
-    s"Get return $NO_CONTENT if there is no answers" in {
-      checkNoContent(actionForGetNoContent)
-    }
 
-    s"Get return answers" in {
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = OK,
-        expectedBody = expectedBodyForGet,
-        methodBlock = () => actionForGet
-      )
-    }
+    testNoContent(actionForGetNoContent)
+    testGetReturnAnswers(actionForGet, expectedBodyForGet)
 
     s"Save answers and return a $NO_CONTENT when successful" in {
       forAll(dataGen) { data =>
@@ -122,6 +123,31 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       }
     }
   }
+
+  def testNoContent(actionForGetNoContent: Action[AnyContent]): Unit =
+    s"Get return $NO_CONTENT if there is no answers" in {
+      checkNoContent(actionForGetNoContent)
+    }
+
+  def testGetReturnAnswers(actionForGet: Action[AnyContent], expectedBodyForGet: String): Unit =
+    s"Get return answers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = OK,
+        expectedBody = expectedBodyForGet,
+        methodBlock = () => actionForGet
+      )
+    }
+
+  def testSaveAnswers[A: Writes](actionForSave: Action[AnyContent], data: A): Unit =
+    s"Save answers and return a $NO_CONTENT when successful" in {
+      behave like testRoute(
+        request = buildRequest(data),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => actionForSave
+      )
+    }
 
   "SelfEmploymentAbroadAnswers" should {
     s"Get return $NO_CONTENT if there is no answers" in {
@@ -816,6 +842,15 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       dataGen = structuresBuildingsWithYeses,
       actionForSave = underTest.saveStructuresBuildings(currTaxYear, businessId, nino)
     )
+  }
+
+  "NationalInsuranceContributions" should {
+    val answers            = NICsAnswers(true)
+    val controllerWithData = mkUnderTest(nicsAnswersService = StubNICsAnswersService(getAnswersRes = Right(Some(answers))))
+
+    testNoContent(underTest.getNationalInsuranceContributions(currTaxYear, businessId, nino))
+    testSaveAnswers(underTest.saveNationalInsuranceContributions(currTaxYear, businessId, nino), answers)
+    testGetReturnAnswers(controllerWithData.getNationalInsuranceContributions(currTaxYear, businessId, nino), Json.toJson(answers).toString())
   }
 
   trait GetExpensesTest[T] {

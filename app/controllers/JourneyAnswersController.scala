@@ -424,16 +424,14 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     handleOptionalApiResult(capitalAllowancesService.getStructuresBuildings(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
-  // API 1638
   def saveNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[NICsAnswers](taxYear, businessId, nino) { (ctx, answers) =>
       nicsAnswersService.saveAnswers(ctx, answers).map(_ => NoContent)
     }
   }
 
-//  def getNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-////    handleOptionalApiResult(capitalAllowancesService.getStructuresBuildings(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
-//    ???
-//  }
+  def getNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(nicsAnswersService.getAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
 
 }

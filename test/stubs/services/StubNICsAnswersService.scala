@@ -16,13 +16,22 @@
 
 package stubs.services
 
+import cats.data.EitherT
 import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
+import models.error.ServiceError
 import models.frontend.nics.NICsAnswers
 import services.journeyAnswers.NICsAnswersService
 import uk.gov.hmrc.http.HeaderCarrier
 
-case class StubNICsAnswersService() extends NICsAnswersService {
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-  def saveAnswers(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = ???
+case class StubNICsAnswersService(getAnswersRes: Either[ServiceError, Option[NICsAnswers]] = Right(None)) extends NICsAnswersService {
+
+  def saveAnswers(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    EitherT.rightT[Future, ServiceError](())
+
+  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NICsAnswers]] =
+    EitherT.fromEither[Future](getAnswersRes)
 }

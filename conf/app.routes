@@ -97,4 +97,4 @@ POST        /:taxYear/:businessId/capital-allowances-structures-buildings/:nino/
 GET         /:taxYear/:businessId/capital-allowances-structures-buildings/:nino/answers                  controllers.JourneyAnswersController.getStructuresBuildings(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/:businessId/national-insurance-contributions/:nino/answers                         controllers.JourneyAnswersController.saveNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
-#GET         /:taxYear/:businessId/national-insurance-contributions/:nino/answers                         controllers.JourneyAnswersController.getNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+GET         /:taxYear/:businessId/national-insurance-contributions/:nino/answers                         controllers.JourneyAnswersController.getNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

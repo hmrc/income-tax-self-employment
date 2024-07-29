@@ -16,10 +16,23 @@
 
 package models.frontend.nics
 
+import models.connector.api_1639.SuccessResponseAPI1639
 import play.api.libs.json.{Format, Json}
 
 case class NICsAnswers(class2NICs: Boolean)
 
 object NICsAnswers {
   implicit val formats: Format[NICsAnswers] = Json.format[NICsAnswers]
+
+  def fromApi1639(maybeExistingAnswers: Option[SuccessResponseAPI1639]): Option[NICsAnswers] = {
+    val existingClass2Nics = for {
+      answers     <- maybeExistingAnswers
+      nicsAnswers <- answers.class2Nics
+      class2Nics  <- nicsAnswers.class2VoluntaryContributions
+    } yield class2Nics
+
+    existingClass2Nics.map(NICsAnswers(_))
+
+  }
+
 }

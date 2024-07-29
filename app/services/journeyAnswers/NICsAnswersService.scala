@@ -16,22 +16,21 @@
 
 package services.journeyAnswers
 
-import cats.data.EitherT
 import cats.implicits.toFunctorOps
 import connectors.SelfEmploymentConnector
 import models.common._
 import models.connector.api_1638.RequestSchemaAPI1638
+import models.connector.api_1639.SuccessResponseAPI1639
 import models.domain.ApiResultT
-import models.error.ServiceError
 import models.frontend.nics.NICsAnswers
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.EitherTOps.EitherTExtensions
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 trait NICsAnswersService {
   def saveAnswers(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NICsAnswers]]
 }
 
 @Singleton
@@ -39,9 +38,15 @@ class NICsAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector)(impl
 
   def saveAnswers(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      maybeClass2Nics <- getNicsRequestBody(ctx, answers)
-      _               <- upsertOrDeleteData(maybeClass2Nics, ctx)
+      existingAnswers <- connector.getDisclosuresSubmission(ctx)
+      upsertRequest = RequestSchemaAPI1638.mkRequestBody(answers, existingAnswers)
+      _ <- upsertOrDeleteData(upsertRequest, ctx)
     } yield ()
+
+  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NICsAnswers]] =
+    connector
+      .getDisclosuresSubmission(ctx)
+      .map(existingAnswers => NICsAnswers.fromApi1639(existingAnswers))
 
   private def upsertOrDeleteData(maybeClass2Nics: Option[RequestSchemaAPI1638], ctx: JourneyContextWithNino)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
@@ -50,9 +55,7 @@ class NICsAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector)(impl
       case None       => connector.deleteDisclosuresSubmission(ctx)
     }
 
-  private def getNicsRequestBody(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit
-      hc: HeaderCarrier): ApiResultT[Option[RequestSchemaAPI1638]] =
-    connector
-      .getDisclosuresSubmission(ctx)
-      .map(RequestSchemaAPI1638.mkRequestBody(answers, _))
+  private def getExistingAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SuccessResponseAPI1639]] =
+    connector.getDisclosuresSubmission(ctx)
+
 }
