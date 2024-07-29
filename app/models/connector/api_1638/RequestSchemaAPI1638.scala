@@ -16,11 +16,9 @@
 
 package models.connector.api_1638
 
-import connectors.SelfEmploymentConnector.Api1639Response
+import models.connector.api_1639.SuccessResponseAPI1639
 import models.frontend.nics.NICsAnswers
 import play.api.libs.json._
-import models.connector.api_1639
-import models.connector.api_1639.SuccessResponseAPI1639
 
 /** Represents the Swagger definition for requestSchemaAPI1638.
   */
@@ -60,7 +58,7 @@ object RequestSchemaAPI1638 {
     if (answers.class2NICs) {
       Some(bodyForPut.copy(class2Nics = Some(RequestSchemaAPI1638Class2Nics(Some(true)))))
     } else if (bodyForPut.taxAvoidance.isDefined) {
-      Some(bodyForPut.copy(class2Nics = Some(RequestSchemaAPI1638Class2Nics(None))))
+      Some(bodyForPut.copy(class2Nics = None))
     } else {
       None
     }

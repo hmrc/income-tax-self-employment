@@ -16,6 +16,7 @@
 
 package stubs.connectors
 
+import cats.data.EitherT
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.SelfEmploymentConnector
 import connectors.SelfEmploymentConnector._
@@ -33,6 +34,7 @@ import models.connector.api_1895.response.AmendSEPeriodSummaryResponse
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import models.connector.{api_1171, api_1786}
 import models.domain.ApiResultT
+import models.error.ServiceError
 import stubs.connectors.StubSelfEmploymentConnector._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
@@ -47,8 +49,12 @@ case class StubSelfEmploymentConnector(
     createAmendSEAnnualSubmissionResult: Future[Api1802Response] = Future.successful(api1802SuccessResponse.asRight),
     getAnnualSummariesResult: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight),
     listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
-    getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight))
-    extends SelfEmploymentConnector {
+    getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight),
+    getDisclosuresSubmissionResult: Either[ServiceError, Option[SuccessResponseAPI1639]] = Right(None),
+    upsertDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(()),
+    deleteDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(())
+) extends SelfEmploymentConnector {
+  var upsertDisclosuresSubmissionData: Option[RequestSchemaAPI1638] = None
 
   override def createSEPeriodSummary(
       data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] =
@@ -75,13 +81,21 @@ case class StubSelfEmploymentConnector(
     getAnnualSummariesResult
 
   def getDisclosuresSubmission(
-      ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[SuccessResponseAPI1639]] = ???
+      ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[SuccessResponseAPI1639]] =
+    EitherT.fromEither[Future](getDisclosuresSubmissionResult)
 
   def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): ApiResultT[Unit] = ???
+      ec: ExecutionContext): ApiResultT[Unit] = {
+    upsertDisclosuresSubmissionData = Some(data)
+    EitherT.fromEither[Future](upsertDisclosuresSubmissionResult)
+  }
 
-  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = ???
+  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
+    upsertDisclosuresSubmissionData = None
+    EitherT.fromEither[Future](deleteDisclosuresSubmissionResult)
+  }
+
 }
 
 object StubSelfEmploymentConnector {

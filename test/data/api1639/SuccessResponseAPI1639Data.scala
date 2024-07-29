@@ -16,8 +16,12 @@
 
 package data.api1639
 
-import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics}
+import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics, SuccessResponseAPI1639TaxAvoidanceInner}
+import utils.BaseSpec.currTaxYear
 
 object SuccessResponseAPI1639Data {
   val class2NicsTrue = SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))
+  val full = SuccessResponseAPI1639(
+    Some(List(SuccessResponseAPI1639TaxAvoidanceInner("arn", currTaxYear.endYear.toString))),
+    Some(SuccessResponseAPI1639Class2Nics(Some(true))))
 }

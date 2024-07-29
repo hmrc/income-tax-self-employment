@@ -50,7 +50,7 @@ package object connector {
     ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
 
     response.status match {
-      case OK | CREATED | ACCEPTED => Right(None)
+      case OK | CREATED | ACCEPTED => Right(())
       case _                       => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
     }
   }

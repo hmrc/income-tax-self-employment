@@ -23,24 +23,30 @@ import models.database.JourneyAnswers
 import models.domain.{ApiResultT, Business}
 import models.error.ServiceError
 import models.frontend.TaskList
-import play.api.libs.json.{JsValue, Reads}
+import models.jsonAs
+import play.api.libs.json.{JsObject, JsValue, Json, Reads}
 import repositories.JourneyAnswersRepository
 import services.journeyAnswers.getPersistedAnswers
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
+import org.scalatest.EitherValues._
 
 case class StubJourneyAnswersRepository(
     getAnswer: Option[JourneyAnswers] = None,
+    getAnswers: Either[ServiceError, Option[JsValue]] = Right(None),
     upsertDateField: Either[ServiceError, Unit] = Right(()),
     upsertStatusField: Either[ServiceError, Unit] = Right(()),
     getAllResult: Either[ServiceError, TaskList] = Right(TaskList.empty),
     deleteOneOrMoreJourneys: Either[ServiceError, Unit] = Right(())
 ) extends JourneyAnswersRepository {
-  implicit val ec: ExecutionContext = ExecutionContext.global
+  implicit val ec: ExecutionContext       = ExecutionContext.global
+  var lastUpsertedAnswer: Option[JsValue] = None
 
-  def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] =
+  def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] = {
+    lastUpsertedAnswer = Some(newData)
     EitherT.fromEither[Future](upsertDateField)
+  }
 
   def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] =
     EitherT.fromEither[Future](upsertStatusField)
@@ -57,8 +63,5 @@ case class StubJourneyAnswersRepository(
     EitherT.fromEither[Future](getAllResult)
 
   def getAnswers[A: Reads](ctx: JourneyContext)(implicit ct: ClassTag[A]): ApiResultT[Option[A]] =
-    for {
-      row            <- get(ctx)
-      maybeDbAnswers <- getPersistedAnswers[A](row)
-    } yield maybeDbAnswers
+    EitherT.fromEither(getAnswers.map(_.map(data => jsonAs[A](data.as[JsObject]).value)))
 }
