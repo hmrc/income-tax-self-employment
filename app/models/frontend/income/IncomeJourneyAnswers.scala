@@ -16,8 +16,7 @@
 
 package models.frontend.income
 
-import models.connector.api_1803
-import models.connector.api_1786
+import models.connector.{api_1786, api_1803}
 import models.database.income.IncomeStorageAnswers
 import play.api.libs.json.{Json, OFormat}
 
