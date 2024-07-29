@@ -18,15 +18,14 @@ package models.connector.api_1639
 
 import play.api.libs.json._
 
-/**
-  * Represents the Swagger definition for successResponseAPI1639_taxAvoidance_inner.
+/** Represents the Swagger definition for successResponseAPI1639_taxAvoidance_inner.
   */
 case class SuccessResponseAPI1639TaxAvoidanceInner(
-  srn: String,
-  taxYear: String
+    srn: String,
+    taxYear: String
 )
 
 object SuccessResponseAPI1639TaxAvoidanceInner {
-  implicit lazy val successResponseAPI1639TaxAvoidanceInnerJsonFormat: Format[SuccessResponseAPI1639TaxAvoidanceInner] = Json.format[SuccessResponseAPI1639TaxAvoidanceInner]
+  implicit lazy val successResponseAPI1639TaxAvoidanceInnerJsonFormat: Format[SuccessResponseAPI1639TaxAvoidanceInner] =
+    Json.format[SuccessResponseAPI1639TaxAvoidanceInner]
 }
-

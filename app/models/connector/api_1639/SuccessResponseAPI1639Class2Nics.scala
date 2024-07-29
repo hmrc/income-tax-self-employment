@@ -18,14 +18,13 @@ package models.connector.api_1639
 
 import play.api.libs.json._
 
-/**
-  * Voluntary contributions.
+/** Voluntary contributions.
   */
 case class SuccessResponseAPI1639Class2Nics(
-  class2VoluntaryContributions: Option[Boolean]
+    class2VoluntaryContributions: Option[Boolean]
 )
 
 object SuccessResponseAPI1639Class2Nics {
-  implicit lazy val successResponseAPI1639Class2NicsJsonFormat: Format[SuccessResponseAPI1639Class2Nics] = Json.format[SuccessResponseAPI1639Class2Nics]
+  implicit lazy val successResponseAPI1639Class2NicsJsonFormat: Format[SuccessResponseAPI1639Class2Nics] =
+    Json.format[SuccessResponseAPI1639Class2Nics]
 }
-
