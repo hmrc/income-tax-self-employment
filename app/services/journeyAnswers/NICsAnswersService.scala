@@ -17,6 +17,7 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
+import cats.implicits.toFunctorOps
 import connectors.SelfEmploymentConnector
 import models.common._
 import models.connector.api_1638.RequestSchemaAPI1638
@@ -43,20 +44,15 @@ class NICsAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector)(impl
     } yield ()
 
   private def upsertOrDeleteData(maybeClass2Nics: Option[RequestSchemaAPI1638], ctx: JourneyContextWithNino)(implicit
-      hc: HeaderCarrier): ApiResultT[Unit] = {
-    val result = maybeClass2Nics match {
-      case Some(data) => connector.upsertDisclosuresSubmission(ctx, data).map(_.map(_ => ()))
+      hc: HeaderCarrier): ApiResultT[Unit] =
+    maybeClass2Nics match {
+      case Some(data) => connector.upsertDisclosuresSubmission(ctx, data).void
       case None       => connector.deleteDisclosuresSubmission(ctx)
     }
 
-    EitherT(result)
-  }
-
   private def getNicsRequestBody(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Option[RequestSchemaAPI1638]] =
-    EitherT(connector.getDisclosuresSubmission(ctx))
-      .leftAs[ServiceError]
-      .map { existingData =>
-        RequestSchemaAPI1638.mkRequestBody(answers, existingData)
-      }
+    connector
+      .getDisclosuresSubmission(ctx)
+      .map(RequestSchemaAPI1638.mkRequestBody(answers, _))
 }

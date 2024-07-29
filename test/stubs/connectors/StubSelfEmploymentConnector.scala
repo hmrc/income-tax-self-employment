@@ -21,6 +21,7 @@ import connectors.SelfEmploymentConnector
 import connectors.SelfEmploymentConnector._
 import models.common.{IdType, JourneyContextWithNino}
 import models.connector.api_1638.RequestSchemaAPI1638
+import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
@@ -31,6 +32,7 @@ import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1895.response.AmendSEPeriodSummaryResponse
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import models.connector.{api_1171, api_1786}
+import models.domain.ApiResultT
 import stubs.connectors.StubSelfEmploymentConnector._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
@@ -72,13 +74,14 @@ case class StubSelfEmploymentConnector(
   def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] =
     getAnnualSummariesResult
 
-  def getDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response] = ???
-
-  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1638Response] = ???
+  def getDisclosuresSubmission(
+      ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[SuccessResponseAPI1639]] = ???
 
   def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): Future[Api1638Response] = ???
+      ec: ExecutionContext): ApiResultT[Unit] = ???
+
+  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = ???
 }
 
 object StubSelfEmploymentConnector {

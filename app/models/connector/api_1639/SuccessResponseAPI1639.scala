@@ -27,4 +27,6 @@ case class SuccessResponseAPI1639(
 
 object SuccessResponseAPI1639 {
   implicit lazy val successResponseAPI1639JsonFormat: Format[SuccessResponseAPI1639] = Json.format[SuccessResponseAPI1639]
+
+  def empty: SuccessResponseAPI1639 = SuccessResponseAPI1639(None, None)
 }

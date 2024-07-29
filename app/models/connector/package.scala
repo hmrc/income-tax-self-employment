@@ -16,6 +16,7 @@
 
 package models
 
+import cats.implicits.catsSyntaxEitherId
 import connectors.DownstreamParser
 import connectors.DownstreamParser.CommonDownstreamParser
 import models.error.DownstreamError
@@ -28,27 +29,41 @@ import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 import java.time.format.DateTimeFormatter
 
 package object connector {
-  type ApiResponse[A] = Either[DownstreamError, A]
+  type ApiResponse[A]       = Either[DownstreamError, A]
+  type ApiResponseOption[A] = Either[DownstreamError, Option[A]]
 
   val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
-  implicit def httpReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[A]] = (method: String, url: String, response: HttpResponse) => {
+  implicit def commonReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[A]] = (method: String, url: String, response: HttpResponse) => {
     ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
 
     response.status match {
-      case OK | CREATED | ACCEPTED =>
-        response.json
-          .validate[A]
-          .fold[Either[DownstreamError, A]](
-            errors => Left(createCommonErrorParser(method, url, response).reportInvalidJsonError(errors.toList)),
-            parsedModel => Right(parsedModel)
-          )
-
-      case _ => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+      case OK | CREATED | ACCEPTED => toA(response, method, url)
+      case _                       => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
     }
   }
 
-  implicit def httpUnitReads(implicit logger: Logger): HttpReads[ApiResponse[Unit]] = (method: String, url: String, response: HttpResponse) => {
+  def commonNoBodyResponse(implicit logger: Logger): HttpReads[ApiResponse[Unit]] = (method: String, url: String, response: HttpResponse) => {
+    ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
+
+    response.status match {
+      case OK | CREATED | ACCEPTED => Right(None)
+      case _                       => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+    }
+  }
+
+  def commonGetReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[Option[A]]] =
+    (method: String, url: String, response: HttpResponse) => {
+      ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
+
+      response.status match {
+        case OK | CREATED | ACCEPTED => toA(response, method, url).map(Some(_))
+        case NOT_FOUND               => Right(None)
+        case _                       => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+      }
+    }
+
+  def commonDeleteReads(implicit logger: Logger): HttpReads[ApiResponse[Unit]] = (method: String, url: String, response: HttpResponse) => {
     ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
 
     response.status match {
@@ -56,6 +71,14 @@ package object connector {
       case _                                      => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
     }
   }
+
+  private def toA[A: Reads](response: HttpResponse, method: String, url: String): Either[DownstreamError, A] =
+    response.json
+      .validate[A]
+      .fold[Either[DownstreamError, A]](
+        errors => Left(createCommonErrorParser(method, url, response).reportInvalidJsonError(errors.toList)),
+        parsedModel => Right(parsedModel)
+      )
 
   private def createCommonErrorParser(method: String, url: String, response: HttpResponse): DownstreamParser =
     CommonDownstreamParser(method, url, response)
