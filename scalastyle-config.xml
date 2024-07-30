@@ -96,11 +96,6 @@
             <parameter name="maxLength"><![CDATA[50]]></parameter>
         </parameters>
     </check>
-    <check level="warning" class="org.scalastyle.scalariform.MethodNamesChecker" enabled="true">
-        <parameters>
-            <parameter name="regex"><![CDATA[^[a-z][A-Za-z0-9]*$]]></parameter>
-        </parameters>
-    </check>
     <check level="warning" class="org.scalastyle.scalariform.PublicMethodsHaveTypeChecker" enabled="true"></check>
     <check level="warning" class="org.scalastyle.file.NewLineAtEofChecker" enabled="true"></check>
     <check level="warning" class="org.scalastyle.file.NoNewLineAtEofChecker" enabled="false"></check>
