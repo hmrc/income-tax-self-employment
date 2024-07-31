@@ -115,9 +115,6 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         connector.createAmendSEAnnualSubmission(*)(*, *) returns
           Future.successful(api1802SuccessResponse.asRight)
 
-        connector.getPeriodicSummaryDetail(*)(*, *) returns
-          Future.successful(api1786DeductionsSuccessResponse.asRight)
-
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
         val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
 
