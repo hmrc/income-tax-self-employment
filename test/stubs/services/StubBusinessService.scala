@@ -16,25 +16,26 @@
 
 package stubs.services
 
-import cats.implicits._
-import models.common._
-import models.domain.Business
-import models.error.DownstreamError
+import cats.data.EitherT
+import models.common.{BusinessId, Nino}
+import models.domain.{ApiResultT, Business}
+import models.error.ServiceError
 import services.BusinessService
-import services.BusinessService.GetBusinessResponse
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.BaseSpec.businessId
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-case class StubBusinessService(
-    getBusinessesRes: Either[DownstreamError, Seq[Business]] = Seq.empty.asRight[DownstreamError],
-    getBusinessRes: Either[DownstreamError, Seq[Business]] = Seq.empty.asRight[DownstreamError]
+final case class StubBusinessService(
+    getBusinessesResult: Either[ServiceError, List[Business]] = Right(Nil),
+    getBusinessResult: Either[ServiceError, Business] = Left(ServiceError.BusinessNotFoundError(businessId))
 ) extends BusinessService {
-  implicit val ec: ExecutionContext = ExecutionContext.global
 
-  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] = Future.successful(getBusinessesRes)
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
+    EitherT.fromEither[Future](getBusinessesResult)
 
-  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
-    Future.successful(getBusinessRes)
+  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business] =
+    EitherT.fromEither[Future](getBusinessResult)
 
 }

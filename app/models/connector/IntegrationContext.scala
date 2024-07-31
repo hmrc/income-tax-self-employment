@@ -33,7 +33,7 @@ object IntegrationContext {
   final case class IFSHeaderCarrier(headerCarrierConfig: Config, appConfig: AppConfig, api: IFSApiName, url: String) extends IntegrationContext {
     def enrichedHeaderCarrier(implicit headerCarrier: HeaderCarrier): HeaderCarrier = {
       val hcWithAuth = headerCarrier.copy(authorization = Some(Authorization(s"Bearer ${appConfig.ifsAuthorisationToken(api.entryName)}")))
-      ApiConnector.apiHeaderCarrier(headerCarrierConfig, url, hcWithAuth, "Environment" -> appConfig.ifsEnvironment)
+      ApiConnector.apiHeaderCarrier(headerCarrierConfig, url, hcWithAuth, appConfig.testMode, "Environment" -> appConfig.ifsEnvironment)
     }
   }
 }

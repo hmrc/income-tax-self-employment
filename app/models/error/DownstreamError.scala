@@ -29,14 +29,22 @@ object DownstreamError {
 
   implicit val formats: Format[DownstreamError] =
     Format(
-      Reads(jsValue => SingleDownstreamError.formats.reads(jsValue) orElse MultipleDownstreamErrors.formats.reads(jsValue)),
+      Reads(jsValue => SingleDownstreamError.format.reads(jsValue) orElse MultipleDownstreamErrors.formatt.reads(jsValue)),
       Writes {
-        case statusError: SingleDownstreamError    => SingleDownstreamError.formats.writes(statusError)
-        case statusError: MultipleDownstreamErrors => MultipleDownstreamErrors.formats.writes(statusError)
+        case statusError: SingleDownstreamError    => SingleDownstreamError.format.writes(statusError)
+        case statusError: MultipleDownstreamErrors => MultipleDownstreamErrors.formatt.writes(statusError)
+        case statusError: GenericDownstreamError   => GenericDownstreamError.format.writes(statusError)
       }
     )
 
-  case class SingleDownstreamError(status: Int, body: SingleDownstreamErrorBody) extends DownstreamError {
+  final case class GenericDownstreamError(override val status: Int, override val errorMessage: String) extends DownstreamError
+  object GenericDownstreamError {
+    implicit val format: OFormat[GenericDownstreamError] = Json.format[GenericDownstreamError]
+  }
+
+  /** Use it only when some action based on different error data is required
+    */
+  case class SingleDownstreamError(override val status: Int, body: SingleDownstreamErrorBody) extends DownstreamError {
 
     def toDomain: SingleDownstreamError = {
       val domainStatus = if (body.code == "INVALID_MTD_ID" || body.code == "INVALID_CORRELATIONID") INTERNAL_SERVER_ERROR else status
@@ -46,10 +54,12 @@ object DownstreamError {
   }
 
   object SingleDownstreamError {
-    implicit val formats: OFormat[SingleDownstreamError] = Json.format[SingleDownstreamError]
+    implicit val format: OFormat[SingleDownstreamError] = Json.format[SingleDownstreamError]
   }
 
-  case class MultipleDownstreamErrors(status: Int, body: MultipleDownstreamErrorBody) extends DownstreamError {
+  /** Use it only when some action based on different error data is required
+    */
+  case class MultipleDownstreamErrors(override val status: Int, body: MultipleDownstreamErrorBody) extends DownstreamError {
 
     def toDomain: MultipleDownstreamErrors =
       this.copy(body = body.copy(failures = body.failures.map(_.toDomain)))
@@ -57,7 +67,7 @@ object DownstreamError {
   }
 
   object MultipleDownstreamErrors {
-    implicit val formats: OFormat[MultipleDownstreamErrors] = Json.format[MultipleDownstreamErrors]
+    implicit val formatt: OFormat[MultipleDownstreamErrors] = Json.format[MultipleDownstreamErrors]
   }
 
 }

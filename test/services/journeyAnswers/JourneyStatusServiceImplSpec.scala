@@ -34,7 +34,9 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.JsObject
 import stubs.connectors.StubBusinessDetailsConnector
+import stubs.connectors.StubIFSConnector
 import stubs.repositories.StubJourneyAnswersRepository
+import stubs.services.StubBusinessService
 import utils.BaseSpec._
 
 import java.time.Instant
@@ -46,7 +48,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
   val repository        = StubJourneyAnswersRepository()
   val now               = Instant.now()
 
-  val underTest = new JourneyStatusServiceImpl(businessConnector, repository)
+  val underTest = new JourneyStatusServiceImpl(StubBusinessService(), repository)
 
   "set" should {
     "return unit" in {
@@ -63,7 +65,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
 
     "return status if the answer exist" in {
       val underTest = new JourneyStatusServiceImpl(
-        businessConnector,
+        StubBusinessService(),
         repository.copy(
           getAnswer = Some(JourneyAnswers(mtditid, businessId, taxYear, JourneyName.ExpensesTailoring, Completed, JsObject.empty, now, now, now))
         )
@@ -82,7 +84,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
     "return a task list" in {
       val taskList = TaskList(Some(JourneyNameAndStatus(JourneyName.Income, JourneyStatus.NotStarted)), Nil, None)
       val underTest = new JourneyStatusServiceImpl(
-        businessConnector,
+        StubBusinessService(),
         repository.copy(
           getAllResult = Right(taskList)
         )
@@ -101,7 +103,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
         Some(JourneyNameAndStatus(JourneyName.NationalInsuranceContributions, JourneyStatus.Completed))
       )
       val underTest = new JourneyStatusServiceImpl(
-        businessConnector,
+        StubBusinessService(),
         repository.copy(
           getAllResult = Right(taskList)
         )
@@ -113,7 +115,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
     "return an error from downstream" in {
       val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
       val underTest = new JourneyStatusServiceImpl(
-        businessConnector,
+        StubBusinessService(),
         repository.copy(
           getAllResult = downstreamError.asLeft
         )

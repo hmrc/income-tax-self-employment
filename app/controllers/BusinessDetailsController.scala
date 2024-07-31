@@ -18,13 +18,10 @@ package controllers
 
 import controllers.actions.AuthorisedAction
 import models.common.{BusinessId, Nino}
-import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
-import play.api.Logging
-import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.BusinessService
-import services.BusinessService.GetBusinessResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import utils.Logging
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -36,21 +33,10 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
     with Logging {
 
   def getBusinesses(nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    businessService.getBusinesses(nino) map businessDataResponse
+    handleApiResultT(businessService.getBusinesses(nino))
   }
 
   def getBusiness(nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    businessService.getBusiness(nino, businessId) map businessDataResponse
+    handleApiResultT(businessService.getBusiness(nino, businessId))
   }
-
-  private def businessDataResponse(dataResponse: GetBusinessResponse) =
-    dataResponse match {
-      case Right(model) => Ok(Json.toJson(model))
-      case Left(errorModel) =>
-        errorModel match {
-          case sde: SingleDownstreamError => Status(errorModel.status)(Json.toJson(sde.toDomain))
-          case _                          => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[MultipleDownstreamErrors].toDomain))
-        }
-    }
-
 }

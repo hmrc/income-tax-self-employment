@@ -18,7 +18,7 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
-import connectors.SelfEmploymentConnector
+import connectors.IFSConnector
 import models.common.JourneyName.{ExpensesTailoring, GoodsToSellOrUse, WorkplaceRunningCosts}
 import models.common.TaxYear.{endDate, startDate}
 import models.common._
@@ -53,7 +53,7 @@ trait ExpensesAnswersService {
 }
 
 @Singleton
-class ExpensesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
+class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends ExpensesAnswersService {
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit

@@ -18,7 +18,7 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
-import connectors.SelfEmploymentConnector
+import connectors.IFSConnector
 import models.common._
 import models.domain.ApiResultT
 import models.error.ServiceError
@@ -35,7 +35,7 @@ trait PrepopAnswersService {
 }
 
 @Singleton
-class PrepopAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector)(implicit ec: ExecutionContext) extends PrepopAnswersService {
+class PrepopAnswersServiceImpl @Inject() (connector: IFSConnector)(implicit ec: ExecutionContext) extends PrepopAnswersService {
 
   def getIncomeAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[IncomePrepopAnswers] =
     EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError].map(IncomePrepopAnswers(_))

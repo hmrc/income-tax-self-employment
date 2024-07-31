@@ -35,12 +35,12 @@ class ApiConnectorSpec extends AnyWordSpecLike with Matchers {
       .withExtraHeaders(HeaderNames.xRequestId -> "extraRequestId")
 
     "add extra headers for internal host" in {
-      val result = ApiConnector.apiHeaderCarrier(config, "http://localhost", originalHc, HeaderNames.xRequestId -> "updatedRequestId")
+      val result = ApiConnector.apiHeaderCarrier(config, "http://localhost", originalHc, false, HeaderNames.xRequestId -> "updatedRequestId")
       result.extraHeaders.toList should contain(HeaderNames.xRequestId -> "updatedRequestId")
     }
 
     "add explicit headers for non-internal host" in {
-      val result = ApiConnector.apiHeaderCarrier(config, "http://ifs", originalHc, HeaderNames.xRequestId -> "overridenRequestId")
+      val result = ApiConnector.apiHeaderCarrier(config, "http://ifs", originalHc, false, HeaderNames.xRequestId -> "overridenRequestId")
       result.extraHeaders.toList should contain(HeaderNames.xRequestId -> "overridenRequestId")
     }
   }

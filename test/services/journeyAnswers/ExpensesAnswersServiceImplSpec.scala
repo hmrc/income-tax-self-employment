@@ -34,8 +34,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsObject, Json}
 import services.journeyAnswers.ExpensesAnswersServiceImplSpec._
-import stubs.connectors.StubSelfEmploymentConnector
-import stubs.connectors.StubSelfEmploymentConnector.api1786DeductionsSuccessResponse
+import stubs.connectors.StubIFSConnector
+import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
 import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
@@ -47,7 +47,7 @@ import scala.concurrent.Future
 class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   trait Test {
-    val connector: StubSelfEmploymentConnector
+    val connector: StubIFSConnector
 
     val repo           = StubJourneyAnswersRepository()
     lazy val underTest = new ExpensesAnswersServiceImpl(connector, repo)
@@ -57,7 +57,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "save ExpensesTailoringNoExpensesAnswers" should {
     "store data successfully" in new Test {
-      override val connector = StubSelfEmploymentConnector()
+      override val connector = StubIFSConnector()
 
       val answers = NoExpensesAnswers
       val result  = underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
@@ -67,7 +67,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "save ExpensesTailoringIndividualCategoriesAnswers" should {
     "store data successfully" in new Test {
-      override val connector = StubSelfEmploymentConnector()
+      override val connector = StubIFSConnector()
 
       val answers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
       val result  = underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
@@ -77,7 +77,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "save expenses journey answers" should {
     "store data successfully" in new Test {
-      override val connector = StubSelfEmploymentConnector()
+      override val connector = StubIFSConnector()
 
       val someExpensesAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
       val result              = underTest.saveAnswers(journeyCtxWithNino, someExpensesAnswers).value.futureValue
@@ -86,7 +86,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
   }
   "get journey answers" in new Test {
     override val connector =
-      StubSelfEmploymentConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
+      StubIFSConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
 
     val result = underTest.getAnswers(journeyCtxWithNino)(goodsToSellOrUseParser, hc).value.futureValue
 
@@ -97,13 +97,13 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "getExpensesTailoringAnswers" should {
     "return None when there are no answers" in new Test {
-      override val connector = StubSelfEmploymentConnector()
+      override val connector = StubIFSConnector()
       val result             = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe None.asRight
     }
 
     "return NoExpensesAnswers" in new Test {
-      override val connector = StubSelfEmploymentConnector()
+      override val connector = StubIFSConnector()
       override val repo = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
         .copy(data = Json.toJson(ExpensesCategoriesDb(NoExpenses)).as[JsObject])
         .some)
@@ -112,7 +112,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
     }
 
     "return AsOneTotalAnswers" in new Test {
-      override val connector = StubSelfEmploymentConnector(
+      override val connector = StubIFSConnector(
         getPeriodicSummaryDetailResult = Future.successful(
           api1786DeductionsSuccessResponse
             .copy(financials = api1786DeductionsSuccessResponse.financials
@@ -129,7 +129,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
     "return ExpensesTailoringIndividualCategoriesAnswers" in new Test {
       val answers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
 
-      override val connector = StubSelfEmploymentConnector()
+      override val connector = StubIFSConnector()
       override val repo = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
         .copy(data = Json.toJson(answers).as[JsObject])
         .some)
@@ -141,14 +141,14 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "getGoodsToSellOrUseAnswers" should {
     "return None when there are no answers" in new Test {
-      override val connector = StubSelfEmploymentConnector()
+      override val connector = StubIFSConnector()
       val result             = underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe None.asRight
     }
 
     "return GoodsToSellOrUseAnswers when they exist" in new Test {
       override val connector =
-        StubSelfEmploymentConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
+        StubIFSConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
       override val repo = StubJourneyAnswersRepository(getAnswer = goodsToSellOrUseJourneyAnswers
         .copy(data = Json.toJson(TaxiMinicabOrRoadHaulageDb(true)).as[JsObject])
         .some)
@@ -159,14 +159,14 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "getWorkplaceRunningCostsAnswers" should {
     "return None when there are no answers" in new Test {
-      override val connector = StubSelfEmploymentConnector()
+      override val connector = StubIFSConnector()
       val result             = underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe None.asRight
     }
 
     "return WorkplaceRunningCostsAnswers when they exist" in new Test {
       override val connector =
-        StubSelfEmploymentConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
+        StubIFSConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
       override val repo = StubJourneyAnswersRepository(getAnswer = workplaceRunningCostsJourneyAnswers
         .copy(data = Json.toJson(workplaceRunningCostsDb).as[JsObject])
         .some)
