@@ -32,7 +32,6 @@ import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json.Json
-import utils.BaseSpec._
 
 class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 

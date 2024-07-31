@@ -17,9 +17,10 @@
 package config
 
 import com.google.inject.AbstractModule
-import connectors.{SelfEmploymentConnector, SelfEmploymentConnectorImpl}
+import connectors.{GetBusinessDetailsConnector, GetBusinessDetailsConnectorImpl, SelfEmploymentConnector, SelfEmploymentConnectorImpl}
 import repositories.{JourneyAnswersRepository, MongoJourneyAnswersRepository}
 import services.journeyAnswers._
+import services.{BusinessService, BusinessServiceImpl}
 
 import java.time.{Clock, ZoneOffset}
 
@@ -33,8 +34,10 @@ class Module extends AbstractModule {
     bind(classOf[IncomeAnswersService]).to(classOf[IncomeAnswersServiceImpl])
     bind(classOf[ExpensesAnswersService]).to(classOf[ExpensesAnswersServiceImpl])
     bind(classOf[CapitalAllowancesAnswersService]).to(classOf[CapitalAllowancesAnswersServiceImpl])
+    bind(classOf[BusinessService]).to(classOf[BusinessServiceImpl])
     bind(classOf[JourneyAnswersRepository]).to(classOf[MongoJourneyAnswersRepository])
     bind(classOf[SelfEmploymentConnector]).to(classOf[SelfEmploymentConnectorImpl])
+    bind(classOf[GetBusinessDetailsConnector]).to(classOf[GetBusinessDetailsConnectorImpl])
     bind(classOf[JourneyStatusService]).to(classOf[JourneyStatusServiceImpl])
     ()
   }

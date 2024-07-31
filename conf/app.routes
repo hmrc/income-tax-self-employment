@@ -4,8 +4,8 @@
 GET         /:taxYear/common-task-list/:nino                                                             controllers.JourneyStatusController.getCommonTaskList(taxYear: TaxYear, nino: Nino)
 
 # Business
-GET         /individuals/business/details/:nino/list                                                     controllers.BusinessDetailsController.getBusinesses(nino: String)
-GET         /individuals/business/details/:nino/:businessId                                              controllers.BusinessDetailsController.getBusiness(nino: String, businessId: String)
+GET         /individuals/business/details/:nino/list                                                     controllers.BusinessDetailsController.getBusinesses(nino: Nino)
+GET         /individuals/business/details/:nino/:businessId                                              controllers.BusinessDetailsController.getBusiness(nino: Nino, businessId: BusinessId)
 
 # Journey Statuses
 GET         /:taxYear/:nino/task-list                                                                    controllers.JourneyStatusController.getTaskList(taxYear: TaxYear, nino: Nino)

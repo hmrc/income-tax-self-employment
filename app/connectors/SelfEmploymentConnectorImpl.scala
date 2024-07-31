@@ -35,7 +35,6 @@ import scala.concurrent.{ExecutionContext, Future}
 /** Keep the methods sorted by API number
   */
 trait SelfEmploymentConnector {
-  def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response]
   def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response]
   def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response]
@@ -46,7 +45,6 @@ trait SelfEmploymentConnector {
 }
 
 object SelfEmploymentConnector {
-  type Api1171Response = ApiResponse[api_1171.SuccessResponseSchema]
   type Api1786Response = ApiResponse[api_1786.SuccessResponseSchema]
   type Api1802Response = ApiResponse[api_1802.response.CreateAmendSEAnnualSubmissionResponse]
   type Api1803Response = ApiResponse[api_1803.SuccessResponseSchema]
@@ -60,9 +58,6 @@ class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppCon
   private val headerCarrierConfig = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
   private val mkIFSMetadata       = IFSHeaderCarrier(headerCarrierConfig, appConfig, _, _)
 
-  // TODO Move to GetBusinessDetailsConnector
-  private def api1171BusinessDetailsUrl(idType: IdType, idNumber: String) = s"${appConfig.ifsBaseUrl}/registration/business-details/$idType/$idNumber"
-
   private def baseUrl(nino: Nino, incomeSourceId: BusinessId, taxYear: TaxYear) =
     s"${appConfig.ifsBaseUrl}/income-tax/${asTys(taxYear)}/$nino/self-employments/$incomeSourceId"
 
@@ -74,12 +69,6 @@ class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppCon
     s"${baseUrl(nino, incomeSourceId, taxYear)}/periodic-summaries?from=${startDate(taxYear)}&to=${endDate(taxYear)}"
   private def periodicSummaryDetailUrl(nino: Nino, incomeSourceId: BusinessId, taxYear: TaxYear) =
     s"${baseUrl(nino, incomeSourceId, taxYear)}/periodic-summary-detail?from=${startDate(taxYear)}&to=${endDate(taxYear)}"
-
-  // TODO Move to GetBusinessDetailsConnector
-  def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response] = {
-    val context = mkIFSMetadata(IFSApiName.Api1171, api1171BusinessDetailsUrl(idType, idNumber))
-    get[Api1171Response](http, context)
-  }
 
   def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {

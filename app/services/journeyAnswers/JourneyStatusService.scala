@@ -18,7 +18,7 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
-import connectors.SelfEmploymentConnector
+import connectors.GetBusinessDetailsConnector
 import models.common._
 import models.commonTaskList.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem}
 import models.connector.api_1171
@@ -39,7 +39,7 @@ trait JourneyStatusService {
 }
 
 @Singleton
-class JourneyStatusServiceImpl @Inject() (businessConnector: SelfEmploymentConnector, repository: JourneyAnswersRepository)(implicit
+class JourneyStatusServiceImpl @Inject() (businessConnector: GetBusinessDetailsConnector, repository: JourneyAnswersRepository)(implicit
     ec: ExecutionContext)
     extends JourneyStatusService {
 

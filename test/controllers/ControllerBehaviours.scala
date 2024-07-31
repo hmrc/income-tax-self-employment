@@ -23,26 +23,20 @@ import utils.TestUtils
 
 class ControllerBehaviours extends TestUtils {
 
-  def controllerSpec(expectedStatus: Int,
-                     expectedBody: String,
-                     stubs: () => Unit,
-                     methodBlock: () => Action[AnyContent],
-                     testName: String = ""): Unit =
+  def controllerSpec(expectedStatus: Int, expectedBody: String, methodBlock: () => Action[AnyContent], testName: String = ""): Unit =
     s"$testName - return a $expectedStatus response and a result value" in {
-      runControllerSpec(fakeRequest, expectedStatus, expectedBody, stubs, methodBlock)
+      runControllerSpec(fakeRequest, expectedStatus, expectedBody, methodBlock)
     }
 
   def testRoute(expectedStatus: Int, expectedBody: String, methodBlock: () => Action[AnyContent], request: Request[AnyContent] = fakeRequest): Unit =
-    runControllerSpec(request, expectedStatus, expectedBody, () => (), methodBlock)
+    runControllerSpec(request, expectedStatus, expectedBody, methodBlock)
 
   private def runControllerSpec(request: Request[AnyContent],
                                 expectedStatus: Int,
                                 expectedBody: String,
-                                stubs: () => Unit,
                                 methodBlock: () => Action[AnyContent]): Unit = {
     val result = {
       mockAuth()
-      stubs()
       methodBlock()(request)
     }
     status(result) mustBe expectedStatus

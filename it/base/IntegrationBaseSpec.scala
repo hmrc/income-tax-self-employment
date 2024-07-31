@@ -16,6 +16,7 @@
 
 package base
 
+import models.common.{BusinessId, Mtditid, Nino, TaxYear}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
@@ -29,6 +30,11 @@ trait IntegrationBaseSpec extends PlaySpec with GuiceOneServerPerSuite with Scal
   implicit val hc: HeaderCarrier    = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
   protected lazy val ws: WSClient = app.injector.instanceOf[WSClient]
+
+  val taxYear: TaxYear       = TaxYear(2024)
+  val businessId: BusinessId = BusinessId("SJPR05893938418")
+  val nino: Nino             = Nino("nino")
+  val mtditid: Mtditid       = Mtditid("1234567890")
 
   protected def buildClient(urlandUri: String): WSRequest =
     ws
