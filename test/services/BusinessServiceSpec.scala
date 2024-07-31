@@ -16,36 +16,35 @@
 
 package services
 
-import bulders.BusinessDataBuilder.{aBusiness, aGetBusinessDataResponse, aTaxPayerDisplayResponse}
-import connectors.SelfEmploymentConnector
-import connectors.SelfEmploymentConnector.Api1171Response
-import models.common.IdType
-import models.common.IdType.Nino
+import bulders.BusinessDataBuilder._
+import connectors.GetBusinessDetailsConnector
+import connectors.GetBusinessDetailsConnector.{Api1171Response, CitizenDetailsResponse}
+import models.common.{BusinessId, IdType, Nino}
 import models.database.JourneyState
 import models.database.JourneyState.JourneyStateData
+import models.domain.BusinessIncomeSourcesSummary
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.BaseSpec.taxYear
 import utils.TestUtils
 
-import java.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}
 
 class BusinessServiceSpec extends TestUtils {
-  val mockBusinessConnector = mock[SelfEmploymentConnector]
+  val mockBusinessConnector = mock[GetBusinessDetailsConnector]
 
   lazy val aJourneyState = JourneyState(
     journeyStateData = JourneyStateData(businessId = aBusiness.businessId, journey = "income", taxYear = 2023, completedState = true)
   )
 
   lazy val service = new BusinessService(mockBusinessConnector)
-  val nino         = aTaxPayerDisplayResponse.nino
+  val nino         = Nino(aTaxPayerDisplayResponse.nino)
   val businessId   = aBusiness.businessId
-  val taxYear      = LocalDate.now.getYear
 
   for ((getMethodName, svcMethod) <- Seq(
-      ("getBusinesses", () => service.getBusinesses(nino)),
-      ("getBusiness", () => service.getBusiness(nino, businessId))
+      ("getBusinesses", () => service.getBusinesses(nino.value)),
+      ("getBusiness", () => service.getBusiness(nino.value, businessId))
     ))
     s"$getMethodName" should { // scalastyle:off magic.number
       val expectedRight = Right(Seq(aBusiness))
@@ -55,8 +54,27 @@ class BusinessServiceSpec extends TestUtils {
       behave like leftResponse(svcMethod, expectedLeft, () => stubConnectorGetBusiness(expectedLeft))
     }
 
+  "getUserDateOfBirth" should {
+    val expectedRight = Right(aUserDateOfBirth)
+    behave like rightResponse(
+      () => service.getUserDateOfBirth(nino),
+      expectedRight,
+      () => stubConnectorGetCitizenDetails(Right(getCitizenDetailsResponse)))
+
+    val expectedLeft = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
+    behave like leftResponse(() => service.getUserDateOfBirth(nino), expectedLeft, () => stubConnectorGetCitizenDetails(expectedLeft))
+  }
+
+  "getBusinessIncomeSourcesSummary" should {
+    val expectedRight = Right(BusinessIncomeSourcesSummary.empty)
+    behave like rightResponse(() => service.getBusinessIncomeSourcesSummary(taxYear, nino, BusinessId(businessId)), expectedRight, () => ())
+
+    val expectedLeft = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
+    behave like leftResponse(() => service.getBusinessIncomeSourcesSummary(taxYear, nino, BusinessId(businessId)), expectedLeft, () => ())
+  }
+
   def rightResponse[A](svcMethod: () => Future[A], expectedResult: A, stubs: () => Unit): Unit =
-    "return a Right with GetBusinessDataRequest model" in {
+    "return a Right with the correct ResponseModel" in {
       stubs()
       await(svcMethod()) mustBe expectedResult
     }
@@ -70,8 +88,17 @@ class BusinessServiceSpec extends TestUtils {
   private def stubConnectorGetBusiness(expectedResult: Api1171Response): Unit = {
     (mockBusinessConnector
       .getBusinesses(_: IdType, _: String)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(Nino, nino, *, *)
+      .expects(IdType.Nino, nino.value, *, *)
       .returning(Future.successful(expectedResult))
     ()
   }
+
+  private def stubConnectorGetCitizenDetails(expectedResult: CitizenDetailsResponse): Unit = {
+    (mockBusinessConnector
+      .getCitizenDetails(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
+      .expects(nino, *, *)
+      .returning(Future.successful(expectedResult))
+    ()
+  }
+
 }

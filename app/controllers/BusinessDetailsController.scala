@@ -17,10 +17,12 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
+import models.common.{BusinessId, Nino, TaxYear}
+import models.error.DownstreamError
 import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
 import play.api.Logging
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
 import services.BusinessService
 import services.BusinessService.GetBusinessResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -34,22 +36,38 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
     extends BackendController(cc)
     with Logging {
 
-  def getBusinesses(nino: String): Action[AnyContent] = auth.async { implicit user =>
+  def getBusinesses(nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     businessService.getBusinesses(nino) map businessDataResponse
   }
 
-  def getBusiness(nino: String, businessId: String): Action[AnyContent] = auth.async { implicit user =>
+  def getBusiness(nino: Nino, businessId: String): Action[AnyContent] = auth.async { implicit user =>
     businessService.getBusiness(nino, businessId) map businessDataResponse
   }
 
-  private def businessDataResponse(dataResponse: GetBusinessResponse) =
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { _ =>
+    businessService.getBusinessIncomeSourcesSummary(taxYear, nino, businessId) map {
+      case Right(model)     => Ok(Json.toJson(model))
+      case Left(errorModel) => handleErrorModel(errorModel)
+    }
+  }
+
+  def getUserDateOfBirth(nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    businessService.getUserDateOfBirth(nino) map {
+      case Right(model)     => Ok(Json.toJson(model))
+      case Left(errorModel) => handleErrorModel(errorModel)
+    }
+  }
+
+  private def businessDataResponse(dataResponse: GetBusinessResponse): Result =
     dataResponse match {
-      case Right(model) => Ok(Json.toJson(model))
-      case Left(errorModel) =>
-        errorModel match {
-          case sde: SingleDownstreamError => Status(errorModel.status)(Json.toJson(sde.toDomain))
-          case _                          => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[MultipleDownstreamErrors].toDomain))
-        }
+      case Right(model)     => Ok(Json.toJson(model))
+      case Left(errorModel) => handleErrorModel(errorModel)
+    }
+
+  private def handleErrorModel(errorModel: DownstreamError): Result =
+    errorModel match {
+      case sde: SingleDownstreamError => Status(errorModel.status)(Json.toJson(sde.toDomain))
+      case _                          => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[MultipleDownstreamErrors].toDomain))
     }
 
 }

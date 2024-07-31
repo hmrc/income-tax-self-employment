@@ -19,7 +19,8 @@ package stubs.connectors
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.SelfEmploymentConnector
 import connectors.SelfEmploymentConnector._
-import models.common.{IdType, JourneyContextWithNino}
+import models.common.JourneyContextWithNino
+import models.connector.api_1786
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
@@ -29,16 +30,13 @@ import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1895.response.AmendSEPeriodSummaryResponse
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
-import models.connector.{api_1171, api_1786}
 import stubs.connectors.StubSelfEmploymentConnector._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
-import java.time.OffsetDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
 case class StubSelfEmploymentConnector(
-    getBusinessesResult: Future[Api1171Response] = Future.successful(api1171EmptyResponse.asRight),
     createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(api1894SuccessResponse.asRight),
     amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(api1895SuccessResponse.asRight),
     createAmendSEAnnualSubmissionResult: Future[Api1802Response] = Future.successful(api1802SuccessResponse.asRight),
@@ -62,9 +60,6 @@ case class StubSelfEmploymentConnector(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] =
     createAmendSEAnnualSubmissionResult
 
-  def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response] =
-    getBusinessesResult
-
   def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response] =
     getPeriodicSummaryDetailResult
 
@@ -73,10 +68,6 @@ case class StubSelfEmploymentConnector(
 }
 
 object StubSelfEmploymentConnector {
-  val api1171EmptyResponse: api_1171.SuccessResponseSchema =
-    api_1171.SuccessResponseSchema(
-      OffsetDateTime.now().toString,
-      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, None))
 
   val api1894SuccessResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("id")
 

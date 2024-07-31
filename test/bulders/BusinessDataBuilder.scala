@@ -17,13 +17,21 @@
 package bulders
 
 import models.common._
-import models.connector.api_1171.SuccessResponseSchema
+import models.connector.citizen_details.SuccessResponseSchema
+import models.connector.{api_1171, citizen_details}
 import models.domain.Business.mkBusiness
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import play.api.libs.json.Json
 
+import java.time.LocalDate
+
 object BusinessDataBuilder {
-  lazy val aGetBusinessDataResponse     = Json.parse(aGetBusinessDataResponseStr).as[SuccessResponseSchema]
+
+  lazy val aUserDateOfBirth: LocalDate                      = LocalDate.of(1997, 7, 30)
+  lazy val citizenDetailsDateOfBirth: String                = "30071997"
+  lazy val getCitizenDetailsResponse: SuccessResponseSchema = Json.parse(getCitizenDetailsResponseStr).as[citizen_details.SuccessResponseSchema]
+
+  lazy val aGetBusinessDataResponse     = Json.parse(aGetBusinessDataResponseStr).as[api_1171.SuccessResponseSchema]
   lazy val aGetBusinessDataEmptyRequest = aGetBusinessDataResponse.copy(taxPayerDisplayResponse = aTaxPayerDisplayResponse.copy(businessData = None))
   lazy val aTaxPayerDisplayResponse     = aGetBusinessDataResponse.taxPayerDisplayResponse
   lazy val aBusinessData                = aGetBusinessDataResponse.taxPayerDisplayResponse.businessData
@@ -122,4 +130,24 @@ object BusinessDataBuilder {
       |  }
       |}
       |""".stripMargin
+
+  lazy val getCitizenDetailsResponseStr: String =
+    s"""{
+     |   "name": {
+     |      "current": {
+     |         "firstName": "Mike",
+     |         "lastName": "Wazowski"
+     |      },
+     |      "previous": [
+     |         {
+     |            "firstName": "Jess",
+     |            "lastName": "Smith"
+     |         }
+     |      ]
+     |   },
+     |   "ids": {
+     |      "nino": "nino"
+     |   },
+     |   "dateOfBirth": "30071997"
+     |}""".stripMargin
 }
