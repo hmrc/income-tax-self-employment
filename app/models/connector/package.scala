@@ -21,32 +21,71 @@ import connectors.DownstreamParser.CommonDownstreamParser
 import models.error.DownstreamError
 import models.logging.ConnectorResponseInfo
 import play.api.Logger
-import play.api.http.Status.{CREATED, OK}
+import play.api.http.Status._
 import play.api.libs.json._
 import uk.gov.hmrc.http.{HttpReads, HttpResponse}
 
 import java.time.format.DateTimeFormatter
 
 package object connector {
-  type ApiResponse[A] = Either[DownstreamError, A]
+  type ApiResponse[A]       = Either[DownstreamError, A]
+  type ApiResponseOption[A] = Either[DownstreamError, Option[A]]
 
   val dateFormatter: DateTimeFormatter = DateTimeFormatter.ISO_LOCAL_DATE
 
-  implicit def httpReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[A]] = (method: String, url: String, response: HttpResponse) => {
+  /** It treats any non OK / CREATED / ACCEPTED as an error
+    */
+  implicit def commonReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[A]] = (method: String, url: String, response: HttpResponse) => {
     ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
 
     response.status match {
-      case OK | CREATED =>
-        response.json
-          .validate[A]
-          .fold[Either[DownstreamError, A]](
-            errors => Left(createCommonErrorParser(method, url, response).reportInvalidJsonError(errors.toList)),
-            parsedModel => Right(parsedModel)
-          )
-
-      case _ => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+      case OK | CREATED | ACCEPTED => toA(response, method, url)
+      case _                       => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
     }
   }
+
+  /** It treats any non OK / CREATED / NO_CONTENT / ACCEPTED as an error, and return Unit otherwise
+    */
+  def commonNoBodyResponse(implicit logger: Logger): HttpReads[ApiResponse[Unit]] = (method: String, url: String, response: HttpResponse) => {
+    ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
+
+    response.status match {
+      case OK | NO_CONTENT | CREATED | ACCEPTED => Right(())
+      case _                                    => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+    }
+  }
+
+  /** It treats NOT_FOUND / OK / CREATED / ACCEPTED as correct response and returns None
+    */
+  def commonGetReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[Option[A]]] =
+    (method: String, url: String, response: HttpResponse) => {
+      ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
+
+      response.status match {
+        case OK | CREATED | ACCEPTED => toA(response, method, url).map(Some(_))
+        case NOT_FOUND | NO_CONTENT  => Right(None)
+        case _                       => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+      }
+    }
+
+  /** It treats NOT_FOUND / NO_CONTENT / OK / ACCEPTED as correct response and returns None
+    */
+  def commonDeleteReads(implicit logger: Logger): HttpReads[ApiResponse[Unit]] = (method: String, url: String, response: HttpResponse) => {
+    ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
+
+    response.status match {
+      case NOT_FOUND | NO_CONTENT | OK | ACCEPTED => Right(())
+      case _                                      => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+    }
+  }
+
+  private def toA[A: Reads](response: HttpResponse, method: String, url: String): Either[DownstreamError, A] =
+    response.json
+      .validate[A]
+      .fold[Either[DownstreamError, A]](
+        errors => Left(createCommonErrorParser(method, url, response).reportInvalidJsonError(errors.toList)),
+        parsedModel => Right(parsedModel)
+      )
 
   private def createCommonErrorParser(method: String, url: String, response: HttpResponse): DownstreamParser =
     CommonDownstreamParser(method, url, response)

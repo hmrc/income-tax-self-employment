@@ -100,6 +100,21 @@ trait WiremockStubHelpers {
             .withHeader("Content-Type", "application/json; charset=utf-8")))
   }
 
+  def stubDelete(url: String, expectedResponse: String, expectedStatus: Int, requestHeaders: Seq[HttpHeader] = Seq.empty): StubMapping = {
+    val mapping: MappingBuilder = requestHeaders
+      .foldLeft(delete(urlMatching(url))) { (result, nxt) =>
+        result.withHeader(nxt.key(), equalTo(nxt.firstValue()))
+      }
+
+    stubFor(
+      mapping
+        .willReturn(
+          aResponse()
+            .withStatus(expectedStatus)
+            .withBody(expectedResponse)
+            .withHeader("Content-Type", "application/json; charset=utf-8")))
+  }
+
   def auditStubs(): Unit = {
     val auditResponseCode = 204
     stubPostWithoutResponseAndRequestBody("/write/audit", auditResponseCode)

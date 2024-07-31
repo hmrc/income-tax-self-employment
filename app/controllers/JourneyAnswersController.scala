@@ -54,6 +54,7 @@ import models.frontend.expenses.tailoring.ExpensesTailoring.TotalAmount
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import models.frontend.income.IncomeJourneyAnswers
+import models.frontend.nics.NICsAnswers
 import play.api.libs.json.Format.GenericFormat
 import play.api.libs.json.{Reads, Writes}
 import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
@@ -72,7 +73,8 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
                                           abroadAnswersService: AbroadAnswersService,
                                           incomeService: IncomeAnswersService,
                                           expensesService: ExpensesAnswersService,
-                                          capitalAllowancesService: CapitalAllowancesAnswersService)(implicit ec: ExecutionContext)
+                                          capitalAllowancesService: CapitalAllowancesAnswersService,
+                                          nicsAnswersService: NICsAnswersService)(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
@@ -420,6 +422,16 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def getStructuresBuildings(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(capitalAllowancesService.getStructuresBuildings(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  def saveNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBodyWithCtx[NICsAnswers](taxYear, businessId, nino) { (ctx, answers) =>
+      nicsAnswersService.saveAnswers(ctx, answers).map(_ => NoContent)
+    }
+  }
+
+  def getNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(nicsAnswersService.getAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
 }

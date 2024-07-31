@@ -31,7 +31,8 @@ import org.mongodb.scala.model.Projections.exclude
 import org.mongodb.scala.model._
 import org.mongodb.scala.result.UpdateResult
 import play.api.Logger
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsValue, Json, Reads}
+import services.journeyAnswers.getPersistedAnswers
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import utils.Logging
@@ -40,9 +41,11 @@ import java.time.{Clock, Instant, ZoneOffset}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
 
 trait JourneyAnswersRepository {
   def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]]
+  def getAnswers[A: Reads](ctx: JourneyContext)(implicit ct: ClassTag[A]): ApiResultT[Option[A]]
   def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): ApiResultT[TaskList]
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit]
   def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit]
@@ -99,6 +102,12 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
         .find(filter)
         .headOption())
   }
+
+  def getAnswers[A: Reads](ctx: JourneyContext)(implicit ct: ClassTag[A]): ApiResultT[Option[A]] =
+    for {
+      row            <- get(ctx)
+      maybeDbAnswers <- getPersistedAnswers[A](row)
+    } yield maybeDbAnswers
 
   def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): ApiResultT[TaskList] = {
     val filter     = filterAllJourneys(taxYear, mtditid)

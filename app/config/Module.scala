@@ -35,10 +35,11 @@ class Module extends AbstractModule {
     bind(classOf[ExpensesAnswersService]).to(classOf[ExpensesAnswersServiceImpl])
     bind(classOf[CapitalAllowancesAnswersService]).to(classOf[CapitalAllowancesAnswersServiceImpl])
     bind(classOf[BusinessService]).to(classOf[BusinessServiceImpl])
+    bind(classOf[JourneyStatusService]).to(classOf[JourneyStatusServiceImpl])
+    bind(classOf[NICsAnswersService]).to(classOf[NICsAnswersServiceImpl])
     bind(classOf[JourneyAnswersRepository]).to(classOf[MongoJourneyAnswersRepository])
     bind(classOf[SelfEmploymentConnector]).to(classOf[SelfEmploymentConnectorImpl])
     bind(classOf[GetBusinessDetailsConnector]).to(classOf[GetBusinessDetailsConnectorImpl])
-    bind(classOf[JourneyStatusService]).to(classOf[JourneyStatusServiceImpl])
     ()
   }
 
