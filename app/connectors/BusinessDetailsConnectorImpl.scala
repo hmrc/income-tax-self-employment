@@ -28,8 +28,6 @@ import utils.Logging
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-/** Keep the methods sorted by API number
-  */
 trait BusinessDetailsConnector {
   def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response]
 }
