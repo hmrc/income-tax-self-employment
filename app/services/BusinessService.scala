@@ -16,7 +16,7 @@
 
 package services
 
-import connectors.GetBusinessDetailsConnector
+import connectors.BusinessDetailsConnector
 import models.common.{BusinessId, IdType, Nino}
 import models.domain._
 import models.error.DownstreamError
@@ -32,7 +32,7 @@ trait BusinessService {
 }
 
 @Singleton
-class BusinessServiceImpl @Inject() (businessConnector: GetBusinessDetailsConnector)(implicit ec: ExecutionContext) extends BusinessService {
+class BusinessServiceImpl @Inject() (businessConnector: BusinessDetailsConnector)(implicit ec: ExecutionContext) extends BusinessService {
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
     businessConnector

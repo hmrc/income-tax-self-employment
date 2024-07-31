@@ -18,7 +18,7 @@ package connectors
 
 import com.typesafe.config.ConfigFactory
 import config.AppConfig
-import connectors.GetBusinessDetailsConnector.Api1171Response
+import connectors.BusinessDetailsConnector.Api1171Response
 import models.common._
 import models.connector.IntegrationContext.IFSHeaderCarrier
 import models.connector._
@@ -30,16 +30,16 @@ import scala.concurrent.{ExecutionContext, Future}
 
 /** Keep the methods sorted by API number
   */
-trait GetBusinessDetailsConnector {
+trait BusinessDetailsConnector {
   def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response]
 }
 
-object GetBusinessDetailsConnector {
+object BusinessDetailsConnector {
   type Api1171Response = ApiResponse[api_1171.SuccessResponseSchema]
 }
 
 @Singleton
-class GetBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends GetBusinessDetailsConnector with Logging {
+class BusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends BusinessDetailsConnector with Logging {
   private val headerCarrierConfig = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
   private val mkIFSMetadata       = IFSHeaderCarrier(headerCarrierConfig, appConfig, _, _)
 

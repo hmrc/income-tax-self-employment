@@ -17,8 +17,8 @@
 package services
 
 import bulders.BusinessDataBuilder._
-import connectors.GetBusinessDetailsConnector
-import connectors.GetBusinessDetailsConnector.Api1171Response
+import connectors.BusinessDetailsConnector
+import connectors.BusinessDetailsConnector.Api1171Response
 import models.common.{BusinessId, IdType, Nino}
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class BusinessServiceSpec extends TestUtils {
 
-  val mockBusinessConnector = mock[GetBusinessDetailsConnector]
+  val mockBusinessConnector = mock[BusinessDetailsConnector]
 
   lazy val service = new BusinessServiceImpl(mockBusinessConnector)
   val nino         = Nino(aTaxPayerDisplayResponse.nino)

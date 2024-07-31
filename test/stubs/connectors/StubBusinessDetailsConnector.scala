@@ -17,26 +17,26 @@
 package stubs.connectors
 
 import cats.implicits.catsSyntaxEitherId
-import connectors.GetBusinessDetailsConnector
-import connectors.GetBusinessDetailsConnector.Api1171Response
+import connectors.BusinessDetailsConnector
+import connectors.BusinessDetailsConnector.Api1171Response
 import models.common.IdType
 import models.connector.api_1171
-import stubs.connectors.StubGetBusinessDetailsConnector.api1171EmptyResponse
+import stubs.connectors.StubBusinessDetailsConnector.api1171EmptyResponse
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.OffsetDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
-case class StubGetBusinessDetailsConnector(
+case class StubBusinessDetailsConnector(
     getBusinessesResult: Future[Api1171Response] = Future.successful(api1171EmptyResponse.asRight)
-) extends GetBusinessDetailsConnector {
+) extends BusinessDetailsConnector {
 
   def getBusinesses(idType: IdType, idNumber: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1171Response] =
     getBusinessesResult
 
 }
 
-object StubGetBusinessDetailsConnector {
+object StubBusinessDetailsConnector {
   val api1171EmptyResponse: api_1171.SuccessResponseSchema =
     api_1171.SuccessResponseSchema(
       OffsetDateTime.now().toString,

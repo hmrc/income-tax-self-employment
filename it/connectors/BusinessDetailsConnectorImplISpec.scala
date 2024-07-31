@@ -24,9 +24,9 @@ import models.common.{IdType, JourneyContextWithNino}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.OK
 
-class GetBusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
+class BusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
-  val connector                   = new GetBusinessDetailsConnectorImpl(httpClient, appConfig)
+  val connector                   = new BusinessDetailsConnectorImpl(httpClient, appConfig)
   val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
 
   "getBusinesses" must {
