@@ -32,10 +32,12 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val authBaseUrl: String      = servicesConfig.baseUrl("auth")
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
-  val testMode: Boolean        = config.getOptional[Boolean]("microservice.services.integration-framework.test-mode").getOrElse(false)
+  val testMode: List[String] =
+    config.getOptional[String]("microservice.services.integration-framework.test-mode").map(_.split(",").toList).getOrElse(Nil)
 
-  if (testMode) {
-    logger.warn("!! TEST MODE enabled in microservice.services.test-mode - DO NOT use on anything after staging !!")
+  if (testMode.nonEmpty) {
+    logger.warn("!! TEST MODE enabled in microservice.services.test-mode - YOU SHOULD NOT SEE THIS MESSAGE ON PROD or END TO END tests !!")
+    logger.info(s"Test Scenarios activated: ${testMode.mkString(",")}")
   }
 
   val ifsEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")

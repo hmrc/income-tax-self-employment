@@ -28,13 +28,14 @@ object ApiConnector {
   def apiHeaderCarrier(headerCarrierConfig: Config,
                        url: String,
                        hc: HeaderCarrier,
-                       isTestMode: Boolean,
+                       testScenarios: List[String],
                        headers: (String, String)*): HeaderCarrier = {
     val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
 
     if (isInternalHost) {
-      val updatedHeaders = if (isTestMode) {
-        headers ++ hc.otherHeaders.filter(_._1 == "ITSA_TEST_SCENARIO")
+      val updatedHeaders = if (testScenarios.nonEmpty) {
+        val updatedHeaders = headers ++ hc.otherHeaders.filter(_._1 == "ITSA_TEST_SCENARIO")
+        updatedHeaders ++ testScenarios.map(value => "ITSA_TEST_SCENARIO" -> value)
       } else {
         headers
       }
