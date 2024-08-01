@@ -16,27 +16,34 @@
 
 package services
 
-import connectors.SelfEmploymentConnector
-import models.common.IdType
+import connectors.BusinessDetailsConnector
+import models.common.{BusinessId, IdType, Nino}
 import models.domain._
 import models.error.DownstreamError
 import services.BusinessService.GetBusinessResponse
 import uk.gov.hmrc.http.HeaderCarrier
 
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-class BusinessService @Inject() (businessConnector: SelfEmploymentConnector)(implicit ec: ExecutionContext) {
+trait BusinessService {
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): Future[GetBusinessResponse]
+  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): Future[GetBusinessResponse]
+}
 
-  def getBusinesses(nino: String)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
+@Singleton
+class BusinessServiceImpl @Inject() (businessConnector: BusinessDetailsConnector)(implicit ec: ExecutionContext) extends BusinessService {
+
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
     businessConnector
-      .getBusinesses(IdType.Nino, nino)
+      .getBusinesses(IdType.Nino, nino.value)
       .map(_.map(_.taxPayerDisplayResponse)
         .map(taxPayerDisplayResponse =>
           taxPayerDisplayResponse.businessData.getOrElse(Nil).map(details => Business.mkBusiness(details, taxPayerDisplayResponse.yearOfMigration))))
 
-  def getBusiness(nino: String, businessId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[GetBusinessResponse] =
-    getBusinesses(nino).map(_.map(_.filter(_.businessId == businessId)))
+  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
+    getBusinesses(nino).map(_.map(_.filter(_.businessId == businessId.value)))
+
 }
 
 object BusinessService {

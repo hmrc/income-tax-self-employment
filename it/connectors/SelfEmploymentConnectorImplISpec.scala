@@ -35,7 +35,6 @@ import org.scalatest.EitherValues._
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json.Json
-import utils.BaseSpec._
 
 class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 

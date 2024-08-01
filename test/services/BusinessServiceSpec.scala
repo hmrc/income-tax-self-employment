@@ -16,32 +16,24 @@
 
 package services
 
-import bulders.BusinessDataBuilder.{aBusiness, aGetBusinessDataResponse, aTaxPayerDisplayResponse}
-import connectors.SelfEmploymentConnector
-import connectors.SelfEmploymentConnector.Api1171Response
-import models.common.IdType
-import models.common.IdType.Nino
-import models.database.JourneyState
-import models.database.JourneyState.JourneyStateData
+import bulders.BusinessDataBuilder._
+import connectors.BusinessDetailsConnector
+import connectors.BusinessDetailsConnector.Api1171Response
+import models.common.{BusinessId, IdType, Nino}
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
 
-import java.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}
 
 class BusinessServiceSpec extends TestUtils {
-  val mockBusinessConnector = mock[SelfEmploymentConnector]
 
-  lazy val aJourneyState = JourneyState(
-    journeyStateData = JourneyStateData(businessId = aBusiness.businessId, journey = "income", taxYear = 2023, completedState = true)
-  )
+  val mockBusinessConnector = mock[BusinessDetailsConnector]
 
-  lazy val service = new BusinessService(mockBusinessConnector)
-  val nino         = aTaxPayerDisplayResponse.nino
-  val businessId   = aBusiness.businessId
-  val taxYear      = LocalDate.now.getYear
+  lazy val service = new BusinessServiceImpl(mockBusinessConnector)
+  val nino         = Nino(aTaxPayerDisplayResponse.nino)
+  val businessId   = BusinessId(aBusiness.businessId)
 
   for ((getMethodName, svcMethod) <- Seq(
       ("getBusinesses", () => service.getBusinesses(nino)),
@@ -70,8 +62,9 @@ class BusinessServiceSpec extends TestUtils {
   private def stubConnectorGetBusiness(expectedResult: Api1171Response): Unit = {
     (mockBusinessConnector
       .getBusinesses(_: IdType, _: String)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(Nino, nino, *, *)
+      .expects(IdType.Nino, nino.value, *, *)
       .returning(Future.successful(expectedResult))
     ()
   }
+
 }
