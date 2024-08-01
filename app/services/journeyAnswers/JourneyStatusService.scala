@@ -18,12 +18,9 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
-import connectors.IFSConnector
-import connectors.BusinessDetailsConnector
 import models.common._
 import models.commonTaskList.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem}
-import models.connector.api_1171
-import models.domain.{ApiResultT, Business}
+import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.TaskList
 import repositories.JourneyAnswersRepository

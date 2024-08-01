@@ -17,7 +17,7 @@
 package services
 
 import cats.data.EitherT
-import connectors.{IFSBusinessDetailsConnector, IFSConnector}
+import connectors.IFSBusinessDetailsConnector
 import models.common.{BusinessId, Nino}
 import models.domain._
 import models.error.ServiceError

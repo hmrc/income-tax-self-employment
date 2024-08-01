@@ -16,12 +16,11 @@
 
 package controllers.journeyAnswers.expenses.goodsToSellOrUse
 
-//import mocks.MockAuth
-//
-//class GoodsToSellOrUseControllerSpec extends MockAuth {
+import mocks.MockAuth
 
 // TODO Move to JourneyAnswersControllerSpec unhappy path
-//
+class GoodsToSellOrUseControllerSpec extends MockAuth {
+
 //  private val mockService = mock[SelfEmploymentBusinessService]
 //
 //  private val controller = new GoodsToSellOrUseController(mockService, mockAuthorisedAction, stubControllerComponents)
@@ -136,4 +135,4 @@ package controllers.journeyAnswers.expenses.goodsToSellOrUse
 //    protected val expectedData: CreateSEPeriodSummaryRequestData = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, expectedBody)
 //  }
 
-//}
+}

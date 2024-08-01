@@ -34,7 +34,6 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.JsObject
 import stubs.connectors.StubBusinessDetailsConnector
-import stubs.connectors.StubIFSConnector
 import stubs.repositories.StubJourneyAnswersRepository
 import stubs.services.StubBusinessService
 import utils.BaseSpec._
