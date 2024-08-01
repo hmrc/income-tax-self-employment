@@ -53,7 +53,7 @@ trait IFSConnector {
   def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
 }
 
-object SelfEmploymentConnector {
+object IFSConnector {
   type Api1786Response = ApiResponse[api_1786.SuccessResponseSchema]
   type Api1802Response = ApiResponse[api_1802.response.CreateAmendSEAnnualSubmissionResponse]
   type Api1803Response = ApiResponse[api_1803.SuccessResponseSchema]
