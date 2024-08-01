@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,46 +14,16 @@
  * limitations under the License.
  */
 
-package bulders
+package connectors.data
 
-import models.common._
-import models.connector.citizen_details.SuccessResponseSchema
-import models.connector.{api_1171, citizen_details}
-import models.connector.api_1171
-import models.domain.Business.mkBusiness
-import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
+import base.IntegrationBaseSpec
+import models.connector.api_1171._
 import play.api.libs.json.Json
 
-import java.time.LocalDate
+trait Api1171Test extends IntegrationBaseSpec {
+  val downstreamUrl = s"/registration/business-details/nino/$nino"
 
-object BusinessDataBuilder {
-
-  lazy val aUserDateOfBirth: LocalDate                      = LocalDate.of(1997, 7, 30)
-  lazy val citizenDetailsDateOfBirth: String                = "30071997"
-  lazy val getCitizenDetailsResponse: SuccessResponseSchema = Json.parse(getCitizenDetailsResponseStr).as[citizen_details.SuccessResponseSchema]
-
-  lazy val aGetBusinessDataResponse     = Json.parse(aGetBusinessDataResponseStr).as[api_1171.SuccessResponseSchema]
-  lazy val aGetBusinessDataEmptyRequest = aGetBusinessDataResponse.copy(taxPayerDisplayResponse = aTaxPayerDisplayResponse.copy(businessData = None))
-  lazy val aTaxPayerDisplayResponse     = aGetBusinessDataResponse.taxPayerDisplayResponse
-  lazy val aBusinessData                = aGetBusinessDataResponse.taxPayerDisplayResponse.businessData
-  lazy val aBusinesses = aBusinessData.map(_.map(a => mkBusiness(a, aGetBusinessDataResponse.taxPayerDisplayResponse.yearOfMigration))).getOrElse(Nil)
-  lazy val aBusiness   = aBusinesses.head
-  lazy val aBusinessIdAndName = (aBusiness.businessId, aBusiness.tradingName)
-  lazy val aTradesJourneyStatusesSeq = List(
-    TradesJourneyStatuses(
-      BusinessId(aBusiness.businessId),
-      aBusiness.tradingName.map(TradingName(_)),
-      TypeOfBusiness(aBusiness.typeOfBusiness),
-      AccountingType(aBusiness.accountingType.getOrElse("")),
-      List(
-        JourneyNameAndStatus(JourneyName.Income, JourneyStatus.Completed),
-        JourneyNameAndStatus(JourneyName.ExpensesTailoring, JourneyStatus.Completed)
-      )
-    )
-  )
-
-  // Note our models use a subset of all the data pulled back by the API which is included here
-  lazy val aGetBusinessDataResponseStr: String =
+  val successResponseRaw: String =
     """
       |{
       |  "processingDate": "2023-07-05T09:16:58.655Z",
@@ -132,23 +102,5 @@ object BusinessDataBuilder {
       |}
       |""".stripMargin
 
-  lazy val getCitizenDetailsResponseStr: String =
-    s"""{
-     |   "name": {
-     |      "current": {
-     |         "firstName": "Mike",
-     |         "lastName": "Wazowski"
-     |      },
-     |      "previous": [
-     |         {
-     |            "firstName": "Jess",
-     |            "lastName": "Smith"
-     |         }
-     |      ]
-     |   },
-     |   "ids": {
-     |      "nino": "nino"
-     |   },
-     |   "dateOfBirth": "30071997"
-     |}""".stripMargin
+  val successResponse = Json.parse(successResponseRaw).as[SuccessResponseSchema]
 }

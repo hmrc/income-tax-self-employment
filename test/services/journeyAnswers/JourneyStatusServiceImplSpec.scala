@@ -34,6 +34,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.JsObject
 import stubs.connectors.StubGetBusinessDetailsConnector
+import stubs.connectors.StubBusinessDetailsConnector
 import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec._
 
@@ -42,7 +43,7 @@ import java.time.Instant
 class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val businessConnector = StubGetBusinessDetailsConnector()
+  val businessConnector = StubBusinessDetailsConnector()
   val repository        = StubJourneyAnswersRepository()
   val now               = Instant.now()
 

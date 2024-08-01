@@ -23,6 +23,9 @@ import models.common.{BusinessId, IdType, Nino}
 import models.database.JourneyState
 import models.database.JourneyState.JourneyStateData
 import models.domain.BusinessIncomeSourcesSummary
+import connectors.BusinessDetailsConnector
+import connectors.BusinessDetailsConnector.Api1171Response
+import models.common.{BusinessId, IdType, Nino}
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import uk.gov.hmrc.http.HeaderCarrier
@@ -32,11 +35,8 @@ import utils.TestUtils
 import scala.concurrent.{ExecutionContext, Future}
 
 class BusinessServiceSpec extends TestUtils {
-  val mockBusinessConnector = mock[GetBusinessDetailsConnector]
 
-  lazy val aJourneyState = JourneyState(
-    journeyStateData = JourneyStateData(businessId = aBusiness.businessId, journey = "income", taxYear = 2023, completedState = true)
-  )
+  val mockBusinessConnector = mock[BusinessDetailsConnector]
 
   lazy val service = new BusinessService(mockBusinessConnector)
   val nino         = Nino(aTaxPayerDisplayResponse.nino)

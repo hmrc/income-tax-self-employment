@@ -23,6 +23,8 @@ import java.time.LocalDate
 
 final case class TaxYear(endYear: Int) extends AnyVal {
   override def toString: String = endYear.toString
+
+  def toYYYY_YY: String = s"${endYear - 1}-${endYear.toString.takeRight(2)}"
 }
 
 object TaxYear {

@@ -4,8 +4,8 @@
 GET         /:taxYear/common-task-list/:nino                                                             controllers.JourneyStatusController.getCommonTaskList(taxYear: TaxYear, nino: Nino)
 
 # Business
-GET         /individuals/business/details/:nino/list                                                     controllers.BusinessDetailsController.getBusinesses(nino: String)
-GET         /individuals/business/details/:nino/:businessId                                              controllers.BusinessDetailsController.getBusiness(nino: String, businessId: String)
+GET         /individuals/business/details/:nino/list                                                     controllers.BusinessDetailsController.getBusinesses(nino: Nino)
+GET         /individuals/business/details/:nino/:businessId                                              controllers.BusinessDetailsController.getBusiness(nino: Nino, businessId: BusinessId)
 
 GET         /user-date-of-birth/:nino                                                                    controllers.BusinessDetailsController.getUserDateOfBirth(nino: Nino)
 
@@ -100,3 +100,5 @@ GET         /:taxYear/:businessId/capital-allowances-special-tax-sites/:nino/ans
 POST        /:taxYear/:businessId/capital-allowances-structures-buildings/:nino/answers                  controllers.JourneyAnswersController.saveStructuresBuildings(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/capital-allowances-structures-buildings/:nino/answers                  controllers.JourneyAnswersController.getStructuresBuildings(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
+POST        /:taxYear/:businessId/national-insurance-contributions/:nino/answers                         controllers.JourneyAnswersController.saveNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+GET         /:taxYear/:businessId/national-insurance-contributions/:nino/answers                         controllers.JourneyAnswersController.getNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

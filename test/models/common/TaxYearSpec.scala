@@ -16,21 +16,27 @@
 
 package models.common
 
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import utils.BaseSpec
+import org.scalatest.wordspec.AnyWordSpecLike
 
-class TaxYearSpec extends BaseSpec {
-
+class TaxYearSpec extends AnyWordSpecLike {
   private val year = TaxYear(2024)
 
-  "getting start and end dates" must {
+  "getting start and end dates" should {
     "get April 5th and 6th" in {
-      TaxYear.startDate(year) shouldBe "2023-04-06"
-      TaxYear.endDate(year) shouldBe "2024-04-05"
+      assert(TaxYear.startDate(year) === "2023-04-06")
+      assert(TaxYear.endDate(year) === "2024-04-05")
     }
   }
+
   "get a TYS (YY-YY) format" in {
-    TaxYear.asTys(year) shouldBe "23-24"
+    assert(TaxYear.asTys(year) === "23-24")
+  }
+
+  "toYYYY_YY" should {
+    "get a YYYY-YY format" in {
+      assert(TaxYear(2024).toYYYY_YY === "2023-24")
+      assert(TaxYear(1999).toYYYY_YY === "1998-99")
+    }
   }
 
 }

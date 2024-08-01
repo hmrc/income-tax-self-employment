@@ -22,6 +22,8 @@ import connectors.data.{Api1786Test, Api1803Test}
 import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import models.common.TaxYear.{asTys, endDate, startDate}
+import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics}
+import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics}
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
 import models.connector.api_1894.request._
@@ -29,10 +31,10 @@ import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
 import models.connector.api_1895.response.AmendSEPeriodSummaryResponse
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
+import org.scalatest.EitherValues._
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json.Json
-import utils.BaseSpec._
 
 class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
@@ -122,6 +124,49 @@ class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBase
     }
   }
 
+  "getDisclosuresSubmission" must {
+    "return None when no data" in {
+      val result = connector.getDisclosuresSubmission(ctx).value.futureValue
+      assert(result === Right(None))
+    }
+
+    "return existing data" in new ApiDisclosuresTest {
+      stubGetWithResponseBody(
+        url = downstreamUrl,
+        expectedStatus = OK,
+        expectedResponse = responseJson
+      )
+      val result = connector.getDisclosuresSubmission(ctx).value.futureValue.value
+      assert(result === Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))))
+    }
+  }
+
+  "upsertDisclosuresSubmission" must {
+    "return unit" in new ApiDisclosuresTest {
+      val request: RequestSchemaAPI1638 = RequestSchemaAPI1638(None, Some(RequestSchemaAPI1638Class2Nics(Some(true))))
+      stubPutWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = request,
+        expectedResponse = "",
+        expectedStatus = CREATED
+      )
+      val result = connector.upsertDisclosuresSubmission(ctx, request).value.futureValue
+      assert(result === Right(()))
+    }
+  }
+
+  "deleteDisclosuresSubmission" must {
+    "return unit" in new ApiDisclosuresTest {
+      stubDelete(
+        url = downstreamUrl,
+        expectedResponse = "",
+        expectedStatus = OK
+      )
+      val result = connector.deleteDisclosuresSubmission(ctx).value.futureValue
+      assert(result === Right(()))
+    }
+  }
+
   trait Api1802Test {
     val downstreamSuccessResponse: String                     = Json.stringify(Json.obj("transactionReference" -> "someId"))
     val requestBody: CreateAmendSEAnnualSubmissionRequestBody = CreateAmendSEAnnualSubmissionRequestBody(None, None, None)
@@ -175,6 +220,18 @@ class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBase
     val downstreamUrl =
       s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries\\?from=${startDate(
           data.taxYear)}&to=${endDate(data.taxYear)}"
+  }
+
+  trait ApiDisclosuresTest {
+    val responseJson: String = Json.stringify(Json.parse(s"""
+                  |{
+                  |  "class2Nics": {
+                  |     "class2VoluntaryContributions": true
+                  |  }
+                  |}
+                  |""".stripMargin))
+
+    val downstreamUrl = s"/income-tax/disclosures/${ctx.nino.value}/${ctx.taxYear.toYYYY_YY}"
   }
 
 }
