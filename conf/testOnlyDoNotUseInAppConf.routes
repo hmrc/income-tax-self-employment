@@ -10,7 +10,9 @@
 # Failing to follow this rule may result in test routes deployed in production.
 
 # Add all the application routes to the prod.routes file
-->         /                          prod.Routes
+->          /                                                                      prod.Routes
 
-GET         /income-tax-self-employment/test-only/test-clear-all-data        controllers.testonly.TestOnlyController.isTestEnabled()
-POST        /income-tax-self-employment/test-only/test-clear-all-data        controllers.testonly.TestOnlyController.clearAllData()
+GET         /test-only/income-tax-self-employment/test-clear-all-data              controllers.testonly.TestOnlyController.isTestEnabled()
+POST        /test-only/income-tax-self-employment/test-clear-all-data              controllers.testonly.TestOnlyController.clearAllData()
+# Must be GET because it is called by cucumber tests
+GET         /test-only/income-tax-self-employment/test-clear-all-data/:nino        controllers.testonly.TestOnlyController.clearAllBEAndStubData(nino: String)

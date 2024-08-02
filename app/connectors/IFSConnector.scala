@@ -55,10 +55,10 @@ trait IFSConnector {
 
 object IFSConnector {
   type Api1786Response = ApiResponse[api_1786.SuccessResponseSchema]
-  type Api1802Response = ApiResponse[api_1802.response.CreateAmendSEAnnualSubmissionResponse]
+  type Api1802Response = ApiResponse[Unit]
   type Api1803Response = ApiResponse[api_1803.SuccessResponseSchema]
-  type Api1894Response = ApiResponse[api_1894.response.CreateSEPeriodSummaryResponse]
-  type Api1895Response = ApiResponse[api_1895.response.AmendSEPeriodSummaryResponse]
+  type Api1894Response = ApiResponse[Unit]
+  type Api1895Response = ApiResponse[Unit]
   type Api1965Response = ApiResponse[api_1965.ListSEPeriodSummariesResponse]
   type Api1638Response = ApiResponse[Unit]
   type Api1639Response = ApiResponseOption[SuccessResponseAPI1639]
@@ -84,20 +84,26 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
 
   def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
-    val url     = annualSummariesUrl(data.nino, data.businessId, data.taxYear)
-    val context = appConfig.mkIFSMetadata(IFSApiName.Api1802, url)
+    val url                                          = annualSummariesUrl(data.nino, data.businessId, data.taxYear)
+    val context                                      = appConfig.mkIFSMetadata(IFSApiName.Api1802, url)
+    implicit val reads: HttpReads[ApiResponse[Unit]] = commonNoBodyResponse
+
     put[CreateAmendSEAnnualSubmissionRequestBody, Api1802Response](http, context, data.body)
   }
 
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {
-    val url     = periodicSummaries(data.nino, data.businessId, data.taxYear)
-    val context = appConfig.mkIFSMetadata(IFSApiName.Api1894, url)
+    val url                                          = periodicSummaries(data.nino, data.businessId, data.taxYear)
+    val context                                      = appConfig.mkIFSMetadata(IFSApiName.Api1894, url)
+    implicit val reads: HttpReads[ApiResponse[Unit]] = commonNoBodyResponse
+
     post[CreateSEPeriodSummaryRequestBody, Api1894Response](http, context, data.body)
   }
 
   def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] = {
-    val url     = periodicSummariesFromTo(data.nino, data.businessId, data.taxYear)
-    val context = appConfig.mkIFSMetadata(IFSApiName.Api1895, url)
+    val url                                          = periodicSummariesFromTo(data.nino, data.businessId, data.taxYear)
+    val context                                      = appConfig.mkIFSMetadata(IFSApiName.Api1895, url)
+    implicit val reads: HttpReads[ApiResponse[Unit]] = commonNoBodyResponse
+
     put[AmendSEPeriodSummaryRequestBody, Api1895Response](http, context, data.body)
   }
 

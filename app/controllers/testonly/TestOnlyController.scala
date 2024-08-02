@@ -16,9 +16,14 @@
 
 package controllers.testonly
 
+import cats.data.EitherT
+import config.AppConfig
 import controllers.handleApiUnitResultT
+import models.connector.{ApiResponse, commonDeleteReads}
+import models.domain.ApiResultT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.JourneyAnswersRepository
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.Logging
 
@@ -27,8 +32,10 @@ import scala.concurrent.ExecutionContext
 
 /** Contains operations used only by tests and environment with stubs.
   */
-class TestOnlyController @Inject() (journeyAnswersRepository: JourneyAnswersRepository, cc: MessagesControllerComponents)(implicit
-    ec: ExecutionContext)
+class TestOnlyController @Inject() (httpClient: HttpClient,
+                                    journeyAnswersRepository: JourneyAnswersRepository,
+                                    cc: MessagesControllerComponents,
+                                    appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
 
@@ -40,4 +47,20 @@ class TestOnlyController @Inject() (journeyAnswersRepository: JourneyAnswersRepo
     handleApiUnitResultT(journeyAnswersRepository.testOnlyClearAllData())
   }
 
+  def clearAllBEAndStubData(nino: String): Action[AnyContent] = Action.async { implicit request =>
+    val res = for {
+      _ <- testClearIFSData(nino)
+      _ <- journeyAnswersRepository.testOnlyClearAllData()
+    } yield ()
+
+    handleApiUnitResultT(res)
+  }
+
+  private def testClearIFSData(nino: String)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+    val url                                          = s"${appConfig.ifsBaseUrl}/nino/$nino"
+    implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
+    val res                                          = httpClient.DELETE[ApiResponse[Unit]](url)(reads, hc, ec)
+
+    EitherT(res)
+  }
 }
