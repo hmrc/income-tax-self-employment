@@ -33,7 +33,6 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.JsObject
-import stubs.connectors.StubGetBusinessDetailsConnector
 import stubs.connectors.StubBusinessDetailsConnector
 import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec._

@@ -17,11 +17,7 @@
 package config
 
 import com.google.inject.AbstractModule
-<<<<<<< HEAD
-import connectors.{GetBusinessDetailsConnector, GetBusinessDetailsConnectorImpl, SelfEmploymentConnector, SelfEmploymentConnectorImpl}
-=======
 import connectors.{BusinessDetailsConnector, BusinessDetailsConnectorImpl, SelfEmploymentConnector, SelfEmploymentConnectorImpl}
->>>>>>> main
 import repositories.{JourneyAnswersRepository, MongoJourneyAnswersRepository}
 import services.journeyAnswers._
 import services.{BusinessService, BusinessServiceImpl}
@@ -43,7 +39,6 @@ class Module extends AbstractModule {
     bind(classOf[NICsAnswersService]).to(classOf[NICsAnswersServiceImpl])
     bind(classOf[JourneyAnswersRepository]).to(classOf[MongoJourneyAnswersRepository])
     bind(classOf[SelfEmploymentConnector]).to(classOf[SelfEmploymentConnectorImpl])
-    bind(classOf[JourneyStatusService]).to(classOf[JourneyStatusServiceImpl])
     bind(classOf[BusinessDetailsConnector]).to(classOf[BusinessDetailsConnectorImpl])
     ()
   }

@@ -19,7 +19,6 @@ package bulders
 import models.common._
 import models.connector.citizen_details.SuccessResponseSchema
 import models.connector.{api_1171, citizen_details}
-import models.connector.api_1171
 import models.domain.Business.mkBusiness
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import play.api.libs.json.Json
@@ -139,15 +138,10 @@ object BusinessDataBuilder {
      |         "firstName": "Mike",
      |         "lastName": "Wazowski"
      |      },
-     |      "previous": [
-     |         {
-     |            "firstName": "Jess",
-     |            "lastName": "Smith"
-     |         }
-     |      ]
+     |      "previous": []
      |   },
      |   "ids": {
-     |      "nino": "nino"
+     |      "nino": "AA055075C"
      |   },
      |   "dateOfBirth": "30071997"
      |}""".stripMargin

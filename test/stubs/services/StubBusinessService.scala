@@ -16,19 +16,25 @@
 
 package stubs.services
 
+import bulders.BusinessDataBuilder.aUserDateOfBirth
 import cats.implicits._
 import models.common._
+import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.domain.Business
 import models.error.DownstreamError
 import services.BusinessService
-import services.BusinessService.GetBusinessResponse
+import services.BusinessService.{GetBusinessIncomeSourcesSummaryResponse, GetBusinessResponse, GetUserDateOfBirthResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.LocalDate
 import scala.concurrent.{ExecutionContext, Future}
 
 case class StubBusinessService(
     getBusinessesRes: Either[DownstreamError, Seq[Business]] = Seq.empty.asRight[DownstreamError],
-    getBusinessRes: Either[DownstreamError, Seq[Business]] = Seq.empty.asRight[DownstreamError]
+    getBusinessRes: Either[DownstreamError, Seq[Business]] = Seq.empty.asRight[DownstreamError],
+    getUserDateOfBirthRes: Either[DownstreamError, LocalDate] = aUserDateOfBirth.asRight[DownstreamError],
+    getBusinessIncomeSourcesSummaryRes: Either[DownstreamError, BusinessIncomeSourcesSummaryResponse] =
+      BusinessIncomeSourcesSummaryResponse.empty.asRight[DownstreamError]
 ) extends BusinessService {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
@@ -36,5 +42,12 @@ case class StubBusinessService(
 
   def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
     Future.successful(getBusinessRes)
+
+  def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): Future[GetUserDateOfBirthResponse] =
+    Future.successful(getUserDateOfBirthRes)
+
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
+      hc: HeaderCarrier): Future[GetBusinessIncomeSourcesSummaryResponse] =
+    Future.successful(getBusinessIncomeSourcesSummaryRes)
 
 }

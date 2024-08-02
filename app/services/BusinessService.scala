@@ -16,25 +16,24 @@
 
 package services
 
-import connectors.GetBusinessDetailsConnector
-import models.common.{BusinessId, IdType, Nino, TaxYear}
 import connectors.BusinessDetailsConnector
-import models.common.{BusinessId, IdType, Nino}
+import models.common.{BusinessId, IdType, Nino, TaxYear}
+import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.domain._
 import models.error.DownstreamError
-import services.BusinessService.{GetBusinessIncomeSourcesSummaryResponse, GetBusinessResponse, GetUserDateOfBirthResponse, getBusinessIncomeSourcesSummaryResponseStub}
+import services.BusinessService.{GetBusinessIncomeSourcesSummaryResponse, GetBusinessResponse, GetUserDateOfBirthResponse, parseDoBToLocalDate}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import java.time.LocalDate
-import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
-
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait BusinessService {
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): Future[GetBusinessResponse]
   def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): Future[GetBusinessResponse]
+  def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): Future[GetUserDateOfBirthResponse]
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
+      hc: HeaderCarrier): Future[GetBusinessIncomeSourcesSummaryResponse]
 }
 
 @Singleton
@@ -42,7 +41,7 @@ class BusinessServiceImpl @Inject() (businessConnector: BusinessDetailsConnector
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
     businessConnector
-      .getBusinesses(IdType.Nino, nino.value)
+      .getBusinesses(IdType.Nino, nino.nino)
       .map(_.map(_.taxPayerDisplayResponse)
         .map(taxPayerDisplayResponse =>
           taxPayerDisplayResponse.businessData.getOrElse(Nil).map(details => Business.mkBusiness(details, taxPayerDisplayResponse.yearOfMigration))))
@@ -50,7 +49,7 @@ class BusinessServiceImpl @Inject() (businessConnector: BusinessDetailsConnector
   def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
     getBusinesses(nino).map(_.map(_.filter(_.businessId == businessId.value)))
 
-  def getUserDateOfBirth(nino: String)(implicit hc: HeaderCarrier): Future[GetUserDateOfBirthResponse] =
+  def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): Future[GetUserDateOfBirthResponse] =
     businessConnector
       .getCitizenDetails(nino)
       .map(_.map { userDetails =>
@@ -58,14 +57,15 @@ class BusinessServiceImpl @Inject() (businessConnector: BusinessDetailsConnector
       })
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
-      hc: HeaderCarrier): Future[GetBusinessIncomeSourcesSummaryResponse] = getBusinessIncomeSourcesSummaryResponseStub()
+      hc: HeaderCarrier): Future[GetBusinessIncomeSourcesSummaryResponse] =
+    businessConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)
 
 }
 
 object BusinessService {
   type GetBusinessResponse                     = Either[DownstreamError, Seq[Business]]
   type GetUserDateOfBirthResponse              = Either[DownstreamError, LocalDate]
-  type GetBusinessIncomeSourcesSummaryResponse = Either[DownstreamError, BusinessIncomeSourcesSummary]
+  type GetBusinessIncomeSourcesSummaryResponse = Either[DownstreamError, BusinessIncomeSourcesSummaryResponse]
 
   def parseDoBToLocalDate(dob: String): LocalDate = {
     val (year, month, day) = (dob.substring(4, 8), dob.substring(2, 4), dob.substring(0, 2))
@@ -73,5 +73,5 @@ object BusinessService {
   }
 
   def getBusinessIncomeSourcesSummaryResponseStub()(implicit ec: ExecutionContext): Future[GetBusinessIncomeSourcesSummaryResponse] = Future(
-    Right(BusinessIncomeSourcesSummary.empty))
+    Right(BusinessIncomeSourcesSummaryResponse.empty))
 }

@@ -59,7 +59,7 @@ class JourneyStatusServiceImpl @Inject() (businessConnector: BusinessDetailsConn
       }
 
     for {
-      businessesResp <- EitherT(businessConnector.getBusinesses(IdType.Nino, nino.value))
+      businessesResp <- EitherT(businessConnector.getBusinesses(IdType.Nino, nino.nino))
       businesses = getBusinesses(businessesResp)
       taskList <- repository.getAll(taxYear, mtditid, businesses)
     } yield taskList

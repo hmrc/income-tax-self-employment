@@ -17,15 +17,10 @@
 package services
 
 import bulders.BusinessDataBuilder._
-import connectors.GetBusinessDetailsConnector
-import connectors.GetBusinessDetailsConnector.{Api1171Response, CitizenDetailsResponse}
-import models.common.{BusinessId, IdType, Nino}
-import models.database.JourneyState
-import models.database.JourneyState.JourneyStateData
-import models.domain.BusinessIncomeSourcesSummary
 import connectors.BusinessDetailsConnector
-import connectors.BusinessDetailsConnector.Api1171Response
-import models.common.{BusinessId, IdType, Nino}
+import connectors.BusinessDetailsConnector.{Api1171Response, Api1871Response, CitizenDetailsResponse}
+import models.common.{BusinessId, IdType, Nino, TaxYear}
+import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import uk.gov.hmrc.http.HeaderCarrier
@@ -38,13 +33,13 @@ class BusinessServiceSpec extends TestUtils {
 
   val mockBusinessConnector = mock[BusinessDetailsConnector]
 
-  lazy val service = new BusinessService(mockBusinessConnector)
+  lazy val service = new BusinessServiceImpl(mockBusinessConnector)
   val nino         = Nino(aTaxPayerDisplayResponse.nino)
-  val businessId   = aBusiness.businessId
+  val businessId   = BusinessId(aBusiness.businessId)
 
   for ((getMethodName, svcMethod) <- Seq(
-      ("getBusinesses", () => service.getBusinesses(nino.value)),
-      ("getBusiness", () => service.getBusiness(nino.value, businessId))
+      ("getBusinesses", () => service.getBusinesses(nino)),
+      ("getBusiness", () => service.getBusiness(nino, businessId))
     ))
     s"$getMethodName" should { // scalastyle:off magic.number
       val expectedRight = Right(Seq(aBusiness))
@@ -66,11 +61,17 @@ class BusinessServiceSpec extends TestUtils {
   }
 
   "getBusinessIncomeSourcesSummary" should {
-    val expectedRight = Right(BusinessIncomeSourcesSummary.empty)
-    behave like rightResponse(() => service.getBusinessIncomeSourcesSummary(taxYear, nino, BusinessId(businessId)), expectedRight, () => ())
+    val expectedRight = Right(BusinessIncomeSourcesSummaryResponse.empty)
+    behave like rightResponse(
+      () => service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId),
+      expectedRight,
+      () => stubConnectorGetBusinessIncomeSourcesSummary(expectedRight))
 
     val expectedLeft = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
-    behave like leftResponse(() => service.getBusinessIncomeSourcesSummary(taxYear, nino, BusinessId(businessId)), expectedLeft, () => ())
+    behave like leftResponse(
+      () => service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId),
+      expectedLeft,
+      () => stubConnectorGetBusinessIncomeSourcesSummary(expectedLeft))
   }
 
   def rightResponse[A](svcMethod: () => Future[A], expectedResult: A, stubs: () => Unit): Unit =
@@ -88,7 +89,7 @@ class BusinessServiceSpec extends TestUtils {
   private def stubConnectorGetBusiness(expectedResult: Api1171Response): Unit = {
     (mockBusinessConnector
       .getBusinesses(_: IdType, _: String)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(IdType.Nino, nino.value, *, *)
+      .expects(IdType.Nino, nino.nino, *, *)
       .returning(Future.successful(expectedResult))
     ()
   }
@@ -97,6 +98,14 @@ class BusinessServiceSpec extends TestUtils {
     (mockBusinessConnector
       .getCitizenDetails(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
       .expects(nino, *, *)
+      .returning(Future.successful(expectedResult))
+    ()
+  }
+
+  private def stubConnectorGetBusinessIncomeSourcesSummary(expectedResult: Api1871Response): Unit = {
+    (mockBusinessConnector
+      .getBusinessIncomeSourcesSummary(_: TaxYear, _: Nino, _: BusinessId)(_: HeaderCarrier, _: ExecutionContext))
+      .expects(taxYear, nino, businessId, *, *)
       .returning(Future.successful(expectedResult))
     ()
   }

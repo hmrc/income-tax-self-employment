@@ -18,7 +18,7 @@ package connectors
 
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
-import connectors.data.Api1171Test
+import connectors.data.{Api1171Test, CitizenDetailsTest}
 import helpers.WiremockSpec
 import models.common.{IdType, JourneyContextWithNino}
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -36,7 +36,18 @@ class BusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBas
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.getBusinesses(IdType.Nino, nino.value).futureValue shouldBe successResponse.asRight
+      connector.getBusinesses(IdType.Nino, nino.nino).futureValue shouldBe successResponse.asRight
+    }
+  }
+
+  "getCitizenDetails" must {
+    "return successful response" in new CitizenDetailsTest {
+      stubGetWithResponseBody(
+        url = downstreamUrl,
+        expectedResponse = successResponseRaw,
+        expectedStatus = OK
+      )
+      connector.getCitizenDetails(nino).futureValue shouldBe successResponse.asRight
     }
   }
 

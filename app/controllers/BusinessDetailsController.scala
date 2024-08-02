@@ -19,7 +19,6 @@ package controllers
 import controllers.actions.AuthorisedAction
 import models.common.{BusinessId, Nino, TaxYear}
 import models.error.DownstreamError
-import models.common.{BusinessId, Nino}
 import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
 import play.api.Logging
 import play.api.libs.json.Json
@@ -45,7 +44,7 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
     businessService.getBusiness(nino, businessId) map businessDataResponse
   }
 
-  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { _ =>
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
     businessService.getBusinessIncomeSourcesSummary(taxYear, nino, businessId) map {
       case Right(model)     => Ok(Json.toJson(model))
       case Left(errorModel) => handleErrorModel(errorModel)

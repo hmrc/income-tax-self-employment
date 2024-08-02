@@ -16,13 +16,15 @@
 
 package models.common
 
+import play.api.libs.json.{Format, Json}
 import play.api.mvc.PathBindable
 
-final case class Nino(value: String) extends AnyVal {
-  override def toString: String = value
+final case class Nino(nino: String) extends AnyVal {
+  override def toString: String = nino
 }
 
 object Nino {
+  implicit val format: Format[Nino] = Json.valueFormat[Nino]
 
   implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[Nino] = new PathBindable[Nino] {
 
@@ -30,7 +32,7 @@ object Nino {
       strBinder.bind(key, value).map(Nino.apply)
 
     override def unbind(key: String, nino: Nino): String =
-      strBinder.unbind(key, nino.value)
+      strBinder.unbind(key, nino.nino)
 
   }
 }
