@@ -16,10 +16,13 @@
 
 package models.error
 
+import models.common.BusinessId
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.libs.json._
 
 trait ServiceError {
   val errorMessage: String
+  val status: Int = INTERNAL_SERVER_ERROR
 }
 
 object ServiceError {
@@ -42,6 +45,11 @@ object ServiceError {
         case error                       => Json.obj("errorMessage" -> error.errorMessage)
       }
     )
+
+  final case class BusinessNotFoundError(id: BusinessId) extends ServiceError {
+    val errorMessage: String = s"Business with id=$id not found"
+    override val status: Int = NOT_FOUND
+  }
 
   case class InvalidJsonFormatError(expectedCaseClassName: String, rawJson: String, error: JsonErrorWithPath) extends ServiceError {
     val errorMessage: String = s"Cannot convert JSON to a case class: $expectedCaseClassName. Error: ${error.toString}. JSON:\n$rawJson"

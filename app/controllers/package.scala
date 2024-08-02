@@ -51,10 +51,10 @@ package object controllers {
       handleError(error)
     }.merge
 
-  // TODO Implement proper error handling
+  // TODO Implement proper error handling, right we assume error status == downstream status, or Internal Server Error if it's different type of error
   private def handleError(error: ServiceError)(implicit logger: Logger) = {
     logger.error(s"HttpError encountered: ${error.errorMessage}")
-    InternalServerError(error.errorMessage)
+    Status(error.status)(error.errorMessage)
   }
 
   def getBody[A: Reads](user: AuthorisedAction.User[AnyContent])(

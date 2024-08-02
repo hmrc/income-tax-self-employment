@@ -18,14 +18,13 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
-import connectors.BusinessDetailsConnector
 import models.common._
 import models.commonTaskList.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem}
-import models.connector.api_1171
-import models.domain.{ApiResultT, Business}
+import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.TaskList
 import repositories.JourneyAnswersRepository
+import services.BusinessService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -39,8 +38,7 @@ trait JourneyStatusService {
 }
 
 @Singleton
-class JourneyStatusServiceImpl @Inject() (businessConnector: BusinessDetailsConnector, repository: JourneyAnswersRepository)(implicit
-    ec: ExecutionContext)
+class JourneyStatusServiceImpl @Inject() (businessService: BusinessService, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends JourneyStatusService {
 
   def set(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] =
@@ -52,18 +50,11 @@ class JourneyStatusServiceImpl @Inject() (businessConnector: BusinessDetailsConn
       status = answer.map(_.status).getOrElse(JourneyStatus.CheckOurRecords)
     } yield status
 
-  def getTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] = {
-    def getBusinesses(businessesResp: api_1171.SuccessResponseSchema): List[Business] =
-      businessesResp.taxPayerDisplayResponse.businessData.getOrElse(Nil).map { details =>
-        Business.mkBusiness(details, businessesResp.taxPayerDisplayResponse.yearOfMigration)
-      }
-
+  def getTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
     for {
-      businessesResp <- EitherT(businessConnector.getBusinesses(IdType.Nino, nino.value))
-      businesses = getBusinesses(businessesResp)
-      taskList <- repository.getAll(taxYear, mtditid, businesses)
+      businesses <- businessService.getBusinesses(nino)
+      taskList   <- repository.getAll(taxYear, mtditid, businesses)
     } yield taskList
-  }
 
   def getCommonTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskListModel] =
     getTaskList(taxYear, mtditid, nino).map { data =>

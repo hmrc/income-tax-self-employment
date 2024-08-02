@@ -17,7 +17,7 @@
 package services.journeyAnswers
 
 import cats.implicits._
-import connectors.SelfEmploymentConnector
+import connectors.IFSConnector
 import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne
 import models.connector.api_1786.IncomesType
@@ -35,7 +35,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import services.journeyAnswers.PrepopAnswersServiceImplSpec._
-import stubs.connectors.StubSelfEmploymentConnector
+import stubs.connectors.StubIFSConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
@@ -54,13 +54,13 @@ class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
     }
 
     "return error if error is returned from the Connector" in new TestCase(connector =
-      StubSelfEmploymentConnector(getPeriodicSummaryDetailResult = Future(downstreamError.asLeft))) {
+      StubIFSConnector(getPeriodicSummaryDetailResult = Future(downstreamError.asLeft))) {
       val result: Either[ServiceError, IncomePrepopAnswers] = service.getIncomeAnswers(journeyCtxWithNino).value.futureValue
       val error: ServiceError                               = result.left.value
       error shouldBe a[DownstreamError]
     }
 
-    "return IncomePrepopAnswers" in new TestCase(connector = StubSelfEmploymentConnector(getPeriodicSummaryDetailResult = Future.successful(
+    "return IncomePrepopAnswers" in new TestCase(connector = StubIFSConnector(getPeriodicSummaryDetailResult = Future.successful(
       api_1786.SuccessResponseSchema(currTaxYearStart, currTaxYearEnd, api_1786.FinancialsType(None, filledIncomes.some)).asRight))) {
       val result: Either[ServiceError, IncomePrepopAnswers] = service.getIncomeAnswers(journeyCtxWithNino).value.futureValue
       result.value shouldBe IncomePrepopAnswers(filledIncomes.turnover, filledIncomes.other)
@@ -74,13 +74,13 @@ class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
     }
 
     "return error if error is returned from the Connector" in new TestCase(connector =
-      StubSelfEmploymentConnector(getAnnualSummariesResult = Future(downstreamError.asLeft))) {
+      StubIFSConnector(getAnnualSummariesResult = Future(downstreamError.asLeft))) {
       val result: Either[ServiceError, AdjustmentsPrepopAnswers] = service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue
       val error: ServiceError                                    = result.left.value
       error shouldBe a[DownstreamError]
     }
 
-    "return IncomePrepopAnswers" in new TestCase(connector = StubSelfEmploymentConnector(getAnnualSummariesResult =
+    "return IncomePrepopAnswers" in new TestCase(connector = StubIFSConnector(getAnnualSummariesResult =
       Future.successful(api_1803.SuccessResponseSchema(annualAdjustmentsType.some, None, None).asRight))) {
       val result         = service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue
       val expectedAnswer = fromAnnualAdjustmentsType(annualAdjustmentsType)
@@ -90,7 +90,7 @@ class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 }
 
 object PrepopAnswersServiceImplSpec {
-  abstract class TestCase(val connector: SelfEmploymentConnector = StubSelfEmploymentConnector()) {
+  abstract class TestCase(val connector: IFSConnector = StubIFSConnector()) {
     val service = new PrepopAnswersServiceImpl(connector)
   }
 }

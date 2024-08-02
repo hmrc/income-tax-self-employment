@@ -17,7 +17,7 @@
 package connectors
 
 import models.error.DownstreamError
-import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
+import models.error.DownstreamError.{GenericDownstreamError, MultipleDownstreamErrors, SingleDownstreamError}
 import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, SERVICE_UNAVAILABLE}
 import play.api.libs.json.{JsPath, JsonValidationError}
@@ -58,25 +58,22 @@ trait DownstreamParser {
     errorMessages.mkString("\n")
   }
 
-  // FIXME - I don't think this code does what it should.
-  // It seems as if the case classes for deserializing the error response json are wrong based off what is documented in
-  // the API OAS for error responses. Until we know what the response json will actually look like from IFS (which we
-  // currently have not integrated with them in order to try), we cannot be 100% sure what our model will look like.
   def handleDownstreamError(response: HttpResponse, statusOverride: Option[Int] = None): DownstreamError = {
     val status = statusOverride.getOrElse(response.status)
     Try {
       val json    = response.json
       val apiErrs = json.asOpt[MultipleDownstreamErrorBody]
-      if (apiErrs.nonEmpty) MultipleDownstreamErrors(status, apiErrs.get)
-      else SingleDownstreamError(status, json.as[SingleDownstreamErrorBody])
+      if (apiErrs.nonEmpty) {
+        MultipleDownstreamErrors(status, apiErrs.get)
+      } else {
+        SingleDownstreamError(status, json.as[SingleDownstreamErrorBody])
+      }
     } match {
       case Success(leftStatusError) => leftStatusError
-      case Failure(t) =>
-        pagerDutyLog(
-          UNEXPECTED_RESPONSE_FROM_API,
-          s"[$parserName][read] Unexpected Json error: ${t.getMessage} when calling $requestMethod $targetUrl, responseStatus: $responseStatus, responseBody $responseBody"
-        )
-        SingleDownstreamError(status, SingleDownstreamErrorBody.parsingError)
+      case Failure(_) =>
+        GenericDownstreamError(
+          response.status,
+          s"Downstream error when calling $requestMethod ${targetUrl}: status=${responseStatus}, body:\n${response.body}")
     }
   }
 

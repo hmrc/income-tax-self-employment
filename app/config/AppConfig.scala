@@ -16,17 +16,29 @@
 
 package config
 
+import com.typesafe.config.ConfigFactory
+import models.connector.IFSApiName
+import models.connector.IntegrationContext.IFSHeaderCarrier
 import play.api.Configuration
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import utils.Logging
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.Duration
 
 @Singleton
-class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) {
+class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) extends Logging {
   val authBaseUrl: String      = servicesConfig.baseUrl("auth")
   val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
   val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
+  val testMode: List[String] =
+    config.getOptional[String]("microservice.services.integration-framework.test-mode").map(_.split(",").toList).getOrElse(Nil)
+
+  if (testMode.nonEmpty) {
+    logger.warn("!! TEST MODE enabled in microservice.services.test-mode - YOU SHOULD NOT SEE THIS MESSAGE ON PROD or END TO END tests !!")
+    logger.info(s"Test Scenarios activated: ${testMode.mkString(",")}")
+  }
 
   val ifsEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
 
@@ -36,4 +48,9 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
 
   val mongoTTL: Int = Duration(servicesConfig.getString("mongodb.timeToLive")).toDays.toInt
+
+  val headerCarrierConfig = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
+
+  def mkIFSMetadata(apiName: IFSApiName, url: String): IFSHeaderCarrier = IFSHeaderCarrier(headerCarrierConfig, this, apiName, url)
+
 }

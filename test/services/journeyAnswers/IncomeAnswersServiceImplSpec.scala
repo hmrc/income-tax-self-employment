@@ -17,7 +17,7 @@
 package services.journeyAnswers
 
 import cats.implicits._
-import connectors.SelfEmploymentConnector
+import connectors.IFSConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import models.common.{JourneyContextWithNino, JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
@@ -36,8 +36,8 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import services.journeyAnswers.IncomeAnswersServiceImplSpec._
-import stubs.connectors.StubSelfEmploymentConnector
-import stubs.connectors.StubSelfEmploymentConnector._
+import stubs.connectors.StubIFSConnector
+import stubs.connectors.StubIFSConnector._
 import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
@@ -85,7 +85,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 
   "saving income answers" when {
     "no period summary submission exists" must {
-      "successfully store data and create the period summary" in new TestCase(connector = mock[SelfEmploymentConnector]) {
+      "successfully store data and create the period summary" in new TestCase(connector = mock[IFSConnector]) {
         connector.listSEPeriodSummary(*)(*, *) returns
           Future.successful(api1965EmptyResponse.asRight)
 
@@ -105,7 +105,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
       }
     }
     "a submission exists" must {
-      "successfully store data and amend the period summary" in new TestCase(connector = mock[SelfEmploymentConnector]) {
+      "successfully store data and amend the period summary" in new TestCase(connector = mock[IFSConnector]) {
         connector.listSEPeriodSummary(*)(*, *) returns
           Future.successful(api1965MatchedResponse.asRight)
 
@@ -137,8 +137,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 }
 
 object IncomeAnswersServiceImplSpec {
-  abstract class TestCase(val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(),
-                          val connector: SelfEmploymentConnector = StubSelfEmploymentConnector()) {
+  abstract class TestCase(val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(), val connector: IFSConnector = StubIFSConnector()) {
     val service = new IncomeAnswersServiceImpl(repo, connector)
   }
 

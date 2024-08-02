@@ -16,36 +16,38 @@
 
 package services
 
-import connectors.BusinessDetailsConnector
-import models.common.{BusinessId, IdType, Nino}
+import cats.data.EitherT
+import connectors.IFSBusinessDetailsConnector
+import models.common.{BusinessId, Nino}
 import models.domain._
-import models.error.DownstreamError
-import services.BusinessService.GetBusinessResponse
+import models.error.ServiceError
+import models.error.ServiceError.BusinessNotFoundError
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.EitherTOps.EitherTExtensions
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait BusinessService {
-  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): Future[GetBusinessResponse]
-  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): Future[GetBusinessResponse]
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]]
+  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business]
 }
 
 @Singleton
-class BusinessServiceImpl @Inject() (businessConnector: BusinessDetailsConnector)(implicit ec: ExecutionContext) extends BusinessService {
+class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnector)(implicit ec: ExecutionContext) extends BusinessService {
 
-  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
-    businessConnector
-      .getBusinesses(IdType.Nino, nino.value)
-      .map(_.map(_.taxPayerDisplayResponse)
-        .map(taxPayerDisplayResponse =>
-          taxPayerDisplayResponse.businessData.getOrElse(Nil).map(details => Business.mkBusiness(details, taxPayerDisplayResponse.yearOfMigration))))
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
+    for {
+      maybeBusinesses <- businessConnector.getBusinesses(nino)
+      maybeYearOfMigration = maybeBusinesses.taxPayerDisplayResponse.yearOfMigration
+      businesses           = maybeBusinesses.taxPayerDisplayResponse.businessData.getOrElse(Nil)
+    } yield businesses.map(b => Business.mkBusiness(b, maybeYearOfMigration))
 
-  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
-    getBusinesses(nino).map(_.map(_.filter(_.businessId == businessId.value)))
+  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business] =
+    for {
+      businesses <- getBusinesses(nino)
+      maybeBusiness = businesses.find(_.businessId == businessId.value)
+      business <- EitherT.fromOption[Future](maybeBusiness, BusinessNotFoundError(businessId)).leftAs[ServiceError]
+    } yield business
 
-}
-
-object BusinessService {
-  type GetBusinessResponse = Either[DownstreamError, Seq[Business]]
 }

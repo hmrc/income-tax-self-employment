@@ -36,9 +36,9 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json.Json
 
-class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
+class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
-  val connector = new SelfEmploymentConnectorImpl(httpClient, appConfig)
+  val connector = new IFSConnectorImpl(httpClient, appConfig)
   val ctx       = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
 
   "getPeriodicSummaryDetail" must {
