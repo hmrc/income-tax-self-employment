@@ -40,12 +40,12 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
     handleApiResultT(businessService.getBusiness(nino, businessId))
   }
 
-  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResultT(businessService.getBusinessIncomeSourcesSummary(taxYear, nino, businessId))
-  }
-
   def getUserDateOfBirth(nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleApiResultT(businessService.getUserDateOfBirth(nino))
+  }
+
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResultT(businessService.getBusinessIncomeSourcesSummary(taxYear, nino, businessId))
   }
 
 }

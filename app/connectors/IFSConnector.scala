@@ -78,6 +78,7 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     s"${baseUrl(nino, incomeSourceId, taxYear)}/periodic-summaries?from=${startDate(taxYear)}&to=${endDate(taxYear)}"
   private def periodicSummaryDetailUrl(nino: Nino, incomeSourceId: BusinessId, taxYear: TaxYear) =
     s"${baseUrl(nino, incomeSourceId, taxYear)}/periodic-summary-detail?from=${startDate(taxYear)}&to=${endDate(taxYear)}"
+
   private def disclosuresSubmissionUrl(nino: Nino, taxYear: TaxYear) =
     s"${appConfig.ifsBaseUrl}/income-tax/disclosures/$nino/${taxYear.toYYYY_YY}"
 

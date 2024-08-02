@@ -47,10 +47,9 @@ object IFSBusinessDetailsConnector {
 class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends IFSBusinessDetailsConnector with Logging {
 
   private def api1171BusinessDetailsUrl(idType: IdType, idNumber: String) = s"${appConfig.ifsBaseUrl}/registration/business-details/$idType/$idNumber"
-  private def citizenDetailsUrl(idType: IdType, idNumber: Nino)           = s"${appConfig.citizenDetailsUrl}/citizen-details/$idType/$idNumber"
-  // TODO BISSUrl is a placeholder, update with correct url
+  private def citizenDetailsUrl(idType: IdType, idNumber: Nino)           = s"${appConfig.ifsBaseUrl}/citizen-details/$idType/$idNumber"
   private def businessIncomeSourcesSummaryUrl(taxYear: TaxYear, nino: Nino, businessId: BusinessId) =
-    s"${appConfig.ifsBaseUrl}/${asTys(taxYear)}/$nino/$businessId"
+    s"${appConfig.ifsBaseUrl}/income-tax/income-sources/${asTys(taxYear)}/$nino/$businessId/self-employment/biss"
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] = {
     val url                                                                    = api1171BusinessDetailsUrl(IdType.Nino, nino.value)

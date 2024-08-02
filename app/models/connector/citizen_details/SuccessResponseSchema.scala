@@ -16,15 +16,22 @@
 
 package models.connector.citizen_details
 
+import models.error.ServiceError
+import models.error.ServiceError.CannotParseLocalDateError
 import play.api.libs.json._
 
 import java.time.LocalDate
+import java.time.format.DateTimeParseException
 
 case class SuccessResponseSchema(name: LegalNames, ids: Ids, dateOfBirth: String) {
 
-  def parseDoBToLocalDate: LocalDate = {
+  def parseDoBToLocalDate: Either[ServiceError, LocalDate] = {
     val (year, month, day) = (dateOfBirth.substring(4, 8), dateOfBirth.substring(2, 4), dateOfBirth.substring(0, 2))
-    LocalDate.parse(s"$year-$month-$day")
+    try
+      Right(LocalDate.parse(s"$year-$month-$day"))
+    catch {
+      case error: DateTimeParseException => Left(CannotParseLocalDateError(error))
+    }
   }
 
 }

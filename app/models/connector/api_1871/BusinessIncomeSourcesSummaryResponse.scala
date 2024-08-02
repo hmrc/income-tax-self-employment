@@ -20,12 +20,12 @@ import play.api.libs.json.{Json, OFormat}
 
 case class BusinessIncomeSourcesSummaryResponse(incomeSourceId: String,
                                                 totalIncome: BigDecimal,
-                                                totalExpenses: BigDecimal, // neg
+                                                totalExpenses: BigDecimal,
                                                 netProfit: BigDecimal,
                                                 netLoss: BigDecimal,
-                                                totalAdditions: Option[BigDecimal], // neg
+                                                totalAdditions: Option[BigDecimal],
                                                 totalDeductions: Option[BigDecimal],
-                                                accountingAdjustments: Option[BigDecimal], // neg
+                                                accountingAdjustments: Option[BigDecimal],
                                                 taxableProfit: BigDecimal,
                                                 taxableLoss: BigDecimal)
 

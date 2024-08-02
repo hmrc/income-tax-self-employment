@@ -18,13 +18,13 @@ package connectors
 
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
-import connectors.data.{Api1171Test, CitizenDetailsTest}
+import connectors.data.{Api1171Test, Api1871Test, CitizenDetailsTest}
 import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.OK
 
-class BusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
+class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
   val connector                   = new IFSBusinessDetailsConnectorImpl(httpClient, appConfig)
   val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
@@ -36,7 +36,7 @@ class BusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBas
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.getBusinesses(nino) shouldBe successResponse.asRight
+      connector.getBusinesses(nino).value.futureValue shouldBe successResponse.asRight
     }
   }
 
@@ -47,7 +47,18 @@ class BusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBas
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.getCitizenDetails(nino) shouldBe successResponse.asRight
+      connector.getCitizenDetails(nino).value.futureValue shouldBe successResponse.asRight
+    }
+  }
+
+  "getBusinessIncomeSourcesSummary" must {
+    "return successful response" in new Api1871Test {
+      stubGetWithResponseBody(
+        url = downstreamUrl,
+        expectedResponse = successResponseRaw,
+        expectedStatus = OK
+      )
+      connector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue shouldBe successResponse.asRight
     }
   }
 

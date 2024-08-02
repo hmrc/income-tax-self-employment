@@ -56,7 +56,10 @@ class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnec
     } yield business
 
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
-    businessConnector.getCitizenDetails(nino).map(_.parseDoBToLocalDate)
+    for {
+      citizenDetails <- businessConnector.getCitizenDetails(nino)
+      dateOfBirth    <- EitherT.fromEither[Future](citizenDetails.parseDoBToLocalDate)
+    } yield dateOfBirth
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
       hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =

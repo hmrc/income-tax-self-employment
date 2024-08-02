@@ -86,13 +86,13 @@ class BusinessServiceSpec extends AnyWordSpecLike {
     "return a user's date of birth as a LocalDate" in {
       val expectedResult = Right(aUserDateOfBirth)
       val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector())
-      val result         = service.getUserDateOfBirth(nino).value
+      val result         = service.getUserDateOfBirth(nino).value.futureValue
       assert(result === expectedResult)
     }
 
     "return an error from downstream" in {
-      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(error))
-      val result  = service.getUserDateOfBirth(nino).value
+      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getCitizenDetailsResult = error))
+      val result  = service.getUserDateOfBirth(nino).value.futureValue
       assert(result === error)
     }
   }
@@ -101,13 +101,13 @@ class BusinessServiceSpec extends AnyWordSpecLike {
     "return a business' IncomeSourcesSummary" in {
       val expectedResult = Right(BusinessIncomeSourcesSummaryResponse.empty)
       val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector())
-      val result         = service.getUserDateOfBirth(nino).value
+      val result         = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
       assert(result === expectedResult)
     }
 
     "return an error from downstream" in {
-      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(error))
-      val result  = service.getUserDateOfBirth(nino).value
+      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getBusinessIncomeSourcesSummaryResult = error))
+      val result  = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
       assert(result === error)
     }
   }

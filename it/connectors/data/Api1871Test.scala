@@ -16,32 +16,28 @@
 
 package connectors.data
 
-import models.connector.citizen_details._
+import models.common.TaxYear.asTys
+import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import play.api.libs.json.Json
 import utils.BaseSpec._
 
-trait CitizenDetailsTest {
-  val downstreamUrl = s"/citizen-details/nino/$nino"
+trait Api1871Test {
+  val downstreamUrl = s"/income-tax/income-sources/${asTys(taxYear)}/$nino/$businessId/self-employment/biss"
 
   val successResponseRaw: String =
     s"""{
-      |   "name": {
-      |      "current": {
-      |         "firstName": "Mike",
-      |         "lastName": "Wazowski"
-      |      },
-      |      "previous": [
-      |         {
-      |            "firstName": "Jess",
-      |            "lastName": "Smith"
-      |         }
-      |      ]
-      |   },
-      |   "ids": {
-      |      "nino": "nino"
-      |   },
-      |   "dateOfBirth": "30071997"
-      |}""".stripMargin
+      |   "incomeSourceId": "incomeSourceId",
+      |   "totalIncome": 200,
+      |   "totalExpenses": 200,
+      |   "netProfit": 200,
+      |   "netLoss": 200,
+      |   "totalAdditions": 200,
+      |   "totalDeductions": 200,
+      |   "accountingAdjustments": 200,
+      |   "taxableProfit": 200,
+      |   "taxableLoss": 200
+      |}
+      |""".stripMargin
 
-  val successResponse: SuccessResponseSchema = Json.parse(successResponseRaw).as[SuccessResponseSchema]
+  val successResponse = Json.parse(successResponseRaw).as[BusinessIncomeSourcesSummaryResponse]
 }
