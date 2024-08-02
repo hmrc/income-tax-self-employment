@@ -17,7 +17,7 @@
 package services.journeyAnswers
 
 import cats.implicits.toFunctorOps
-import connectors.SelfEmploymentConnector
+import connectors.IFSConnector
 import models.common._
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.database.nics.NICsStorageAnswers
@@ -36,7 +36,7 @@ trait NICsAnswersService {
 }
 
 @Singleton
-class NICsAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
+class NICsAnswersServiceImpl @Inject() (connector: IFSConnector, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends NICsAnswersService {
 
   def saveAnswers(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =

@@ -21,7 +21,7 @@ lazy val appName = "income-tax-self-employment"
 ThisBuild / majorVersion := 0
 ThisBuild / scalaVersion := "2.13.12"
 
-val additionalScalacOptions = if (sys.props.getOrElse("PLAY_ENV", "") == "Dev") Seq() else Seq("-Xfatal-warnings")
+val additionalScalacOptions = if (sys.props.getOrElse("PLAY_ENV", "") == "CI") Seq("-Xfatal-warnings") else Seq()
 
 lazy val compileOpts = Seq(
   "-feature",

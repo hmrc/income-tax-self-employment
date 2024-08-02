@@ -17,37 +17,39 @@
 package stubs.services
 
 import bulders.BusinessDataBuilder.aUserDateOfBirth
+import cats.data.EitherT
 import cats.implicits._
 import models.common._
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
-import models.domain.Business
-import models.error.DownstreamError
+import models.domain.{ApiResultT, Business}
+import models.error.{DownstreamError, ServiceError}
 import services.BusinessService
-import services.BusinessService.{GetBusinessIncomeSourcesSummaryResponse, GetBusinessResponse, GetUserDateOfBirthResponse}
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.BaseSpec.businessId
 
 import java.time.LocalDate
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-case class StubBusinessService(
-    getBusinessesRes: Either[DownstreamError, Seq[Business]] = Seq.empty.asRight[DownstreamError],
-    getBusinessRes: Either[DownstreamError, Seq[Business]] = Seq.empty.asRight[DownstreamError],
+final case class StubBusinessService(
+    getBusinessesResult: Either[ServiceError, List[Business]] = Right(Nil),
+    getBusinessResult: Either[ServiceError, Business] = Left(ServiceError.BusinessNotFoundError(businessId)),
     getUserDateOfBirthRes: Either[DownstreamError, LocalDate] = aUserDateOfBirth.asRight[DownstreamError],
     getBusinessIncomeSourcesSummaryRes: Either[DownstreamError, BusinessIncomeSourcesSummaryResponse] =
       BusinessIncomeSourcesSummaryResponse.empty.asRight[DownstreamError]
 ) extends BusinessService {
-  implicit val ec: ExecutionContext = ExecutionContext.global
 
-  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] = Future.successful(getBusinessesRes)
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
+    EitherT.fromEither[Future](getBusinessesResult)
 
-  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
-    Future.successful(getBusinessRes)
+  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business] =
+    EitherT.fromEither[Future](getBusinessResult)
 
-  def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): Future[GetUserDateOfBirthResponse] =
-    Future.successful(getUserDateOfBirthRes)
+  def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
+    EitherT.fromEither[Future](getUserDateOfBirthRes)
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
-      hc: HeaderCarrier): Future[GetBusinessIncomeSourcesSummaryResponse] =
-    Future.successful(getBusinessIncomeSourcesSummaryRes)
+      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =
+    EitherT.fromEither[Future](getBusinessIncomeSourcesSummaryRes)
 
 }

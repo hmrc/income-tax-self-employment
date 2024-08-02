@@ -61,13 +61,10 @@ object DownstreamErrorBody {
     val invalidNino: SingleDownstreamErrorBody =
       SingleDownstreamErrorBody("INVALID_NINO", "Submission has not passed validation. Invalid parameter NINO.")
 
-    val invalidMtdid: SingleDownstreamErrorBody =
-      SingleDownstreamErrorBody("INVALID_MTDID", "Submission has not passed validation. Invalid parameter MTDID.")
-
     val notFound: SingleDownstreamErrorBody = SingleDownstreamErrorBody("NOT_FOUND", "The remote endpoint has indicated that no data can be found.")
 
     val serverError: SingleDownstreamErrorBody =
-      SingleDownstreamErrorBody("SERVER_ERROR", "IF is currently experiencing problems that require live service intervention.")
+      SingleDownstreamErrorBody("SERVER_ERROR", "IFS is currently experiencing problems that require live service intervention.")
 
     val serviceUnavailable: SingleDownstreamErrorBody =
       SingleDownstreamErrorBody("SERVICE_UNAVAILABLE", "Dependent systems are currently not responding.")

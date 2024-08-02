@@ -17,7 +17,7 @@
 package config
 
 import com.google.inject.AbstractModule
-import connectors.{BusinessDetailsConnector, BusinessDetailsConnectorImpl, SelfEmploymentConnector, SelfEmploymentConnectorImpl}
+import connectors.{IFSBusinessDetailsConnector, IFSBusinessDetailsConnectorImpl, IFSConnector, IFSConnectorImpl}
 import repositories.{JourneyAnswersRepository, MongoJourneyAnswersRepository}
 import services.journeyAnswers._
 import services.{BusinessService, BusinessServiceImpl}
@@ -29,17 +29,18 @@ class Module extends AbstractModule {
   override def configure(): Unit = {
     bind(classOf[AppConfig]).asEagerSingleton()
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
+    bind(classOf[BusinessService]).to(classOf[BusinessServiceImpl])
     bind(classOf[PrepopAnswersService]).to(classOf[PrepopAnswersServiceImpl])
     bind(classOf[AbroadAnswersService]).to(classOf[AbroadAnswersServiceImpl])
     bind(classOf[IncomeAnswersService]).to(classOf[IncomeAnswersServiceImpl])
     bind(classOf[ExpensesAnswersService]).to(classOf[ExpensesAnswersServiceImpl])
     bind(classOf[CapitalAllowancesAnswersService]).to(classOf[CapitalAllowancesAnswersServiceImpl])
-    bind(classOf[BusinessService]).to(classOf[BusinessServiceImpl])
+    bind(classOf[JourneyAnswersRepository]).to(classOf[MongoJourneyAnswersRepository])
+    bind(classOf[IFSConnector]).to(classOf[IFSConnectorImpl])
+    bind(classOf[IFSBusinessDetailsConnector]).to(classOf[IFSBusinessDetailsConnectorImpl])
     bind(classOf[JourneyStatusService]).to(classOf[JourneyStatusServiceImpl])
     bind(classOf[NICsAnswersService]).to(classOf[NICsAnswersServiceImpl])
     bind(classOf[JourneyAnswersRepository]).to(classOf[MongoJourneyAnswersRepository])
-    bind(classOf[SelfEmploymentConnector]).to(classOf[SelfEmploymentConnectorImpl])
-    bind(classOf[BusinessDetailsConnector]).to(classOf[BusinessDetailsConnectorImpl])
     ()
   }
 

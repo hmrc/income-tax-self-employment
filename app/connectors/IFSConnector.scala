@@ -17,12 +17,10 @@
 package connectors
 
 import cats.data.EitherT
-import com.typesafe.config.ConfigFactory
 import config.AppConfig
-import connectors.SelfEmploymentConnector._
+import connectors.IFSConnector._
 import models.common.TaxYear.{asTys, endDate, startDate}
 import models.common._
-import models.connector.IntegrationContext.IFSHeaderCarrier
 import models.connector._
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
@@ -38,7 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 /** Keep the methods sorted by API number
   */
-trait SelfEmploymentConnector {
+trait IFSConnector {
   def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response]
   def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response]
@@ -55,7 +53,7 @@ trait SelfEmploymentConnector {
   def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
 }
 
-object SelfEmploymentConnector {
+object IFSConnector {
   type Api1786Response = ApiResponse[api_1786.SuccessResponseSchema]
   type Api1802Response = ApiResponse[api_1802.response.CreateAmendSEAnnualSubmissionResponse]
   type Api1803Response = ApiResponse[api_1803.SuccessResponseSchema]
@@ -67,9 +65,7 @@ object SelfEmploymentConnector {
 }
 
 @Singleton
-class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends SelfEmploymentConnector with Logging {
-  private val headerCarrierConfig = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
-  private val mkIFSMetadata       = IFSHeaderCarrier(headerCarrierConfig, appConfig, _, _)
+class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends IFSConnector with Logging {
 
   private def baseUrl(nino: Nino, incomeSourceId: BusinessId, taxYear: TaxYear) =
     s"${appConfig.ifsBaseUrl}/income-tax/${asTys(taxYear)}/$nino/self-employments/$incomeSourceId"
@@ -88,44 +84,44 @@ class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppCon
   def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
     val url     = annualSummariesUrl(data.nino, data.businessId, data.taxYear)
-    val context = mkIFSMetadata(IFSApiName.Api1802, url)
+    val context = appConfig.mkIFSMetadata(IFSApiName.Api1802, url)
     put[CreateAmendSEAnnualSubmissionRequestBody, Api1802Response](http, context, data.body)
   }
 
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {
     val url     = periodicSummaries(data.nino, data.businessId, data.taxYear)
-    val context = mkIFSMetadata(IFSApiName.Api1894, url)
+    val context = appConfig.mkIFSMetadata(IFSApiName.Api1894, url)
     post[CreateSEPeriodSummaryRequestBody, Api1894Response](http, context, data.body)
   }
 
   def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] = {
     val url     = periodicSummariesFromTo(data.nino, data.businessId, data.taxYear)
-    val context = mkIFSMetadata(IFSApiName.Api1895, url)
+    val context = appConfig.mkIFSMetadata(IFSApiName.Api1895, url)
     put[AmendSEPeriodSummaryRequestBody, Api1895Response](http, context, data.body)
   }
 
   def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response] = {
     val url     = periodicSummaries(ctx.nino, ctx.businessId, ctx.taxYear)
-    val context = mkIFSMetadata(IFSApiName.Api1965, url)
+    val context = appConfig.mkIFSMetadata(IFSApiName.Api1965, url)
     get[Api1965Response](http, context)
   }
 
   def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response] = {
     val url     = periodicSummaryDetailUrl(ctx.nino, ctx.businessId, ctx.taxYear)
-    val context = mkIFSMetadata(IFSApiName.Api1786, url)
+    val context = appConfig.mkIFSMetadata(IFSApiName.Api1786, url)
     get[Api1786Response](http, context)
   }
 
   def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] = {
     val url     = annualSummariesUrl(ctx.nino, ctx.businessId, ctx.taxYear)
-    val context = mkIFSMetadata(IFSApiName.Api1803, url)
+    val context = appConfig.mkIFSMetadata(IFSApiName.Api1803, url)
     get[Api1803Response](http, context)
   }
 
   def getDisclosuresSubmission(
       ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[SuccessResponseAPI1639]] = {
     val url                                                                    = disclosuresSubmissionUrl(ctx.nino, ctx.taxYear)
-    val context                                                                = mkIFSMetadata(IFSApiName.Api1639, url)
+    val context                                                                = appConfig.mkIFSMetadata(IFSApiName.Api1639, url)
     implicit val reads: HttpReads[ApiResponse[Option[SuccessResponseAPI1639]]] = commonGetReads[SuccessResponseAPI1639]
 
     EitherT(get[Api1639Response](http, context))
@@ -135,7 +131,7 @@ class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppCon
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[Unit] = {
     val url                                          = disclosuresSubmissionUrl(ctx.nino, ctx.taxYear)
-    val context                                      = mkIFSMetadata(IFSApiName.Api1638, url)
+    val context                                      = appConfig.mkIFSMetadata(IFSApiName.Api1638, url)
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonNoBodyResponse
 
     EitherT(put[RequestSchemaAPI1638, Api1638Response](http, context, data))
@@ -143,7 +139,7 @@ class SelfEmploymentConnectorImpl @Inject() (http: HttpClient, appConfig: AppCon
 
   def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
     val url                                          = disclosuresSubmissionUrl(ctx.nino, ctx.taxYear)
-    val context                                      = mkIFSMetadata(IFSApiName.Api1640, url)
+    val context                                      = appConfig.mkIFSMetadata(IFSApiName.Api1640, url)
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
 
     EitherT(delete(http, context))

@@ -16,14 +16,14 @@
 
 package stubs.connectors
 
+import bulders.BusinessDataBuilder.citizenDetailsDateOfBirth
 import cats.data.EitherT
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
-import connectors.SelfEmploymentConnector
-import connectors.SelfEmploymentConnector._
+import connectors.IFSConnector
+import connectors.IFSConnector._
 import models.common.JourneyContextWithNino
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
-import models.connector.api_1786
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
@@ -33,15 +33,18 @@ import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1895.response.AmendSEPeriodSummaryResponse
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
+import models.connector.citizen_details.{Ids, LegalNames, Name}
+import models.connector.{api_1171, api_1786, api_1871, citizen_details}
 import models.domain.ApiResultT
 import models.error.ServiceError
-import stubs.connectors.StubSelfEmploymentConnector._
+import stubs.connectors.StubIFSConnector._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
+import java.time.OffsetDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
-case class StubSelfEmploymentConnector(
+case class StubIFSConnector(
     createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(api1894SuccessResponse.asRight),
     amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(api1895SuccessResponse.asRight),
     createAmendSEAnnualSubmissionResult: Future[Api1802Response] = Future.successful(api1802SuccessResponse.asRight),
@@ -51,7 +54,7 @@ case class StubSelfEmploymentConnector(
     getDisclosuresSubmissionResult: Either[ServiceError, Option[SuccessResponseAPI1639]] = Right(None),
     upsertDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(()),
     deleteDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(())
-) extends SelfEmploymentConnector {
+) extends IFSConnector {
   var upsertDisclosuresSubmissionData: Option[RequestSchemaAPI1638] = None
 
   override def createSEPeriodSummary(
@@ -93,7 +96,19 @@ case class StubSelfEmploymentConnector(
 
 }
 
-object StubSelfEmploymentConnector {
+object StubIFSConnector {
+
+  val citizenDetailsResponse: citizen_details.SuccessResponseSchema =
+    citizen_details.SuccessResponseSchema(
+      name = LegalNames(current = Name(firstName = "Mike", lastName = "Wazowski"), previous = List(Name(firstName = "Jess", lastName = "Smith"))),
+      ids = Ids(nino.value),
+      dateOfBirth = citizenDetailsDateOfBirth
+    )
+
+  val api1171EmptyResponse: api_1171.SuccessResponseSchema =
+    api_1171.SuccessResponseSchema(
+      OffsetDateTime.now().toString,
+      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, None))
 
   val api1894SuccessResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("id")
 
@@ -134,4 +149,7 @@ object StubSelfEmploymentConnector {
     )
 
   val api1965EmptyResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(Some(List.empty))
+
+  val api1871EmptyResponse: api_1871.BusinessIncomeSourcesSummaryResponse = api_1871.BusinessIncomeSourcesSummaryResponse.empty
+
 }

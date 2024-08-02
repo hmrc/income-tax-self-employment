@@ -19,8 +19,8 @@ package models.common
 import play.api.libs.json.{Format, Json}
 import play.api.mvc.PathBindable
 
-final case class Nino(nino: String) extends AnyVal {
-  override def toString: String = nino
+final case class Nino(value: String) extends AnyVal {
+  override def toString: String = value
 }
 
 object Nino {
@@ -32,7 +32,7 @@ object Nino {
       strBinder.bind(key, value).map(Nino.apply)
 
     override def unbind(key: String, nino: Nino): String =
-      strBinder.unbind(key, nino.nino)
+      strBinder.unbind(key, nino.value)
 
   }
 }

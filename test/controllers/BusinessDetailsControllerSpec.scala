@@ -17,71 +17,48 @@
 package controllers
 
 import bulders.BusinessDataBuilder._
-import models.common.{BusinessId, Nino}
-import models.error.DownstreamError.SingleDownstreamError
-import models.error.DownstreamErrorBody.SingleDownstreamErrorBody.{invalidNino, notFound, serverError, serviceUnavailable}
+import models.common.BusinessId
+import org.scalatest.wordspec.AnyWordSpecLike
+import stubs.controllers.actions.StubAuthorisedAction
+import stubs.services.StubBusinessService
+import utils.BaseSpec.nino
+import utils.TestUtils
+import utils.TestUtils._
 import play.api.http.Status._
 import play.api.libs.json.Json
-import services.BusinessService
-import stubs.services.StubBusinessService
 
-import java.time.LocalDate
+class BusinessDetailsControllerSpec extends AnyWordSpecLike {
+  def mkUnderTest(businessService: StubBusinessService): BusinessDetailsController =
+    new BusinessDetailsController(businessService, StubAuthorisedAction(), TestUtils.stubControllerComponents)
 
-class BusinessDetailsControllerSpec extends ControllerBehaviours {
+  s"getBusinesses" should {
+    val underTest = mkUnderTest(StubBusinessService(getBusinessesResult = Right(aBusinesses)))
 
-  def underTest(stubbedService: BusinessService) = new BusinessDetailsController(stubbedService, mockAuthorisedAction, stubControllerComponents)
-
-  val nino       = Nino("FI290077A")
-  val businessId = BusinessId("SJPR05893938418")
-  val taxYear    = LocalDate.now.getYear
-
-  s"GET /individuals/business/details/$nino/list" should {
-    val service = StubBusinessService(getBusinessesRes = Right(aBusinesses))
-
-    behave like controllerSpec(
-      OK,
-      Json.toJson(aBusinesses).toString(),
-      () => underTest(service).getBusinesses(nino)
-    )
-
-    for {
-      (errorStatus, apiError) <- Seq(
-        (NOT_FOUND, notFound),
-        (BAD_REQUEST, invalidNino),
-        (INTERNAL_SERVER_ERROR, serverError),
-        (SERVICE_UNAVAILABLE, serviceUnavailable))
-      error        = SingleDownstreamError(errorStatus, apiError)
-      errorService = StubBusinessService(getBusinessesRes = Left(error))
+    "return businesses" in {
+      val result = underTest.getBusinesses(nino)(TestUtils.fakeRequest)
+      assert(status(result) == OK)
+      assert(bodyOf(result) == Json.toJson(aBusinesses).toString())
     }
-      behave like controllerSpec(
-        errorStatus,
-        Json.toJson(SingleDownstreamError(errorStatus, apiError.toDomain)).toString(),
-        () => underTest(errorService).getBusinesses(nino)
-      )
   }
 
-  s"GET /individuals/business/details/$nino/$businessId" should {
-    val service = StubBusinessService(getBusinessRes = Right(aBusinesses))
+  s"getBusiness" should {
+    val underTest = mkUnderTest(StubBusinessService(getBusinessResult = Right(aBusiness)))
 
-    behave like controllerSpec(
-      OK,
-      Json.toJson(aBusinesses).toString(),
-      () => underTest(service).getBusiness(nino, businessId)
-    )
-
-    for {
-      (errorStatus, apiError) <- Seq(
-        (NOT_FOUND, notFound),
-        (BAD_REQUEST, invalidNino),
-        (INTERNAL_SERVER_ERROR, serverError),
-        (SERVICE_UNAVAILABLE, serviceUnavailable))
-      error        = SingleDownstreamError(errorStatus, apiError)
-      errorService = StubBusinessService(getBusinessRes = Left(error))
+    "return businesses" in {
+      val result = underTest.getBusiness(nino, BusinessId(aBusiness.businessId))(TestUtils.fakeRequest)
+      assert(status(result) == OK)
+      assert(bodyOf(result) == Json.toJson(aBusiness).toString())
     }
-      behave like controllerSpec(
-        errorStatus,
-        Json.toJson(SingleDownstreamError(errorStatus, apiError.toDomain)).toString(),
-        () => underTest(errorService).getBusiness(nino, businessId)
-      )
   }
+
+  s"getBusiness" should {
+    val underTest = mkUnderTest(StubBusinessService(getBusinessResult = Right(aBusiness)))
+
+    "return businesses" in {
+      val result = underTest.getBusiness(nino, BusinessId(aBusiness.businessId))(TestUtils.fakeRequest)
+      assert(status(result) == OK)
+      assert(bodyOf(result) == Json.toJson(aBusiness).toString())
+    }
+  }
+
 }

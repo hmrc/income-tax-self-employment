@@ -30,8 +30,8 @@ import models.frontend.capitalAllowances.zeroEmissionCars.{ZeroEmissionCarsAnswe
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
-import stubs.connectors.StubSelfEmploymentConnector
-import stubs.connectors.StubSelfEmploymentConnector.{api1802SuccessResponse, api1803SuccessResponse}
+import stubs.connectors.StubIFSConnector
+import stubs.connectors.StubIFSConnector.{api1802SuccessResponse, api1803SuccessResponse}
 import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec._
 import utils.EitherTTestOps._
@@ -40,8 +40,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
-  val connector: StubSelfEmploymentConnector =
-    StubSelfEmploymentConnector(
+  val connector: StubIFSConnector =
+    StubIFSConnector(
       createAmendSEAnnualSubmissionResult = Future.successful(api1802SuccessResponse.asRight),
       getAnnualSummariesResult = Future.successful(api1803SuccessResponse.asRight)
     )

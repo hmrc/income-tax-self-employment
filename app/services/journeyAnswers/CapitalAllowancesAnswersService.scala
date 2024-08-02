@@ -17,7 +17,7 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
-import connectors.SelfEmploymentConnector
+import connectors.IFSConnector
 import models.common.JourneyName.{
   AnnualInvestmentAllowance,
   BalancingAllowance,
@@ -71,8 +71,7 @@ trait CapitalAllowancesAnswersService {
 }
 
 @Singleton
-class CapitalAllowancesAnswersServiceImpl @Inject() (connector: SelfEmploymentConnector, repository: JourneyAnswersRepository)(implicit
-    ec: ExecutionContext)
+class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends CapitalAllowancesAnswersService {
 
   def saveAnnualAllowances(ctx: JourneyContextWithNino, updatedAnnualAllowances: AnnualAllowances)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {

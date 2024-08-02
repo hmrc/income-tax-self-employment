@@ -17,97 +17,99 @@
 package services
 
 import bulders.BusinessDataBuilder._
-import connectors.BusinessDetailsConnector
-import connectors.BusinessDetailsConnector.{Api1171Response, Api1871Response, CitizenDetailsResponse}
-import models.common.{BusinessId, IdType, Nino, TaxYear}
+import models.common.BusinessId
+import models.connector.api_1171._
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
+import models.domain.BusinessTestData
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
-import uk.gov.hmrc.http.HeaderCarrier
-import utils.BaseSpec.taxYear
-import utils.TestUtils
+import models.error.ServiceError
+import org.scalatest.EitherValues._
+import org.scalatest.wordspec.AnyWordSpecLike
+import stubs.connectors.StubIFSBusinessDetailsConnector
+import utils.BaseSpec._
+import utils.EitherTTestOps.convertScalaFuture
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class BusinessServiceSpec extends TestUtils {
+class BusinessServiceSpec extends AnyWordSpecLike {
 
-  val mockBusinessConnector = mock[BusinessDetailsConnector]
+  val ifsConnector = StubIFSBusinessDetailsConnector()
+  val service      = new BusinessServiceImpl(ifsConnector)
 
-  lazy val service = new BusinessServiceImpl(mockBusinessConnector)
-  val nino         = Nino(aTaxPayerDisplayResponse.nino)
-  val businessId   = BusinessId(aBusiness.businessId)
+  private val error = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
 
-  for ((getMethodName, svcMethod) <- Seq(
-      ("getBusinesses", () => service.getBusinesses(nino)),
-      ("getBusiness", () => service.getBusiness(nino, businessId))
-    ))
-    s"$getMethodName" should { // scalastyle:off magic.number
-      val expectedRight = Right(Seq(aBusiness))
-      behave like rightResponse(svcMethod, expectedRight, () => stubConnectorGetBusiness(Right(aGetBusinessDataResponse)))
-
-      val expectedLeft = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
-      behave like leftResponse(svcMethod, expectedLeft, () => stubConnectorGetBusiness(expectedLeft))
+  "getBusinesses" should {
+    "return an empty list" in {
+      val result = service.getBusinesses(nino).value.futureValue.value
+      assert(result === Nil)
     }
 
-  "getUserDateOfBirth" should {
-    val expectedRight = Right(aUserDateOfBirth)
-    behave like rightResponse(
-      () => service.getUserDateOfBirth(nino),
-      expectedRight,
-      () => stubConnectorGetCitizenDetails(Right(getCitizenDetailsResponse)))
+    "return a list of businesses" in {
+      val businesses = SuccessResponseSchemaTestData.mkExample(
+        nino,
+        mtditid,
+        List(
+          BusinessDataDetailsTestData.mkExample(BusinessId("id1")),
+          BusinessDataDetailsTestData.mkExample(BusinessId("id2"))
+        )
+      )
+      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getBusinessesResult = Right(businesses)))
 
-    val expectedLeft = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
-    behave like leftResponse(() => service.getUserDateOfBirth(nino), expectedLeft, () => stubConnectorGetCitizenDetails(expectedLeft))
+      val result = service.getBusinesses(nino).value.futureValue.value
+
+      val expectedBusiness = List(
+        BusinessTestData.mkExample(BusinessId("id1")),
+        BusinessTestData.mkExample(BusinessId("id2"))
+      )
+
+      assert(result === expectedBusiness)
+    }
+  }
+
+  "getBusiness" should {
+    "return Not Found if no business exist" in {
+      val id     = BusinessId("id")
+      val result = service.getBusiness(nino, id).value.futureValue.left.value
+      assert(result === ServiceError.BusinessNotFoundError(id))
+    }
+
+    "return a business" in {
+      val business = SuccessResponseSchemaTestData.mkExample(nino, mtditid, List(BusinessDataDetailsTestData.mkExample(businessId)))
+      val service  = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getBusinessesResult = Right(business)))
+      val result   = service.getBusiness(nino, businessId).value.futureValue.value
+      assert(result === BusinessTestData.mkExample(businessId))
+    }
+  }
+
+  "getUserDateOfBirth" should {
+    "return a user's date of birth as a LocalDate" in {
+      val expectedResult = Right(aUserDateOfBirth)
+      val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector())
+      val result         = service.getUserDateOfBirth(nino).value
+      assert(result === expectedResult)
+    }
+
+    "return an error from downstream" in {
+      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(error))
+      val result  = service.getUserDateOfBirth(nino).value
+      assert(result === error)
+    }
   }
 
   "getBusinessIncomeSourcesSummary" should {
-    val expectedRight = Right(BusinessIncomeSourcesSummaryResponse.empty)
-    behave like rightResponse(
-      () => service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId),
-      expectedRight,
-      () => stubConnectorGetBusinessIncomeSourcesSummary(expectedRight))
-
-    val expectedLeft = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
-    behave like leftResponse(
-      () => service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId),
-      expectedLeft,
-      () => stubConnectorGetBusinessIncomeSourcesSummary(expectedLeft))
-  }
-
-  def rightResponse[A](svcMethod: () => Future[A], expectedResult: A, stubs: () => Unit): Unit =
-    "return a Right with the correct ResponseModel" in {
-      stubs()
-      await(svcMethod()) mustBe expectedResult
+    "return a business' IncomeSourcesSummary" in {
+      val expectedResult = Right(BusinessIncomeSourcesSummaryResponse.empty)
+      val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector())
+      val result         = service.getUserDateOfBirth(nino).value
+      assert(result === expectedResult)
     }
 
-  def leftResponse[A](svcMethod: () => Future[A], expectedResult: A, stubs: () => Unit, remark: String = ""): Unit =
-    s"$remark error - return a Left when $remark returns an error" in {
-      stubs()
-      await(svcMethod()) mustBe expectedResult
+    "return an error from downstream" in {
+      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(error))
+      val result  = service.getUserDateOfBirth(nino).value
+      assert(result === error)
     }
-
-  private def stubConnectorGetBusiness(expectedResult: Api1171Response): Unit = {
-    (mockBusinessConnector
-      .getBusinesses(_: IdType, _: String)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(IdType.Nino, nino.nino, *, *)
-      .returning(Future.successful(expectedResult))
-    ()
-  }
-
-  private def stubConnectorGetCitizenDetails(expectedResult: CitizenDetailsResponse): Unit = {
-    (mockBusinessConnector
-      .getCitizenDetails(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(nino, *, *)
-      .returning(Future.successful(expectedResult))
-    ()
-  }
-
-  private def stubConnectorGetBusinessIncomeSourcesSummary(expectedResult: Api1871Response): Unit = {
-    (mockBusinessConnector
-      .getBusinessIncomeSourcesSummary(_: TaxYear, _: Nino, _: BusinessId)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(taxYear, nino, businessId, *, *)
-      .returning(Future.successful(expectedResult))
-    ()
   }
 
 }

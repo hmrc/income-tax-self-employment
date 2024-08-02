@@ -24,7 +24,7 @@ import models.frontend.nics.NICsAnswers
 import org.scalatest.EitherValues._
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsObject, Json}
-import stubs.connectors.StubSelfEmploymentConnector
+import stubs.connectors.StubIFSConnector
 import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec.{currTaxYearEnd, hc, journeyCtxWithNino}
 import utils.EitherTTestOps.convertScalaFuture
@@ -48,7 +48,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
       SuccessResponseAPI1639(Some(List(SuccessResponseAPI1639TaxAvoidanceInner("srn", currTaxYearEnd.toUpperCase))), None)
 
     "setting class2 does not override other fields and true is not stored in DB" in new StubbedService {
-      override val connector = StubSelfEmploymentConnector(getDisclosuresSubmissionResult = Some(disclosuresWithOtherFields).asRight)
+      override val connector = StubIFSConnector(getDisclosuresSubmissionResult = Some(disclosuresWithOtherFields).asRight)
       val answers            = NICsAnswers(true)
 
       val result = service.saveAnswers(journeyCtxWithNino, answers).value.futureValue
@@ -63,7 +63,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
     }
 
     "settings class2 to None when class2 is false and there are other fields in the object" in new StubbedService {
-      override val connector = StubSelfEmploymentConnector(getDisclosuresSubmissionResult = Some(disclosuresWithOtherFields).asRight)
+      override val connector = StubIFSConnector(getDisclosuresSubmissionResult = Some(disclosuresWithOtherFields).asRight)
       val answers            = NICsAnswers(false)
 
       val result = service.saveAnswers(journeyCtxWithNino, answers).value.futureValue
@@ -81,7 +81,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
     }
 
     "call DELETE if setting to false and the object is empty" in new StubbedService {
-      override val connector = StubSelfEmploymentConnector(getDisclosuresSubmissionResult =
+      override val connector = StubIFSConnector(getDisclosuresSubmissionResult =
         Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))).asRight)
       val answers = NICsAnswers(false)
 
@@ -101,7 +101,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
     }
 
     "return API version even if database exist" in new StubbedService {
-      override val connector = StubSelfEmploymentConnector(getDisclosuresSubmissionResult =
+      override val connector = StubIFSConnector(getDisclosuresSubmissionResult =
         Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))).asRight)
       override val repository = StubJourneyAnswersRepository(
         getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(Some(false)))))
@@ -124,7 +124,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
   }
 
   trait StubbedService {
-    val connector  = StubSelfEmploymentConnector()
+    val connector  = StubIFSConnector()
     val repository = StubJourneyAnswersRepository()
 
     def service = new NICsAnswersServiceImpl(connector, repository)

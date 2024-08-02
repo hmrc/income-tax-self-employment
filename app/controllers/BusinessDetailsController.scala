@@ -18,14 +18,10 @@ package controllers
 
 import controllers.actions.AuthorisedAction
 import models.common.{BusinessId, Nino, TaxYear}
-import models.error.DownstreamError
-import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
-import play.api.Logging
-import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.BusinessService
-import services.BusinessService.GetBusinessResponse
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
+import utils.Logging
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -37,37 +33,19 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
     with Logging {
 
   def getBusinesses(nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    businessService.getBusinesses(nino) map businessDataResponse
+    handleApiResultT(businessService.getBusinesses(nino))
   }
 
   def getBusiness(nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    businessService.getBusiness(nino, businessId) map businessDataResponse
+    handleApiResultT(businessService.getBusiness(nino, businessId))
   }
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    businessService.getBusinessIncomeSourcesSummary(taxYear, nino, businessId) map {
-      case Right(model)     => Ok(Json.toJson(model))
-      case Left(errorModel) => handleErrorModel(errorModel)
-    }
+    handleApiResultT(businessService.getBusinessIncomeSourcesSummary(taxYear, nino, businessId))
   }
 
   def getUserDateOfBirth(nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    businessService.getUserDateOfBirth(nino) map {
-      case Right(model)     => Ok(Json.toJson(model))
-      case Left(errorModel) => handleErrorModel(errorModel)
-    }
+    handleApiResultT(businessService.getUserDateOfBirth(nino))
   }
-
-  private def businessDataResponse(dataResponse: GetBusinessResponse): Result =
-    dataResponse match {
-      case Right(model)     => Ok(Json.toJson(model))
-      case Left(errorModel) => handleErrorModel(errorModel)
-    }
-
-  private def handleErrorModel(errorModel: DownstreamError): Result =
-    errorModel match {
-      case sde: SingleDownstreamError => Status(errorModel.status)(Json.toJson(sde.toDomain))
-      case _                          => Status(errorModel.status)(Json.toJson(errorModel.asInstanceOf[MultipleDownstreamErrors].toDomain))
-    }
 
 }

@@ -36,9 +36,9 @@ import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json.Json
 
-class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
+class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
-  val connector = new SelfEmploymentConnectorImpl(httpClient, appConfig)
+  val connector = new IFSConnectorImpl(httpClient, appConfig)
   val ctx       = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
 
   "getPeriodicSummaryDetail" must {
@@ -173,7 +173,7 @@ class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBase
     val data: CreateAmendSEAnnualSubmissionRequestData        = CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, requestBody)
 
     val downstreamUrl =
-      s"/income-tax/${asTys(data.taxYear)}/${data.nino.nino}/self-employments/${data.businessId.value}/annual-summaries"
+      s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/annual-summaries"
   }
 
   trait Api1965Test {
@@ -191,7 +191,7 @@ class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBase
                  |""".stripMargin))
 
     val downstreamUrl =
-      s"/income-tax/${asTys(ctx.taxYear)}/${ctx.nino.nino}/self-employments/${ctx.businessId.value}/periodic-summaries"
+      s"/income-tax/${asTys(ctx.taxYear)}/${ctx.nino.value}/self-employments/${ctx.businessId.value}/periodic-summaries"
   }
 
   trait Api1894Test {
@@ -207,7 +207,7 @@ class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBase
     val data: CreateSEPeriodSummaryRequestData = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, requestBody)
 
     val downstreamUrl =
-      s"/income-tax/${asTys(data.taxYear)}/${data.nino.nino}/self-employments/${data.businessId.value}/periodic-summaries"
+      s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries"
   }
 
   trait Api1895Test {
@@ -218,7 +218,7 @@ class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBase
     val data: AmendSEPeriodSummaryRequestData = AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, requestBody)
 
     val downstreamUrl =
-      s"/income-tax/${asTys(data.taxYear)}/${data.nino.nino}/self-employments/${data.businessId.value}/periodic-summaries\\?from=${startDate(
+      s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries\\?from=${startDate(
           data.taxYear)}&to=${endDate(data.taxYear)}"
   }
 
@@ -231,7 +231,7 @@ class SelfEmploymentConnectorImplISpec extends WiremockSpec with IntegrationBase
                   |}
                   |""".stripMargin))
 
-    val downstreamUrl = s"/income-tax/disclosures/${ctx.nino.nino}/${ctx.taxYear.toYYYY_YY}"
+    val downstreamUrl = s"/income-tax/disclosures/${ctx.nino.value}/${ctx.taxYear.toYYYY_YY}"
   }
 
 }

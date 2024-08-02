@@ -16,62 +16,49 @@
 
 package services
 
-import connectors.BusinessDetailsConnector
-import models.common.{BusinessId, IdType, Nino, TaxYear}
+import cats.data.EitherT
+import connectors.IFSBusinessDetailsConnector
+import models.common.{BusinessId, Nino, TaxYear}
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.domain._
-import models.error.DownstreamError
-import services.BusinessService.{GetBusinessIncomeSourcesSummaryResponse, GetBusinessResponse, GetUserDateOfBirthResponse, parseDoBToLocalDate}
+import models.error.ServiceError
+import models.error.ServiceError.BusinessNotFoundError
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.EitherTOps.EitherTExtensions
 
 import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait BusinessService {
-  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): Future[GetBusinessResponse]
-  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): Future[GetBusinessResponse]
-  def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): Future[GetUserDateOfBirthResponse]
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]]
+  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business]
+  def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate]
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
-      hc: HeaderCarrier): Future[GetBusinessIncomeSourcesSummaryResponse]
+      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse]
 }
 
 @Singleton
-class BusinessServiceImpl @Inject() (businessConnector: BusinessDetailsConnector)(implicit ec: ExecutionContext) extends BusinessService {
+class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnector)(implicit ec: ExecutionContext) extends BusinessService {
 
-  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
-    businessConnector
-      .getBusinesses(IdType.Nino, nino.nino)
-      .map(_.map(_.taxPayerDisplayResponse)
-        .map(taxPayerDisplayResponse =>
-          taxPayerDisplayResponse.businessData.getOrElse(Nil).map(details => Business.mkBusiness(details, taxPayerDisplayResponse.yearOfMigration))))
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
+    for {
+      maybeBusinesses <- businessConnector.getBusinesses(nino)
+      maybeYearOfMigration = maybeBusinesses.taxPayerDisplayResponse.yearOfMigration
+      businesses           = maybeBusinesses.taxPayerDisplayResponse.businessData.getOrElse(Nil)
+    } yield businesses.map(b => Business.mkBusiness(b, maybeYearOfMigration))
 
-  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): Future[GetBusinessResponse] =
-    getBusinesses(nino).map(_.map(_.filter(_.businessId == businessId.value)))
+  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business] =
+    for {
+      businesses <- getBusinesses(nino)
+      maybeBusiness = businesses.find(_.businessId == businessId.value)
+      business <- EitherT.fromOption[Future](maybeBusiness, BusinessNotFoundError(businessId)).leftAs[ServiceError]
+    } yield business
 
-  def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): Future[GetUserDateOfBirthResponse] =
-    businessConnector
-      .getCitizenDetails(nino)
-      .map(_.map { userDetails =>
-        parseDoBToLocalDate(userDetails.dateOfBirth)
-      })
+  def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
+    businessConnector.getCitizenDetails(nino).map(_.parseDoBToLocalDate)
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
-      hc: HeaderCarrier): Future[GetBusinessIncomeSourcesSummaryResponse] =
+      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =
     businessConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)
-
-}
-
-object BusinessService {
-  type GetBusinessResponse                     = Either[DownstreamError, Seq[Business]]
-  type GetUserDateOfBirthResponse              = Either[DownstreamError, LocalDate]
-  type GetBusinessIncomeSourcesSummaryResponse = Either[DownstreamError, BusinessIncomeSourcesSummaryResponse]
-
-  def parseDoBToLocalDate(dob: String): LocalDate = {
-    val (year, month, day) = (dob.substring(4, 8), dob.substring(2, 4), dob.substring(0, 2))
-    LocalDate.parse(s"$year-$month-$day")
-  }
-
-  def getBusinessIncomeSourcesSummaryResponseStub()(implicit ec: ExecutionContext): Future[GetBusinessIncomeSourcesSummaryResponse] = Future(
-    Right(BusinessIncomeSourcesSummaryResponse.empty))
 }

@@ -59,12 +59,13 @@ class CommonDownstreamParserSpec extends AnyWordSpecLike with PagerDutyAware wit
       (NOT_FOUND, FOURXX_RESPONSE_FROM_API, NOT_FOUND),
       (INTERNAL_SERVER_ERROR, INTERNAL_SERVER_ERROR_FROM_API, INTERNAL_SERVER_ERROR),
       (SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE_FROM_API, SERVICE_UNAVAILABLE),
-      (NETWORK_AUTHENTICATION_REQUIRED, UNEXPECTED_RESPONSE_FROM_API, INTERNAL_SERVER_ERROR)
+      (NETWORK_AUTHENTICATION_REQUIRED, UNEXPECTED_RESPONSE_FROM_API, NETWORK_AUTHENTICATION_REQUIRED)
     )
 
     forAll(cases) { case (status, expectedKey, expectedStatus) =>
       s"return a pager duty $expectedKey and http status $expectedStatus for an error response with status=$status" in new PagerDutyAware {
         val parser = DownstreamParser.CommonDownstreamParser("method", "url", HttpResponse(status, ""))
+
         val result = parser.pagerDutyError(HttpResponse(status, ""))
 
         assert(result.status === expectedStatus)

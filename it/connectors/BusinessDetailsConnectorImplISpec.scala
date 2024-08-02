@@ -20,13 +20,13 @@ import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
 import connectors.data.{Api1171Test, CitizenDetailsTest}
 import helpers.WiremockSpec
-import models.common.{IdType, JourneyContextWithNino}
+import models.common.JourneyContextWithNino
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.OK
 
 class BusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
-  val connector                   = new BusinessDetailsConnectorImpl(httpClient, appConfig)
+  val connector                   = new IFSBusinessDetailsConnectorImpl(httpClient, appConfig)
   val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
 
   "getBusinesses" must {
@@ -36,7 +36,7 @@ class BusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBas
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.getBusinesses(IdType.Nino, nino.nino).futureValue shouldBe successResponse.asRight
+      connector.getBusinesses(nino) shouldBe successResponse.asRight
     }
   }
 
@@ -47,7 +47,7 @@ class BusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBas
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.getCitizenDetails(nino).futureValue shouldBe successResponse.asRight
+      connector.getCitizenDetails(nino) shouldBe successResponse.asRight
     }
   }
 

@@ -18,7 +18,16 @@ package models.connector.citizen_details
 
 import play.api.libs.json._
 
-case class SuccessResponseSchema(name: LegalNames, ids: Ids, dateOfBirth: String)
+import java.time.LocalDate
+
+case class SuccessResponseSchema(name: LegalNames, ids: Ids, dateOfBirth: String) {
+
+  def parseDoBToLocalDate: LocalDate = {
+    val (year, month, day) = (dateOfBirth.substring(4, 8), dateOfBirth.substring(2, 4), dateOfBirth.substring(0, 2))
+    LocalDate.parse(s"$year-$month-$day")
+  }
+
+}
 
 object SuccessResponseSchema {
   implicit lazy val successResponseSchemaJsonFormat: Format[SuccessResponseSchema] = Json.format[SuccessResponseSchema]
