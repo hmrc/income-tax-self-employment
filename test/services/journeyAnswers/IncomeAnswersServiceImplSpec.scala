@@ -90,10 +90,10 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
           Future.successful(api1965EmptyResponse.asRight)
 
         connector.createSEPeriodSummary(*)(*, *) returns
-          Future.successful(api1894SuccessResponse.asRight)
+          Future.successful(().asRight)
 
         connector.createAmendSEAnnualSubmission(*)(*, *) returns
-          Future.successful(api1802SuccessResponse.asRight)
+          Future.successful(().asRight)
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
         val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
@@ -109,11 +109,10 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         connector.listSEPeriodSummary(*)(*, *) returns
           Future.successful(api1965MatchedResponse.asRight)
 
-        connector.amendSEPeriodSummary(*)(*, *) returns
-          Future.successful(api1895SuccessResponse.asRight)
+        connector.amendSEPeriodSummary(*)(*, *) returns Future.successful(().asRight)
 
         connector.createAmendSEAnnualSubmission(*)(*, *) returns
-          Future.successful(api1802SuccessResponse.asRight)
+          Future.successful(().asRight)
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
         val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)

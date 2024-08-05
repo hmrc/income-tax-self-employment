@@ -25,12 +25,9 @@ import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
-import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
 import models.connector.api_1803.{AnnualAllowancesType, SuccessResponseSchema}
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
-import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
-import models.connector.api_1895.response.AmendSEPeriodSummaryResponse
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import models.connector.{api_1171, api_1786}
 import models.domain.ApiResultT
@@ -43,9 +40,9 @@ import java.time.OffsetDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
 case class StubIFSConnector(
-    createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(api1894SuccessResponse.asRight),
-    amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(api1895SuccessResponse.asRight),
-    createAmendSEAnnualSubmissionResult: Future[Api1802Response] = Future.successful(api1802SuccessResponse.asRight),
+    createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(().asRight),
+    amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(().asRight),
+    createAmendSEAnnualSubmissionResult: Future[Api1802Response] = Future.successful(().asRight),
     getAnnualSummariesResult: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight),
     listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
     getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight),
@@ -99,12 +96,6 @@ object StubIFSConnector {
     api_1171.SuccessResponseSchema(
       OffsetDateTime.now().toString,
       api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, None))
-
-  val api1894SuccessResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("id")
-
-  val api1895SuccessResponse: AmendSEPeriodSummaryResponse = AmendSEPeriodSummaryResponse("id")
-
-  val api1802SuccessResponse: CreateAmendSEAnnualSubmissionResponse = CreateAmendSEAnnualSubmissionResponse("id")
 
   val api1803SuccessResponse: SuccessResponseSchema = SuccessResponseSchema(
     None,

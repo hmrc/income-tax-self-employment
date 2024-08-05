@@ -25,11 +25,8 @@ import models.common.TaxYear.{asTys, endDate, startDate}
 import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics}
 import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics}
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
-import models.connector.api_1802.response.CreateAmendSEAnnualSubmissionResponse
 import models.connector.api_1894.request._
-import models.connector.api_1894.response.CreateSEPeriodSummaryResponse
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
-import models.connector.api_1895.response.AmendSEPeriodSummaryResponse
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import org.scalatest.EitherValues._
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -60,9 +57,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = OK)
 
-      val expectedResponse: CreateAmendSEAnnualSubmissionResponse = CreateAmendSEAnnualSubmissionResponse("someId")
-
-      connector.createAmendSEAnnualSubmission(data).futureValue shouldBe expectedResponse.asRight
+      connector.createAmendSEAnnualSubmission(data).futureValue shouldBe ().asRight
     }
   }
 
@@ -86,9 +81,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = CREATED)
 
-      val expectedResponse: CreateSEPeriodSummaryResponse = CreateSEPeriodSummaryResponse("someId")
-
-      connector.createSEPeriodSummary(data).futureValue shouldBe expectedResponse.asRight
+      connector.createSEPeriodSummary(data).futureValue shouldBe ().asRight
 
     }
   }
@@ -101,9 +94,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = OK)
 
-      val expectedResponse: AmendSEPeriodSummaryResponse = AmendSEPeriodSummaryResponse("someId")
-
-      connector.amendSEPeriodSummary(data).futureValue shouldBe expectedResponse.asRight
+      connector.amendSEPeriodSummary(data).futureValue shouldBe ().asRight
 
     }
   }
