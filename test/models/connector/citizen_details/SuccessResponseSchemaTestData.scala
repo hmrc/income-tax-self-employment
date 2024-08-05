@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,19 @@
  * limitations under the License.
  */
 
-package models
+package models.connector.citizen_details
 
-import cats.data.EitherT
-import models.error.ServiceError
+import bulders.BusinessDataBuilder.citizenDetailsDateOfBirth
+import utils.BaseSpec.nino
 
-import scala.concurrent.Future
-
-package object domain {
-  type ApiResultT[A] = EitherT[Future, ServiceError, A]
-  type ApiResult[A]  = Either[ServiceError, A]
+object SuccessResponseSchemaTestData {
+  val citizenDetailsResponse: SuccessResponseSchema =
+    SuccessResponseSchema(
+      name = LegalNames(
+        current = Name(firstName = "Mike", lastName = "Wazowski"),
+        previous = List(Name(firstName = "Jess", lastName = "Smith"))
+      ),
+      ids = Ids(nino.value),
+      dateOfBirth = citizenDetailsDateOfBirth
+    )
 }

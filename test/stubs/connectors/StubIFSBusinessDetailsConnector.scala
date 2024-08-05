@@ -30,15 +30,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class StubIFSBusinessDetailsConnector(
     getBusinessesResult: Api1171Response = api1171EmptyResponse.asRight,
-    getCitizenDetailsResult: CitizenDetailsResponse = citizenDetailsResponse.asRight,
     getBusinessIncomeSourcesSummaryResult: Api1871Response = api1871EmptyResponse.asRight
 ) extends IFSBusinessDetailsConnector {
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] =
     EitherT.fromEither[Future](getBusinessesResult)
-
-  def getCitizenDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[citizen_details.SuccessResponseSchema] =
-    EitherT.fromEither[Future](getCitizenDetailsResult)
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
       hc: HeaderCarrier,

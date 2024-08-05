@@ -18,35 +18,22 @@ package connectors
 
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
-import connectors.data.{Api1171Test, Api1871Test, CitizenDetailsTest}
+import connectors.data.CitizenDetailsTest
 import helpers.WiremockSpec
-import models.common.JourneyContextWithNino
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.OK
 
-class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
+class MDTPConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
+  val connector = new MDTPConnectorImpl(httpClient, appConfig)
 
-  val connector                   = new IFSBusinessDetailsConnectorImpl(httpClient, appConfig)
-  val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
-
-  "getBusinesses" must {
-    "return successful response" in new Api1171Test {
+  "getCitizenDetails" must {
+    "return successful response" in new CitizenDetailsTest {
       stubGetWithResponseBody(
         url = downstreamUrl,
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.getBusinesses(nino).value.futureValue shouldBe successResponse.asRight
-    }
-  }
-  "getBusinessIncomeSourcesSummary" must {
-    "return successful response" in new Api1871Test {
-      stubGetWithResponseBody(
-        url = downstreamUrl,
-        expectedResponse = successResponseRaw,
-        expectedStatus = OK
-      )
-      connector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue shouldBe successResponse.asRight
+      connector.getCitizenDetails(nino).value.futureValue shouldBe successResponse.asRight
     }
   }
 

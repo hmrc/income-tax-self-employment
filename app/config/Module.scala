@@ -17,7 +17,7 @@
 package config
 
 import com.google.inject.AbstractModule
-import connectors.{IFSBusinessDetailsConnector, IFSBusinessDetailsConnectorImpl, IFSConnector, IFSConnectorImpl}
+import connectors._
 import repositories.{JourneyAnswersRepository, MongoJourneyAnswersRepository}
 import services.journeyAnswers._
 import services.{BusinessService, BusinessServiceImpl}
@@ -38,6 +38,7 @@ class Module extends AbstractModule {
     bind(classOf[JourneyAnswersRepository]).to(classOf[MongoJourneyAnswersRepository])
     bind(classOf[IFSConnector]).to(classOf[IFSConnectorImpl])
     bind(classOf[IFSBusinessDetailsConnector]).to(classOf[IFSBusinessDetailsConnectorImpl])
+    bind(classOf[MDTPConnector]).to(classOf[MDTPConnectorImpl])
     bind(classOf[JourneyStatusService]).to(classOf[JourneyStatusServiceImpl])
     bind(classOf[NICsAnswersService]).to(classOf[NICsAnswersServiceImpl])
     bind(classOf[JourneyAnswersRepository]).to(classOf[MongoJourneyAnswersRepository])
