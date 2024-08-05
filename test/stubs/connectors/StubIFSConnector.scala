@@ -16,6 +16,7 @@
 
 package stubs.connectors
 
+import bulders.BusinessDataBuilder.citizenDetailsDateOfBirth
 import cats.data.EitherT
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.IFSConnector
@@ -29,7 +30,8 @@ import models.connector.api_1803.{AnnualAllowancesType, SuccessResponseSchema}
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
-import models.connector.{api_1171, api_1786}
+import models.connector.citizen_details.{Ids, LegalNames, Name}
+import models.connector.{api_1171, api_1786, api_1871, citizen_details}
 import models.domain.ApiResultT
 import models.error.ServiceError
 import stubs.connectors.StubIFSConnector._
@@ -92,6 +94,14 @@ case class StubIFSConnector(
 }
 
 object StubIFSConnector {
+
+  val citizenDetailsResponse: citizen_details.SuccessResponseSchema =
+    citizen_details.SuccessResponseSchema(
+      name = LegalNames(current = Name(firstName = "Mike", lastName = "Wazowski"), previous = List(Name(firstName = "Jess", lastName = "Smith"))),
+      ids = Ids(nino.value),
+      dateOfBirth = citizenDetailsDateOfBirth
+    )
+
   val api1171EmptyResponse: api_1171.SuccessResponseSchema =
     api_1171.SuccessResponseSchema(
       OffsetDateTime.now().toString,
@@ -130,4 +140,7 @@ object StubIFSConnector {
     )
 
   val api1965EmptyResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(Some(List.empty))
+
+  val api1871EmptyResponse: api_1871.BusinessIncomeSourcesSummaryResponse = api_1871.BusinessIncomeSourcesSummaryResponse.empty
+
 }

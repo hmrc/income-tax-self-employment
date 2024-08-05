@@ -47,6 +47,8 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
 
+  val citizenDetailsUrl: String = servicesConfig.baseUrl("citizen-details")
+
   val mongoTTL: Int = Duration(servicesConfig.getString("mongodb.timeToLive")).toDays.toInt
 
   val headerCarrierConfig = HeaderCarrier.Config.fromConfig(ConfigFactory.load())

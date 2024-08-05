@@ -19,9 +19,9 @@ package stubs.connectors
 import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
 import connectors.IFSBusinessDetailsConnector
-import connectors.IFSBusinessDetailsConnector.Api1171Response
-import models.common.Nino
-import models.connector.api_1171
+import connectors.IFSBusinessDetailsConnector.{Api1171Response, Api1871Response, CitizenDetailsResponse}
+import models.common.{BusinessId, Nino, TaxYear}
+import models.connector.{api_1171, api_1871, citizen_details}
 import models.domain.ApiResultT
 import stubs.connectors.StubIFSConnector._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -29,8 +29,20 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.{ExecutionContext, Future}
 
 case class StubIFSBusinessDetailsConnector(
-    getBusinessesResult: Api1171Response = api1171EmptyResponse.asRight
+    getBusinessesResult: Api1171Response = api1171EmptyResponse.asRight,
+    getCitizenDetailsResult: CitizenDetailsResponse = citizenDetailsResponse.asRight,
+    getBusinessIncomeSourcesSummaryResult: Api1871Response = api1871EmptyResponse.asRight
 ) extends IFSBusinessDetailsConnector {
+
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] =
     EitherT.fromEither[Future](getBusinessesResult)
+
+  def getCitizenDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[citizen_details.SuccessResponseSchema] =
+    EitherT.fromEither[Future](getCitizenDetailsResult)
+
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[api_1871.BusinessIncomeSourcesSummaryResponse] =
+    EitherT.fromEither[Future](getBusinessIncomeSourcesSummaryResult)
+
 }

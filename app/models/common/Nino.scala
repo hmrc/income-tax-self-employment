@@ -16,6 +16,7 @@
 
 package models.common
 
+import play.api.libs.json.{Format, Json}
 import play.api.mvc.PathBindable
 
 final case class Nino(value: String) extends AnyVal {
@@ -23,6 +24,7 @@ final case class Nino(value: String) extends AnyVal {
 }
 
 object Nino {
+  implicit val format: Format[Nino] = Json.valueFormat[Nino]
 
   implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[Nino] = new PathBindable[Nino] {
 

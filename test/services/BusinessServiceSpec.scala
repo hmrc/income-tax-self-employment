@@ -16,9 +16,13 @@
 
 package services
 
+import bulders.BusinessDataBuilder._
 import models.common.BusinessId
 import models.connector.api_1171._
+import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.domain.BusinessTestData
+import models.error.DownstreamError.SingleDownstreamError
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
 import org.scalatest.EitherValues._
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -29,8 +33,11 @@ import utils.EitherTTestOps.convertScalaFuture
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class BusinessServiceSpec extends AnyWordSpecLike {
+
   val ifsConnector = StubIFSBusinessDetailsConnector()
   val service      = new BusinessServiceImpl(ifsConnector)
+
+  private val error = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
 
   "getBusinesses" should {
     "return an empty list" in {
@@ -72,6 +79,36 @@ class BusinessServiceSpec extends AnyWordSpecLike {
       val service  = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getBusinessesResult = Right(business)))
       val result   = service.getBusiness(nino, businessId).value.futureValue.value
       assert(result === BusinessTestData.mkExample(businessId))
+    }
+  }
+
+  "getUserDateOfBirth" should {
+    "return a user's date of birth as a LocalDate" in {
+      val expectedResult = Right(aUserDateOfBirth)
+      val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector())
+      val result         = service.getUserDateOfBirth(nino).value.futureValue
+      assert(result === expectedResult)
+    }
+
+    "return an error from downstream" in {
+      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getCitizenDetailsResult = error))
+      val result  = service.getUserDateOfBirth(nino).value.futureValue
+      assert(result === error)
+    }
+  }
+
+  "getBusinessIncomeSourcesSummary" should {
+    "return a business' IncomeSourcesSummary" in {
+      val expectedResult = Right(BusinessIncomeSourcesSummaryResponse.empty)
+      val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector())
+      val result         = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
+      assert(result === expectedResult)
+    }
+
+    "return an error from downstream" in {
+      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getBusinessIncomeSourcesSummaryResult = error))
+      val result  = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
+      assert(result === error)
     }
   }
 

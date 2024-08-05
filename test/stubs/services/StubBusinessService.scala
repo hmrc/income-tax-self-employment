@@ -16,20 +16,27 @@
 
 package stubs.services
 
+import bulders.BusinessDataBuilder.aUserDateOfBirth
 import cats.data.EitherT
-import models.common.{BusinessId, Nino}
+import cats.implicits._
+import models.common._
+import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.domain.{ApiResultT, Business}
-import models.error.ServiceError
+import models.error.{DownstreamError, ServiceError}
 import services.BusinessService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec.businessId
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 final case class StubBusinessService(
     getBusinessesResult: Either[ServiceError, List[Business]] = Right(Nil),
-    getBusinessResult: Either[ServiceError, Business] = Left(ServiceError.BusinessNotFoundError(businessId))
+    getBusinessResult: Either[ServiceError, Business] = Left(ServiceError.BusinessNotFoundError(businessId)),
+    getUserDateOfBirthRes: Either[DownstreamError, LocalDate] = aUserDateOfBirth.asRight[DownstreamError],
+    getBusinessIncomeSourcesSummaryRes: Either[DownstreamError, BusinessIncomeSourcesSummaryResponse] =
+      BusinessIncomeSourcesSummaryResponse.empty.asRight[DownstreamError]
 ) extends BusinessService {
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
@@ -37,5 +44,12 @@ final case class StubBusinessService(
 
   def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business] =
     EitherT.fromEither[Future](getBusinessResult)
+
+  def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
+    EitherT.fromEither[Future](getUserDateOfBirthRes)
+
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
+      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =
+    EitherT.fromEither[Future](getBusinessIncomeSourcesSummaryRes)
 
 }

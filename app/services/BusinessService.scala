@@ -18,19 +18,24 @@ package services
 
 import cats.data.EitherT
 import connectors.IFSBusinessDetailsConnector
-import models.common.{BusinessId, Nino}
+import models.common.{BusinessId, Nino, TaxYear}
+import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.domain._
 import models.error.ServiceError
 import models.error.ServiceError.BusinessNotFoundError
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTOps.EitherTExtensions
 
+import java.time.LocalDate
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait BusinessService {
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]]
   def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business]
+  def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate]
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
+      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse]
 }
 
 @Singleton
@@ -50,4 +55,13 @@ class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnec
       business <- EitherT.fromOption[Future](maybeBusiness, BusinessNotFoundError(businessId)).leftAs[ServiceError]
     } yield business
 
+  def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
+    for {
+      citizenDetails <- businessConnector.getCitizenDetails(nino)
+      dateOfBirth    <- EitherT.fromEither[Future](citizenDetails.parseDoBToLocalDate)
+    } yield dateOfBirth
+
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
+      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =
+    businessConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)
 }

@@ -17,7 +17,7 @@
 package controllers
 
 import controllers.actions.AuthorisedAction
-import models.common.{BusinessId, Nino}
+import models.common.{BusinessId, Nino, TaxYear}
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.BusinessService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -39,4 +39,13 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
   def getBusiness(nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
     handleApiResultT(businessService.getBusiness(nino, businessId))
   }
+
+  def getUserDateOfBirth(nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResultT(businessService.getUserDateOfBirth(nino))
+  }
+
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResultT(businessService.getBusinessIncomeSourcesSummary(taxYear, nino, businessId))
+  }
+
 }

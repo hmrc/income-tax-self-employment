@@ -71,6 +71,10 @@ object ServiceError {
     val errorMessage: String = s"Cannot parse JSON: ${details.getMessage}"
   }
 
+  final case class CannotParseLocalDateError(details: Throwable) extends ServiceError {
+    val errorMessage: String = s"Cannot parse JSON: ${details.getMessage}"
+  }
+
   sealed trait DatabaseError extends ServiceError
 
   object DatabaseError {

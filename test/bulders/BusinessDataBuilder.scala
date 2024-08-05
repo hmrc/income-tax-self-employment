@@ -17,23 +17,42 @@
 package bulders
 
 import models.common._
-import models.connector.api_1171
+import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
+import models.connector.citizen_details.SuccessResponseSchema
+import models.connector.{api_1171, citizen_details}
 import models.domain.Business.mkBusiness
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import play.api.libs.json.Json
 
+import java.time.LocalDate
+
 object BusinessDataBuilder {
 
-  lazy val aGetBusinessDataResponse     = Json.parse(aGetBusinessDataResponseStr).as[api_1171.SuccessResponseSchema]
-  lazy val aGetBusinessDataEmptyRequest = aGetBusinessDataResponse.copy(taxPayerDisplayResponse = aTaxPayerDisplayResponse.copy(businessData = None))
-  lazy val aTaxPayerDisplayResponse     = aGetBusinessDataResponse.taxPayerDisplayResponse
-  lazy val aBusinessData                = aGetBusinessDataResponse.taxPayerDisplayResponse.businessData
+  lazy val aUserDateOfBirth: LocalDate                      = LocalDate.of(1997, 7, 30)
+  lazy val citizenDetailsDateOfBirth: String                = "30071997"
+  lazy val getCitizenDetailsResponse: SuccessResponseSchema = Json.parse(getCitizenDetailsResponseStr).as[citizen_details.SuccessResponseSchema]
+
+  lazy val aBusinessIncomeSourcesSummaryResponse: BusinessIncomeSourcesSummaryResponse = BusinessIncomeSourcesSummaryResponse(
+    aBusinessId.value,
+    totalIncome = 200,
+    totalExpenses = 200,
+    netProfit = 200,
+    netLoss = 200,
+    totalAdditions = Some(200),
+    totalDeductions = Some(200),
+    accountingAdjustments = Some(200),
+    taxableProfit = 200,
+    taxableLoss = 200
+  )
+
+  lazy val aGetBusinessDataResponse = Json.parse(aGetBusinessDataResponseStr).as[api_1171.SuccessResponseSchema]
+  lazy val aBusinessData            = aGetBusinessDataResponse.taxPayerDisplayResponse.businessData
   lazy val aBusinesses = aBusinessData.map(_.map(a => mkBusiness(a, aGetBusinessDataResponse.taxPayerDisplayResponse.yearOfMigration))).getOrElse(Nil)
   lazy val aBusiness   = aBusinesses.head
-  lazy val aBusinessIdAndName = (aBusiness.businessId, aBusiness.tradingName)
+  lazy val aBusinessId = BusinessId(aBusiness.businessId)
   lazy val aTradesJourneyStatusesSeq = List(
     TradesJourneyStatuses(
-      BusinessId(aBusiness.businessId),
+      aBusinessId,
       aBusiness.tradingName.map(TradingName(_)),
       TypeOfBusiness(aBusiness.typeOfBusiness),
       AccountingType(aBusiness.accountingType.getOrElse("")),
@@ -123,4 +142,19 @@ object BusinessDataBuilder {
       |  }
       |}
       |""".stripMargin
+
+  lazy val getCitizenDetailsResponseStr: String =
+    s"""{
+     |   "name": {
+     |      "current": {
+     |         "firstName": "Mike",
+     |         "lastName": "Wazowski"
+     |      },
+     |      "previous": []
+     |   },
+     |   "ids": {
+     |      "nino": "AA055075C"
+     |   },
+     |   "dateOfBirth": "30071997"
+     |}""".stripMargin
 }

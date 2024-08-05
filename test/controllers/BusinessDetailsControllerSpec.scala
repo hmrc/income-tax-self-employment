@@ -17,15 +17,14 @@
 package controllers
 
 import bulders.BusinessDataBuilder._
-import models.common.BusinessId
 import org.scalatest.wordspec.AnyWordSpecLike
-import stubs.controllers.actions.StubAuthorisedAction
-import stubs.services.StubBusinessService
-import utils.BaseSpec.nino
-import utils.TestUtils
-import utils.TestUtils._
 import play.api.http.Status._
 import play.api.libs.json.Json
+import stubs.controllers.actions.StubAuthorisedAction
+import stubs.services.StubBusinessService
+import utils.BaseSpec.{nino, taxYear}
+import utils.TestUtils
+import utils.TestUtils._
 
 class BusinessDetailsControllerSpec extends AnyWordSpecLike {
   def mkUnderTest(businessService: StubBusinessService): BusinessDetailsController =
@@ -45,9 +44,29 @@ class BusinessDetailsControllerSpec extends AnyWordSpecLike {
     val underTest = mkUnderTest(StubBusinessService(getBusinessResult = Right(aBusiness)))
 
     "return businesses" in {
-      val result = underTest.getBusiness(nino, BusinessId(aBusiness.businessId))(TestUtils.fakeRequest)
+      val result = underTest.getBusiness(nino, aBusinessId)(TestUtils.fakeRequest)
       assert(status(result) == OK)
       assert(bodyOf(result) == Json.toJson(aBusiness).toString())
+    }
+  }
+
+  s"getUserDateOfBirth" should {
+    val underTest = mkUnderTest(StubBusinessService(getUserDateOfBirthRes = Right(aUserDateOfBirth)))
+
+    "return the date of birth" in {
+      val result = underTest.getUserDateOfBirth(nino)(TestUtils.fakeRequest)
+      assert(status(result) == OK)
+      assert(bodyOf(result) == Json.toJson(aUserDateOfBirth).toString())
+    }
+  }
+
+  s"getBusinessIncomeSourcesSummary" should {
+    val underTest = mkUnderTest(StubBusinessService(getBusinessIncomeSourcesSummaryRes = Right(aBusinessIncomeSourcesSummaryResponse)))
+
+    "return the business' income source summary" in {
+      val result = underTest.getBusinessIncomeSourcesSummary(taxYear, nino, aBusinessId)(TestUtils.fakeRequest)
+      assert(status(result) == OK)
+      assert(bodyOf(result) == Json.toJson(aBusinessIncomeSourcesSummaryResponse).toString())
     }
   }
 
