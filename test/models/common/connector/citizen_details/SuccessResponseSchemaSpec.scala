@@ -21,6 +21,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 import java.time.LocalDate
+import org.scalatest.EitherValues._
 
 class SuccessResponseSchemaSpec extends AnyWordSpec with Matchers {
 
@@ -35,8 +36,8 @@ class SuccessResponseSchemaSpec extends AnyWordSpec with Matchers {
       val citizenDetails       = getCitizenDetailsResponse.copy(dateOfBirth = "99999999")
       val expectedErrorMessage = "Cannot parse JSON: Text '9999-99-99' could not be parsed: Invalid value for MonthOfYear (valid values 1 - 12): 99"
 
-      // noinspection ScalaDeprecation
-      val result = citizenDetails.parseDoBToLocalDate.left.get.errorMessage
+      val result = citizenDetails.parseDoBToLocalDate.left.value.errorMessage
+
       result shouldBe expectedErrorMessage
     }
   }

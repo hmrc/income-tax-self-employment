@@ -51,7 +51,7 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] = {
     val url                                                                    = api1171BusinessDetailsUrl(IdType.Nino, nino.value)
-    val context                                                                = appConfig.mkIFSMetadata(IFSApiName.Api1171, url)
+    val context                                                                = appConfig.mkMetadata(IFSApiName.Api1171, url)
     implicit val reads: HttpReads[ApiResponse[api_1171.SuccessResponseSchema]] = commonReads[api_1171.SuccessResponseSchema]
 
     EitherT(get[Api1171Response](http, context))
@@ -61,7 +61,7 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1871.BusinessIncomeSourcesSummaryResponse] = {
     val url     = businessIncomeSourcesSummaryUrl(taxYear, nino, businessId)
-    val context = appConfig.mkIFSMetadata(IFSApiName.Api1871, url)
+    val context = appConfig.mkMetadata(IFSApiName.Api1871, url)
     implicit val reads: HttpReads[ApiResponse[api_1871.BusinessIncomeSourcesSummaryResponse]] =
       commonReads[api_1871.BusinessIncomeSourcesSummaryResponse]
 

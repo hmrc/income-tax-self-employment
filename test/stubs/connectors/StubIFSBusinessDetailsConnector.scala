@@ -19,9 +19,9 @@ package stubs.connectors
 import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
 import connectors.IFSBusinessDetailsConnector
-import connectors.IFSBusinessDetailsConnector.{Api1171Response, Api1871Response, CitizenDetailsResponse}
+import connectors.IFSBusinessDetailsConnector.{Api1171Response, Api1871Response}
 import models.common.{BusinessId, Nino, TaxYear}
-import models.connector.{api_1171, api_1871, citizen_details}
+import models.connector.{api_1171, api_1871}
 import models.domain.ApiResultT
 import stubs.connectors.StubIFSConnector._
 import uk.gov.hmrc.http.HeaderCarrier

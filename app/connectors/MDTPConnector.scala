@@ -34,11 +34,11 @@ trait MDTPConnector {
 
 @Singleton
 class MDTPConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends MDTPConnector with Logging {
-  private def citizenDetailsUrl(idType: IdType, idNumber: Nino) = s"${appConfig.ifsBaseUrl}/citizen-details/$idType/$idNumber"
+  private def citizenDetailsUrl(idType: IdType, idNumber: Nino) = s"${appConfig.citizenDetailsUrl}/citizen-details/$idType/$idNumber"
 
   def getCitizenDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[citizen_details.SuccessResponseSchema] = {
     val url                                                                           = citizenDetailsUrl(IdType.Nino, nino)
-    val context                                                                       = appConfig.mkIFSMetadata(IFSApiName.CitizenDetails, url)
+    val context                                                                       = appConfig.mkMetadata(IFSApiName.CitizenDetails, url)
     implicit val reads: HttpReads[ApiResponse[citizen_details.SuccessResponseSchema]] = commonReads[citizen_details.SuccessResponseSchema]
 
     EitherT(get[CitizenDetailsResponse](http, context))

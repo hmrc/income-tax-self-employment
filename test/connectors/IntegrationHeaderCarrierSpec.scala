@@ -17,14 +17,14 @@
 package connectors
 
 import models.connector.IFSApiName
-import models.connector.IntegrationContext.IFSHeaderCarrier
+import models.connector.IntegrationContext.IntegrationHeaderCarrier
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import uk.gov.hmrc.http.HeaderCarrier.Config
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import utils.TestUtils.mockAppConfig
 
-class IFSHeaderCarrierSpec extends AnyWordSpecLike with Matchers {
+class IntegrationHeaderCarrierSpec extends AnyWordSpecLike with Matchers {
 
   "IFSHeaderCarrier" should {
     val internalHost        = "http://localhost"
@@ -33,7 +33,7 @@ class IFSHeaderCarrierSpec extends AnyWordSpecLike with Matchers {
     val headerCarrierConfig = Config()
 
     "enrich header carrier with bearer and environment" in {
-      val context = IFSHeaderCarrier(headerCarrierConfig, mockApiConfig, IFSApiName.Api1965, internalHost)
+      val context = IntegrationHeaderCarrier(headerCarrierConfig, mockApiConfig, IFSApiName.Api1965, internalHost)
       val result  = context.enrichedHeaderCarrier(hc)
 
       result.authorization shouldBe Some(Authorization(s"Bearer secret"))

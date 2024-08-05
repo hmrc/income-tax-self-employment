@@ -23,17 +23,24 @@ import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
 sealed trait IntegrationContext {
   val url: String
-  val api: IFSApiName
+  val api: ApiName
 
   def enrichedHeaderCarrier(implicit headerCarrier: HeaderCarrier): HeaderCarrier
 }
 
 object IntegrationContext {
 
-  final case class IFSHeaderCarrier(headerCarrierConfig: Config, appConfig: AppConfig, api: IFSApiName, url: String) extends IntegrationContext {
+  final case class IntegrationHeaderCarrier(headerCarrierConfig: Config, appConfig: AppConfig, api: ApiName, url: String) extends IntegrationContext {
     def enrichedHeaderCarrier(implicit headerCarrier: HeaderCarrier): HeaderCarrier = {
-      val hcWithAuth = headerCarrier.copy(authorization = Some(Authorization(s"Bearer ${appConfig.ifsAuthorisationToken(api.entryName)}")))
-      ApiConnector.apiHeaderCarrier(headerCarrierConfig, url, hcWithAuth, appConfig.testMode, "Environment" -> appConfig.ifsEnvironment)
+      val (hcWithAuth, headers) = api match {
+        case _: IFSApiName =>
+          val updatedHeader = headerCarrier.copy(authorization = Some(Authorization(s"Bearer ${appConfig.ifsAuthorisationToken(api.entryName)}")))
+          (updatedHeader, List("Environment" -> appConfig.ifsEnvironment))
+        case _: MDTPApiName => // We don't need bearer for MDTP services
+          (headerCarrier, Nil)
+      }
+
+      ApiConnector.apiHeaderCarrier(headerCarrierConfig, url, hcWithAuth, appConfig.testMode, headers: _*)
     }
   }
 }

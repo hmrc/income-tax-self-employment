@@ -18,7 +18,11 @@ package models.connector
 
 import enumeratum._
 
-sealed abstract class IFSApiName(override val entryName: String) extends EnumEntry
+sealed trait ApiName {
+  def entryName: String
+}
+
+sealed abstract class IFSApiName(override val entryName: String) extends EnumEntry with ApiName
 
 /** When you add a new API here, don't forget to add it in the application.conf and config for QA, Staging and Prod
   */
@@ -37,4 +41,12 @@ object IFSApiName extends Enum[IFSApiName] {
   case object Api1894        extends IFSApiName("1894")
   case object Api1895        extends IFSApiName("1895")
   case object Api1965        extends IFSApiName("1965")
+}
+
+sealed abstract class MDTPApiName(override val entryName: String) extends EnumEntry with ApiName
+
+object MDTPApiName extends Enum[MDTPApiName] {
+  val values = IndexedSeq[MDTPApiName]()
+
+  case object CitizenDetails extends MDTPApiName("citizen-details")
 }

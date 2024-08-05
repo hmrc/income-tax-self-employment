@@ -17,8 +17,8 @@
 package config
 
 import com.typesafe.config.ConfigFactory
-import models.connector.IFSApiName
-import models.connector.IntegrationContext.IFSHeaderCarrier
+import models.connector.ApiName
+import models.connector.IntegrationContext.IntegrationHeaderCarrier
 import play.api.Configuration
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -55,6 +55,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val headerCarrierConfig = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 
-  def mkIFSMetadata(apiName: IFSApiName, url: String): IFSHeaderCarrier = IFSHeaderCarrier(headerCarrierConfig, this, apiName, url)
+  def mkMetadata(apiName: ApiName, url: String): IntegrationHeaderCarrier =
+    IntegrationHeaderCarrier(headerCarrierConfig, this, apiName, url)
 
 }
