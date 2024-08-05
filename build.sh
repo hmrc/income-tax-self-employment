@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-sbt -DPLAY_ENV=CI clean scalafmtAll scalafmtSbt compile test:compile it:compile
+sbt -DPLAY_ENV=CI clean scalafmtAll test:scalafmtAll it:scalafmtAll scalafmtSbt compile test:compile it:compile
