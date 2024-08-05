@@ -39,6 +39,7 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
       connector.getBusinesses(nino).value.futureValue shouldBe successResponse.asRight
     }
   }
+
   "getBusinessIncomeSourcesSummary" must {
     "return successful response" in new Api1871Test {
       stubGetWithResponseBody(
