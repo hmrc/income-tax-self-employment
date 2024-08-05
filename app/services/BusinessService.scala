@@ -17,7 +17,7 @@
 package services
 
 import cats.data.EitherT
-import connectors.IFSBusinessDetailsConnector
+import connectors.{IFSBusinessDetailsConnector, MDTPConnector}
 import models.common.{BusinessId, Nino, TaxYear}
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.domain._
@@ -39,7 +39,8 @@ trait BusinessService {
 }
 
 @Singleton
-class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnector)(implicit ec: ExecutionContext) extends BusinessService {
+class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnector, mdtpConnector: MDTPConnector)(implicit ec: ExecutionContext)
+    extends BusinessService {
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
     for {
@@ -57,7 +58,7 @@ class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnec
 
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
     for {
-      citizenDetails <- businessConnector.getCitizenDetails(nino)
+      citizenDetails <- mdtpConnector.getCitizenDetails(nino)
       dateOfBirth    <- EitherT.fromEither[Future](citizenDetails.parseDoBToLocalDate)
     } yield dateOfBirth
 

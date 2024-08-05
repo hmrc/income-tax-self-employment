@@ -16,11 +16,11 @@
 
 package models.logging
 
-import models.connector.IFSApiName
+import models.connector.ApiName
 import play.api.Logger
 import play.api.libs.json.{Json, Writes}
 
-final case class ConnectorRequestInfo(method: String, url: String, apiId: IFSApiName) {
+final case class ConnectorRequestInfo(method: String, url: String, apiId: ApiName) {
   private def apiIdStr = s"API#${apiId.entryName}"
 
   def logRequestWithBody[A: Writes](logger: Logger, body: A): Unit = {

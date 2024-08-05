@@ -34,5 +34,5 @@ case class AnnualAdjustmentsType(includedNonTaxableProfits: Option[BigDecimal],
 
 object AnnualAdjustmentsType {
   implicit lazy val annualAdjustmentsTypeJsonFormat: Format[AnnualAdjustmentsType] = Json.format[AnnualAdjustmentsType]
-  def emptyAnnualAdjustmentsType = AnnualAdjustmentsType(None, None, None, None, None, None, None, None, None, None, None)
+  def emptyAnnualAdjustmentsType: AnnualAdjustmentsType = AnnualAdjustmentsType(None, None, None, None, None, None, None, None, None, None, None)
 }

@@ -26,7 +26,7 @@ import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
 import org.scalatest.EitherValues._
 import org.scalatest.wordspec.AnyWordSpecLike
-import stubs.connectors.StubIFSBusinessDetailsConnector
+import stubs.connectors.{StubIFSBusinessDetailsConnector, StubMDTPConnector}
 import utils.BaseSpec._
 import utils.EitherTTestOps.convertScalaFuture
 
@@ -34,8 +34,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class BusinessServiceSpec extends AnyWordSpecLike {
 
-  val ifsConnector = StubIFSBusinessDetailsConnector()
-  val service      = new BusinessServiceImpl(ifsConnector)
+  val ifsConnector  = StubIFSBusinessDetailsConnector()
+  val mdtpConnector = StubMDTPConnector()
+  val service       = new BusinessServiceImpl(ifsConnector, mdtpConnector)
 
   private val error = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
 
@@ -54,7 +55,10 @@ class BusinessServiceSpec extends AnyWordSpecLike {
           BusinessDataDetailsTestData.mkExample(BusinessId("id2"))
         )
       )
-      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getBusinessesResult = Right(businesses)))
+      val service = new BusinessServiceImpl(
+        StubIFSBusinessDetailsConnector(getBusinessesResult = Right(businesses)),
+        StubMDTPConnector()
+      )
 
       val result = service.getBusinesses(nino).value.futureValue.value
 
@@ -76,8 +80,11 @@ class BusinessServiceSpec extends AnyWordSpecLike {
 
     "return a business" in {
       val business = SuccessResponseSchemaTestData.mkExample(nino, mtditid, List(BusinessDataDetailsTestData.mkExample(businessId)))
-      val service  = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getBusinessesResult = Right(business)))
-      val result   = service.getBusiness(nino, businessId).value.futureValue.value
+      val service = new BusinessServiceImpl(
+        StubIFSBusinessDetailsConnector(getBusinessesResult = Right(business)),
+        StubMDTPConnector()
+      )
+      val result = service.getBusiness(nino, businessId).value.futureValue.value
       assert(result === BusinessTestData.mkExample(businessId))
     }
   }
@@ -85,13 +92,13 @@ class BusinessServiceSpec extends AnyWordSpecLike {
   "getUserDateOfBirth" should {
     "return a user's date of birth as a LocalDate" in {
       val expectedResult = Right(aUserDateOfBirth)
-      val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector())
+      val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(), StubMDTPConnector())
       val result         = service.getUserDateOfBirth(nino).value.futureValue
       assert(result === expectedResult)
     }
 
     "return an error from downstream" in {
-      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getCitizenDetailsResult = error))
+      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(), StubMDTPConnector(getCitizenDetailsRes = error))
       val result  = service.getUserDateOfBirth(nino).value.futureValue
       assert(result === error)
     }
@@ -100,13 +107,13 @@ class BusinessServiceSpec extends AnyWordSpecLike {
   "getBusinessIncomeSourcesSummary" should {
     "return a business' IncomeSourcesSummary" in {
       val expectedResult = Right(BusinessIncomeSourcesSummaryResponse.empty)
-      val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector())
+      val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(), StubMDTPConnector())
       val result         = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
       assert(result === expectedResult)
     }
 
     "return an error from downstream" in {
-      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getBusinessIncomeSourcesSummaryResult = error))
+      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getBusinessIncomeSourcesSummaryResult = error), StubMDTPConnector())
       val result  = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
       assert(result === error)
     }

@@ -45,7 +45,7 @@ trait WiremockSpec
 
   val wireMockServer: WireMockServer = new WireMockServer(wireMockConfig().port(wireMockPort))
 
-  lazy val connectedServices: Seq[String] = Seq("auth", "integration-framework")
+  lazy val connectedServices: Seq[String] = Seq("auth", "integration-framework", "integration-framework-api1171", "citizen-details")
 
   protected lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
 

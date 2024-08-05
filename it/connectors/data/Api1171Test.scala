@@ -26,7 +26,7 @@ trait Api1171Test extends IntegrationBaseSpec {
   val successResponseRaw: String =
     """
       |{
-      |  "processingDate": "2023-07-05T09:16:58.655Z",
+      |  "processingDate": "2023-07-05T09:16:58",
       |  "taxPayerDisplayResponse": {
       |    "safeId": "EK3074559847852",
       |    "nino": "FI290077A",

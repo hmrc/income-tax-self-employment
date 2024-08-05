@@ -31,47 +31,37 @@ import scala.concurrent.ExecutionContext
 
 trait IFSBusinessDetailsConnector {
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema]
-  def getCitizenDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[citizen_details.SuccessResponseSchema]
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1871.BusinessIncomeSourcesSummaryResponse]
 }
 
 object IFSBusinessDetailsConnector {
-  type CitizenDetailsResponse = ApiResponse[citizen_details.SuccessResponseSchema]
-  type Api1171Response        = ApiResponse[api_1171.SuccessResponseSchema]
-  type Api1871Response        = ApiResponse[api_1871.BusinessIncomeSourcesSummaryResponse]
+  type Api1171Response = ApiResponse[api_1171.SuccessResponseSchema]
+  type Api1871Response = ApiResponse[api_1871.BusinessIncomeSourcesSummaryResponse]
 }
 
 @Singleton
 class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends IFSBusinessDetailsConnector with Logging {
+  private def api1171BusinessDetailsUrl(idType: IdType, idNumber: String) =
+    s"${appConfig.ifsApi1171}/registration/business-details/$idType/$idNumber"
 
-  private def api1171BusinessDetailsUrl(idType: IdType, idNumber: String) = s"${appConfig.ifsBaseUrl}/registration/business-details/$idType/$idNumber"
-  private def citizenDetailsUrl(idType: IdType, idNumber: Nino)           = s"${appConfig.ifsBaseUrl}/citizen-details/$idType/$idNumber"
   private def businessIncomeSourcesSummaryUrl(taxYear: TaxYear, nino: Nino, businessId: BusinessId) =
     s"${appConfig.ifsBaseUrl}/income-tax/income-sources/${asTys(taxYear)}/$nino/$businessId/self-employment/biss"
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] = {
     val url                                                                    = api1171BusinessDetailsUrl(IdType.Nino, nino.value)
-    val context                                                                = appConfig.mkIFSMetadata(IFSApiName.Api1171, url)
+    val context                                                                = appConfig.mkMetadata(IFSApiName.Api1171, url)
     implicit val reads: HttpReads[ApiResponse[api_1171.SuccessResponseSchema]] = commonReads[api_1171.SuccessResponseSchema]
 
     EitherT(get[Api1171Response](http, context))
-  }
-
-  def getCitizenDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[citizen_details.SuccessResponseSchema] = {
-    val url                                                                           = citizenDetailsUrl(IdType.Nino, nino)
-    val context                                                                       = appConfig.mkIFSMetadata(IFSApiName.CitizenDetails, url)
-    implicit val reads: HttpReads[ApiResponse[citizen_details.SuccessResponseSchema]] = commonReads[citizen_details.SuccessResponseSchema]
-
-    EitherT(get[CitizenDetailsResponse](http, context))
   }
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1871.BusinessIncomeSourcesSummaryResponse] = {
     val url     = businessIncomeSourcesSummaryUrl(taxYear, nino, businessId)
-    val context = appConfig.mkIFSMetadata(IFSApiName.Api1871, url)
+    val context = appConfig.mkMetadata(IFSApiName.Api1871, url)
     implicit val reads: HttpReads[ApiResponse[api_1871.BusinessIncomeSourcesSummaryResponse]] =
       commonReads[api_1871.BusinessIncomeSourcesSummaryResponse]
 
