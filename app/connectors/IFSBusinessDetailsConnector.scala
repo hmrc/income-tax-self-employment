@@ -44,7 +44,8 @@ object IFSBusinessDetailsConnector {
 
 @Singleton
 class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends IFSBusinessDetailsConnector with Logging {
-  private def api1171BusinessDetailsUrl(idType: IdType, idNumber: String) = s"${appConfig.ifsApi1171}/registration/business-details/$idType/$idNumber"
+  private def api1171BusinessDetailsUrl(idType: IdType, idNumber: String) =
+    s"${appConfig.ifsApi1171}/registration/business-details/$idType/$idNumber"
 
   private def businessIncomeSourcesSummaryUrl(taxYear: TaxYear, nino: Nino, businessId: BusinessId) =
     s"${appConfig.ifsBaseUrl}/income-tax/income-sources/${asTys(taxYear)}/$nino/$businessId/self-employment/biss"

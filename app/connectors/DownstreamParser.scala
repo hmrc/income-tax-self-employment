@@ -40,7 +40,8 @@ trait DownstreamParser {
   def reportInvalidJsonError(errors: List[(JsPath, scala.collection.Seq[JsonValidationError])]): SingleDownstreamError = {
     pagerDutyLog(
       BAD_SUCCESS_JSON_FROM_API,
-      s"[$parserName][read] Invalid Json when calling $requestMethod $targetUrl: ${formatJsonErrors(errors)}, responseStatus: $responseStatus, responseBody: $responseBody"
+      s"[$parserName][read] Invalid Json when calling $requestMethod $targetUrl: ${formatJsonErrors(errors)}, " +
+        s"responseStatus: $responseStatus, responseBody: $responseBody"
     )
     SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
   }

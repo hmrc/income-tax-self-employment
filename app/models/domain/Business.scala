@@ -57,7 +57,7 @@ object Business {
   private val typeOfBusiness                         = "self-employment"
   private val latencyIndicatorType: String => String = latencyIndicator => if (latencyIndicator == "Q") "Quarterly" else "Annual"
 
-  def mkBusiness(details: BusinessDataDetails, yearOfMigration: Option[String]) =
+  def mkBusiness(details: BusinessDataDetails, yearOfMigration: Option[String]): Business =
     Business(
       businessId = details.incomeSourceId,
       typeOfBusiness,
