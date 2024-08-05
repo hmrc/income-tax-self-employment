@@ -18,7 +18,7 @@ package connectors
 
 import cats.data.EitherT
 import config.AppConfig
-import connectors.IFSBusinessDetailsConnector._
+import connectors.MDTPConnector.CitizenDetailsResponse
 import models.common._
 import models.connector._
 import models.domain.ApiResultT
@@ -30,6 +30,10 @@ import scala.concurrent.ExecutionContext
 
 trait MDTPConnector {
   def getCitizenDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[citizen_details.SuccessResponseSchema]
+}
+
+object MDTPConnector {
+  type CitizenDetailsResponse = ApiResponse[citizen_details.SuccessResponseSchema]
 }
 
 @Singleton

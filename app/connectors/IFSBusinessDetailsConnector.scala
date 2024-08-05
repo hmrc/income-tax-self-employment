@@ -37,9 +37,8 @@ trait IFSBusinessDetailsConnector {
 }
 
 object IFSBusinessDetailsConnector {
-  type CitizenDetailsResponse = ApiResponse[citizen_details.SuccessResponseSchema]
-  type Api1171Response        = ApiResponse[api_1171.SuccessResponseSchema]
-  type Api1871Response        = ApiResponse[api_1871.BusinessIncomeSourcesSummaryResponse]
+  type Api1171Response = ApiResponse[api_1171.SuccessResponseSchema]
+  type Api1871Response = ApiResponse[api_1871.BusinessIncomeSourcesSummaryResponse]
 }
 
 @Singleton
