@@ -24,25 +24,22 @@ import java.net.URL
 
 object ApiConnector {
 
-  // TODO I'm not sure what is happening here. Review the logic below: SASS-6247
   def apiHeaderCarrier(headerCarrierConfig: Config,
                        url: String,
                        hc: HeaderCarrier,
                        testScenarios: List[String],
                        headers: (String, String)*): HeaderCarrier = {
-    val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
-
-    if (isInternalHost) {
-      val updatedHeaders = if (testScenarios.nonEmpty) {
+    def maybeWithTestScenarios(headers: Seq[(String, String)]): Seq[(String, String)] =
+      if (testScenarios.nonEmpty) {
         val updatedHeaders = headers ++ hc.otherHeaders.filter(_._1 == "ITSA_TEST_SCENARIO")
         updatedHeaders ++ testScenarios.map(value => "ITSA_TEST_SCENARIO" -> value)
       } else {
         headers
       }
-      hc.withExtraHeaders(updatedHeaders: _*)
-    } else {
-      val updatedHeaders = headers ++ hc.toExplicitHeaders
-      hc.withExtraHeaders(updatedHeaders: _*)
-    }
+
+    val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
+    val updatedHeaders = if (isInternalHost) headers else headers ++ hc.toExplicitHeaders
+
+    hc.withExtraHeaders(maybeWithTestScenarios(updatedHeaders): _*)
   }
 }
