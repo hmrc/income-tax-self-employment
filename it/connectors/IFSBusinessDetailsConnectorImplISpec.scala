@@ -18,7 +18,7 @@ package connectors
 
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
-import connectors.data.{Api1171Test, Api1871Test, CitizenDetailsTest}
+import connectors.data.{Api1171Test, Api1871Test}
 import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
