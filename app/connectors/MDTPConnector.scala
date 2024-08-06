@@ -42,7 +42,7 @@ class MDTPConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) exten
 
   def getCitizenDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[citizen_details.SuccessResponseSchema] = {
     val url                                                                           = citizenDetailsUrl(IdType.Nino, nino)
-    val context                                                                       = appConfig.mkMetadata(IFSApiName.CitizenDetails, url)
+    val context                                                                       = appConfig.mkMetadata(MDTPApiName.CitizenDetails, url)
     implicit val reads: HttpReads[ApiResponse[citizen_details.SuccessResponseSchema]] = commonReads[citizen_details.SuccessResponseSchema]
 
     EitherT(get[CitizenDetailsResponse](http, context))
