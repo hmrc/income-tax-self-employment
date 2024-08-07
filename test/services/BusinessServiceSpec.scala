@@ -17,6 +17,7 @@
 package services
 
 import bulders.BusinessDataBuilder._
+import cats.implicits.catsSyntaxEitherId
 import models.common.BusinessId
 import models.connector.api_1171._
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
@@ -34,9 +35,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class BusinessServiceSpec extends AnyWordSpecLike {
 
-  val ifsConnector  = StubIFSBusinessDetailsConnector()
-  val mdtpConnector = StubMDTPConnector()
-  val service       = new BusinessServiceImpl(ifsConnector, mdtpConnector)
+  val ifsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
+  val mdtpConnector: StubMDTPConnector              = StubMDTPConnector()
+  val service                                       = new BusinessServiceImpl(ifsConnector, mdtpConnector)
 
   private val error = Left(SingleDownstreamError(999, SingleDownstreamErrorBody("API_ERROR", "Error response from API")))
 
@@ -105,16 +106,31 @@ class BusinessServiceSpec extends AnyWordSpecLike {
   }
 
   "getBusinessIncomeSourcesSummary" should {
-    "return a business' IncomeSourcesSummary" in {
-      val expectedResult = Right(BusinessIncomeSourcesSummaryResponse.empty)
+    "return an empty list if a user has no businesses" in {
+      val expectedResult = Right(List.empty[BusinessIncomeSourcesSummaryResponse])
       val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(), StubMDTPConnector())
-      val result         = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
+      val result         = service.getAllBusinessIncomeSourcesSummaries(taxYear, nino).value.futureValue
+      assert(result === expectedResult)
+    }
+
+    "return an IncomeSourcesSummary for each business" in {
+      val expectedResult = Right(List(aBusinessIncomeSourcesSummaryResponse))
+      val stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+        getBusinessesResult = aGetBusinessDataResponse.asRight,
+        getBusinessIncomeSourcesSummaryResult = aBusinessIncomeSourcesSummaryResponse.asRight
+      )
+      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector())
+      val result  = service.getAllBusinessIncomeSourcesSummaries(taxYear, nino).value.futureValue
       assert(result === expectedResult)
     }
 
     "return an error from downstream" in {
-      val service = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(getBusinessIncomeSourcesSummaryResult = error), StubMDTPConnector())
-      val result  = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
+      val stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+        getBusinessesResult = aGetBusinessDataResponse.asRight,
+        getBusinessIncomeSourcesSummaryResult = error
+      )
+      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector())
+      val result  = service.getAllBusinessIncomeSourcesSummaries(taxYear, nino).value.futureValue
       assert(result === error)
     }
   }

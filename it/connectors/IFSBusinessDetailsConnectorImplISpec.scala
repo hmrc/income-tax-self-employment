@@ -47,7 +47,7 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue shouldBe successResponse.asRight
+      connector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId.value).value.futureValue shouldBe successResponse.asRight
     }
   }
 

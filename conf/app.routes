@@ -9,7 +9,7 @@ GET         /individuals/business/details/:nino/:businessId                     
 
 GET         /user-date-of-birth/:nino                                                                    controllers.BusinessDetailsController.getUserDateOfBirth(nino: Nino)
 
-GET         /:taxYear/:businessId/business-income-sources-summary/:nino                                  controllers.BusinessDetailsController.getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)
+GET         /:taxYear/business-income-sources-summaries/:nino                                            controllers.BusinessDetailsController.getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)
 
 # Journey Statuses
 GET         /:taxYear/:nino/task-list                                                                    controllers.JourneyStatusController.getTaskList(taxYear: TaxYear, nino: Nino)
