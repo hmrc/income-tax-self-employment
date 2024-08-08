@@ -61,12 +61,12 @@ class BusinessDetailsControllerSpec extends AnyWordSpecLike {
   }
 
   s"getBusinessIncomeSourcesSummary" should {
-    val underTest = mkUnderTest(StubBusinessService(getBusinessIncomeSourcesSummaryRes = Right(aBusinessIncomeSourcesSummaryResponse)))
+    val underTest = mkUnderTest(StubBusinessService(getAllBusinessIncomeSourcesSummariesRes = Right(List(aBusinessIncomeSourcesSummaryResponse))))
 
-    "return the business' income source summary" in {
-      val result = underTest.getBusinessIncomeSourcesSummary(taxYear, nino, aBusinessId)(TestUtils.fakeRequest)
+    "return a list of business income source summaries" in {
+      val result = underTest.getAllBusinessIncomeSourcesSummaries(taxYear, nino)(TestUtils.fakeRequest)
       assert(status(result) == OK)
-      assert(bodyOf(result) == Json.toJson(aBusinessIncomeSourcesSummaryResponse).toString())
+      assert(bodyOf(result) == Json.toJson(List(aBusinessIncomeSourcesSummaryResponse)).toString())
     }
   }
 

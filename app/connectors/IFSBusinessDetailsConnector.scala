@@ -31,7 +31,7 @@ import scala.concurrent.ExecutionContext
 
 trait IFSBusinessDetailsConnector {
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema]
-  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: String)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1871.BusinessIncomeSourcesSummaryResponse]
 }
@@ -46,7 +46,7 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
   private def api1171BusinessDetailsUrl(idType: IdType, idNumber: String) =
     s"${appConfig.ifsApi1171}/registration/business-details/$idType/$idNumber"
 
-  private def businessIncomeSourcesSummaryUrl(taxYear: TaxYear, nino: Nino, businessId: BusinessId) =
+  private def businessIncomeSourcesSummaryUrl(taxYear: TaxYear, nino: Nino, businessId: String) =
     s"${appConfig.ifsBaseUrl}/income-tax/income-sources/${asTys(taxYear)}/$nino/$businessId/self-employment/biss"
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] = {
@@ -57,7 +57,7 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
     EitherT(get[Api1171Response](http, context))
   }
 
-  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: String)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1871.BusinessIncomeSourcesSummaryResponse] = {
     val url     = businessIncomeSourcesSummaryUrl(taxYear, nino, businessId)

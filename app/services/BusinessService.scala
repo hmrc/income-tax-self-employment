@@ -34,8 +34,8 @@ trait BusinessService {
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]]
   def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business]
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate]
-  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
-      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse]
+  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)(implicit
+      hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]]
 }
 
 @Singleton
@@ -62,7 +62,24 @@ class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnec
       dateOfBirth    <- EitherT.fromEither[Future](citizenDetails.parseDoBToLocalDate)
     } yield dateOfBirth
 
-  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
-      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =
-    businessConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)
+  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)(implicit
+      hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]] = {
+
+    def getSummaryForEachBusinessId(remainingIds: List[String],
+                                    summaries: List[BusinessIncomeSourcesSummaryResponse]): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]] =
+      remainingIds match {
+        case Nil => EitherT.rightT(summaries)
+        case head :: tail =>
+          for {
+            newSummary       <- businessConnector.getBusinessIncomeSourcesSummary(taxYear, nino, head)
+            updatedSummaries <- getSummaryForEachBusinessId(tail, summaries :+ newSummary)
+          } yield updatedSummaries
+      }
+
+    for {
+      businesses <- getBusinesses(nino)
+      businessIds = businesses.map(_.businessId)
+      summaryList <- getSummaryForEachBusinessId(businessIds, List.empty[BusinessIncomeSourcesSummaryResponse])
+    } yield summaryList
+  }
 }

@@ -20,7 +20,7 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
 import connectors.IFSBusinessDetailsConnector
 import connectors.IFSBusinessDetailsConnector.{Api1171Response, Api1871Response}
-import models.common.{BusinessId, Nino, TaxYear}
+import models.common.{Nino, TaxYear}
 import models.connector.{api_1171, api_1871}
 import models.domain.ApiResultT
 import stubs.connectors.StubIFSConnector._
@@ -36,7 +36,7 @@ case class StubIFSBusinessDetailsConnector(
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] =
     EitherT.fromEither[Future](getBusinessesResult)
 
-  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: String)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1871.BusinessIncomeSourcesSummaryResponse] =
     EitherT.fromEither[Future](getBusinessIncomeSourcesSummaryResult)

@@ -35,8 +35,8 @@ final case class StubBusinessService(
     getBusinessesResult: Either[ServiceError, List[Business]] = Right(Nil),
     getBusinessResult: Either[ServiceError, Business] = Left(ServiceError.BusinessNotFoundError(businessId)),
     getUserDateOfBirthRes: Either[DownstreamError, LocalDate] = aUserDateOfBirth.asRight[DownstreamError],
-    getBusinessIncomeSourcesSummaryRes: Either[DownstreamError, BusinessIncomeSourcesSummaryResponse] =
-      BusinessIncomeSourcesSummaryResponse.empty.asRight[DownstreamError]
+    getAllBusinessIncomeSourcesSummariesRes: Either[DownstreamError, List[BusinessIncomeSourcesSummaryResponse]] =
+      List.empty[BusinessIncomeSourcesSummaryResponse].asRight[DownstreamError]
 ) extends BusinessService {
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
@@ -48,8 +48,8 @@ final case class StubBusinessService(
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
     EitherT.fromEither[Future](getUserDateOfBirthRes)
 
-  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
-      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =
-    EitherT.fromEither[Future](getBusinessIncomeSourcesSummaryRes)
+  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)(implicit
+      hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]] =
+    EitherT.fromEither[Future](getAllBusinessIncomeSourcesSummariesRes)
 
 }
