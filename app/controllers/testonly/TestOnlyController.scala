@@ -17,6 +17,7 @@
 package controllers.testonly
 
 import cats.data.EitherT
+import cats.implicits.toTraverseOps
 import config.AppConfig
 import controllers.handleApiUnitResultT
 import models.connector.{ApiResponse, commonDeleteReads}
@@ -38,13 +39,25 @@ class TestOnlyController @Inject() (httpClient: HttpClient,
                                     appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
+  private val testNinos = List(
+    "AA000001C",
+    "BB000001A",
+    "BB000001C",
+    "BB000002A",
+    "BB000002C"
+  )
 
   def isTestEnabled: Action[AnyContent] = Action {
     Ok("true")
   }
 
-  def clearAllData(): Action[AnyContent] = Action.async {
-    handleApiUnitResultT(journeyAnswersRepository.testOnlyClearAllData())
+  def clearAllData(): Action[AnyContent] = Action.async { implicit request =>
+    val res = for {
+      _ <- testNinos.traverse(testClearIFSData)
+      _ <- journeyAnswersRepository.testOnlyClearAllData()
+    } yield ()
+
+    handleApiUnitResultT(res)
   }
 
   def clearAllBEAndStubData(nino: String): Action[AnyContent] = Action.async { implicit request =>
