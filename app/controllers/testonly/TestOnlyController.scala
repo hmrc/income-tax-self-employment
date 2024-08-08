@@ -39,7 +39,7 @@ class TestOnlyController @Inject() (httpClient: HttpClient,
                                     appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends BackendController(cc)
     with Logging {
-  val testNinos = List(
+  private val testNinos = List(
     "AA000001C",
     "BB000001A",
     "BB000001C",
