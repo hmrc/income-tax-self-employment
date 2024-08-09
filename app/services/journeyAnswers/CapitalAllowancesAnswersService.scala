@@ -50,8 +50,9 @@ import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import cats.implicits._
+import utils.EitherTOps.EitherTExtensions
 
 trait CapitalAllowancesAnswersService {
   def saveAnnualAllowances(ctx: JourneyContextWithNino, updatedAnnualAllowances: AnnualAllowances)(implicit hc: HeaderCarrier): ApiResultT[Unit]
@@ -77,8 +78,11 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
   def saveAnnualAllowances(ctx: JourneyContextWithNino, updatedAnnualAllowances: AnnualAllowances)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     val maybeUpsertBody  = CreateAmendSEAnnualSubmissionRequestBody.mkRequest(None, Some(updatedAnnualAllowances), None)
     val maybeRequestData = maybeUpsertBody.map(CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, _))
-    val result           = maybeRequestData.traverse(requestData => connector.createAmendSEAnnualSubmission(requestData)).void
-    EitherT.right[ServiceError](result)
+    val result = maybeRequestData.map(requestData => connector.createAmendSEAnnualSubmission(requestData)).map {
+      EitherT(_).leftAs[ServiceError]
+    }
+
+    result.getOrElse(EitherT.rightT[Future, ServiceError](()))
   }
 
   def saveAnswers[A: Api1802AnnualAllowancesBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit

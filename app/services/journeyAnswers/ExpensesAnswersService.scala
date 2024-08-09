@@ -60,16 +60,29 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       writes: Writes[A]): ApiResultT[Unit] =
     repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, journey), Json.toJson(answers))
 
-  def saveAnswers[A: Api1894DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+  def saveAnswers[A: Api1894DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    for {
+      periodSummary <- EitherT(connector.listSEPeriodSummary(ctx))
+      periodAlreadyExist = periodSummary.periods.exists(periods =>
+        periods.exists(period => period.from.contains(ctx.taxYear.fromAnnualPeriod) && period.to.contains(ctx.taxYear.toAnnualPeriod)))
+      _ <- if (periodAlreadyExist) amendPeriod(ctx, answers) else createPeriod(ctx, answers)
+    } yield ()
+
+  private def createPeriod[A: Api1894DeductionsBuilder](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier) = {
     val financials  = FinancialsType.fromFrontendModel(answers)
     val body        = CreateSEPeriodSummaryRequestBody(startDate(ctx.taxYear), endDate(ctx.taxYear), Some(financials))
     val requestData = CreateSEPeriodSummaryRequestData(ctx.taxYear, ctx.businessId, ctx.nino, body)
 
-    val result = connector
-      .createSEPeriodSummary(requestData)
-      .map(_ => ())
+    EitherT(connector.createSEPeriodSummary(requestData)).leftAs[ServiceError]
+  }
 
-    EitherT.right[ServiceError](result)
+  // TODO This is wrong, it should call amend SASS-9465
+  private def amendPeriod[A: Api1894DeductionsBuilder](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier) = {
+    val financials  = FinancialsType.fromFrontendModel(answers)
+    val body        = CreateSEPeriodSummaryRequestBody(startDate(ctx.taxYear), endDate(ctx.taxYear), Some(financials))
+    val requestData = CreateSEPeriodSummaryRequestData(ctx.taxYear, ctx.businessId, ctx.nino, body)
+
+    EitherT(connector.createSEPeriodSummary(requestData)).leftAs[ServiceError]
   }
 
   def getAnswers[A: Api1786ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A] = {
