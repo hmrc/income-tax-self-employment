@@ -16,7 +16,7 @@
 
 package stubs.services
 
-import bulders.BusinessDataBuilder.aUserDateOfBirth
+import bulders.BusinessDataBuilder.{aBusinessIncomeSourcesSummaryResponse, aUserDateOfBirth}
 import cats.data.EitherT
 import cats.implicits._
 import models.common._
@@ -36,7 +36,8 @@ final case class StubBusinessService(
     getBusinessResult: Either[ServiceError, Business] = Left(ServiceError.BusinessNotFoundError(businessId)),
     getUserDateOfBirthRes: Either[DownstreamError, LocalDate] = aUserDateOfBirth.asRight[DownstreamError],
     getAllBusinessIncomeSourcesSummariesRes: Either[DownstreamError, List[BusinessIncomeSourcesSummaryResponse]] =
-      List.empty[BusinessIncomeSourcesSummaryResponse].asRight[DownstreamError]
+      List.empty[BusinessIncomeSourcesSummaryResponse].asRight[DownstreamError],
+    getBusinessIncomeSourcesSummaryRes: Either[DownstreamError, BusinessIncomeSourcesSummaryResponse] = Right(aBusinessIncomeSourcesSummaryResponse)
 ) extends BusinessService {
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
@@ -51,5 +52,9 @@ final case class StubBusinessService(
   def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)(implicit
       hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]] =
     EitherT.fromEither[Future](getAllBusinessIncomeSourcesSummariesRes)
+
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
+      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =
+    EitherT.fromEither[Future](getBusinessIncomeSourcesSummaryRes)
 
 }
