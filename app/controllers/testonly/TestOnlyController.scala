@@ -41,6 +41,8 @@ class TestOnlyController @Inject() (httpClient: HttpClient,
     with Logging {
   private val testNinos = List(
     "AA000001C",
+    "AA100001C",
+    "AA200001C",
     "BB000001A",
     "BB000001C",
     "BB000002A",
