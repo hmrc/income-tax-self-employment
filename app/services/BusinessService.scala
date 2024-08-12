@@ -17,6 +17,7 @@
 package services
 
 import cats.data.EitherT
+import cats.implicits.toTraverseOps
 import connectors.{IFSBusinessDetailsConnector, MDTPConnector}
 import models.common.{BusinessId, Nino, TaxYear}
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
@@ -34,8 +35,8 @@ trait BusinessService {
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]]
   def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business]
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate]
-  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
-      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse]
+  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)(implicit
+      hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]]
 }
 
 @Singleton
@@ -62,7 +63,13 @@ class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnec
       dateOfBirth    <- EitherT.fromEither[Future](citizenDetails.parseDoBToLocalDate)
     } yield dateOfBirth
 
-  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
-      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =
-    businessConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)
+  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)(implicit
+      hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]] =
+    for {
+      businesses <- getBusinesses(nino)
+      businessIds = businesses.map(business => BusinessId(business.businessId))
+      summaryList <- businessIds.traverse { businessId =>
+        businessConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)
+      }
+    } yield summaryList
 }
