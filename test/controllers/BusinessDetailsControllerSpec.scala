@@ -22,7 +22,7 @@ import play.api.http.Status._
 import play.api.libs.json.Json
 import stubs.controllers.actions.StubAuthorisedAction
 import stubs.services.StubBusinessService
-import utils.BaseSpec.{nino, taxYear}
+import utils.BaseSpec.{businessId, nino, taxYear}
 import utils.TestUtils
 import utils.TestUtils._
 
@@ -60,13 +60,23 @@ class BusinessDetailsControllerSpec extends AnyWordSpecLike {
     }
   }
 
-  s"getBusinessIncomeSourcesSummary" should {
+  s"getAllBusinessIncomeSourcesSummaries" should {
     val underTest = mkUnderTest(StubBusinessService(getAllBusinessIncomeSourcesSummariesRes = Right(List(aBusinessIncomeSourcesSummaryResponse))))
 
     "return a list of business income source summaries" in {
       val result = underTest.getAllBusinessIncomeSourcesSummaries(taxYear, nino)(TestUtils.fakeRequest)
       assert(status(result) == OK)
       assert(bodyOf(result) == Json.toJson(List(aBusinessIncomeSourcesSummaryResponse)).toString())
+    }
+  }
+
+  s"getBusinessIncomeSourcesSummary" should {
+    val underTest = mkUnderTest(StubBusinessService(getBusinessIncomeSourcesSummaryRes = Right(aBusinessIncomeSourcesSummaryResponse)))
+
+    "return a business income source summary" in {
+      val result = underTest.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(TestUtils.fakeRequest)
+      assert(status(result) == OK)
+      assert(bodyOf(result) == Json.toJson(aBusinessIncomeSourcesSummaryResponse).toString())
     }
   }
 

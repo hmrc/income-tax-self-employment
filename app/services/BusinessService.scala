@@ -37,6 +37,8 @@ trait BusinessService {
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate]
   def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)(implicit
       hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]]
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
+      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse]
 }
 
 @Singleton
@@ -72,4 +74,8 @@ class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnec
         businessConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)
       }
     } yield summaryList
+
+  def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
+      hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =
+    businessConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)
 }

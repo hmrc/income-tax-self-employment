@@ -105,7 +105,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
     }
   }
 
-  "getBusinessIncomeSourcesSummary" should {
+  "getAllBusinessIncomeSourcesSummaries" should {
     "return an empty list if a user has no businesses" in {
       val expectedResult = Right(List.empty[BusinessIncomeSourcesSummaryResponse])
       val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(), StubMDTPConnector())
@@ -131,6 +131,29 @@ class BusinessServiceSpec extends AnyWordSpecLike {
       )
       val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector())
       val result  = service.getAllBusinessIncomeSourcesSummaries(taxYear, nino).value.futureValue
+      assert(result === error)
+    }
+  }
+
+  "getBusinessIncomeSourcesSummary" should {
+    "return an IncomeSourcesSummary for a business" in {
+      val expectedResult = Right(aBusinessIncomeSourcesSummaryResponse)
+      val stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+        getBusinessesResult = aGetBusinessDataResponse.asRight,
+        getBusinessIncomeSourcesSummaryResult = aBusinessIncomeSourcesSummaryResponse.asRight
+      )
+      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector())
+      val result  = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
+      assert(result === expectedResult)
+    }
+
+    "return an error from downstream" in {
+      val stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+        getBusinessesResult = aGetBusinessDataResponse.asRight,
+        getBusinessIncomeSourcesSummaryResult = error
+      )
+      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector())
+      val result  = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
       assert(result === error)
     }
   }
