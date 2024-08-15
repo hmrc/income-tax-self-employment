@@ -44,7 +44,7 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
       writes: Writes[A]): ApiResultT[Unit] =
     expensesSaveTailoringAnswersRes
 
-  def saveAnswers[A: Api1894DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def saveExpenseTailoringAnswers[A: Api1894DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     expensesSaveAnswersRes
 
   def getAnswers[A: Api1786ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A] =

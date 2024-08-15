@@ -22,6 +22,7 @@ import connectors.IFSConnector
 import models.common.JourneyName.{ExpensesTailoring, Income}
 import models.common.TaxYear.{endDate, startDate}
 import models.common._
+import models.connector.api_1786.SuccessResponseSchema
 import models.connector.api_1802.request._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Deductions, Incomes}
@@ -65,11 +66,19 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       maybeDbAnswers <- getPersistedAnswers[IncomeStorageAnswers](row)
     } yield maybeDbAnswers
 
-  // TODO: We need to confirm what actual APIs in QA returns for this, based on that we may have to change `annualNonFinancials` value. SASS-9292 is the ticket for this.
-  def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
-    import ctx._
-    val storageAnswers = IncomeStorageAnswers.fromJourneyAnswers(answers)
+  def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    for {
+      _               <- submitAnnualSubmission(ctx, answers)
+      periodSummaries <- EitherT(connector.listSEPeriodSummary(ctx)).leftAs[ServiceError]
+      _               <- upsertPeriodSummary(periodSummaries, ctx, answers)
+      storageAnswers = IncomeStorageAnswers.fromJourneyAnswers(answers)
+      _ <- repository.upsertAnswers(ctx.toJourneyContext(Income), Json.toJson(storageAnswers))
+      _ <- maybeDeleteExpenses(ctx, answers)
+    } yield ()
 
+  // TODO: We need to confirm what actual APIs in QA returns for this, based on that we may have to change
+  //  `annualNonFinancials` value. SASS-9292 is the ticket for this.
+  private def submitAnnualSubmission(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier) = {
     val upsertBody = CreateAmendSEAnnualSubmissionRequestBody.mkRequest(
       annualAdjustments = Some(
         AnnualAdjustments.empty.copy(includedNonTaxableProfits = answers.notTaxableAmount, outstandingBusinessIncome = answers.otherIncomeAmount)),
@@ -78,17 +87,8 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
         None // TODO: Verify in QA if we need to set it to empty or copy values if exists. And link between annualNonFinancials and annualAllowances
     )
 
-    val maybeUpsertData = upsertBody.map(CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, _))
-
-    val result = for {
-      response <- EitherT(connector.listSEPeriodSummary(ctx)).leftAs[ServiceError]
-      _        <- upsertPeriodSummary(response, ctx, answers)
-      _        <- maybeUpsertData.traverse(upsertData => EitherT(connector.createAmendSEAnnualSubmission(upsertData))).leftAs[ServiceError]
-      _        <- repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, Income), Json.toJson(storageAnswers))
-      _        <- maybeDeleteExpenses(ctx, answers)
-    } yield ()
-
-    result.leftAs[ServiceError]
+    val maybeUpsertData = upsertBody.map(CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, _))
+    maybeUpsertData.traverse(upsertData => EitherT(connector.createAmendSEAnnualSubmission(upsertData))).leftAs[ServiceError]
   }
 
   private def maybeDeleteExpenses(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers): EitherT[Future, ServiceError, Unit] =
@@ -97,39 +97,55 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       case DeclareExpenses     => EitherT.rightT[Future, ServiceError](())
     }
 
-  // TODO: We need to confirm what actual APIs in QA returns for this, based on that we may have to change `taxTakenOffTradingIncome` value. SASS-9292 is the ticket for this.
   private def upsertPeriodSummary(response: ListSEPeriodSummariesResponse, ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit
       hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
-    import ctx._
 
-    val noSubmissionExists = response.periods.forall(_.isEmpty)
-
-    val result = if (noSubmissionExists) {
-      val createIncome = IncomesType(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount)
-      val createBody   = CreateSEPeriodSummaryRequestBody(startDate(taxYear), endDate(taxYear), Some(FinancialsType(createIncome.some, None)))
-      val createData   = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, createBody)
-
-      EitherT(connector.createSEPeriodSummary(createData)).leftAs[ServiceError].void
-    } else {
-      val amendIncome = Incomes(
-        turnover = answers.turnoverIncomeAmount.some,
-        other = answers.nonTurnoverIncomeAmount,
-        taxTakenOffTradingIncome =
-          None // TODO: Verify in QA if we need to set it to empty or copy values if exists. And link between taxTakenOffTradingIncome and amendIncome.
-      )
-
-      for {
-        periodicSummaryDetails <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
-        updatedDeductions = answers.tradingAllowance match {
-          case UseTradingAllowance => None
-          case DeclareExpenses     => periodicSummaryDetails.financials.deductions
-        }
-        amendBody = AmendSEPeriodSummaryRequestBody(amendIncome.some, updatedDeductions.map(Deductions.fromApi1786))
-        amendData = AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, amendBody)
-        _ <- EitherT(connector.amendSEPeriodSummary(amendData)).leftAs[ServiceError]
-      } yield ()
+    val submissionPeriod = response.periods.getOrElse(Nil).find { period =>
+      period.from.contains(ctx.taxYear.fromAnnualPeriod) && period.to.contains(ctx.taxYear.toAnnualPeriod)
     }
 
-    result
+    if (submissionPeriod.isEmpty) {
+      createSEPeriod(ctx, answers)
+    } else {
+      updateSEPeriod(ctx, answers)
+    }
+  }
+
+  private def createSEPeriod(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier) = {
+    val createIncome = IncomesType(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount)
+    val createBody   = CreateSEPeriodSummaryRequestBody(startDate(ctx.taxYear), endDate(ctx.taxYear), Some(FinancialsType(createIncome.some, None)))
+    val createData   = CreateSEPeriodSummaryRequestData(ctx.taxYear, ctx.businessId, ctx.nino, createBody)
+
+    EitherT(connector.createSEPeriodSummary(createData)).leftAs[ServiceError].void
+  }
+
+  private def updateSEPeriod(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier) =
+    for {
+      periodicSummaryDetails <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
+      _                      <- updateSEPeriodSummary(ctx, periodicSummaryDetails, answers)
+    } yield ()
+
+  private def updateSEPeriodSummary(ctx: JourneyContextWithNino, periodicSummaryDetails: SuccessResponseSchema, answers: IncomeJourneyAnswers)(
+      implicit hc: HeaderCarrier) = {
+    def createIncome(taxTakenOffTradingIncome: Option[BigDecimal]) = Incomes(
+      turnover = answers.turnoverIncomeAmount.some,
+      other = answers.nonTurnoverIncomeAmount,
+      taxTakenOffTradingIncome = taxTakenOffTradingIncome // TODO we don't set it on our UI - Confirm what to do with this field SASS-9555
+    )
+
+    val taxTakenOffTradingIncome = periodicSummaryDetails.financials.incomes.flatMap(_.taxTakenOffTradingIncome)
+    val updatedIncomes           = createIncome(taxTakenOffTradingIncome)
+    val updatedDeductions = answers.tradingAllowance match {
+      case UseTradingAllowance => None
+      case DeclareExpenses     => periodicSummaryDetails.financials.deductions
+    }
+
+    val amendBody = AmendSEPeriodSummaryRequestBody(
+      incomes = Some(updatedIncomes),
+      deductions = updatedDeductions.map(_.toApi1895)
+    )
+
+    val amendData = AmendSEPeriodSummaryRequestData(ctx.taxYear, ctx.nino, ctx.businessId, amendBody)
+    EitherT(connector.amendSEPeriodSummary(amendData)).leftAs[ServiceError]
   }
 }

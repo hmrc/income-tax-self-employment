@@ -31,8 +31,4 @@ object SelfEmploymentDeductionsDetailAllowablePosNegType {
 
   implicit lazy val selfEmploymentDeductionsDetailAllowablePosNegTypeJsonFormat: Format[SelfEmploymentDeductionsDetailAllowablePosNegType] =
     Json.format[SelfEmploymentDeductionsDetailAllowablePosNegType]
-
-  def fromApi1786(source: Option[SelfEmploymentDeductionsDetailTypeAllowableNegDisPos]): Option[SelfEmploymentDeductionsDetailAllowablePosNegType] =
-    source.map(x => SelfEmploymentDeductionsDetailAllowablePosNegType(Some(x.amount), x.disallowableAmount))
-
 }

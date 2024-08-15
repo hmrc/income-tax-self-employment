@@ -28,7 +28,7 @@ final case class TaxYear(endYear: Int) extends AnyVal {
 
   def fromAnnualPeriod: String = s"${endYear - 1}-04-06"
 
-  def toAnnualPeriod: String = s"$endYear-04-06"
+  def toAnnualPeriod: String = s"$endYear-04-05"
 }
 
 object TaxYear {

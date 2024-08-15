@@ -16,6 +16,8 @@
 
 package models.connector.api_1786
 
+import models.connector.api_1895.request.AmendSEPeriodSummaryRequestBody
+import models.connector.api_1894
 import play.api.libs.json._
 
 /** Represents the Swagger definition for financialsType.
@@ -23,7 +25,18 @@ import play.api.libs.json._
 case class FinancialsType(
     deductions: Option[DeductionsType],
     incomes: Option[IncomesType]
-)
+) {
+  def toApi1895: AmendSEPeriodSummaryRequestBody =
+    AmendSEPeriodSummaryRequestBody(
+      incomes.map(_.toApi1895),
+      deductions.map(_.toApi1895)
+    )
+
+  def toApi1894: api_1894.request.FinancialsType = api_1894.request.FinancialsType(
+    incomes.map(_.toApi1894),
+    deductions.map(_.toApi1894)
+  )
+}
 
 object FinancialsType {
   implicit lazy val financialsTypeJsonFormat: Format[FinancialsType] = Json.format[FinancialsType]
