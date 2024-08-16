@@ -16,9 +16,8 @@
 
 package models.connector.api_1894.request
 
-import play.api.libs.json._
 import models.connector.api_1895
-import models.connector.api_1895.request
+import play.api.libs.json._
 
 /** Represents the Swagger definition for deductionsType.
   * @param simplifiedExpenses

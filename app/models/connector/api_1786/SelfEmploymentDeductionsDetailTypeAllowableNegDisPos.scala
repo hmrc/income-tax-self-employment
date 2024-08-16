@@ -16,9 +16,7 @@
 
 package models.connector.api_1786
 
-import models.connector.api_1894.request.SelfEmploymentDeductionsDetailAllowablePosNegType
-import models.connector.api_1895
-import models.connector.api_1894
+import models.connector.{api_1894, api_1895}
 import play.api.libs.json._
 
 /** Represents the Swagger definition for selfEmploymentDeductionsDetailTypeAllowableNegDisPos.

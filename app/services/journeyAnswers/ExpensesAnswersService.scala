@@ -20,9 +20,8 @@ import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
 import models.common.JourneyName.{ExpensesTailoring, GoodsToSellOrUse, WorkplaceRunningCosts}
-import models.common.TaxYear.{endDate, startDate}
 import models.common._
-import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType}
+import models.connector.api_1894.request.FinancialsType
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
 import models.connector.{Api1786ExpensesResponseParser, api_1786, api_1894}
 import models.database.JourneyAnswers
@@ -124,7 +123,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
     EitherT(connector.amendSEPeriodSummary(requestData)).leftAs[ServiceError]
   }
 
-  private def persistTailoringAnswers(ctx: JourneyContextWithNino, answers: ExpensesTailoringAnswers)(implicit hc: HeaderCarrier) = answers match {
+  private def persistTailoringAnswers(ctx: JourneyContextWithNino, answers: ExpensesTailoringAnswers) = answers match {
     case NoExpensesAnswers | _: ExpensesTailoringIndividualCategoriesAnswers =>
       persistAnswers(ctx.businessId, ctx.taxYear, ctx.mtditid, ExpensesTailoring, answers)
     case _: AsOneTotalAnswers =>

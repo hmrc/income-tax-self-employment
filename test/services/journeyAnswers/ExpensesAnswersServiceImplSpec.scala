@@ -80,7 +80,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       override val connector = StubIFSConnector()
 
       val someExpensesAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
-      val result              = underTest.saveTailoringAnswers(journeyCtxWithNino, someExpensesAnswers).value.futureValue
+      val result              = underTest.saveGoodsToSell(journeyCtxWithNino, someExpensesAnswers).value.futureValue
       result shouldBe ().asRight
     }
   }

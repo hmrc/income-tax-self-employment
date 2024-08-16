@@ -21,7 +21,7 @@ import controllers.actions.AuthorisedAction
 import models.common.JourneyName._
 import models.common._
 import models.database.capitalAllowances.{NewStructuresBuildingsDb, SpecialTaxSitesDb, WritingDownAllowanceDb}
-import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
+import models.database.expenses.TaxiMinicabOrRoadHaulageDb
 import models.frontend.FrontendAnswers
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
@@ -50,7 +50,6 @@ import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
 import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
-import models.frontend.expenses.tailoring.ExpensesTailoring.TotalAmount
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import models.frontend.income.IncomeJourneyAnswers
@@ -119,7 +118,6 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     handleApiUnitResultT(result)
   }
 
-  // TODO LT move to service layer saveTailoringAnswers
   def saveExpensesTailoringIndividualCategories(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async {
     implicit user =>
       getBodyWithCtx[ExpensesTailoringIndividualCategoriesAnswers](taxYear, businessId, nino) { (ctx, value) =>
