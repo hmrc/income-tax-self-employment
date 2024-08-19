@@ -34,131 +34,147 @@ import play.api.libs.json.{Json, OFormat}
 
 case class AmendSEPeriodSummaryRequestBody(incomes: Option[Incomes], deductions: Option[Deductions]) {
 
+  private def getDeductions: Deductions = deductions.getOrElse(Deductions.empty)
+
   def updateOfficeSupplies(answers: OfficeSuppliesJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
+      deductions = Some(
+        getDeductions.copy(
           adminCosts = Some(SelfEmploymentDeductionsDetailType(answers.officeSuppliesAmount, answers.officeSuppliesDisallowableAmount))
-        )))
+        ))
+    )
 
   def updateGoodsToSell(answers: GoodsToSellOrUseJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          costOfGoods = Some(
-            SelfEmploymentDeductionsDetailPosNegType(Some(answers.goodsToSellOrUseAmount), answers.disallowableGoodsToSellOrUseAmount)
-          )
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            costOfGoods = Some(
+              SelfEmploymentDeductionsDetailPosNegType(Some(answers.goodsToSellOrUseAmount), answers.disallowableGoodsToSellOrUseAmount)
+            )
+          ))
     )
 
   def updateRepairsAndMaintenance(answers: RepairsAndMaintenanceCostsJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          maintenanceCosts = Some(
-            SelfEmploymentDeductionsDetailPosNegType(Some(answers.repairsAndMaintenanceAmount), answers.repairsAndMaintenanceDisallowableAmount)
-          )
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            maintenanceCosts = Some(
+              SelfEmploymentDeductionsDetailPosNegType(Some(answers.repairsAndMaintenanceAmount), answers.repairsAndMaintenanceDisallowableAmount)
+            )
+          ))
     )
   def updateWorkplaceRunningCosts(answers: WorkplaceRunningCostsJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          premisesRunningCosts = Some(
-            SelfEmploymentDeductionsDetailPosNegType(Some(answers.wfhPremisesRunningCosts), answers.wfbpPremisesRunningCostsDisallowable)
-          )
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            premisesRunningCosts = Some(
+              SelfEmploymentDeductionsDetailPosNegType(Some(answers.wfhPremisesRunningCosts), answers.wfbpPremisesRunningCostsDisallowable)
+            )
+          ))
     )
   def updateAdvertisingOrMarketing(answers: AdvertisingOrMarketingJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          advertisingCosts = Some(
-            SelfEmploymentDeductionsDetailType(answers.advertisingOrMarketingAmount, answers.advertisingOrMarketingDisallowableAmount)
-          )
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            advertisingCosts = Some(
+              SelfEmploymentDeductionsDetailType(answers.advertisingOrMarketingAmount, answers.advertisingOrMarketingDisallowableAmount)
+            )
+          ))
     )
   def updateEntertainmentCosts(answers: EntertainmentJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          businessEntertainmentCosts = Some(
-            SelfEmploymentDeductionsDetailType(answers.entertainmentAmount, None)
-          )
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            businessEntertainmentCosts = Some(
+              SelfEmploymentDeductionsDetailType(answers.entertainmentAmount, None)
+            )
+          ))
     )
   def updateStaffCosts(answers: StaffCostsJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          staffCosts = Some(
-            SelfEmploymentDeductionsDetailType(answers.staffCostsAmount, answers.staffCostsDisallowableAmount)
-          )
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            staffCosts = Some(
+              SelfEmploymentDeductionsDetailType(answers.staffCostsAmount, answers.staffCostsDisallowableAmount)
+            )
+          ))
     )
 
   def updateConstructionIndustrySubcontractors(answers: ConstructionJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          constructionIndustryScheme = Some(
-            SelfEmploymentDeductionsDetailType(answers.constructionIndustryAmount, answers.constructionIndustryDisallowableAmount)
-          )
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            constructionIndustryScheme = Some(
+              SelfEmploymentDeductionsDetailType(answers.constructionIndustryAmount, answers.constructionIndustryDisallowableAmount)
+            )
+          ))
     )
   def updateProfessionalFees(answers: ProfessionalFeesJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          professionalFees = Some(
-            SelfEmploymentDeductionsDetailAllowablePosNegType(Some(answers.professionalFeesAmount), answers.professionalFeesDisallowableAmount)
-          )
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            professionalFees = Some(
+              SelfEmploymentDeductionsDetailAllowablePosNegType(Some(answers.professionalFeesAmount), answers.professionalFeesDisallowableAmount)
+            )
+          ))
     )
   def updateFinancialCharges(answers: FinancialChargesJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          financialCharges =
-            Some(SelfEmploymentDeductionsDetailPosNegType(Some(answers.financialChargesAmount), answers.financialChargesDisallowableAmount))
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            financialCharges =
+              Some(SelfEmploymentDeductionsDetailPosNegType(Some(answers.financialChargesAmount), answers.financialChargesDisallowableAmount))
+          ))
     )
 
   def updateBadDebts(answers: IrrecoverableDebtsJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          badDebt =
-            Some(SelfEmploymentDeductionsDetailPosNegType(Some(answers.irrecoverableDebtsAmount), answers.irrecoverableDebtsDisallowableAmount))
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            badDebt =
+              Some(SelfEmploymentDeductionsDetailPosNegType(Some(answers.irrecoverableDebtsAmount), answers.irrecoverableDebtsDisallowableAmount))
+          ))
     )
 
   def updateDepreciationCosts(answers: DepreciationCostsJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          depreciation = Some(
-            SelfEmploymentDeductionsDetailPosNegType(Some(answers.depreciationDisallowableAmount), None)
-          )
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            depreciation = Some(
+              SelfEmploymentDeductionsDetailPosNegType(Some(answers.depreciationDisallowableAmount), None)
+            )
+          ))
     )
 
   def updateOtherExpenses(answers: OtherExpensesJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          other = Some(SelfEmploymentDeductionsDetailType(answers.otherExpensesAmount, answers.otherExpensesDisallowableAmount))
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            other = Some(SelfEmploymentDeductionsDetailType(answers.otherExpensesAmount, answers.otherExpensesDisallowableAmount))
+          ))
     )
 
   def updateInterest(answers: InterestJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
-      deductions = deductions.map(
-        _.copy(
-          interest = Some(
-            SelfEmploymentDeductionsDetailPosNegType(Some(answers.interestAmount), answers.interestDisallowableAmount)
-          )
-        ))
+      deductions = Some(
+        getDeductions
+          .copy(
+            interest = Some(
+              SelfEmploymentDeductionsDetailPosNegType(Some(answers.interestAmount), answers.interestDisallowableAmount)
+            )
+          ))
     )
 
 }

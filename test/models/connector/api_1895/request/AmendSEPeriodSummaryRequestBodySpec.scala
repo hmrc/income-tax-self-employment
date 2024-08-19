@@ -38,6 +38,13 @@ class AmendSEPeriodSummaryRequestBodySpec extends AnyWordSpecLike with TypeCheck
   private val data = AmendSEPeriodSummaryRequestBodyTestData.sample
 
   "update deductions" should {
+    "updating an expense should create a new Deduction if it does not exist before" in {
+      val data = AmendSEPeriodSummaryRequestBody(None, None)
+      val answers = OfficeSuppliesJourneyAnswers(100.0, Some(200.0))
+      val updated = data.updateOfficeSupplies(answers)
+      assert(updated.deductions.value.adminCosts.value === SelfEmploymentDeductionsDetailType(100.0, Some(200.0)))
+    }
+
     "updateOfficeSupplies" in {
       val answers = OfficeSuppliesJourneyAnswers(100.0, Some(200.0))
       val updated = data.updateOfficeSupplies(answers)
