@@ -32,195 +32,137 @@ import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsJourneyAnswers
 import play.api.libs.json.{Json, OFormat}
 
-case class AmendSEPeriodSummaryRequestBody(incomes: Option[Incomes], deductions: Option[Deductions])
+case class AmendSEPeriodSummaryRequestBody(incomes: Option[Incomes], deductions: Option[Deductions]) {
 
-object AmendSEPeriodSummaryRequestBody {
-  implicit val formats: OFormat[AmendSEPeriodSummaryRequestBody] = Json.format[AmendSEPeriodSummaryRequestBody]
+  def updateOfficeSupplies(answers: OfficeSuppliesJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
+          adminCosts = Some(SelfEmploymentDeductionsDetailType(answers.officeSuppliesAmount, answers.officeSuppliesDisallowableAmount))
+        )))
 
-  private def getOrEmptyDeductions(existingFinancial: AmendSEPeriodSummaryRequestBody): Deductions =
-    existingFinancial.deductions.getOrElse(Deductions.empty)
-
-  def updateOfficeSupplies(existingPeriodSummary: AmendSEPeriodSummaryRequestBody,
-                           answers: OfficeSuppliesJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
-          adminCosts = Some(
-            SelfEmploymentDeductionsDetailType(answers.officeSuppliesAmount, answers.officeSuppliesDisallowableAmount)
-          )
-        )
-      )
-    )
-  }
-
-  def updateGoodsToSell(existingPeriodSummary: AmendSEPeriodSummaryRequestBody,
-                        answers: GoodsToSellOrUseJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateGoodsToSell(answers: GoodsToSellOrUseJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           costOfGoods = Some(
             SelfEmploymentDeductionsDetailPosNegType(Some(answers.goodsToSellOrUseAmount), answers.disallowableGoodsToSellOrUseAmount)
           )
-        )
-      )
+        ))
     )
-  }
 
-  def updateRepairsAndMaintenance(existingPeriodSummary: AmendSEPeriodSummaryRequestBody,
-                                  answers: RepairsAndMaintenanceCostsJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateRepairsAndMaintenance(answers: RepairsAndMaintenanceCostsJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           maintenanceCosts = Some(
             SelfEmploymentDeductionsDetailPosNegType(Some(answers.repairsAndMaintenanceAmount), answers.repairsAndMaintenanceDisallowableAmount)
           )
-        )
-      )
+        ))
     )
-  }
-  def updateWorkplaceRunningCosts(existingPeriodSummary: AmendSEPeriodSummaryRequestBody,
-                                  answers: WorkplaceRunningCostsJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateWorkplaceRunningCosts(answers: WorkplaceRunningCostsJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           premisesRunningCosts = Some(
             SelfEmploymentDeductionsDetailPosNegType(Some(answers.wfhPremisesRunningCosts), answers.wfbpPremisesRunningCostsDisallowable)
           )
-        )
-      )
+        ))
     )
-  }
-  def updateAdvertisingOrMarketing(existingPeriodSummary: AmendSEPeriodSummaryRequestBody,
-                                   answers: AdvertisingOrMarketingJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateAdvertisingOrMarketing(answers: AdvertisingOrMarketingJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           advertisingCosts = Some(
             SelfEmploymentDeductionsDetailType(answers.advertisingOrMarketingAmount, answers.advertisingOrMarketingDisallowableAmount)
           )
-        )
-      )
+        ))
     )
-  }
-  def updateEntertainmentCosts(existingPeriodSummary: AmendSEPeriodSummaryRequestBody,
-                               answers: EntertainmentJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateEntertainmentCosts(answers: EntertainmentJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           businessEntertainmentCosts = Some(
-            SelfEmploymentDeductionsDetailType(answers.entertainmentAmount, None) // TODO LT Is this correct, I swaped None with amount
+            SelfEmploymentDeductionsDetailType(answers.entertainmentAmount, None)
           )
-        )
-      )
+        ))
     )
-  }
-  def updateStaffCosts(existingPeriodSummary: AmendSEPeriodSummaryRequestBody, answers: StaffCostsJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateStaffCosts(answers: StaffCostsJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           staffCosts = Some(
             SelfEmploymentDeductionsDetailType(answers.staffCostsAmount, answers.staffCostsDisallowableAmount)
           )
-        )
-      )
+        ))
     )
-  }
 
-  def updateConstructionIndustrySubcontractors(existingPeriodSummary: AmendSEPeriodSummaryRequestBody,
-                                               answers: ConstructionJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateConstructionIndustrySubcontractors(answers: ConstructionJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           constructionIndustryScheme = Some(
             SelfEmploymentDeductionsDetailType(answers.constructionIndustryAmount, answers.constructionIndustryDisallowableAmount)
           )
-        )
-      )
+        ))
     )
-  }
-  def updateProfessionalFees(existingPeriodSummary: AmendSEPeriodSummaryRequestBody,
-                             answers: ProfessionalFeesJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateProfessionalFees(answers: ProfessionalFeesJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           professionalFees = Some(
             SelfEmploymentDeductionsDetailAllowablePosNegType(Some(answers.professionalFeesAmount), answers.professionalFeesDisallowableAmount)
           )
-        )
-      )
+        ))
     )
-  }
-  def updateFinancialCharges(existingPeriodSummary: AmendSEPeriodSummaryRequestBody,
-                             answers: FinancialChargesJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateFinancialCharges(answers: FinancialChargesJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           financialCharges =
             Some(SelfEmploymentDeductionsDetailPosNegType(Some(answers.financialChargesAmount), answers.financialChargesDisallowableAmount))
-        )
-      )
+        ))
     )
-  }
 
-  def updateBadDebts(existingPeriodSummary: AmendSEPeriodSummaryRequestBody,
-                     answers: IrrecoverableDebtsJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateBadDebts(answers: IrrecoverableDebtsJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           badDebt =
             Some(SelfEmploymentDeductionsDetailPosNegType(Some(answers.irrecoverableDebtsAmount), answers.irrecoverableDebtsDisallowableAmount))
-        )
-      )
+        ))
     )
-  }
 
-  def updateDepreciationCosts(existingPeriodSummary: AmendSEPeriodSummaryRequestBody,
-                              answers: DepreciationCostsJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateDepreciationCosts(answers: DepreciationCostsJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           depreciation = Some(
-            SelfEmploymentDeductionsDetailPosNegType(None, Some(answers.depreciationDisallowableAmount))
+            SelfEmploymentDeductionsDetailPosNegType(Some(answers.depreciationDisallowableAmount), None)
           )
-        )
-      )
+        ))
     )
-  }
 
-  def updateOtherExpenses(existingPeriodSummary: AmendSEPeriodSummaryRequestBody,
-                          answers: OtherExpensesJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateOtherExpenses(answers: OtherExpensesJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           other = Some(SelfEmploymentDeductionsDetailType(answers.otherExpensesAmount, answers.otherExpensesDisallowableAmount))
-        )
-      )
+        ))
     )
-  }
 
-  def updateInterest(existingPeriodSummary: AmendSEPeriodSummaryRequestBody, answers: InterestJourneyAnswers): AmendSEPeriodSummaryRequestBody = {
-    val deductions = getOrEmptyDeductions(existingPeriodSummary)
-    existingPeriodSummary.copy(
-      deductions = Some(
-        deductions.copy(
+  def updateInterest(answers: InterestJourneyAnswers): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = deductions.map(
+        _.copy(
           interest = Some(
             SelfEmploymentDeductionsDetailPosNegType(Some(answers.interestAmount), answers.interestDisallowableAmount)
           )
-        )
-      )
+        ))
     )
-  }
+
+}
+
+object AmendSEPeriodSummaryRequestBody {
+  implicit val formats: OFormat[AmendSEPeriodSummaryRequestBody] = Json.format[AmendSEPeriodSummaryRequestBody]
 }

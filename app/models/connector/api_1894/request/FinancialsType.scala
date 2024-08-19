@@ -36,4 +36,6 @@ case class FinancialsType(incomes: Option[IncomesType], deductions: Option[Deduc
 
 object FinancialsType {
   implicit lazy val financialsTypeJsonFormat: Format[FinancialsType] = Json.format[FinancialsType]
+
+  def empty: FinancialsType = FinancialsType(None, None)
 }

@@ -131,50 +131,50 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   }
 
   def saveOfficeSuppliesAnswers(ctx: JourneyContextWithNino, answers: OfficeSuppliesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateOfficeSupplies(_, answers))
+    updatePeriodSummary(ctx, _.updateOfficeSupplies(answers))
 
   def saveGoodsToSell(ctx: JourneyContextWithNino, answers: GoodsToSellOrUseJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateGoodsToSell(_, answers))
+    updatePeriodSummary(ctx, _.updateGoodsToSell(answers))
 
   def saveRepairsAndMaintenance(ctx: JourneyContextWithNino, answers: RepairsAndMaintenanceCostsJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateRepairsAndMaintenance(_, answers))
+    updatePeriodSummary(ctx, _.updateRepairsAndMaintenance(answers))
 
   def saveWorkplaceRunningCosts(ctx: JourneyContextWithNino, answers: WorkplaceRunningCostsJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateWorkplaceRunningCosts(_, answers))
+    updatePeriodSummary(ctx, _.updateWorkplaceRunningCosts(answers))
 
   def saveAdvertisingOrMarketing(ctx: JourneyContextWithNino, answers: AdvertisingOrMarketingJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateAdvertisingOrMarketing(_, answers))
+    updatePeriodSummary(ctx, _.updateAdvertisingOrMarketing(answers))
 
   def saveEntertainmentCosts(ctx: JourneyContextWithNino, answers: EntertainmentJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateEntertainmentCosts(_, answers))
+    updatePeriodSummary(ctx, _.updateEntertainmentCosts(answers))
 
   def saveStaffCosts(ctx: JourneyContextWithNino, answers: StaffCostsJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateStaffCosts(_, answers))
+    updatePeriodSummary(ctx, _.updateStaffCosts(answers))
 
   def saveConstructionIndustrySubcontractors(ctx: JourneyContextWithNino, answers: ConstructionJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateConstructionIndustrySubcontractors(_, answers))
+    updatePeriodSummary(ctx, _.updateConstructionIndustrySubcontractors(answers))
 
   def saveProfessionalFees(ctx: JourneyContextWithNino, answers: ProfessionalFeesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateProfessionalFees(_, answers))
+    updatePeriodSummary(ctx, _.updateProfessionalFees(answers))
 
   def saveFinancialCharges(ctx: JourneyContextWithNino, answers: FinancialChargesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateFinancialCharges(_, answers))
+    updatePeriodSummary(ctx, _.updateFinancialCharges(answers))
 
   def saveBadDebts(ctx: JourneyContextWithNino, answers: IrrecoverableDebtsJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateBadDebts(_, answers))
+    updatePeriodSummary(ctx, _.updateBadDebts(answers))
 
   def saveDepreciationCosts(ctx: JourneyContextWithNino, answers: DepreciationCostsJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateDepreciationCosts(_, answers))
+    updatePeriodSummary(ctx, _.updateDepreciationCosts(answers))
 
   def saveOtherExpenses(ctx: JourneyContextWithNino, answers: OtherExpensesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateOtherExpenses(_, answers))
+    updatePeriodSummary(ctx, _.updateOtherExpenses(answers))
 
   def saveInterests(ctx: JourneyContextWithNino, answers: InterestJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    updatePeriodSummary(ctx, AmendSEPeriodSummaryRequestBody.updateInterest(_, answers))
+    updatePeriodSummary(ctx, _.updateInterest(answers))
 
   /** It assumes period summary already exist
     */
