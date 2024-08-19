@@ -16,9 +16,10 @@
 
 package models.connector.api_1894.request
 
+import org.scalactic.TypeCheckedTripleEquals
 import org.scalatest.wordspec.AnyWordSpecLike
 
-class FinancialsTypeSpec extends AnyWordSpecLike {
+class FinancialsTypeSpec extends AnyWordSpecLike with TypeCheckedTripleEquals {
 
   "toApi1895" should {
     "convert the model to API 1895" in {
@@ -27,6 +28,17 @@ class FinancialsTypeSpec extends AnyWordSpecLike {
       assert(
         data.toApi1895(Some(123.45)) === expectedModel
           .copy(incomes = expectedModel.incomes.map(_.copy(taxTakenOffTradingIncome = Some(123.45)))))
+    }
+  }
+
+  "updateDeductions" should {
+    "update the deductions" in {
+      val data = FinancialsTypeTestData.sample
+      assert(data.updateDeductions(DeductionsTestData.sample) === data.copy(deductions = Some(DeductionsTestData.sample)))
+    }
+
+    "return None for deductions if updating with an empty deductions" in {
+      assert(FinancialsType.empty.updateDeductions(Deductions.empty).deductions === None)
     }
   }
 }
