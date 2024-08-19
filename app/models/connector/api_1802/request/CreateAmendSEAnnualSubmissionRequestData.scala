@@ -16,9 +16,24 @@
 
 package models.connector.api_1802.request
 
-import models.common.{BusinessId, Nino, TaxYear}
+import models.common.{BusinessId, JourneyContextWithNino, Nino, TaxYear}
+import models.frontend.nics.NICsAnswers
 
 case class CreateAmendSEAnnualSubmissionRequestData(taxYear: TaxYear,
                                                     nino: Nino,
                                                     businessId: BusinessId,
                                                     body: CreateAmendSEAnnualSubmissionRequestBody)
+
+object CreateAmendSEAnnualSubmissionRequestData {
+  def mkNicsClassFourSingleBusinessRequestBody(ctx: JourneyContextWithNino, answers: NICsAnswers, existingAnswers: Option[CreateAmendSEAnnualSubmissionRequestBody]): CreateAmendSEAnnualSubmissionRequestData = {
+    val body = existingAnswers.getOrElse()
+    CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId,
+ answers
+    )
+  }
+
+  def mkNicsClassFourRequestBody(ctx: JourneyContextWithNino, answers: NICsAnswers): CreateAmendSEAnnualSubmissionRequestData =
+    CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, // this businessId is not correct yet
+ answers
+    )
+}

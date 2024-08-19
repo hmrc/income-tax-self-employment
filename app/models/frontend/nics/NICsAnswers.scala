@@ -16,14 +16,25 @@
 
 package models.frontend.nics
 
+import models.common.BusinessId
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.database.nics.NICsStorageAnswers
 import play.api.libs.json.{Format, Json}
 
-case class NICsAnswers(class2NICs: Boolean)
+case class NICsAnswers(class2NICs: Option[Boolean],
+                       class4NICs: Option[Boolean],
+                       class4ExemptionReason: Option[ExemptionReason],
+                       class4DivingExempt: Option[List[BusinessId]],
+                       class4NonDivingExempt: Option[List[BusinessId]]) {
+  def isClass2: Boolean = class2NICs.isDefined
+  def isClass4SingleBusiness(businessId: BusinessId): Boolean =
+    class4ExemptionReason.isDefined && businessId != BusinessId.nationalInsuranceContributions
+}
 
 object NICsAnswers {
   implicit val formats: Format[NICsAnswers] = Json.format[NICsAnswers]
+
+  val empty: NICsAnswers = NICsAnswers(None, None, None, None, None)
 
   def mkPriorData(maybeApiAnswers: Option[SuccessResponseAPI1639], maybeDbAnswers: Option[NICsStorageAnswers]): Option[NICsAnswers] = {
     val existingClass2Nics = for {
