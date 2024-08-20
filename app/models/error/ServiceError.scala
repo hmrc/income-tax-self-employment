@@ -75,6 +75,10 @@ object ServiceError {
     val errorMessage: String = s"Cannot parse JSON: ${details.getMessage}"
   }
 
+  final case class ErrorFromUpstream(details: String) extends ServiceError {
+    val errorMessage: String = s"Error from upstream: $details"
+  }
+
   sealed trait DatabaseError extends ServiceError
 
   object DatabaseError {

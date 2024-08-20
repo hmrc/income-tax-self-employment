@@ -17,7 +17,6 @@
 package models.connector.api_1803
 
 import models.connector.api_1802.request.AnnualNonFinancials
-import models.frontend.nics.NICsAnswers
 import play.api.libs.json._
 
 /** Represents the Swagger definition for annualNonFinancialsType.
@@ -34,8 +33,10 @@ case class AnnualNonFinancialsType(
     exemptFromPayingClass4Nics: Option[Boolean],
     class4NicsExemptionReason: Option[AnnualNonFinancialsType.Class4NicsExemptionReason.Value]
 ) {
-  def updateClass4ToRequestType(class4Answers: NICsAnswers): AnnualNonFinancials = // TODO which of these are compulsory? Can I have false or is that None?
-    AnnualNonFinancials(businessDetailsChangedRecently, class4Answers.class4NICs, class4Answers.class4ExemptionReason)
+
+  def toApi1802AnnualNonFinancials: AnnualNonFinancials =
+    AnnualNonFinancials(businessDetailsChangedRecently, exemptFromPayingClass4Nics, class4NicsExemptionReason.map(_.toString))
+
 }
 
 object AnnualNonFinancialsType {

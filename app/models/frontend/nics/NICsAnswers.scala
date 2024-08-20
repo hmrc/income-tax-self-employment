@@ -16,35 +16,25 @@
 
 package models.frontend.nics
 
-import models.common.BusinessId
+import cats.implicits.catsSyntaxOptionId
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.database.nics.NICsStorageAnswers
 import play.api.libs.json.{Format, Json}
 
-case class NICsAnswers(class2NICs: Option[Boolean],
-                       class4NICs: Option[Boolean],
-                       class4ExemptionReason: Option[ExemptionReason],
-                       class4DivingExempt: Option[List[BusinessId]],
-                       class4NonDivingExempt: Option[List[BusinessId]]) {
-  def isClass2: Boolean = class2NICs.isDefined
-  def isClass4SingleBusiness(businessId: BusinessId): Boolean =
-    class4ExemptionReason.isDefined && businessId != BusinessId.nationalInsuranceContributions
-}
+case class NICsAnswers(class2Answers: Option[NICsClass2Answers], class4Answers: Option[NICsClass4Answers])
 
 object NICsAnswers {
   implicit val formats: Format[NICsAnswers] = Json.format[NICsAnswers]
 
-  val empty: NICsAnswers = NICsAnswers(None, None, None, None, None)
-
-  def mkPriorData(maybeApiAnswers: Option[SuccessResponseAPI1639], maybeDbAnswers: Option[NICsStorageAnswers]): Option[NICsAnswers] = {
+  def mkPriorClass2Data(maybeApiAnswers: Option[SuccessResponseAPI1639], maybeDbAnswers: Option[NICsStorageAnswers]): Option[NICsAnswers] = {
     val existingClass2Nics = for {
       answers     <- maybeApiAnswers
       nicsAnswers <- answers.class2Nics
       class2Nics  <- nicsAnswers.class2VoluntaryContributions
     } yield class2Nics
 
-    val maybeNics = existingClass2Nics.map(NICsAnswers(_))
-    maybeNics.orElse(maybeDbAnswers.flatMap(_.class2NICs.map(NICsAnswers(_))))
+    val maybeNics = existingClass2Nics.map(value => NICsAnswers(class2Answers = NICsClass2Answers(value).some, None))
+    maybeNics.orElse(maybeDbAnswers.flatMap(_.class2NICs.map(value => NICsAnswers(class2Answers = NICsClass2Answers(value).some, None))))
   }
 
 }

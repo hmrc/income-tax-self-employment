@@ -23,7 +23,7 @@ import models.common.JourneyName.TradeDetails
   */
 case class JourneyContextWithNino(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino) {
   def toJourneyContext(journeyName: JourneyName): JourneyContext = JourneyContext(taxYear, businessId, mtditid, journeyName)
-  def apply(newId: BusinessId): JourneyContextWithNino = this.copy(businessId = newId)
+  def apply(newId: BusinessId): JourneyContextWithNino           = this.copy(businessId = newId)
 }
 
 /** @param businessId

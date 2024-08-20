@@ -18,12 +18,18 @@ package models.frontend.nics
 
 import models.common.{Enumerable, WithName}
 
-sealed trait ExemptionReason
+sealed trait ExemptionReason {
+  val exemptionCode: String
+}
 
 object ExemptionReason extends Enumerable.Implicits {
 
-  case object TrusteeExecutorAdmin  extends WithName("trusteeExecutorAdmin") with ExemptionReason
-  case object DiverDivingInstructor extends WithName("diverDivingInstructor") with ExemptionReason
+  case object TrusteeExecutorAdmin extends WithName("trusteeExecutorAdmin") with ExemptionReason {
+    override val exemptionCode: String = "002"
+  }
+  case object DiverDivingInstructor extends WithName("diverDivingInstructor") with ExemptionReason {
+    override val exemptionCode: String = "003"
+  }
 
   val values: Seq[ExemptionReason] = Seq(
     TrusteeExecutorAdmin,

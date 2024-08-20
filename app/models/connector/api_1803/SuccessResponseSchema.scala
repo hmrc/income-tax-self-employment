@@ -20,12 +20,14 @@ import play.api.libs.json._
 
 /** Represents the Swagger definition for successResponseSchema.
   */
-case class SuccessResponseSchema(
-    annualAdjustments: Option[AnnualAdjustmentsType],
-    annualAllowances: Option[AnnualAllowancesType],
-    annualNonFinancials: Option[AnnualNonFinancialsType]
-)
+case class SuccessResponseSchema(annualAdjustments: Option[AnnualAdjustmentsType],
+                                 annualAllowances: Option[AnnualAllowancesType],
+                                 annualNonFinancials: Option[AnnualNonFinancialsType]) {
+  def hasNICsClassFourData: Boolean = annualNonFinancials.exists(_.exemptFromPayingClass4Nics.isDefined)
+}
 
 object SuccessResponseSchema {
   implicit lazy val successResponseSchemaJsonFormat: Format[SuccessResponseSchema] = Json.format[SuccessResponseSchema]
+
+  val empty: SuccessResponseSchema = SuccessResponseSchema(None, None, None)
 }

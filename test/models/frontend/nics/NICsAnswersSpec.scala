@@ -24,22 +24,22 @@ import org.scalatest.OptionValues._
 class NICsAnswersSpec extends AnyWordSpecLike {
   "fromApi1639" should {
     "return None when there are no class 2 NICs" in {
-      val result = NICsAnswers.mkPriorData(None, None)
+      val result = NICsAnswers.mkPriorClass2Data(None, None)
       assert(result.isEmpty)
     }
 
     "return class2 from the API" in {
-      val result = NICsAnswers.mkPriorData(Some(class2NicsTrue), None).value
+      val result = NICsAnswers.mkPriorClass2Data(Some(class2NicsTrue), None).value
       assert(result === NICsAnswers(true))
     }
 
     "return class2 from the DB if does not exist in API" in {
-      val result = NICsAnswers.mkPriorData(None, Some(NICsStorageAnswers(Some(false)))).value
+      val result = NICsAnswers.mkPriorClass2Data(None, Some(NICsStorageAnswers(Some(false)))).value
       assert(result === NICsAnswers(false))
     }
 
     "ignore value from DB if it exist in the API" in {
-      val result = NICsAnswers.mkPriorData(Some(class2NicsTrue), Some(NICsStorageAnswers(Some(false)))).value
+      val result = NICsAnswers.mkPriorClass2Data(Some(class2NicsTrue), Some(NICsStorageAnswers(Some(false)))).value
       assert(result === NICsAnswers(true))
     }
 

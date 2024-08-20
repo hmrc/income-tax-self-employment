@@ -16,6 +16,7 @@
 
 package models.connector.api_1803
 
+import models.connector.api_1802.request.AnnualAdjustments
 import play.api.libs.json._
 
 /** Represents the Swagger definition for annualAdjustmentsType.
@@ -30,7 +31,21 @@ case class AnnualAdjustmentsType(includedNonTaxableProfits: Option[BigDecimal],
                                  balancingChargeOther: Option[BigDecimal],
                                  goodsAndServicesOwnUse: Option[BigDecimal],
                                  transitionProfitAmount: Option[BigDecimal],
-                                 transitionProfitAccelerationAmount: Option[BigDecimal])
+                                 transitionProfitAccelerationAmount: Option[BigDecimal]) {
+
+  def toApi1802AnnualAdjustments: AnnualAdjustments = AnnualAdjustments(
+    includedNonTaxableProfits,
+    basisAdjustment,
+    overlapReliefUsed,
+    accountingAdjustment,
+    averagingAdjustment,
+    lossBroughtForward = None, // TODO 9567 where do we get this value from?
+    outstandingBusinessIncome,
+    balancingChargeBpra,
+    balancingChargeOther,
+    goodsAndServicesOwnUse
+  )
+}
 
 object AnnualAdjustmentsType {
   implicit lazy val annualAdjustmentsTypeJsonFormat: Format[AnnualAdjustmentsType] = Json.format[AnnualAdjustmentsType]
