@@ -48,10 +48,11 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
 
   def saveAnswers(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     val result: ApiResultT[Unit] = (answers.class2Answers, answers.class4Answers) match {
-      case (Some(class2Answers), None)                                        => saveClass2Answers(ctx, class2Answers)
-      case (None, Some(class4Answers)) if class4Answers.userHasSingleBusiness => saveClass4SingleBusiness(ctx, class4Answers)
+      case (Some(class2Answers), None) => saveClass2Answers(ctx, class2Answers)
+      case (None, Some(class4Answers)) => saveClass4SingleBusiness(ctx, class4Answers)
+//      case (None, Some(class4Answers)) if class4Answers.userHasSingleBusiness => saveClass4SingleBusiness(ctx, class4Answers) // TODO handle 'No' result
 //      case (None, Some(class4Answers)) => saveClass4MultipleBusinesses(ctx, class4Answers) // TODO multiple business exemptions scenario
-      case _ => EitherT.leftT[Future, Unit](ServiceError.ErrorFromUpstream("NICsAnswers must contain only one of 'class2Answers' OR 'class4Answers'"))
+      case _ => EitherT.leftT[Future, Unit](NICsAnswers.invalidAnswersError(answers))
     }
     result
   }
