@@ -17,6 +17,7 @@
 package models.connector.api_1894.request
 
 import play.api.libs.json._
+import models.connector.api_1895
 
 /** Represents the Swagger definition for incomesType.
   * @param turnover
@@ -24,7 +25,14 @@ import play.api.libs.json._
   * @param other
   *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   */
-case class IncomesType(turnover: Option[BigDecimal], other: Option[BigDecimal])
+case class IncomesType(turnover: Option[BigDecimal], other: Option[BigDecimal]) {
+  def toApi1895(taxTakenOffTradingIncome: Option[BigDecimal]): api_1895.request.Incomes =
+    api_1895.request.Incomes(
+      turnover = turnover,
+      other = other,
+      taxTakenOffTradingIncome = taxTakenOffTradingIncome
+    )
+}
 
 object IncomesType {
   implicit lazy val formats: Format[IncomesType] = Json.format[IncomesType]

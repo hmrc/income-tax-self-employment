@@ -27,7 +27,13 @@ import play.api.libs.json._
 case class SelfEmploymentDeductionsDetailAllowablePosNegType(
     amount: Option[BigDecimal],
     disallowableAmount: Option[BigDecimal]
-)
+) {
+  def toApi1895: models.connector.api_1895.request.SelfEmploymentDeductionsDetailAllowablePosNegType =
+    models.connector.api_1895.request.SelfEmploymentDeductionsDetailAllowablePosNegType(
+      amount = amount,
+      disallowableAmount = disallowableAmount
+    )
+}
 
 object SelfEmploymentDeductionsDetailAllowablePosNegType {
 

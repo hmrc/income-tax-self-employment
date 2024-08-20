@@ -17,7 +17,7 @@
 package services.journeyAnswers
 
 import cats.implicits._
-import gens.ExpensesJourneyAnswersGen.goodsToSellOrUseJourneyAnswersGen
+import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.genOne
 import models.common.JourneyName.ExpensesTailoring
@@ -47,7 +47,7 @@ import scala.concurrent.Future
 class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   trait Test {
-    val connector: StubIFSConnector
+    val connector: StubIFSConnector = StubIFSConnector()
 
     val repo           = StubJourneyAnswersRepository()
     lazy val underTest = new ExpensesAnswersServiceImpl(connector, repo)
@@ -55,10 +55,101 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
     implicit val hc: HeaderCarrier = HeaderCarrier()
   }
 
+  "save answers" should {
+    "saveTailoringAnswers" in new Test {
+      val answers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
+      val result  = underTest.saveTailoringAnswers(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveOfficeSuppliesAnswers" in new Test {
+      val answers = genOne(officeSuppliesJourneyAnswersGen)
+      val result  = underTest.saveOfficeSuppliesAnswers(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveGoodsToSell" in new Test {
+      val answers = genOne(goodsToSellOrUseJourneyAnswersGen)
+      val result  = underTest.saveGoodsToSell(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveRepairsAndMaintenance" in new Test {
+      val answers = genOne(repairsAndMaintenanceCostsJourneyAnswersGen)
+      val result  = underTest.saveRepairsAndMaintenance(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveWorkplaceRunningCosts" in new Test {
+      val answers = genOne(workplaceRunningCostsJourneyAnswersGen)
+      val result  = underTest.saveWorkplaceRunningCosts(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveAdvertisingOrMarketing" in new Test {
+      val answers = genOne(advertisingOrMarketingJourneyAnswersGen)
+      val result  = underTest.saveAdvertisingOrMarketing(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveEntertainmentCosts" in new Test {
+      val answers = genOne(entertainmentJourneyAnswersGen)
+      val result  = underTest.saveEntertainmentCosts(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveStaffCosts" in new Test {
+      val answers = genOne(staffCostsJourneyAnswersGen)
+      val result  = underTest.saveStaffCosts(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveConstructionIndustrySubcontractors" in new Test {
+      val answers = genOne(constructionJourneyAnswersGen)
+      val result  = underTest.saveConstructionIndustrySubcontractors(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveProfessionalFees" in new Test {
+      val answers = genOne(professionalFeesJourneyAnswersGen)
+      val result  = underTest.saveProfessionalFees(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveFinancialCharges" in new Test {
+      val answers = genOne(financialChargesJourneyAnswersGen)
+      val result  = underTest.saveFinancialCharges(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveBadDebts" in new Test {
+      val answers = genOne(irrecoverableDebtsJourneyAnswersGen)
+      val result  = underTest.saveBadDebts(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveDepreciationCosts" in new Test {
+      val answers = genOne(depreciationCostsJourneyAnswersGen)
+      val result  = underTest.saveDepreciationCosts(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveOtherExpenses" in new Test {
+      val answers = genOne(otherExpensesJourneyAnswersGen)
+      val result  = underTest.saveOtherExpenses(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+    "saveInterests" in new Test {
+      val answers = genOne(interestJourneyAnswersGen)
+      val result  = underTest.saveInterests(journeyCtxWithNino, answers).value.futureValue
+      result shouldBe ().asRight
+    }
+
+  }
+
   "save ExpensesTailoringNoExpensesAnswers" should {
     "store data successfully" in new Test {
-      override val connector = StubIFSConnector()
-
       val answers = NoExpensesAnswers
       val result  = underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
       result shouldBe ().asRight
@@ -67,8 +158,6 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "save ExpensesTailoringIndividualCategoriesAnswers" should {
     "store data successfully" in new Test {
-      override val connector = StubIFSConnector()
-
       val answers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
       val result  = underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
       result shouldBe ().asRight
@@ -77,10 +166,9 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "save expenses journey answers" should {
     "store data successfully" in new Test {
-      override val connector = StubIFSConnector()
 
       val someExpensesAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
-      val result              = underTest.saveAnswers(journeyCtxWithNino, someExpensesAnswers).value.futureValue
+      val result              = underTest.saveGoodsToSell(journeyCtxWithNino, someExpensesAnswers).value.futureValue
       result shouldBe ().asRight
     }
   }
@@ -97,13 +185,13 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "getExpensesTailoringAnswers" should {
     "return None when there are no answers" in new Test {
-      override val connector = StubIFSConnector()
-      val result             = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
+
+      val result = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe None.asRight
     }
 
     "return NoExpensesAnswers" in new Test {
-      override val connector = StubIFSConnector()
+
       override val repo = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
         .copy(data = Json.toJson(ExpensesCategoriesDb(NoExpenses)).as[JsObject])
         .some)
@@ -129,7 +217,6 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
     "return ExpensesTailoringIndividualCategoriesAnswers" in new Test {
       val answers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
 
-      override val connector = StubIFSConnector()
       override val repo = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
         .copy(data = Json.toJson(answers).as[JsObject])
         .some)
@@ -141,8 +228,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "getGoodsToSellOrUseAnswers" should {
     "return None when there are no answers" in new Test {
-      override val connector = StubIFSConnector()
-      val result             = underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value.futureValue
+
+      val result = underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe None.asRight
     }
 
@@ -159,8 +246,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "getWorkplaceRunningCostsAnswers" should {
     "return None when there are no answers" in new Test {
-      override val connector = StubIFSConnector()
-      val result             = underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value.futureValue
+
+      val result = underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe None.asRight
     }
 

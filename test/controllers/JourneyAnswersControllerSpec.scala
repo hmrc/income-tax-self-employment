@@ -286,7 +286,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save ExpensesTailoringNoExpenses return a $NO_CONTENT when successful" in {
-      checkNoContent(underTest.saveExpensesTailoringNoExpenses(currTaxYear, businessId))
+      checkNoContent(underTest.saveExpensesTailoringNoExpenses(currTaxYear, businessId, nino))
     }
 
     s"Save ExpensesTailoringIndividualCategories return a $NO_CONTENT when successful" in {
@@ -295,7 +295,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
           request = buildRequest(data),
           expectedStatus = NO_CONTENT,
           expectedBody = "",
-          methodBlock = () => underTest.saveExpensesTailoringIndividualCategories(currTaxYear, businessId)
+          methodBlock = () => underTest.saveExpensesTailoringIndividualCategories(currTaxYear, businessId, nino)
         )
       }
     }

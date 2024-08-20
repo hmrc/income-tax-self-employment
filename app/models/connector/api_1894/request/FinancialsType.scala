@@ -16,19 +16,26 @@
 
 package models.connector.api_1894.request
 
-import cats.implicits.catsSyntaxOptionId
-import models.connector.Api1894DeductionsBuilder
 import play.api.libs.json._
+import models.connector.api_1895
 
 /** Represents the Swagger definition for financialsType.
   */
-case class FinancialsType(incomes: Option[IncomesType], deductions: Option[Deductions])
+case class FinancialsType(incomes: Option[IncomesType], deductions: Option[Deductions]) {
+
+  /** Make sure to not allow to set an empty object as API does not allow that */
+  def updateDeductions(newDeductions: Deductions): FinancialsType =
+    if (newDeductions.isEmpty) copy(deductions = None) else copy(deductions = Some(newDeductions))
+
+  def toApi1895(taxTakenOffTradingIncome: Option[BigDecimal]): api_1895.request.AmendSEPeriodSummaryRequestBody =
+    api_1895.request.AmendSEPeriodSummaryRequestBody(
+      incomes = incomes.map(_.toApi1895(taxTakenOffTradingIncome)),
+      deductions = deductions.map(_.toApi1895)
+    )
+}
 
 object FinancialsType {
   implicit lazy val financialsTypeJsonFormat: Format[FinancialsType] = Json.format[FinancialsType]
 
-  def fromFrontendModel[A: Api1894DeductionsBuilder](answers: A): FinancialsType = {
-    val builder = implicitly[Api1894DeductionsBuilder[A]]
-    FinancialsType(None, builder.build(answers).some)
-  }
+  def empty: FinancialsType = FinancialsType(None, None)
 }

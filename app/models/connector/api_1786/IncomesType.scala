@@ -16,6 +16,8 @@
 
 package models.connector.api_1786
 
+import models.connector.api_1895
+import models.connector.api_1894
 import play.api.libs.json._
 
 /** Represents the Swagger definition for incomesType.
@@ -28,7 +30,18 @@ case class IncomesType(
     turnover: Option[BigDecimal],
     other: Option[BigDecimal],
     taxTakenOffTradingIncome: Option[BigDecimal]
-)
+) {
+  def toApi1895: api_1895.request.Incomes = api_1895.request.Incomes(
+    turnover,
+    other,
+    taxTakenOffTradingIncome
+  )
+
+  def toApi1894: api_1894.request.IncomesType = api_1894.request.IncomesType(
+    turnover,
+    other
+  )
+}
 
 object IncomesType {
   implicit lazy val incomesTypeJsonFormat: Format[IncomesType] = Json.format[IncomesType]
