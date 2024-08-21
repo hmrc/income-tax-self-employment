@@ -20,7 +20,7 @@ import cats.implicits.catsSyntaxEitherId
 import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics, RequestSchemaAPI1638TaxAvoidanceInner}
 import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics, SuccessResponseAPI1639TaxAvoidanceInner}
 import models.database.nics.NICsStorageAnswers
-import models.frontend.nics.NICsAnswers
+import models.frontend.nics.{NICsAnswers, NICsClass2Answers}
 import org.scalatest.EitherValues._
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsObject, Json}
@@ -33,9 +33,11 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
 
+  def buildNICsAnswers(class2Answer: Boolean): NICsAnswers = NICsAnswers(Some(NICsClass2Answers(class2Answer)), None)
+
   "save answers" should {
     "create a new answers if nothing already exist" in new StubbedService {
-      val answers = NICsAnswers(true)
+      val answers = buildNICsAnswers(true)
 
       val result = service.saveAnswers(journeyCtxWithNino, answers).value.futureValue
 
@@ -49,7 +51,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
 
     "setting class2 does not override other fields and true is not stored in DB" in new StubbedService {
       override val connector = StubIFSConnector(getDisclosuresSubmissionResult = Some(disclosuresWithOtherFields).asRight)
-      val answers            = NICsAnswers(true)
+      val answers            = buildNICsAnswers(true)
 
       val result = service.saveAnswers(journeyCtxWithNino, answers).value.futureValue
 
@@ -64,7 +66,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
 
     "settings class2 to None when class2 is false and there are other fields in the object" in new StubbedService {
       override val connector = StubIFSConnector(getDisclosuresSubmissionResult = Some(disclosuresWithOtherFields).asRight)
-      val answers            = NICsAnswers(false)
+      val answers            = buildNICsAnswers(false)
 
       val result = service.saveAnswers(journeyCtxWithNino, answers).value.futureValue
 
@@ -83,13 +85,13 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
     "call DELETE if setting to false and the object is empty" in new StubbedService {
       override val connector = StubIFSConnector(getDisclosuresSubmissionResult =
         Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))).asRight)
-      val answers = NICsAnswers(false)
+      val answers = buildNICsAnswers(false)
 
       val result = service.saveAnswers(journeyCtxWithNino, answers).value.futureValue
 
       assert(result.isRight)
       assert(connector.upsertDisclosuresSubmissionData === None)
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(answers)))
+      assert(repository.lastUpsertedAnswer === Some(Json.toJson(answers.class2Answers)))
     }
 
   }
@@ -109,7 +111,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
 
       val result = service.getAnswers(journeyCtxWithNino).value.futureValue.value
 
-      assert(result === Some(NICsAnswers(true)))
+      assert(result === Some(NICsAnswers(Some(NICsClass2Answers(true)), None)))
     }
 
     "return database version if no API data exist" in new StubbedService {
@@ -119,7 +121,7 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
 
       val result = service.getAnswers(journeyCtxWithNino).value.futureValue.value
 
-      assert(result === Some(NICsAnswers(false)))
+      assert(result === Some(NICsAnswers(Some(NICsClass2Answers(false)), None)))
     }
   }
 

@@ -16,7 +16,7 @@
 
 package models.database.nics
 
-import models.frontend.nics.NICsAnswers
+import models.frontend.nics.NICsClass2Answers
 import play.api.libs.json.{Json, OFormat}
 
 /** The API does not support false. We store only false here.
@@ -29,6 +29,6 @@ object NICsStorageAnswers {
   /** We send class2=true to API, so we don't store it. We don't send false, so we must store it based on our rule to store everything not sent
     * downstream
     */
-  def fromJourneyAnswers(answers: NICsAnswers): NICsStorageAnswers =
+  def fromJourneyAnswers(answers: NICsClass2Answers): NICsStorageAnswers =
     if (answers.class2NICs) NICsStorageAnswers(None) else NICsStorageAnswers(Some(false))
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package models.connector.api_1802.request
+package models.frontend.nics
 
-import play.api.libs.json.{Json, OFormat}
+import models.common.BusinessId
+import play.api.libs.json.{Format, Json}
 
-case class AnnualNonFinancials(businessDetailsChangedRecently: Option[Boolean],
-                               exemptFromPayingClass4Nics: Option[Boolean],
-                               class4NicsExemptionReason: Option[String])
+case class NICsClass4Answers(class4NICs: Boolean,
+                             class4ExemptionReason: Option[ExemptionReason],
+                             class4DivingExempt: Option[List[BusinessId]],
+                             class4NonDivingExempt: Option[List[BusinessId]])
 
-object AnnualNonFinancials {
-  implicit val format: OFormat[AnnualNonFinancials] = Json.format[AnnualNonFinancials]
+object NICsClass4Answers {
+  implicit val formats: Format[NICsClass4Answers] = Json.format[NICsClass4Answers]
 }

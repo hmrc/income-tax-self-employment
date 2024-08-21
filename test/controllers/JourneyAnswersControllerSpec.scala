@@ -45,7 +45,7 @@ import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCosts
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
-import models.frontend.nics.NICsAnswers
+import models.frontend.nics.{NICsAnswers, NICsClass2Answers}
 import models.frontend.prepop.AdjustmentsPrepopAnswers.fromAnnualAdjustmentsType
 import org.scalacheck.Gen
 import org.scalamock.handlers.{CallHandler2, CallHandler3}
@@ -845,7 +845,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "NationalInsuranceContributions" should {
-    val answers            = NICsAnswers(true)
+    val answers            = NICsAnswers(Some(NICsClass2Answers(true)), None)
     val controllerWithData = mkUnderTest(nicsAnswersService = StubNICsAnswersService(getAnswersRes = Right(Some(answers))))
 
     testNoContent(underTest.getNationalInsuranceContributions(currTaxYear, businessId, nino))
