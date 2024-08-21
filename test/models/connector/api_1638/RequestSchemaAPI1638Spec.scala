@@ -17,26 +17,27 @@
 package models.connector.api_1638
 
 import data.api1639.SuccessResponseAPI1639Data
-import models.frontend.nics.NICsAnswers
+import models.frontend.nics.NICsClass2Answers
 import org.scalatest.wordspec.AnyWordSpecLike
 import utils.BaseSpec.currTaxYear
 
 class RequestSchemaAPI1638Spec extends AnyWordSpecLike {
+
   "mkRequestBody" should {
     "return class2 set to true" in {
-      val answers = NICsAnswers(true)
+      val answers = NICsClass2Answers(true)
       val result  = RequestSchemaAPI1638.mkRequestBody(answers, None)
       assert(result === Some(RequestSchemaAPI1638(None, Some(RequestSchemaAPI1638Class2Nics(Some(true))))))
     }
 
     "return None when answer class2 set to false and no other fields in the object exist" in {
-      val answers = NICsAnswers(false)
+      val answers = NICsClass2Answers(false)
       val result  = RequestSchemaAPI1638.mkRequestBody(answers, maybeExistingDisclosures = None)
       assert(result === None)
     }
 
     "return an object with class 2 set to None if other fields exist" in {
-      val answers = NICsAnswers(false)
+      val answers = NICsClass2Answers(false)
       val result  = RequestSchemaAPI1638.mkRequestBody(answers, Some(SuccessResponseAPI1639Data.full))
       assert(result === Some(RequestSchemaAPI1638(Some(List(RequestSchemaAPI1638TaxAvoidanceInner("arn", currTaxYear.toString))), None)))
     }

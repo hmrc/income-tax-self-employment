@@ -16,7 +16,6 @@
 
 package models.connector.api_1895.request
 
-import models.connector.api_1786.SelfEmploymentDeductionsDetailTypeAllowableNegDisPos
 import play.api.libs.json._
 
 /** utility object for deductions where by you must only have a positive or negative amount and the disallowable amount must be positive.
@@ -31,8 +30,4 @@ object SelfEmploymentDeductionsDetailAllowablePosNegType {
 
   implicit lazy val selfEmploymentDeductionsDetailAllowablePosNegTypeJsonFormat: Format[SelfEmploymentDeductionsDetailAllowablePosNegType] =
     Json.format[SelfEmploymentDeductionsDetailAllowablePosNegType]
-
-  def fromApi1786(source: Option[SelfEmploymentDeductionsDetailTypeAllowableNegDisPos]): Option[SelfEmploymentDeductionsDetailAllowablePosNegType] =
-    source.map(x => SelfEmploymentDeductionsDetailAllowablePosNegType(Some(x.amount), x.disallowableAmount))
-
 }

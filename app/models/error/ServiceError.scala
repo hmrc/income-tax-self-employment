@@ -17,7 +17,8 @@
 package models.error
 
 import models.common.BusinessId
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
+import models.frontend.nics.NICsAnswers
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.libs.json._
 
 trait ServiceError {
@@ -75,8 +76,11 @@ object ServiceError {
     val errorMessage: String = s"Cannot parse JSON: ${details.getMessage}"
   }
 
-  final case class ErrorFromUpstream(details: String) extends ServiceError {
-    val errorMessage: String = s"Error from upstream: $details"
+  final case class InvalidNICsAnswer(answers: NICsAnswers) extends ServiceError {
+    val errorMessage: String =
+      "\n---------------------\nNICsAnswers must contain only one of 'class2Answers' OR 'class4Answers'.\nAnswers contained" +
+        s"\nClass 2: ${answers.class2Answers}\nClass 4: ${answers.class4Answers}\n---------------------\n"
+    override val status: Int = BAD_REQUEST
   }
 
   sealed trait DatabaseError extends ServiceError

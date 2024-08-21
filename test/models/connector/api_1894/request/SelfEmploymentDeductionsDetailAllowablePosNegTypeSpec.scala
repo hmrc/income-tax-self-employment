@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-package models.frontend.nics
+package models.connector.api_1894.request
 
-import enumeratum.{Enum, EnumEntry}
+import models.connector.api_1895
+import org.scalatest.wordspec.AnyWordSpecLike
 
-sealed abstract class ExemptionReason(override val entryName: String) extends EnumEntry {
-  val exemptionCode: String
-}
+class SelfEmploymentDeductionsDetailAllowablePosNegTypeSpec extends AnyWordSpecLike {
 
-object ExemptionReason extends Enum[ExemptionReason] with utils.PlayJsonEnum[ExemptionReason] {
-
-  val values: IndexedSeq[ExemptionReason] = findValues
-
-  case object TrusteeExecutorAdmin extends ExemptionReason("trusteeExecutorAdmin") {
-    override val exemptionCode: String = "002"
+  "toApi1895" should {
+    "convert the model to API 1895" in {
+      val data = SelfEmploymentDeductionsDetailAllowablePosNegType(Some(1.0), Some(2.0))
+      assert(data.toApi1895 === api_1895.request.SelfEmploymentDeductionsDetailAllowablePosNegType(Some(1.0), Some(2.0)))
+    }
   }
-  case object DiverDivingInstructor extends ExemptionReason("diverDivingInstructor") {
-    override val exemptionCode: String = "003"
-  }
-
 }

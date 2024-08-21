@@ -16,6 +16,7 @@
 
 package models.connector.api_1171
 
+import models.common.BusinessId
 import play.api.libs.json._
 
 /** Represents the Swagger definition for response_type.
@@ -27,7 +28,15 @@ case class ResponseType(
     yearOfMigration: Option[String],
     propertyIncome: Boolean,
     businessData: Option[List[BusinessDataDetails]]
-)
+) {
+  def getMaybeSingleBusinessId: Option[BusinessId] = businessData.flatMap { businessList =>
+    businessList match {
+      case singleBusiness :: Nil => Some(BusinessId(singleBusiness.incomeSourceId))
+      case _                     => None
+    }
+
+  }
+}
 
 object ResponseType {
   implicit lazy val responseTypeJsonFormat: Format[ResponseType] = Json.format[ResponseType]

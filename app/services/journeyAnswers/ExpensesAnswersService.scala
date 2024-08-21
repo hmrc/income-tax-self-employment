@@ -20,20 +20,32 @@ import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
 import models.common.JourneyName.{ExpensesTailoring, GoodsToSellOrUse, WorkplaceRunningCosts}
-import models.common.TaxYear.{endDate, startDate}
 import models.common._
-import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType}
-import models.connector.{Api1786ExpensesResponseParser, Api1894DeductionsBuilder}
+import models.connector.api_1894.request.FinancialsType
+import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
+import models.connector.{Api1786ExpensesResponseParser, api_1786, api_1894}
 import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
 import models.domain.ApiResultT
 import models.error.ServiceError
-import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseAnswers
+import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
+import models.frontend.expenses.construction.ConstructionJourneyAnswers
+import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
+import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
+import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
+import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers}
+import models.frontend.expenses.interest.InterestJourneyAnswers
+import models.frontend.expenses.irrecoverableDebts.IrrecoverableDebtsJourneyAnswers
+import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
+import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
+import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
+import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
+import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring
 import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategories, NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
-import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
+import models.frontend.expenses.workplaceRunningCosts.{WorkplaceRunningCostsAnswers, WorkplaceRunningCostsJourneyAnswers}
 import play.api.libs.json.{Json, Writes}
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -45,7 +57,28 @@ import scala.concurrent.{ExecutionContext, Future}
 trait ExpensesAnswersService {
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
       writes: Writes[A]): ApiResultT[Unit]
-  def saveAnswers[A: Api1894DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+
+  def saveTailoringAnswers(ctx: JourneyContextWithNino, answers: ExpensesTailoringAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+
+  def saveOfficeSuppliesAnswers(ctx: JourneyContextWithNino, answers: OfficeSuppliesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def saveGoodsToSell(ctx: JourneyContextWithNino, answers: GoodsToSellOrUseJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def saveRepairsAndMaintenance(ctx: JourneyContextWithNino, answers: RepairsAndMaintenanceCostsJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit]
+  def saveWorkplaceRunningCosts(ctx: JourneyContextWithNino, answers: WorkplaceRunningCostsJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit]
+  def saveAdvertisingOrMarketing(ctx: JourneyContextWithNino, answers: AdvertisingOrMarketingJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit]
+  def saveEntertainmentCosts(ctx: JourneyContextWithNino, answers: EntertainmentJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def saveStaffCosts(ctx: JourneyContextWithNino, answers: StaffCostsJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def saveConstructionIndustrySubcontractors(ctx: JourneyContextWithNino, answers: ConstructionJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit]
+  def saveProfessionalFees(ctx: JourneyContextWithNino, answers: ProfessionalFeesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def saveFinancialCharges(ctx: JourneyContextWithNino, answers: FinancialChargesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def saveBadDebts(ctx: JourneyContextWithNino, answers: IrrecoverableDebtsJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def saveDepreciationCosts(ctx: JourneyContextWithNino, answers: DepreciationCostsJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def saveOtherExpenses(ctx: JourneyContextWithNino, answers: OtherExpensesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def saveInterests(ctx: JourneyContextWithNino, answers: InterestJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+
   def getAnswers[A: Api1786ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A]
   def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]]
   def getGoodsToSellOrUseAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[GoodsToSellOrUseAnswers]]
@@ -60,30 +93,99 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       writes: Writes[A]): ApiResultT[Unit] =
     repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, journey), Json.toJson(answers))
 
-  def saveAnswers[A: Api1894DeductionsBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def saveTailoringAnswers(ctx: JourneyContextWithNino, answers: ExpensesTailoringAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+    def createFinancials(existingFinancials: api_1786.FinancialsType) = {
+      val financials = existingFinancials.toApi1894
+
+      answers match {
+        case NoExpensesAnswers => financials.copy(deductions = None) // clear all expenses
+        case AsOneTotalAnswers(totalAmount) =>
+          val deductions = api_1894.request.Deductions.empty
+          financials.updateDeductions(deductions.copy(simplifiedExpenses = Some(totalAmount))) // clear all expenses and set one total
+        case _: ExpensesTailoringIndividualCategoriesAnswers =>
+          val deductions = financials.deductions.getOrElse(api_1894.request.Deductions.empty)
+          financials.updateDeductions(deductions.copy(simplifiedExpenses = None)) // leave all existing deductions except simplifiedExpenses
+      }
+    }
+
     for {
-      periodSummary <- EitherT(connector.listSEPeriodSummary(ctx))
-      periodAlreadyExist = periodSummary.periods.exists(periods =>
-        periods.exists(period => period.from.contains(ctx.taxYear.fromAnnualPeriod) && period.to.contains(ctx.taxYear.toAnnualPeriod)))
-      _ <- if (periodAlreadyExist) amendPeriod(ctx, answers) else createPeriod(ctx, answers)
+      existingIncome <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
+      updatedFinancials = createFinancials(existingIncome.financials)
+      _ <- submitTailoringAnswers(ctx, updatedFinancials, existingIncome.financials.incomes.flatMap(_.taxTakenOffTradingIncome))
+      _ <- persistTailoringAnswers(ctx, answers)
     } yield ()
-
-  private def createPeriod[A: Api1894DeductionsBuilder](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier) = {
-    val financials  = FinancialsType.fromFrontendModel(answers)
-    val body        = CreateSEPeriodSummaryRequestBody(startDate(ctx.taxYear), endDate(ctx.taxYear), Some(financials))
-    val requestData = CreateSEPeriodSummaryRequestData(ctx.taxYear, ctx.businessId, ctx.nino, body)
-
-    EitherT(connector.createSEPeriodSummary(requestData)).leftAs[ServiceError]
   }
 
-  // TODO This is wrong, it should call amend SASS-9465
-  private def amendPeriod[A: Api1894DeductionsBuilder](ctx: JourneyContextWithNino, answers: A)(implicit hc: HeaderCarrier) = {
-    val financials  = FinancialsType.fromFrontendModel(answers)
-    val body        = CreateSEPeriodSummaryRequestBody(startDate(ctx.taxYear), endDate(ctx.taxYear), Some(financials))
-    val requestData = CreateSEPeriodSummaryRequestData(ctx.taxYear, ctx.businessId, ctx.nino, body)
-
-    EitherT(connector.createSEPeriodSummary(requestData)).leftAs[ServiceError]
+  private def submitTailoringAnswers(ctx: JourneyContextWithNino, financials: FinancialsType, existingTaxTakenOffTradingIncome: Option[BigDecimal])(
+      implicit hc: HeaderCarrier) = {
+    val body        = financials.toApi1895(existingTaxTakenOffTradingIncome)
+    val requestData = AmendSEPeriodSummaryRequestData(ctx.taxYear, ctx.nino, ctx.businessId, body)
+    EitherT(connector.amendSEPeriodSummary(requestData)).leftAs[ServiceError]
   }
+
+  private def persistTailoringAnswers(ctx: JourneyContextWithNino, answers: ExpensesTailoringAnswers) = answers match {
+    case NoExpensesAnswers | _: ExpensesTailoringIndividualCategoriesAnswers =>
+      persistAnswers(ctx.businessId, ctx.taxYear, ctx.mtditid, ExpensesTailoring, answers)
+    case _: AsOneTotalAnswers =>
+      persistAnswers(ctx.businessId, ctx.taxYear, ctx.mtditid, ExpensesTailoring, ExpensesCategoriesDb(tailoring.ExpensesTailoring.TotalAmount))
+  }
+
+  def saveOfficeSuppliesAnswers(ctx: JourneyContextWithNino, answers: OfficeSuppliesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateOfficeSupplies(answers))
+
+  def saveGoodsToSell(ctx: JourneyContextWithNino, answers: GoodsToSellOrUseJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateGoodsToSell(answers))
+
+  def saveRepairsAndMaintenance(ctx: JourneyContextWithNino, answers: RepairsAndMaintenanceCostsJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateRepairsAndMaintenance(answers))
+
+  def saveWorkplaceRunningCosts(ctx: JourneyContextWithNino, answers: WorkplaceRunningCostsJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateWorkplaceRunningCosts(answers))
+
+  def saveAdvertisingOrMarketing(ctx: JourneyContextWithNino, answers: AdvertisingOrMarketingJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateAdvertisingOrMarketing(answers))
+
+  def saveEntertainmentCosts(ctx: JourneyContextWithNino, answers: EntertainmentJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateEntertainmentCosts(answers))
+
+  def saveStaffCosts(ctx: JourneyContextWithNino, answers: StaffCostsJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateStaffCosts(answers))
+
+  def saveConstructionIndustrySubcontractors(ctx: JourneyContextWithNino, answers: ConstructionJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateConstructionIndustrySubcontractors(answers))
+
+  def saveProfessionalFees(ctx: JourneyContextWithNino, answers: ProfessionalFeesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateProfessionalFees(answers))
+
+  def saveFinancialCharges(ctx: JourneyContextWithNino, answers: FinancialChargesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateFinancialCharges(answers))
+
+  def saveBadDebts(ctx: JourneyContextWithNino, answers: IrrecoverableDebtsJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateBadDebts(answers))
+
+  def saveDepreciationCosts(ctx: JourneyContextWithNino, answers: DepreciationCostsJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateDepreciationCosts(answers))
+
+  def saveOtherExpenses(ctx: JourneyContextWithNino, answers: OtherExpensesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateOtherExpenses(answers))
+
+  def saveInterests(ctx: JourneyContextWithNino, answers: InterestJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    updatePeriodSummary(ctx, _.updateInterest(answers))
+
+  /** It assumes period summary already exist
+    */
+  private def updatePeriodSummary(ctx: JourneyContextWithNino, updateBody: AmendSEPeriodSummaryRequestBody => AmendSEPeriodSummaryRequestBody)(
+      implicit hc: HeaderCarrier) =
+    for {
+      existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
+      financials = existingPeriodicSummary.financials.toApi1895
+      data       = AmendSEPeriodSummaryRequestData(ctx.taxYear, ctx.nino, ctx.businessId, updateBody(financials))
+      _ <- EitherT(connector.amendSEPeriodSummary(data)).leftAs[ServiceError]
+    } yield ()
 
   def getAnswers[A: Api1786ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A] = {
     val parser = implicitly[Api1786ExpensesResponseParser[A]]

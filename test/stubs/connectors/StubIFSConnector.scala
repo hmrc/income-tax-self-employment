@@ -21,7 +21,8 @@ import cats.data.EitherT
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.IFSConnector
 import connectors.IFSConnector._
-import models.common.JourneyContextWithNino
+import models.common.{BusinessId, JourneyContextWithNino}
+import models.connector.api_1171.BusinessDataDetailsTestData
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
@@ -31,9 +32,9 @@ import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import models.connector.citizen_details.{Ids, LegalNames, Name}
-import models.connector.{api_1171, api_1786, api_1871, citizen_details}
+import models.connector.{api_1171, api_1786, api_1803, api_1871, citizen_details}
 import models.domain.ApiResultT
-import models.error.ServiceError
+import models.error.{DownstreamError, ServiceError}
 import stubs.connectors.StubIFSConnector._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
@@ -44,15 +45,16 @@ import scala.concurrent.{ExecutionContext, Future}
 case class StubIFSConnector(
     createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(().asRight),
     amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(().asRight),
-    createAmendSEAnnualSubmissionResult: Future[Api1802Response] = Future.successful(().asRight),
-    getAnnualSummariesResult: Future[Api1803Response] = Future.successful(api1803SuccessResponse.asRight),
+    getAnnualSummariesResult: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
+    createAmendSEAnnualSubmissionResult: Either[DownstreamError, Unit] = Right(()),
     listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
     getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight),
     getDisclosuresSubmissionResult: Either[ServiceError, Option[SuccessResponseAPI1639]] = Right(None),
     upsertDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(()),
     deleteDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(())
 ) extends IFSConnector {
-  var upsertDisclosuresSubmissionData: Option[RequestSchemaAPI1638] = None
+  var upsertDisclosuresSubmissionData: Option[RequestSchemaAPI1638]                         = None
+  var upsertAnnualSummariesSubmissionData: Option[CreateAmendSEAnnualSubmissionRequestData] = None
 
   override def createSEPeriodSummary(
       data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] =
@@ -65,15 +67,17 @@ case class StubIFSConnector(
   override def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response] =
     listSEPeriodSummariesResult
 
-  override def createAmendSEAnnualSubmission(
-      data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] =
-    createAmendSEAnnualSubmissionResult
-
   def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response] =
     getPeriodicSummaryDetailResult
 
-  def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] =
-    getAnnualSummariesResult
+  override def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] =
+    Future.successful(getAnnualSummariesResult)
+
+  override def createAmendSEAnnualSubmission(
+      data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
+    upsertAnnualSummariesSubmissionData = Some(data)
+    Future.successful(createAmendSEAnnualSubmissionResult)
+  }
 
   def getDisclosuresSubmission(
       ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[SuccessResponseAPI1639]] =
@@ -106,6 +110,12 @@ object StubIFSConnector {
     api_1171.SuccessResponseSchema(
       OffsetDateTime.now().toString,
       api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, None))
+
+  def api1171SingleBusinessResponse(businessId: BusinessId): api_1171.SuccessResponseSchema =
+    api_1171.SuccessResponseSchema(
+      OffsetDateTime.now().toString,
+      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Some(List(BusinessDataDetailsTestData.mkExample(businessId))))
+    )
 
   val api1803SuccessResponse: SuccessResponseSchema = SuccessResponseSchema(
     None,

@@ -16,12 +16,15 @@
 
 package controllers
 
+import cats.data.EitherT
 import cats.implicits._
 import controllers.actions.AuthorisedAction
 import models.common.JourneyName._
 import models.common._
 import models.database.capitalAllowances.{NewStructuresBuildingsDb, SpecialTaxSitesDb, WritingDownAllowanceDb}
-import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb}
+import models.database.expenses.TaxiMinicabOrRoadHaulageDb
+import models.domain.ApiResultT
+import models.error.ServiceError.InvalidNICsAnswer
 import models.frontend.FrontendAnswers
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
@@ -50,7 +53,6 @@ import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
 import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
-import models.frontend.expenses.tailoring.ExpensesTailoring.TotalAmount
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import models.frontend.income.IncomeJourneyAnswers
@@ -113,30 +115,31 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     handleOptionalApiResult(expensesService.getExpensesTailoringAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
-  def saveExpensesTailoringNoExpenses(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    val result = expensesService.persistAnswers(businessId, taxYear, user.getMtditid, ExpensesTailoring, NoExpensesAnswers)
+  def saveExpensesTailoringNoExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
+    val result = expensesService.saveTailoringAnswers(ctx, NoExpensesAnswers)
     handleApiUnitResultT(result)
   }
 
-  def saveExpensesTailoringIndividualCategories(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    getBody[ExpensesTailoringIndividualCategoriesAnswers](user) { value =>
-      expensesService.persistAnswers(businessId, taxYear, user.getMtditid, ExpensesTailoring, value).map(_ => NoContent)
-    }
+  def saveExpensesTailoringIndividualCategories(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async {
+    implicit user =>
+      getBodyWithCtx[ExpensesTailoringIndividualCategoriesAnswers](taxYear, businessId, nino) { (ctx, value) =>
+        expensesService.saveTailoringAnswers(ctx, value).map(_ => NoContent)
+      }
   }
 
   def saveExpensesTailoringTotalAmount(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[AsOneTotalAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      for {
-        _ <- expensesService.saveAnswers(ctx, value)
-        _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, ExpensesTailoring, ExpensesCategoriesDb(TotalAmount))
-      } yield NoContent
+      expensesService.saveTailoringAnswers(ctx, value).map(_ => NoContent)
     }
   }
 
   def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[GoodsToSellOrUseAnswers](taxYear, businessId, nino) { (ctx, value) =>
       for {
-        _ <- expensesService.saveAnswers(ctx, GoodsToSellOrUseJourneyAnswers(value.goodsToSellOrUseAmount, value.disallowableGoodsToSellOrUseAmount))
+        _ <- expensesService.saveGoodsToSell(
+          ctx,
+          GoodsToSellOrUseJourneyAnswers(value.goodsToSellOrUseAmount, value.disallowableGoodsToSellOrUseAmount))
         _ <- expensesService.persistAnswers(
           businessId,
           taxYear,
@@ -154,7 +157,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def saveWorkplaceRunningCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[WorkplaceRunningCostsAnswers](taxYear, businessId, nino) { (ctx, value) =>
       for {
-        _ <- expensesService.saveAnswers(ctx, value.toApiSubmissionModel)
+        _ <- expensesService.saveWorkplaceRunningCosts(ctx, value.toApiSubmissionModel)
         _ <- expensesService.persistAnswers(businessId, taxYear, user.getMtditid, WorkplaceRunningCosts, value.toDbModel)
       } yield NoContent
     }
@@ -170,7 +173,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveOfficeSupplies(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[OfficeSuppliesJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveOfficeSuppliesAnswers(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -181,7 +184,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveRepairsAndMaintenanceCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[RepairsAndMaintenanceCostsJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveRepairsAndMaintenance(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -191,7 +194,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveStaffCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[StaffCostsJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveStaffCosts(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -203,7 +206,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveAdvertisingOrMarketing(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[AdvertisingOrMarketingJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveAdvertisingOrMarketing(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -213,7 +216,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveEntertainmentCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[EntertainmentJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveEntertainmentCosts(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -223,7 +226,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveConstructionCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[ConstructionJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveConstructionIndustrySubcontractors(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -233,7 +236,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveProfessionalFees(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[ProfessionalFeesJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveProfessionalFees(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -243,7 +246,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveInterest(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[InterestJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveInterests(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -253,7 +256,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveDepreciationCosts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[DepreciationCostsJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveDepreciationCosts(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -263,7 +266,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveOtherExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[OtherExpensesJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveOtherExpenses(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -273,7 +276,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveFinancialCharges(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[FinancialChargesJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveFinancialCharges(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -283,7 +286,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveIrrecoverableDebts(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[IrrecoverableDebtsJourneyAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      expensesService.saveAnswers(ctx, value).map(_ => NoContent)
+      expensesService.saveBadDebts(ctx, value).map(_ => NoContent)
     }
   }
 
@@ -426,7 +429,13 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[NICsAnswers](taxYear, businessId, nino) { (ctx, answers) =>
-      nicsAnswersService.saveAnswers(ctx, answers).map(_ => NoContent)
+      val result: ApiResultT[Unit] = (answers.class2Answers, answers.class4Answers) match {
+        case (Some(class2Answers), None) => nicsAnswersService.saveClass2Answers(ctx, class2Answers)
+        //      case (None, Some(class4Answers)) if class4Answers.userHasMultipleBusinesses => saveClass4MultipleBusinesses(ctx, class4Answers) // TODO multiple business exemptions scenario
+        case (None, Some(class4Answers)) => nicsAnswersService.saveClass4SingleBusiness(ctx, class4Answers)
+        case _                           => EitherT.leftT[Future, Unit](InvalidNICsAnswer(answers))
+      }
+      result.map(_ => NoContent)
     }
   }
 

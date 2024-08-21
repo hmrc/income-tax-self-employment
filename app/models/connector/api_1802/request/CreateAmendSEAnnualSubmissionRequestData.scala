@@ -30,10 +30,11 @@ case class CreateAmendSEAnnualSubmissionRequestData(taxYear: TaxYear,
 object CreateAmendSEAnnualSubmissionRequestData {
   def mkNicsClassFourSingleBusinessRequestBody(answers: NICsClass4Answers,
                                                existingAnswers: api_1803.SuccessResponseSchema): CreateAmendSEAnnualSubmissionRequestBody = {
-    val maybeBusinessDetailsChangedRecently = existingAnswers.annualNonFinancials.flatMap(_.businessDetailsChangedRecently)
+//    val maybeBusinessDetailsChangedRecently = existingAnswers.annualNonFinancials.flatMap(_.businessDetailsChangedRecently)
 
-    val annualNonFinancialsAnswers =
-      AnnualNonFinancials(maybeBusinessDetailsChangedRecently, answers.class4NICs.some, answers.class4ExemptionReason.map(_.exemptionCode))
+//    val annualNonFinancialsAnswers = AnnualNonFinancials(maybeBusinessDetailsChangedRecently, answers.class4NICs.some, answers.class4ExemptionReason.map(_.exemptionCode))
+    val annualNonFinancialsAnswers = AnnualNonFinancials(Some(true), answers.class4NICs.some, answers.class4ExemptionReason.map(_.exemptionCode))
+    // TODO SASS-8728 businessDetailsChangedRecently is a compulsory value, where does it come from?
 
     CreateAmendSEAnnualSubmissionRequestBody(
       existingAnswers.annualAdjustments.map(_.toApi1802AnnualAdjustments),

@@ -14,23 +14,14 @@
  * limitations under the License.
  */
 
-package models.frontend.nics
+package bulders
 
-import enumeratum.{Enum, EnumEntry}
+import models.frontend.nics.{ExemptionReason, NICsClass4Answers}
 
-sealed abstract class ExemptionReason(override val entryName: String) extends EnumEntry {
-  val exemptionCode: String
-}
+object NICsAnswersBuilder {
 
-object ExemptionReason extends Enum[ExemptionReason] with utils.PlayJsonEnum[ExemptionReason] {
+  val class4NoAnswer = NICsClass4Answers(false, None, None, None)
 
-  val values: IndexedSeq[ExemptionReason] = findValues
-
-  case object TrusteeExecutorAdmin extends ExemptionReason("trusteeExecutorAdmin") {
-    override val exemptionCode: String = "002"
-  }
-  case object DiverDivingInstructor extends ExemptionReason("diverDivingInstructor") {
-    override val exemptionCode: String = "003"
-  }
+  val class4SingleBusinessAnswers = NICsClass4Answers(true, Some(ExemptionReason.TrusteeExecutorAdmin), None, None)
 
 }

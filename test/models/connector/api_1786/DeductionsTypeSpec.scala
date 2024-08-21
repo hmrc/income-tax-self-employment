@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package models.frontend.nics
+package models.connector.api_1786
 
-import enumeratum.{Enum, EnumEntry}
+import org.scalatest.wordspec.AnyWordSpecLike
+import models.connector.api_1895
+import models.connector.api_1894
 
-sealed abstract class ExemptionReason(override val entryName: String) extends EnumEntry {
-  val exemptionCode: String
-}
+class DeductionsTypeSpec extends AnyWordSpecLike {
+  val data = DeductionsTypeTestData.sample
 
-object ExemptionReason extends Enum[ExemptionReason] with utils.PlayJsonEnum[ExemptionReason] {
-
-  val values: IndexedSeq[ExemptionReason] = findValues
-
-  case object TrusteeExecutorAdmin extends ExemptionReason("trusteeExecutorAdmin") {
-    override val exemptionCode: String = "002"
-  }
-  case object DiverDivingInstructor extends ExemptionReason("diverDivingInstructor") {
-    override val exemptionCode: String = "003"
+  "toApi1895" should {
+    "convert the model to API 1895" in {
+      assert(data.toApi1894 === api_1894.request.DeductionsTestData.sample)
+    }
   }
 
+  "toApi1894" should {
+    "convert the model to API 1894" in {
+      assert(data.toApi1895 === api_1895.request.DeductionsTestData.sample)
+    }
+  }
 }

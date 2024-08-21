@@ -18,30 +18,30 @@ package models.frontend.nics
 
 import data.api1639.SuccessResponseAPI1639Data.class2NicsTrue
 import models.database.nics.NICsStorageAnswers
-import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues._
+import org.scalatest.wordspec.AnyWordSpecLike
 
 class NICsAnswersSpec extends AnyWordSpecLike {
-  "fromApi1639" should {
+
+  "mkPriorClass2Data fromApi1639" should {
     "return None when there are no class 2 NICs" in {
       val result = NICsAnswers.mkPriorClass2Data(None, None)
       assert(result.isEmpty)
     }
 
     "return class2 from the API" in {
-      val result = NICsAnswers.mkPriorClass2Data(Some(class2NicsTrue), None).value
-      assert(result === NICsAnswers(true))
+      val result = NICsAnswers.mkPriorClass2Data(Some(class2NicsTrue), None).value.class2Answers
+      assert(result === Some(NICsClass2Answers(true)))
     }
 
     "return class2 from the DB if does not exist in API" in {
-      val result = NICsAnswers.mkPriorClass2Data(None, Some(NICsStorageAnswers(Some(false)))).value
-      assert(result === NICsAnswers(false))
+      val result = NICsAnswers.mkPriorClass2Data(None, Some(NICsStorageAnswers(Some(false)))).value.class2Answers
+      assert(result === Some(NICsClass2Answers(false)))
     }
 
     "ignore value from DB if it exist in the API" in {
-      val result = NICsAnswers.mkPriorClass2Data(Some(class2NicsTrue), Some(NICsStorageAnswers(Some(false)))).value
-      assert(result === NICsAnswers(true))
+      val result = NICsAnswers.mkPriorClass2Data(Some(class2NicsTrue), Some(NICsStorageAnswers(Some(false)))).value.class2Answers
+      assert(result === Some(NICsClass2Answers(true)))
     }
-
   }
 }
