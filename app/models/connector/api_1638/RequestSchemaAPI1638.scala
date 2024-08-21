@@ -17,7 +17,7 @@
 package models.connector.api_1638
 
 import models.connector.api_1639.SuccessResponseAPI1639
-import models.frontend.nics.NICsAnswers
+import models.frontend.nics.NICsClass2Answers
 import play.api.libs.json._
 
 /** Represents the Swagger definition for requestSchemaAPI1638.
@@ -36,7 +36,7 @@ object RequestSchemaAPI1638 {
     * @return
     *   None if the object needs to be DELETED or Some() if it needs to be updated via PUT
     */
-  def mkRequestBody(answers: NICsAnswers, maybeExistingDisclosures: Option[SuccessResponseAPI1639]): Option[RequestSchemaAPI1638] = {
+  def mkRequestBody(answers: NICsClass2Answers, maybeExistingDisclosures: Option[SuccessResponseAPI1639]): Option[RequestSchemaAPI1638] = {
     val existingDisclosures = maybeExistingDisclosures.getOrElse(SuccessResponseAPI1639.empty)
 
     val bodyForPut = RequestSchemaAPI1638(

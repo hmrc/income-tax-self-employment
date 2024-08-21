@@ -16,9 +16,9 @@
 
 package models.connector.api_1802.request
 
-import org.scalatest.wordspec.AnyWordSpecLike
-import CreateAmendSEAnnualSubmissionRequestBody._
 import cats.implicits._
+import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestBody._
+import org.scalatest.wordspec.AnyWordSpecLike
 
 class CreateAmendSEAnnualSubmissionRequestBodySpec extends AnyWordSpecLike {
 
@@ -44,7 +44,7 @@ class CreateAmendSEAnnualSubmissionRequestBodySpec extends AnyWordSpecLike {
     }
 
     "create an object if AnnualNonFinancials is defined" in {
-      val financials = AnnualNonFinancials(false, false, None).some
+      val financials = AnnualNonFinancials(None, Some(false), None).some
       assert(
         mkRequest(AnnualAdjustments.empty.some, AnnualAllowances.empty.some, financials) === CreateAmendSEAnnualSubmissionRequestBody(
           None,

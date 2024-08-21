@@ -16,19 +16,20 @@
 
 package services.journeyAnswers
 
+import cats.data.EitherT
 import cats.implicits.toFunctorOps
 import connectors.IFSConnector
 import models.common._
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.database.nics.NICsStorageAnswers
 import models.domain.ApiResultT
-import models.frontend.nics.NICsAnswers
+import models.frontend.nics.{NICsAnswers, NICsClass2Answers}
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 trait NICsAnswersService {
   def saveAnswers(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
@@ -39,11 +40,20 @@ trait NICsAnswersService {
 class NICsAnswersServiceImpl @Inject() (connector: IFSConnector, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends NICsAnswersService {
 
-  def saveAnswers(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def saveAnswers(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+    val result: ApiResultT[Unit] = (answers.class2Answers, answers.class4Answers) match {
+      case (Some(class2Answers), None) => saveClass2Answers(ctx, class2Answers) // TODO 9567 add Class 4 scenarios
+      case _                           => EitherT.leftT[Future, Unit](NICsAnswers.invalidAnswersError(answers))
+    }
+    result
+  }
+
+  // Class 2 - Save
+  private def saveClass2Answers(ctx: JourneyContextWithNino, answers: NICsClass2Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingAnswers <- connector.getDisclosuresSubmission(ctx)
       upsertRequest = RequestSchemaAPI1638.mkRequestBody(answers, existingAnswers)
-      _ <- upsertOrDeleteData(upsertRequest, ctx)
+      _ <- upsertOrDeleteClass2Data(upsertRequest, ctx)
       storageAnswers = NICsStorageAnswers.fromJourneyAnswers(answers)
       _ <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.NationalInsuranceContributions), Json.toJson(storageAnswers))
     } yield ()
@@ -52,9 +62,9 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector, repository: Jou
     for {
       apiAnswers <- connector.getDisclosuresSubmission(ctx)
       dbAnswers  <- repository.getAnswers[NICsStorageAnswers](ctx.toJourneyContext(JourneyName.NationalInsuranceContributions))
-    } yield NICsAnswers.mkPriorData(apiAnswers, dbAnswers)
+    } yield NICsAnswers.mkPriorClass2Data(apiAnswers, dbAnswers)
 
-  private def upsertOrDeleteData(maybeClass2Nics: Option[RequestSchemaAPI1638], ctx: JourneyContextWithNino)(implicit
+  private def upsertOrDeleteClass2Data(maybeClass2Nics: Option[RequestSchemaAPI1638], ctx: JourneyContextWithNino)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
     maybeClass2Nics match {
       case Some(data) => connector.upsertDisclosuresSubmission(ctx, data).void
