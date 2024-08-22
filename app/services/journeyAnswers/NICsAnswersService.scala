@@ -67,7 +67,7 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
   def saveClass4SingleBusiness(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       updatedContext  <- updateJourneyContextWithSingleBusinessId(ctx)
-      existingAnswers <- getBusinessAnnualSummaryOrMakeNew(updatedContext)
+      existingAnswers <- EitherT(connector.getAnnualSummaries(updatedContext))
       requestBody   = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourSingleBusinessRequestBody(answers, existingAnswers)
       upsertRequest = CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, updatedContext.businessId, requestBody)
       _ <- EitherT[Future, ServiceError, Unit](connector.createAmendSEAnnualSubmission(upsertRequest))
@@ -81,13 +81,6 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
           case None     => Left(BusinessNotFoundError(ctx.businessId))
         }
       case Left(error) => Left(error)
-    })
-
-  private def getBusinessAnnualSummaryOrMakeNew(updatedContext: JourneyContextWithNino)(implicit
-      hc: HeaderCarrier): ApiResultT[api_1803.SuccessResponseSchema] =
-    EitherT(connector.getAnnualSummaries(updatedContext).map {
-      case Left(error) if error.status == NOT_FOUND => Right(api_1803.SuccessResponseSchema.empty)
-      case otherResult                              => otherResult
     })
 
   // TODO SASS-9573 save multiple businesses
