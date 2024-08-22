@@ -20,15 +20,14 @@ import cats.data.EitherT
 import cats.implicits.toFunctorOps
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common._
+import models.connector.api_1171
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
-import models.connector.{api_1171, api_1803}
 import models.database.nics.NICsStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.error.ServiceError.BusinessNotFoundError
 import models.frontend.nics.{NICsAnswers, NICsClass2Answers, NICsClass4Answers}
-import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
