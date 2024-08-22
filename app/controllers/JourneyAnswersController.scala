@@ -16,12 +16,15 @@
 
 package controllers
 
+import cats.data.EitherT
 import cats.implicits._
 import controllers.actions.AuthorisedAction
 import models.common.JourneyName._
 import models.common._
 import models.database.capitalAllowances.{NewStructuresBuildingsDb, SpecialTaxSitesDb, WritingDownAllowanceDb}
 import models.database.expenses.TaxiMinicabOrRoadHaulageDb
+import models.domain.ApiResultT
+import models.error.ServiceError.InvalidNICsAnswer
 import models.frontend.FrontendAnswers
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
@@ -426,7 +429,13 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[NICsAnswers](taxYear, businessId, nino) { (ctx, answers) =>
-      nicsAnswersService.saveAnswers(ctx, answers).map(_ => NoContent)
+      val result: ApiResultT[Unit] = (answers.class2Answers, answers.class4Answers) match {
+        case (Some(class2Answers), None) => nicsAnswersService.saveClass2Answers(ctx, class2Answers)
+        //      case (None, Some(class4Answers)) if class4Answers.userHasMultipleBusinesses => saveClass4MultipleBusinesses(ctx, class4Answers) // TODO multiple business exemptions scenario
+        case (None, Some(class4Answers)) => nicsAnswersService.saveClass4SingleBusiness(ctx, class4Answers)
+        case _                           => EitherT.leftT[Future, Unit](InvalidNICsAnswer(answers))
+      }
+      result.map(_ => NoContent)
     }
   }
 

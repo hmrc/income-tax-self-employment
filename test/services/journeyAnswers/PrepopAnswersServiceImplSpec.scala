@@ -74,14 +74,14 @@ class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
     }
 
     "return error if error is returned from the Connector" in new TestCase(connector =
-      StubIFSConnector(getAnnualSummariesResult = Future(downstreamError.asLeft))) {
+      StubIFSConnector(getAnnualSummariesResult = downstreamError.asLeft)) {
       val result: Either[ServiceError, AdjustmentsPrepopAnswers] = service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue
       val error: ServiceError                                    = result.left.value
       error shouldBe a[DownstreamError]
     }
 
-    "return IncomePrepopAnswers" in new TestCase(connector = StubIFSConnector(getAnnualSummariesResult =
-      Future.successful(api_1803.SuccessResponseSchema(annualAdjustmentsType.some, None, None).asRight))) {
+    "return IncomePrepopAnswers" in new TestCase(connector =
+      StubIFSConnector(getAnnualSummariesResult = api_1803.SuccessResponseSchema(annualAdjustmentsType.some, None, None).asRight)) {
       val result         = service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue
       val expectedAnswer = fromAnnualAdjustmentsType(annualAdjustmentsType)
       result.value shouldBe expectedAnswer

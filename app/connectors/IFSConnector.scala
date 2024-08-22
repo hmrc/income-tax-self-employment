@@ -82,15 +82,6 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
   private def disclosuresSubmissionUrl(nino: Nino, taxYear: TaxYear) =
     s"${appConfig.ifsBaseUrl}/income-tax/disclosures/$nino/${taxYear.toYYYY_YY}"
 
-  def createAmendSEAnnualSubmission(
-      data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
-    val url                                          = annualSummariesUrl(data.nino, data.businessId, data.taxYear)
-    val context                                      = appConfig.mkMetadata(IFSApiName.Api1802, url)
-    implicit val reads: HttpReads[ApiResponse[Unit]] = commonNoBodyResponse
-
-    put[CreateAmendSEAnnualSubmissionRequestBody, Api1802Response](http, context, data.body)
-  }
-
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {
     val url                                          = periodicSummaries(data.nino, data.businessId, data.taxYear)
     val context                                      = appConfig.mkMetadata(IFSApiName.Api1894, url)
@@ -117,6 +108,15 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     val url     = periodicSummaryDetailUrl(ctx.nino, ctx.businessId, ctx.taxYear)
     val context = appConfig.mkMetadata(IFSApiName.Api1786, url)
     get[Api1786Response](http, context)
+  }
+
+  def createAmendSEAnnualSubmission(
+      data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
+    val url                                          = annualSummariesUrl(data.nino, data.businessId, data.taxYear)
+    val context                                      = appConfig.mkMetadata(IFSApiName.Api1802, url)
+    implicit val reads: HttpReads[ApiResponse[Unit]] = commonNoBodyResponse
+
+    put[CreateAmendSEAnnualSubmissionRequestBody, Api1802Response](http, context, data.body)
   }
 
   def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] = {

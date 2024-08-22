@@ -20,7 +20,7 @@ import cats.data.EitherT
 import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
 import models.error.ServiceError
-import models.frontend.nics.NICsAnswers
+import models.frontend.nics.{NICsAnswers, NICsClass2Answers, NICsClass4Answers}
 import services.journeyAnswers.NICsAnswersService
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -29,7 +29,10 @@ import scala.concurrent.Future
 
 case class StubNICsAnswersService(getAnswersRes: Either[ServiceError, Option[NICsAnswers]] = Right(None)) extends NICsAnswersService {
 
-  def saveAnswers(ctx: JourneyContextWithNino, answers: NICsAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def saveClass2Answers(ctx: JourneyContextWithNino, answers: NICsClass2Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    EitherT.rightT[Future, ServiceError](())
+
+  def saveClass4SingleBusiness(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     EitherT.rightT[Future, ServiceError](())
 
   def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NICsAnswers]] =

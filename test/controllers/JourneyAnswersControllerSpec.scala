@@ -45,7 +45,7 @@ import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCosts
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
-import models.frontend.nics.{NICsAnswers, NICsClass2Answers}
+import models.frontend.nics.{ExemptionReason, NICsAnswers, NICsClass2Answers, NICsClass4Answers}
 import models.frontend.prepop.AdjustmentsPrepopAnswers.fromAnnualAdjustmentsType
 import org.scalacheck.Gen
 import org.scalamock.handlers.{CallHandler2, CallHandler3}
@@ -844,13 +844,22 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     )
   }
 
-  "NationalInsuranceContributions" should {
-    val answers            = NICsAnswers(Some(NICsClass2Answers(true)), None)
-    val controllerWithData = mkUnderTest(nicsAnswersService = StubNICsAnswersService(getAnswersRes = Right(Some(answers))))
+  "NationalInsuranceContributions" when {
+    val answerCases = List(
+      NICsAnswers(Some(NICsClass2Answers(true)), None),
+      NICsAnswers(None, Some(NICsClass4Answers(false, None, None, None))),
+      NICsAnswers(None, Some(NICsClass4Answers(true, Some(ExemptionReason.TrusteeExecutorAdmin), None, None)))
+    )
 
-    testNoContent(underTest.getNationalInsuranceContributions(currTaxYear, businessId, nino))
-    testSaveAnswers(underTest.saveNationalInsuranceContributions(currTaxYear, businessId, nino), answers)
-    testGetReturnAnswers(controllerWithData.getNationalInsuranceContributions(currTaxYear, businessId, nino), Json.toJson(answers).toString())
+    answerCases.foreach { answers =>
+      s"NICs answers are $answers" should {
+        val controllerWithData = mkUnderTest(nicsAnswersService = StubNICsAnswersService(getAnswersRes = Right(Some(answers))))
+
+        testNoContent(underTest.getNationalInsuranceContributions(currTaxYear, businessId, nino))
+        testSaveAnswers(underTest.saveNationalInsuranceContributions(currTaxYear, businessId, nino), answers)
+        testGetReturnAnswers(controllerWithData.getNationalInsuranceContributions(currTaxYear, businessId, nino), Json.toJson(answers).toString())
+      }
+    }
   }
 
   trait GetExpensesTest[T] {

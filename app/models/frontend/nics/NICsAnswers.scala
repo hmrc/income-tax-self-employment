@@ -19,17 +19,12 @@ package models.frontend.nics
 import cats.implicits.catsSyntaxOptionId
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.database.nics.NICsStorageAnswers
-import models.error.ServiceError
 import play.api.libs.json.{Format, Json}
 
 case class NICsAnswers(class2Answers: Option[NICsClass2Answers], class4Answers: Option[NICsClass4Answers])
 
 object NICsAnswers {
   implicit val formats: Format[NICsAnswers] = Json.format[NICsAnswers]
-
-  def invalidAnswersError(answers: NICsAnswers): ServiceError = ServiceError.ErrorFromUpstream(
-    "\n---------------------\nNICsAnswers must contain only one of 'class2Answers' OR 'class4Answers'.\nAnswers contained" +
-      s"\nClass 2: ${answers.class2Answers}\nClass 4: ${answers.class4Answers}\n---------------------\n")
 
   def mkPriorClass2Data(maybeApiAnswers: Option[SuccessResponseAPI1639], maybeDbAnswers: Option[NICsStorageAnswers]): Option[NICsAnswers] = {
     val existingClass2Nics = for {

@@ -16,6 +16,7 @@
 
 package models.connector.api_1803
 
+import models.connector.api_1802.request.AnnualNonFinancials
 import play.api.libs.json._
 
 /** Represents the Swagger definition for annualNonFinancialsType.
@@ -31,7 +32,12 @@ case class AnnualNonFinancialsType(
     businessDetailsChangedRecently: Option[Boolean],
     exemptFromPayingClass4Nics: Option[Boolean],
     class4NicsExemptionReason: Option[AnnualNonFinancialsType.Class4NicsExemptionReason.Value]
-)
+) {
+
+  def toApi1802AnnualNonFinancials: AnnualNonFinancials =
+    AnnualNonFinancials(businessDetailsChangedRecently, exemptFromPayingClass4Nics, class4NicsExemptionReason.map(_.toString))
+
+}
 
 object AnnualNonFinancialsType {
   implicit lazy val annualNonFinancialsTypeJsonFormat: Format[AnnualNonFinancialsType] = Json.format[AnnualNonFinancialsType]

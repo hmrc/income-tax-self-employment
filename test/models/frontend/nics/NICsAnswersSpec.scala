@@ -23,7 +23,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 
 class NICsAnswersSpec extends AnyWordSpecLike {
 
-  "fromApi1639" should {
+  "mkPriorClass2Data fromApi1639" should {
     "return None when there are no class 2 NICs" in {
       val result = NICsAnswers.mkPriorClass2Data(None, None)
       assert(result.isEmpty)

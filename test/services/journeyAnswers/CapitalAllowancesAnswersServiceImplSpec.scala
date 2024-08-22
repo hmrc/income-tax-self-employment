@@ -37,13 +37,12 @@ import utils.BaseSpec._
 import utils.EitherTTestOps._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
   val connector: StubIFSConnector =
     StubIFSConnector(
-      createAmendSEAnnualSubmissionResult = Future.successful(().asRight),
-      getAnnualSummariesResult = Future.successful(api1803SuccessResponse.asRight)
+      createAmendSEAnnualSubmissionResult = ().asRight,
+      getAnnualSummariesResult = api1803SuccessResponse.asRight
     )
   val service = new CapitalAllowancesAnswersServiceImpl(connector, StubJourneyAnswersRepository())
 
