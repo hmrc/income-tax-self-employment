@@ -25,12 +25,13 @@ import models.common.TaxYear.{asTys, endDate, startDate}
 import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics}
 import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics}
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1803.SuccessResponseSchema
 import models.connector.api_1894.request._
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import org.scalatest.EitherValues._
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import play.api.http.Status.{CREATED, OK}
+import play.api.http.Status.{CREATED, NOT_FOUND, OK}
 import play.api.libs.json.Json
 
 class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
@@ -70,6 +71,16 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
       )
 
       connector.getAnnualSummaries(ctx).futureValue shouldBe successResponse.asRight
+    }
+
+    "return an empty annual summary if not found" in new Api1803Test {
+      stubGetWithResponseBody(
+        url = downstreamUrl,
+        expectedResponse = "{}",
+        expectedStatus = NOT_FOUND
+      )
+
+      connector.getAnnualSummaries(ctx).futureValue shouldBe SuccessResponseSchema(None, None, None).asRight
     }
   }
 
