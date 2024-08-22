@@ -16,8 +16,6 @@
 
 package models.common
 
-import models.common.JourneyName.TradeDetails
-
 /** @param businessId
   *   also called incomeSourceId
   */
@@ -28,9 +26,4 @@ case class JourneyContextWithNino(taxYear: TaxYear, businessId: BusinessId, mtdi
 /** @param businessId
   *   also called incomeSourceId
   */
-case class JourneyContext(taxYear: TaxYear, _businessId: BusinessId, mtditid: Mtditid, journey: JourneyName) {
-  val businessId: BusinessId = journey match {
-    case TradeDetails => BusinessId.tradeDetailsId
-    case _            => _businessId
-  }
-}
+case class JourneyContext(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, journey: JourneyName)

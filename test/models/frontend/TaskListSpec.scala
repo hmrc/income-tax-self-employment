@@ -32,7 +32,7 @@ class TaskListSpec extends AnyWordSpecLike {
 
   "fromJourneyAnswers" should {
     "return an empty task list when there are no answers" in {
-      assert(TaskList.fromJourneyAnswers(Nil, Nil) === TaskList.empty)
+      assert(TaskList.fromJourneyAnswers(Nil, Nil, mtditid) === TaskList.empty)
     }
 
     "return all businesses with non statuses for a TradeDetails status" in {
@@ -42,7 +42,7 @@ class TaskListSpec extends AnyWordSpecLike {
       val answers = List(
         JourneyAnswers(
           mtditid,
-          BusinessId.tradeDetailsId,
+          BusinessId.tradeDetailsId(mtditid),
           currTaxYear,
           JourneyName.TradeDetails,
           JourneyStatus.InProgress,
@@ -57,7 +57,7 @@ class TaskListSpec extends AnyWordSpecLike {
         BusinessDataBuilder.aBusiness.copy(businessId = businessId1.value),
         BusinessDataBuilder.aBusiness.copy(businessId = businessId2.value)
       )
-      val result = TaskList.fromJourneyAnswers(answers, businesses)
+      val result = TaskList.fromJourneyAnswers(answers, businesses, mtditid)
 
       assert(
         result === TaskList(

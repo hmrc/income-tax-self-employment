@@ -119,7 +119,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val result = (for {
         _        <- repository.setStatus(tradeDetailsCtx, CheckOurRecords)
         _        <- repository.setStatus(incomeCtx, Completed)
-        _        <- repository.setStatus(incomeCtx.copy(_businessId = BusinessId("business2")), NotStarted)
+        _        <- repository.setStatus(incomeCtx.copy(businessId = BusinessId("business2")), NotStarted)
         taskList <- repository.getAll(tradeDetailsCtx.taxYear, tradeDetailsCtx.mtditid, businesses)
       } yield taskList).rightValue
 

@@ -117,7 +117,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
         .find(filter)
         .projection(projection)
         .toFuture()
-        .map(answers => TaskList.fromJourneyAnswers(answers.toList, businesses)))
+        .map(answers => TaskList.fromJourneyAnswers(answers.toList, businesses, mtditid)))
   }
 
   private def filterAllJourneys(taxYear: TaxYear, mtditid: Mtditid): Bson = Filters.and(

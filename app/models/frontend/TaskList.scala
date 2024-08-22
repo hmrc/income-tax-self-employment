@@ -30,13 +30,12 @@ object TaskList {
 
   val empty: TaskList = TaskList(None, Nil, None)
 
-  def fromJourneyAnswers(userJourneyAnswers: List[JourneyAnswers], businesses: List[Business]): TaskList = {
+  def fromJourneyAnswers(userJourneyAnswers: List[JourneyAnswers], businesses: List[Business], mtditid: Mtditid): TaskList = {
     val groupedByBusinessId: Map[BusinessId, Seq[JourneyAnswers]] = userJourneyAnswers.groupBy(_.businessId)
     val tradingDetailsStatus = groupedByBusinessId
-      .get(BusinessId.tradeDetailsId)
-      .flatMap(
-        _.toList.headOption
-          .map(a => JourneyNameAndStatus(a.journey, a.status)))
+      .get(BusinessId.tradeDetailsId(mtditid))
+      .flatMap(_.toList.headOption
+        .map(a => JourneyNameAndStatus(a.journey, a.status)))
 
     val perBusinessStatuses = businesses.map { business =>
       val currentJourneys = groupedByBusinessId
@@ -54,10 +53,9 @@ object TaskList {
     }
 
     val nationalInsuranceStatus = groupedByBusinessId
-      .get(BusinessId.nationalInsuranceContributions)
-      .flatMap(
-        _.toList.headOption
-          .map(a => JourneyNameAndStatus(a.journey, a.status)))
+      .get(BusinessId.nationalInsuranceContributions(mtditid))
+      .flatMap(_.toList.headOption
+        .map(a => JourneyNameAndStatus(a.journey, a.status)))
 
     TaskList(tradingDetailsStatus, perBusinessStatuses, nationalInsuranceStatus)
   }

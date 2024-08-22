@@ -26,8 +26,8 @@ final case class BusinessId(value: String) extends AnyVal {
 object BusinessId {
 
   /** Special Business Id for trade details which is not business specific */
-  val tradeDetailsId: BusinessId                 = BusinessId(s"trade-details")
-  val nationalInsuranceContributions: BusinessId = BusinessId("national-insurance-contributions")
+  val tradeDetailsId: Mtditid => BusinessId                 = (mtditid: Mtditid) => BusinessId(s"trade-details-${mtditid.value}")
+  val nationalInsuranceContributions: Mtditid => BusinessId = (mtditid: Mtditid) => BusinessId(s"national-insurance-contributions-${mtditid.value}")
 
   implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[BusinessId] = new PathBindable[BusinessId] {
 
