@@ -58,13 +58,13 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
   "setStatus" should {
     "set trade details journey status with trade-details businessId" in {
       val result = (for {
-        _      <- repository.setStatus(tradeDetailsCtx, NotStarted)
-        answer <- repository.get(tradeDetailsCtx)
+        _      <- repository.setStatus(tradeDetailsWithMtditidCtx, NotStarted)
+        answer <- repository.get(tradeDetailsWithMtditidCtx)
       } yield answer).rightValue
 
       result.value shouldBe JourneyAnswers(
         tradeDetailsCtx.mtditid,
-        BusinessId("trade-details"),
+        BusinessId(s"trade-details-${mtditid.value}"),
         tradeDetailsCtx.taxYear,
         TradeDetails,
         NotStarted,
@@ -103,7 +103,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
 
     "return trade details without businesses" in {
       val result = (for {
-        _        <- repository.setStatus(tradeDetailsCtx, NotStarted)
+        _        <- repository.setStatus(tradeDetailsWithMtditidCtx, NotStarted)
         taskList <- repository.getAll(tradeDetailsCtx.taxYear, tradeDetailsCtx.mtditid, Nil)
       } yield taskList).value.futureValue.value
 
@@ -117,7 +117,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       )
 
       val result = (for {
-        _        <- repository.setStatus(tradeDetailsCtx, CheckOurRecords)
+        _        <- repository.setStatus(tradeDetailsWithMtditidCtx, CheckOurRecords)
         _        <- repository.setStatus(incomeCtx, Completed)
         _        <- repository.setStatus(incomeCtx.copy(businessId = BusinessId("business2")), NotStarted)
         taskList <- repository.getAll(tradeDetailsCtx.taxYear, tradeDetailsCtx.mtditid, businesses)
