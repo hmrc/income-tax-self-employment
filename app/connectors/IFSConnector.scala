@@ -120,9 +120,12 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
   }
 
   def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] = {
-    val url     = annualSummariesUrl(ctx.nino, ctx.businessId, ctx.taxYear)
-    val context = appConfig.mkMetadata(IFSApiName.Api1803, url)
-    get[Api1803Response](http, context)
+    val url                                                                            = annualSummariesUrl(ctx.nino, ctx.businessId, ctx.taxYear)
+    val context                                                                        = appConfig.mkMetadata(IFSApiName.Api1803, url)
+    implicit val reads: HttpReads[ApiResponse[Option[api_1803.SuccessResponseSchema]]] = commonGetReads[api_1803.SuccessResponseSchema]
+
+    val result = EitherT(get[ApiResponseOption[api_1803.SuccessResponseSchema]](http, context))
+    result.map(_.getOrElse(api_1803.SuccessResponseSchema.empty)).value
   }
 
   def getDisclosuresSubmission(

@@ -20,15 +20,14 @@ import cats.data.EitherT
 import cats.implicits.toFunctorOps
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common._
+import models.connector.api_1171
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
-import models.connector.{api_1171, api_1803}
 import models.database.nics.NICsStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.error.ServiceError.BusinessNotFoundError
 import models.frontend.nics.{NICsAnswers, NICsClass2Answers, NICsClass4Answers}
-import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -67,7 +66,7 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
   def saveClass4SingleBusiness(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       updatedContext  <- updateJourneyContextWithSingleBusinessId(ctx)
-      existingAnswers <- getBusinessAnnualSummaryOrMakeNew(updatedContext)
+      existingAnswers <- EitherT(connector.getAnnualSummaries(updatedContext))
       requestBody   = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourSingleBusinessRequestBody(answers, existingAnswers)
       upsertRequest = CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, updatedContext.businessId, requestBody)
       _ <- EitherT[Future, ServiceError, Unit](connector.createAmendSEAnnualSubmission(upsertRequest))
@@ -81,13 +80,6 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
           case None     => Left(BusinessNotFoundError(ctx.businessId))
         }
       case Left(error) => Left(error)
-    })
-
-  private def getBusinessAnnualSummaryOrMakeNew(updatedContext: JourneyContextWithNino)(implicit
-      hc: HeaderCarrier): ApiResultT[api_1803.SuccessResponseSchema] =
-    EitherT(connector.getAnnualSummaries(updatedContext).map {
-      case Left(error) if error.status == NOT_FOUND => Right(api_1803.SuccessResponseSchema.empty)
-      case otherResult                              => otherResult
     })
 
   // TODO SASS-9573 save multiple businesses
