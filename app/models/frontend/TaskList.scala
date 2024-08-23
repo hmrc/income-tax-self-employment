@@ -30,19 +30,20 @@ object TaskList {
 
   val empty: TaskList = TaskList(None, Nil, None)
 
-  def fromJourneyAnswers(userJourneyAnswers: List[JourneyAnswers], businesses: List[Business]): TaskList = {
-    val groupedByBusinessId: Map[BusinessId, Seq[JourneyAnswers]] = userJourneyAnswers.groupBy(_.businessId)
-    val tradingDetailsStatus = groupedByBusinessId
-      .get(BusinessId.tradeDetailsId)
-      .flatMap(
-        _.toList.headOption
-          .map(a => JourneyNameAndStatus(a.journey, a.status)))
+  def fromJourneyAnswers(userJourneyAnswers: List[JourneyAnswers], businesses: List[Business], mtditid: Mtditid): TaskList = {
+    def getStatusWithoutBusinessId(journeyName: JourneyName): Option[JourneyNameAndStatus] = {
+      val groupedByJourney = userJourneyAnswers.groupBy(_.journey)
+      groupedByJourney
+        .get(journeyName)
+        .flatMap(_.filter(_.mtditid == mtditid).headOption.map(a => JourneyNameAndStatus(a.journey, a.status)))
+    }
 
-    val perBusinessStatuses = businesses.map { business =>
-      val currentJourneys = groupedByBusinessId
-        .get(BusinessId(business.businessId))
-        .map(_.toList)
-        .getOrElse(Nil)
+    val tradingDetailsStatus    = getStatusWithoutBusinessId(JourneyName.TradeDetails)
+    val nationalInsuranceStatus = getStatusWithoutBusinessId(JourneyName.NationalInsuranceContributions)
+
+    val journeyStatusesPerBusiness = businesses.map { business =>
+      val groupedByBusinessId = userJourneyAnswers.groupBy(_.businessId)
+      val currentJourneys     = groupedByBusinessId.get(BusinessId(business.businessId)).map(_.toList).getOrElse(Nil)
 
       TradesJourneyStatuses(
         BusinessId(business.businessId),
@@ -53,12 +54,6 @@ object TaskList {
       )
     }
 
-    val nationalInsuranceStatus = groupedByBusinessId
-      .get(BusinessId.nationalInsuranceContributions)
-      .flatMap(
-        _.toList.headOption
-          .map(a => JourneyNameAndStatus(a.journey, a.status)))
-
-    TaskList(tradingDetailsStatus, perBusinessStatuses, nationalInsuranceStatus)
+    TaskList(tradingDetailsStatus, journeyStatusesPerBusiness, nationalInsuranceStatus)
   }
 }

@@ -19,6 +19,7 @@ package repositories
 import cats.data.EitherT
 import cats.implicits._
 import config.AppConfig
+import models.common.JourneyName.{NationalInsuranceContributions, TradeDetails}
 import models.common._
 import models.database.JourneyAnswers
 import models.domain.{ApiResultT, Business}
@@ -117,7 +118,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
         .find(filter)
         .projection(projection)
         .toFuture()
-        .map(answers => TaskList.fromJourneyAnswers(answers.toList, businesses)))
+        .map(answers => TaskList.fromJourneyAnswers(answers.toList, businesses, mtditid)))
   }
 
   private def filterAllJourneys(taxYear: TaxYear, mtditid: Mtditid): Bson = Filters.and(
@@ -167,16 +168,20 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     collection.updateOne(filter, update, options).toFuture()
   }
 
-  private def filterJourney(ctx: JourneyContext, prefix: Option[String] = None): Bson =
-    Filters.and(
+  private def filterJourney(ctx: JourneyContext, prefix: Option[String] = None): Bson = {
+    val baseFilters = Filters.and(
       Filters.eq("mtditid", ctx.mtditid.value),
       Filters.eq("taxYear", ctx.taxYear.endYear),
-      Filters.eq("businessId", ctx.businessId.value),
       prefix match {
         case Some(p) => Filters.regex("journey", s"^$p.*")
         case None    => Filters.eq("journey", ctx.journey.entryName)
       }
     )
+    ctx.journey match {
+      case TradeDetails | NationalInsuranceContributions => baseFilters
+      case _                                             => Filters.and(baseFilters, Filters.eq("businessId", ctx.businessId.value))
+    }
+  }
 
   private def createUpsertStatus(ctx: JourneyContext)(status: JourneyStatus): Bson = {
     val now      = Instant.now(clock)
