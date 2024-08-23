@@ -35,7 +35,7 @@ object TaskList {
       val groupedByJourney = userJourneyAnswers.groupBy(_.journey)
       groupedByJourney
         .get(journeyName)
-        .flatMap(_.filter(_.mtditid == mtditid).headOption.map(a => JourneyNameAndStatus(a.journey, a.status)))
+        .flatMap(_.headOption.map(a => JourneyNameAndStatus(a.journey, a.status)))
     }
 
     val tradingDetailsStatus    = getStatusWithoutBusinessId(JourneyName.TradeDetails)
