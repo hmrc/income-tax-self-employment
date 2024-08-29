@@ -431,8 +431,9 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     getBodyWithCtx[NICsAnswers](taxYear, businessId, nino) { (ctx, answers) =>
       val result: ApiResultT[Unit] = (answers.class2Answers, answers.class4Answers) match {
         case (Some(class2Answers), None) => nicsAnswersService.saveClass2Answers(ctx, class2Answers)
-        //      case (None, Some(class4Answers)) if class4Answers.userHasMultipleBusinesses => saveClass4MultipleBusinesses(ctx, class4Answers) // TODO multiple business exemptions scenario
-        case (None, Some(class4Answers)) => nicsAnswersService.saveClass4SingleBusiness(ctx, class4Answers)
+        case (None, Some(class4Answers)) if class4Answers.userHasSingleBusinessExemption =>
+          nicsAnswersService.saveClass4SingleBusiness(ctx, class4Answers)
+        case (None, Some(class4Answers)) => nicsAnswersService.saveClass4MultipleBusinesses(ctx, class4Answers)
         case _                           => EitherT.leftT[Future, Unit](InvalidNICsAnswer(answers))
       }
       result.map(_ => NoContent)

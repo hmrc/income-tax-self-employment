@@ -39,7 +39,6 @@ case class AnnualAdjustmentsType(includedNonTaxableProfits: Option[BigDecimal],
     overlapReliefUsed,
     accountingAdjustment,
     averagingAdjustment,
-    lossBroughtForward = None, // TODO 9567 where do we get this value from?
     outstandingBusinessIncome,
     balancingChargeBpra,
     balancingChargeOther,
@@ -49,5 +48,4 @@ case class AnnualAdjustmentsType(includedNonTaxableProfits: Option[BigDecimal],
 
 object AnnualAdjustmentsType {
   implicit lazy val annualAdjustmentsTypeJsonFormat: Format[AnnualAdjustmentsType] = Json.format[AnnualAdjustmentsType]
-  def emptyAnnualAdjustmentsType: AnnualAdjustmentsType = AnnualAdjustmentsType(None, None, None, None, None, None, None, None, None, None, None)
 }

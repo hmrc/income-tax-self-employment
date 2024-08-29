@@ -48,7 +48,7 @@ object ServiceError {
     )
 
   final case class BusinessNotFoundError(id: BusinessId) extends ServiceError {
-    val errorMessage: String = s"Business with id=$id not found"
+    val errorMessage: String = s"Business with id = '$id' not found"
     override val status: Int = NOT_FOUND
   }
 

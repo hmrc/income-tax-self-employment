@@ -18,9 +18,10 @@ package models.connector.api_1802.request
 
 import play.api.libs.json.{Json, OFormat}
 
-case class AnnualNonFinancials(businessDetailsChangedRecently: Option[Boolean],
-                               exemptFromPayingClass4Nics: Option[Boolean],
-                               class4NicsExemptionReason: Option[String])
+case class AnnualNonFinancials(exemptFromPayingClass4Nics: Boolean,
+                               class4NicsExemptionReason: Option[String],
+                               businessDetailsChangedRecently: Boolean =
+                                 true) // TODO Jacob NoMerge this is a dummy value, will be removed by API team
 
 object AnnualNonFinancials {
   implicit val format: OFormat[AnnualNonFinancials] = Json.format[AnnualNonFinancials]

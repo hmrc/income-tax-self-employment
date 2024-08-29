@@ -31,7 +31,6 @@ trait Api1803Test {
                                      |    "overlapReliefUsed": 123.78,
                                      |    "accountingAdjustment": 678.9,
                                      |    "averagingAdjustment": 674.98,
-                                     |    "lossBroughtForward": 124.78,
                                      |    "outstandingBusinessIncome": 342.67,
                                      |    "balancingChargeBpra": 145.98,
                                      |    "balancingChargeOther": 457.23,
@@ -78,8 +77,8 @@ trait Api1803Test {
                                      |    "zeroEmissionsCarAllowance": 678.78
                                      |  },
                                      |  "annualNonFinancials": {
-                                     |    "businessDetailsChangedRecently": true,
-                                     |    "exemptFromPayingClass4Nics": true
+                                     |    "exemptFromPayingClass4Nics": true,
+                                     |    "businessDetailsChangedRecently": true
                                      |  }
                                      |}""".stripMargin
 
