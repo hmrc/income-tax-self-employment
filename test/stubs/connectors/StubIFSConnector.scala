@@ -51,10 +51,18 @@ case class StubIFSConnector(
     getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight),
     getDisclosuresSubmissionResult: Either[ServiceError, Option[SuccessResponseAPI1639]] = Right(None),
     upsertDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(()),
-    deleteDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(())
+    deleteDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(()),
+    getAnnualSummariesResultTest1: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
+    getAnnualSummariesResultTest2: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
+    getAnnualSummariesResultTest3: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
+    getAnnualSummariesResultTest4: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse)
 ) extends IFSConnector {
-  var upsertDisclosuresSubmissionData: Option[RequestSchemaAPI1638]                         = None
-  var upsertAnnualSummariesSubmissionData: Option[CreateAmendSEAnnualSubmissionRequestData] = None
+  var upsertDisclosuresSubmissionData: Option[RequestSchemaAPI1638]                              = None
+  var upsertAnnualSummariesSubmissionData: Option[CreateAmendSEAnnualSubmissionRequestData]      = None
+  var upsertAnnualSummariesSubmissionDataTest1: Option[CreateAmendSEAnnualSubmissionRequestData] = None
+  var upsertAnnualSummariesSubmissionDataTest2: Option[CreateAmendSEAnnualSubmissionRequestData] = None
+  var upsertAnnualSummariesSubmissionDataTest3: Option[CreateAmendSEAnnualSubmissionRequestData] = None
+  var upsertAnnualSummariesSubmissionDataTest4: Option[CreateAmendSEAnnualSubmissionRequestData] = None
 
   override def createSEPeriodSummary(
       data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] =
@@ -71,11 +79,23 @@ case class StubIFSConnector(
     getPeriodicSummaryDetailResult
 
   override def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] =
-    Future.successful(getAnnualSummariesResult)
+    ctx.businessId match {
+      case BusinessId("BusinessId1") => Future.successful(getAnnualSummariesResultTest1)
+      case BusinessId("BusinessId2") => Future.successful(getAnnualSummariesResultTest2)
+      case BusinessId("BusinessId3") => Future.successful(getAnnualSummariesResultTest3)
+      case BusinessId("BusinessId4") => Future.successful(getAnnualSummariesResultTest4)
+      case _                         => Future.successful(getAnnualSummariesResult)
+    }
 
   override def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
-    upsertAnnualSummariesSubmissionData = Some(data)
+    data.businessId match {
+      case BusinessId("BusinessId1") => upsertAnnualSummariesSubmissionDataTest1 = Some(data)
+      case BusinessId("BusinessId2") => upsertAnnualSummariesSubmissionDataTest2 = Some(data)
+      case BusinessId("BusinessId3") => upsertAnnualSummariesSubmissionDataTest3 = Some(data)
+      case BusinessId("BusinessId4") => upsertAnnualSummariesSubmissionDataTest4 = Some(data)
+      case _                         => upsertAnnualSummariesSubmissionData = Some(data)
+    }
     Future.successful(createAmendSEAnnualSubmissionResult)
   }
 

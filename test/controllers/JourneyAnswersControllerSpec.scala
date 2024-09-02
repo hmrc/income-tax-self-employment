@@ -16,6 +16,7 @@
 
 package controllers
 
+import bulders.NICsAnswersBuilder._
 import cats.data.EitherT
 import cats.implicits._
 import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}
@@ -45,7 +46,7 @@ import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCosts
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
-import models.frontend.nics.{ExemptionReason, NICsAnswers, NICsClass2Answers, NICsClass4Answers}
+import models.frontend.nics.{NICsAnswers, NICsClass2Answers}
 import models.frontend.prepop.AdjustmentsPrepopAnswers.fromAnnualAdjustmentsType
 import org.scalacheck.Gen
 import org.scalamock.handlers.{CallHandler2, CallHandler3}
@@ -847,8 +848,11 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   "NationalInsuranceContributions" when {
     val answerCases = List(
       NICsAnswers(Some(NICsClass2Answers(true)), None),
-      NICsAnswers(None, Some(NICsClass4Answers(false, None, None, None))),
-      NICsAnswers(None, Some(NICsClass4Answers(true, Some(ExemptionReason.TrusteeExecutorAdmin), None, None)))
+      NICsAnswers(None, Some(class4NoAnswer)),
+      NICsAnswers(None, Some(class4SingleBusinessAnswers)),
+      NICsAnswers(None, Some(class4DiverAndTrusteeMultipleBusinessesAnswers)),
+      NICsAnswers(None, Some(class4DiverMultipleBusinessesAnswers)),
+      NICsAnswers(None, Some(class4TrusteeMultipleBusinessesAnswers))
     )
 
     answerCases.foreach { answers =>

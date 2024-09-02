@@ -23,7 +23,6 @@ case class AnnualAdjustments(includedNonTaxableProfits: Option[BigDecimal],
                              overlapReliefUsed: Option[BigDecimal],
                              accountingAdjustment: Option[BigDecimal],
                              averagingAdjustment: Option[BigDecimal],
-                             lossBroughtForward: Option[BigDecimal],
                              outstandingBusinessIncome: Option[BigDecimal],
                              balancingChargeBpra: Option[BigDecimal],
                              balancingChargeOther: Option[BigDecimal],
@@ -34,5 +33,5 @@ case class AnnualAdjustments(includedNonTaxableProfits: Option[BigDecimal],
 object AnnualAdjustments {
   implicit val format: OFormat[AnnualAdjustments] = Json.format[AnnualAdjustments]
 
-  val empty: AnnualAdjustments = AnnualAdjustments(None, None, None, None, None, None, None, None, None, None)
+  val empty: AnnualAdjustments = AnnualAdjustments(None, None, None, None, None, None, None, None, None)
 }

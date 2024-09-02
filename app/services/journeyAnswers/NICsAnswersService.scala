@@ -17,17 +17,19 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
-import cats.implicits.toFunctorOps
+import cats.implicits.{toFunctorOps, toTraverseOps}
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common._
-import models.connector.api_1171
+import models.connector._
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.database.nics.NICsStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.error.ServiceError.BusinessNotFoundError
+import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
 import models.frontend.nics.{NICsAnswers, NICsClass2Answers, NICsClass4Answers}
+import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -38,6 +40,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait NICsAnswersService {
   def saveClass2Answers(ctx: JourneyContextWithNino, answers: NICsClass2Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def saveClass4SingleBusiness(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def saveClass4MultipleBusinesses(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NICsAnswers]]
 }
 
@@ -65,12 +68,53 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
 
   def saveClass4SingleBusiness(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      updatedContext  <- updateJourneyContextWithSingleBusinessId(ctx)
-      existingAnswers <- EitherT(connector.getAnnualSummaries(updatedContext))
-      requestBody   = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourSingleBusinessRequestBody(answers, existingAnswers)
-      upsertRequest = CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, updatedContext.businessId, requestBody)
-      _ <- EitherT[Future, ServiceError, Unit](connector.createAmendSEAnnualSubmission(upsertRequest))
+      updatedContext <- updateJourneyContextWithSingleBusinessId(ctx)
+      exemptionAnswer = Class4ExemptionAnswers(updatedContext.businessId, answers.class4NICs, answers.class4ExemptionReason)
+      _ <- saveClass4BusinessData(updatedContext, exemptionAnswer)
     } yield ()
+
+  def saveClass4MultipleBusinesses(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+    val multipleBusinessExemptionAnswers: List[Class4ExemptionAnswers] = answers.toMultipleBusinessesAnswers
+    val idsWithExemption: List[String]                                 = multipleBusinessExemptionAnswers.map(_.businessId.value)
+    val updateOtherIdsToNotExempt: ApiResultT[Unit]                    = clearOtherExistingClass4Data(ctx, idsToNotClear = idsWithExemption).void
+
+    val saveAllNewExemptionAnswers = multipleBusinessExemptionAnswers.traverse { answer =>
+      val businessContext = ctx(newId = answer.businessId)
+      saveClass4BusinessData(businessContext, answer)
+    }
+
+    EitherT.rightT[Future, ServiceError](updateOtherIdsToNotExempt.map(_ => saveAllNewExemptionAnswers))
+  }
+
+  def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] = {
+    val result = for {
+      existingAnswers <- connector.getAnnualSummaries(ctx).map(_.getOrElse(api_1803.SuccessResponseSchema.empty))
+      upsertRequest = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourRequestData(ctx, businessExemptionAnswer, existingAnswers)
+      _ <- connector.createAmendSEAnnualSubmission(upsertRequest)
+    } yield ()
+    EitherT.rightT[Future, ServiceError](result)
+  }
+
+  private def clearOtherExistingClass4Data(ctx: JourneyContextWithNino, idsToNotClear: List[String])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    for {
+      allUserBusinessIds <- businessConnector.getBusinesses(ctx.nino).map(_.taxPayerDisplayResponse.businessData.map(_.map(_.incomeSourceId)))
+      idsToClearData = allUserBusinessIds.filterNot(idsToNotClear.contains(_))
+      _              = idsToClearData.traverse(_.map(id => setExistingClass4DataToNotExempt(ctx(newId = BusinessId(id)))))
+    } yield ()
+
+  private def setExistingClass4DataToNotExempt(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+    val result = connector.getAnnualSummaries(ctx) flatMap {
+      case Right(summary) if summary.hasNICsClassFourData =>
+        val noExemptionAnswer = Class4ExemptionAnswers(ctx.businessId, class4Exempt = false, None)
+        val requestData       = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourRequestData(ctx, noExemptionAnswer, summary)
+        connector.createAmendSEAnnualSubmission(requestData)
+      case Right(_)                                 => Future.successful(Right[ServiceError, Unit](()))
+      case Left(error) if error.status == NOT_FOUND => Future.successful(Right[ServiceError, Unit](()))
+      case leftResult                               => Future(leftResult.void)
+    }
+    EitherT(result)
+  }
 
   private def updateJourneyContextWithSingleBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[JourneyContextWithNino] =
     EitherT(businessConnector.getBusinesses(ctx.nino).value.map {
@@ -81,47 +125,6 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
         }
       case Left(error) => Left(error)
     })
-
-  // TODO SASS-9573 save multiple businesses
-  // Class 4 MULTIPLE - Save data and Clear changed data
-//  def saveClass4MultipleBusinesses(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
-//    val clearAnyChangedData = clearOtherExistingClass4Data(ctx, idsToNotClear = List(ctx.businessId.value)).void
-//    val saveNewData = for {
-//      existingAnswers <- connector.getAnnualSummaries(ctx).map(_.getOrElse(api_1803.SuccessResponseSchema.empty))
-//      requestBody   = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourSingleBusinessRequestBody(answers, existingAnswers)
-//      upsertRequest = CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, requestBody)
-//      _ <- connector.createAmendSEAnnualSubmission(upsertRequest)
-//    } yield ()
-//    EitherT.rightT[Future, ServiceError](clearAnyChangedData.map(_ => saveNewData))
-//  }
-//  private def clearOtherExistingClass4Data(ctx: JourneyContextWithNino, idsToNotClear: List[String])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-//    for {
-//      allUserBusinessIds <- businessConnector.getBusinesses(ctx.nino).map(_.taxPayerDisplayResponse.businessData.map(_.map(_.incomeSourceId)))
-//      idsToClearData = allUserBusinessIds.filterNot(id => idsToNotClear.contains(id))
-//      _              = idsToClearData.traverse(_.map(id => clearClass4Data(ctx.copy(businessId = BusinessId(id)))))
-//    } yield ()
-//
-//  private def clearClass4Data(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
-//    val result = connector.getAnnualSummaries(ctx) flatMap {
-//      case Right(summary) if summary.hasNICsClassFourData =>
-//        val optionalRequestBody = CreateAmendSEAnnualSubmissionRequestData.mkEmptyNicsClassFourSingleBusinessRequestBody(summary)
-//        upsertOrDeleteClass4Data(optionalRequestBody, ctx).value // Clear data: upsert if other data, delete if now empty
-//      case Right(_)                                 => EitherT.rightT[Future, ServiceError](()).value // No AnnualSummary data to clear
-//      case Left(error) if error.status == NOT_FOUND => EitherT.rightT[Future, ServiceError](()).value // No AnnualSummary data to clear
-//      case leftResult                               => Future(leftResult.void)                        // Error
-//    }
-//    EitherT(result)
-//  }
-//
-//  private def upsertOrDeleteClass4Data(maybeClass4RequestBody: Option[CreateAmendSEAnnualSubmissionRequestBody], ctx: JourneyContextWithNino)(implicit
-//      hc: HeaderCarrier): ApiResultT[Unit] =
-//    maybeClass4RequestBody match {
-//      case Some(requestBody) =>
-//        val requestData = CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, requestBody)
-//        EitherT.rightT[Future, ServiceError](connector.createAmendSEAnnualSubmission(requestData))
-//      case None => connector.deleteDisclosuresSubmission(ctx)
-//    }
-  //
 
   def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NICsAnswers]] =
     for {

@@ -44,7 +44,7 @@ class CreateAmendSEAnnualSubmissionRequestBodySpec extends AnyWordSpecLike {
     }
 
     "create an object if AnnualNonFinancials is defined" in {
-      val financials = AnnualNonFinancials(None, Some(false), None).some
+      val financials = AnnualNonFinancials(false, None).some
       assert(
         mkRequest(AnnualAdjustments.empty.some, AnnualAllowances.empty.some, financials) === CreateAmendSEAnnualSubmissionRequestBody(
           None,

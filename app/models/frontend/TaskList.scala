@@ -30,7 +30,7 @@ object TaskList {
 
   val empty: TaskList = TaskList(None, Nil, None)
 
-  def fromJourneyAnswers(userJourneyAnswers: List[JourneyAnswers], businesses: List[Business], mtditid: Mtditid): TaskList = {
+  def fromJourneyAnswers(userJourneyAnswers: List[JourneyAnswers], businesses: List[Business]): TaskList = {
     def getStatusWithoutBusinessId(journeyName: JourneyName): Option[JourneyNameAndStatus] = {
       val groupedByJourney = userJourneyAnswers.groupBy(_.journey)
       groupedByJourney

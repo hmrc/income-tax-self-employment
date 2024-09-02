@@ -16,17 +16,24 @@
 
 package services.journeyAnswers
 
-import bulders.NICsAnswersBuilder.{class4NoAnswer, class4SingleBusinessAnswers}
+import bulders.NICsAnswersBuilder.{class4DiverAndTrusteeMultipleBusinessesAnswers, class4SingleBusinessAnswers}
 import cats.implicits.catsSyntaxEitherId
+import models.common.BusinessId
 import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics, RequestSchemaAPI1638TaxAvoidanceInner}
 import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics, SuccessResponseAPI1639TaxAvoidanceInner}
 import models.connector.api_1802.request.{AnnualNonFinancials, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1803
 import models.connector.api_1803.AnnualNonFinancialsType
 import models.database.nics.NICsStorageAnswers
+import models.error.DownstreamError.SingleDownstreamError
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
+import models.frontend.nics.ExemptionReason.{DiverDivingInstructor, TrusteeExecutorAdmin}
+import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
 import models.frontend.nics.{NICsAnswers, NICsClass2Answers}
 import org.scalatest.EitherValues._
+import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpecLike
+import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.{JsObject, Json}
 import stubs.connectors.StubIFSConnector.api1171SingleBusinessResponse
 import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
@@ -36,7 +43,7 @@ import utils.EitherTTestOps.convertScalaFuture
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
+class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordSpecLike {
 
   "saveClass2Answers" should {
     "create a new answers model if nothing already exist" in new StubbedService {
@@ -96,42 +103,99 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
       assert(connector.upsertDisclosuresSubmissionData === None)
       assert(repository.lastUpsertedAnswer === Some(Json.toJson(answers)))
     }
-
   }
 
-  def buildCreateAmendSEAnnualSubmissionRequestData(annualNonFinancials: Option[AnnualNonFinancials]): CreateAmendSEAnnualSubmissionRequestData =
-    CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, CreateAmendSEAnnualSubmissionRequestBody(None, None, annualNonFinancials))
+  val saveClass4DataCases = Table(
+    ("testDescription", "answer", "expectedApiData"),
+    ("save 'No Class 4 exemption'", Class4ExemptionAnswers(businessId, false, None), AnnualNonFinancials(false, None)),
+    (
+      "save a Trustee related exemption",
+      Class4ExemptionAnswers(businessId, true, Some(TrusteeExecutorAdmin)),
+      AnnualNonFinancials(true, Some("002"))),
+    ("save a Diver related exemption", Class4ExemptionAnswers(businessId, true, Some(DiverDivingInstructor)), AnnualNonFinancials(true, Some("003")))
+  )
+
+  "saveClass4BusinessData" should {
+    forAll(saveClass4DataCases) { (testDescription, answer, expectedApiData) =>
+      testDescription when {
+        "creating a new answers model when there is no existing Class 4 data" in new StubbedService {
+          override val connector: StubIFSConnector =
+            StubIFSConnector(getAnnualSummariesResult = Right(api_1803.SuccessResponseSchema(None, None, None)))
+
+          val expectedResult = buildExpectedRequestResult(expectedApiData)
+
+          service.saveClass4BusinessData(journeyCtxWithNino, answer).value.map { result =>
+            assert(result.isRight)
+            assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
+          }
+        }
+        "overriding existing details" in new StubbedService {
+          override val connector = StubIFSConnector(getAnnualSummariesResult = Right(
+            api_1803.SuccessResponseSchema(
+              None,
+              None,
+              Some(AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)))))
+
+          val expectedResult = buildExpectedRequestResult(expectedApiData)
+
+          service.saveClass4BusinessData(journeyCtxWithNino, answer).value.map { result =>
+            assert(result.isRight)
+            assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
+          }
+
+        }
+      }
+    }
+  }
 
   "saveClass4SingleBusiness" should {
-    "create a new answers model if nothing already exist" in new StubbedService {
-      val answers            = class4NoAnswer
+    "save Class 4 journey answers when user has a single business" in new StubbedService {
+      val answers            = class4SingleBusinessAnswers
       override val connector = StubIFSConnector(getAnnualSummariesResult = Right(api_1803.SuccessResponseSchema(None, None, None)))
 
-      val result = service.saveClass4SingleBusiness(journeyCtxWithNino, answers).value.futureValue
-      val expectedApiData = AnnualNonFinancials(
-        businessDetailsChangedRecently = Some(true),
-        Some(false),
-        None
-      ) // TODO SASS-8728 businessDetailsChangedRecently should be None
+      val expectedApiData = AnnualNonFinancials(true, Some(TrusteeExecutorAdmin.exemptionCode))
+      StubIFSConnector(getAnnualSummariesResult = Left(SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)))
+      val expectedResult = buildExpectedRequestResult(expectedApiData)
 
-      assert(result.isRight)
-      assert(connector.upsertAnnualSummariesSubmissionData === Some(buildCreateAmendSEAnnualSubmissionRequestData(Some(expectedApiData))))
+      service.saveClass4SingleBusiness(journeyCtxWithNino, answers).value.map { result =>
+        assert(result.isRight)
+        assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
+      }
     }
+  }
 
-    "override existing details" in new StubbedService {
-      val answers = class4SingleBusinessAnswers
-      override val connector = StubIFSConnector(getAnnualSummariesResult =
-        Right(api_1803.SuccessResponseSchema(None, None, Some(AnnualNonFinancialsType(None, Some(false), None)))))
+  "saveClass4MultipleBusinesses" should {
+    "save journey answers - creating, replacing or clearing Class 4 exemptions data of any user business IDs" in new StubbedService {
+      val submissionAnswers = class4DiverAndTrusteeMultipleBusinessesAnswers
 
-      val result = service.saveClass4SingleBusiness(journeyCtxWithNino, answers).value.futureValue
-      val expectedApiData = AnnualNonFinancials(
-        businessDetailsChangedRecently = Some(true),
-        Some(true),
-        Some("002")
-      ) // TODO SASS-8728 businessDetailsChangedRecently should be None
+      val existingDataId1 = AnnualNonFinancialsType(None, None, None)
+      val existingDataId2 = AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._003), None)
+      val existingDataId3 = AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)
+      val existingDataId4 = AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)
 
-      assert(result.isRight)
-      assert(connector.upsertAnnualSummariesSubmissionData === Some(buildCreateAmendSEAnnualSubmissionRequestData(Some(expectedApiData))))
+      override val connector = StubIFSConnector(
+        getAnnualSummariesResultTest1 = buildDataResponse(existingDataId1),
+        getAnnualSummariesResultTest2 = buildDataResponse(existingDataId2),
+        getAnnualSummariesResultTest3 = buildDataResponse(existingDataId3),
+        getAnnualSummariesResultTest4 = buildDataResponse(existingDataId4)
+      )
+
+      val expectedResultId1 = // Replace empty answers
+        buildExpectedRequestResult(AnnualNonFinancials(true, Some(DiverDivingInstructor.exemptionCode)), BusinessId("businessId1"))
+      val expectedResultId2 = // Persist original answers
+        buildExpectedRequestResult(AnnualNonFinancials(true, Some(DiverDivingInstructor.exemptionCode)), BusinessId("businessId2"))
+      val expectedResultId3 = // Replace existing answers
+        buildExpectedRequestResult(AnnualNonFinancials(true, Some(TrusteeExecutorAdmin.exemptionCode)), BusinessId("businessId3"))
+      val expectedResultId4 = // Clear existing answers
+        buildExpectedRequestResult(AnnualNonFinancials(false, None), BusinessId("businessId4"))
+
+      service.saveClass4MultipleBusinesses(journeyCtxWithNino, submissionAnswers).value.map { result =>
+        assert(result.isRight)
+        assert(connector.upsertAnnualSummariesSubmissionDataTest1 === expectedResultId1)
+        assert(connector.upsertAnnualSummariesSubmissionDataTest2 === expectedResultId2)
+        assert(connector.upsertAnnualSummariesSubmissionDataTest3 === expectedResultId3)
+        assert(connector.upsertAnnualSummariesSubmissionDataTest4 === expectedResultId4)
+      }
     }
   }
 
@@ -170,5 +234,14 @@ class NICsAnswersServiceImplSpec extends AnyWordSpecLike {
     val repository        = StubJourneyAnswersRepository()
 
     def service = new NICsAnswersServiceImpl(connector, businessConnector, repository)
+
+    def buildDataResponse(annualNonFinancialsData: AnnualNonFinancialsType) =
+      Right(api_1803.SuccessResponseSchema(None, None, Some(annualNonFinancialsData)))
+
+    def buildExpectedRequestResult(annualNonFinancials: AnnualNonFinancials,
+                                   id: BusinessId = businessId): Option[CreateAmendSEAnnualSubmissionRequestData] =
+      Some(
+        CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, id, CreateAmendSEAnnualSubmissionRequestBody(None, None, Some(annualNonFinancials))))
+
   }
 }
