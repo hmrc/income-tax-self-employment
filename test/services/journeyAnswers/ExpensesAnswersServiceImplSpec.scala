@@ -266,7 +266,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
   "deleteSimplifiedExpensesAnswers" should {
     def buildPeriodData(deductions: Option[Deductions]): AmendSEPeriodSummaryRequestData =
       AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), deductions))
-    "remove Tailoring DB answers and delete SimplifiedAmount API answer" in new Test {
+    "delete Tailoring DB answers and SimplifiedAmount API answer" in new Test {
       val existingPeriodData = buildPeriodData(Some(DeductionsTestData.sample))
 
       override val connector = StubIFSConnector()
