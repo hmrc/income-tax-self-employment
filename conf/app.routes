@@ -103,3 +103,5 @@ GET         /:taxYear/:businessId/capital-allowances-structures-buildings/:nino/
 
 POST        /:taxYear/:businessId/national-insurance-contributions/:nino/answers                         controllers.JourneyAnswersController.saveNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/national-insurance-contributions/:nino/answers                         controllers.JourneyAnswersController.getNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
+POST        /:taxYear/clear-simplified-expenses-answers/:nino/:businessId                                controllers.JourneyAnswersController.clearExpensesSimplifiedOrNoExpensesAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

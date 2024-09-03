@@ -83,6 +83,8 @@ trait ExpensesAnswersService {
   def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]]
   def getGoodsToSellOrUseAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[GoodsToSellOrUseAnswers]]
   def getWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WorkplaceRunningCostsAnswers]]
+
+  def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
 @Singleton
@@ -271,5 +273,13 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
     }
     EitherT.liftF(result)
   }
+
+  def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    for {
+      existingIncome <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
+      financialsWithoutSimplifiedExpenses = existingIncome.financials.toApi1894.copy(deductions = None)
+      _ <- submitTailoringAnswers(ctx, financialsWithoutSimplifiedExpenses, existingIncome.financials.incomes.flatMap(_.taxTakenOffTradingIncome))
+      _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(ExpensesTailoring))
+    } yield ()
 
 }

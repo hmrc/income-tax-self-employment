@@ -44,7 +44,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class StubIFSConnector(
     createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(().asRight),
-    amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(().asRight),
+    amendSEPeriodSummaryResult: Either[DownstreamError, Unit] = Right(()),
     getAnnualSummariesResult: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
     createAmendSEAnnualSubmissionResult: Either[DownstreamError, Unit] = Right(()),
     listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
@@ -57,6 +57,7 @@ case class StubIFSConnector(
     getAnnualSummariesResultTest3: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
     getAnnualSummariesResultTest4: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse)
 ) extends IFSConnector {
+  var amendSEPeriodSummaryResultData: Option[AmendSEPeriodSummaryRequestData]                    = None
   var upsertDisclosuresSubmissionData: Option[RequestSchemaAPI1638]                              = None
   var upsertAnnualSummariesSubmissionData: Option[CreateAmendSEAnnualSubmissionRequestData]      = None
   var upsertAnnualSummariesSubmissionDataTest1: Option[CreateAmendSEAnnualSubmissionRequestData] = None
@@ -69,8 +70,10 @@ case class StubIFSConnector(
     createSEPeriodSummaryResult
 
   override def amendSEPeriodSummary(
-      data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] =
-    amendSEPeriodSummaryResult
+      data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] = {
+    amendSEPeriodSummaryResultData = Some(data)
+    Future.successful(amendSEPeriodSummaryResult)
+  }
 
   override def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response] =
     listSEPeriodSummariesResult

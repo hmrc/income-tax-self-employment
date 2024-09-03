@@ -49,7 +49,8 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
                                       expensesGetAnswersRes: ApiResultT[AnyRef] = EitherT.right[ServiceError](Future.successful("unused")),
                                       getTailoringJourneyAnswers: Option[ExpensesTailoringAnswers] = None,
                                       getGoodsToSellOrUseAnswers: Option[GoodsToSellOrUseAnswers] = None,
-                                      getWorkplaceRunningCostsAnswers: Option[WorkplaceRunningCostsAnswers] = None)
+                                      getWorkplaceRunningCostsAnswers: Option[WorkplaceRunningCostsAnswers] = None,
+                                      deleteSimplifiedExpensesAnswersRes: ApiResultT[Unit] = serviceUnitT)
     extends ExpensesAnswersService {
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
@@ -117,4 +118,5 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
   def saveInterests(ctx: JourneyContextWithNino, answers: InterestJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     expensesSaveAnswersRes
 
+  def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] = deleteSimplifiedExpensesAnswersRes
 }

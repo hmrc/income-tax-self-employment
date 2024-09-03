@@ -309,6 +309,25 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => underTest.saveExpensesTailoringTotalAmount(currTaxYear, businessId, nino)
       )
     }
+
+    s"clearExpensesSimplifiedOrNoExpensesAnswers" in {
+      val controller: JourneyAnswersController = new JourneyAnswersController(
+        auth = mockAuthorisedAction,
+        cc = stubControllerComponents,
+        abroadAnswersService = StubAbroadAnswersService(),
+        incomeService = StubIncomeAnswersService(),
+        expensesService = StubExpensesAnswersService(),
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+        prepopAnswersService = StubPrepopAnswersService(),
+        nicsAnswersService = StubNICsAnswersService()
+      )
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => controller.clearExpensesSimplifiedOrNoExpensesAnswers(currTaxYear, businessId, nino)
+      )
+    }
   }
 
   "GoodsToSellOrUse" should {
