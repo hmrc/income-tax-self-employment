@@ -16,13 +16,14 @@
 
 package stubs.services
 
-import bulders.BusinessDataBuilder.{aBusinessIncomeSourcesSummaryResponse, aUserDateOfBirth}
+import bulders.BusinessDataBuilder.{aBusinessIncomeSourcesSummaryResponse, aNetBusinessProfitValues, aUserDateOfBirth}
 import cats.data.EitherT
 import cats.implicits._
 import models.common._
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.domain.{ApiResultT, Business}
 import models.error.{DownstreamError, ServiceError}
+import models.frontend.adjustments.NetBusinessProfitValues
 import services.BusinessService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec.businessId
@@ -37,7 +38,8 @@ final case class StubBusinessService(
     getUserDateOfBirthRes: Either[DownstreamError, LocalDate] = aUserDateOfBirth.asRight[DownstreamError],
     getAllBusinessIncomeSourcesSummariesRes: Either[DownstreamError, List[BusinessIncomeSourcesSummaryResponse]] =
       List.empty[BusinessIncomeSourcesSummaryResponse].asRight[DownstreamError],
-    getBusinessIncomeSourcesSummaryRes: Either[DownstreamError, BusinessIncomeSourcesSummaryResponse] = Right(aBusinessIncomeSourcesSummaryResponse)
+    getBusinessIncomeSourcesSummaryRes: Either[DownstreamError, BusinessIncomeSourcesSummaryResponse] = Right(aBusinessIncomeSourcesSummaryResponse),
+    getNetBusinessProfitValuesRes: Either[ServiceError, NetBusinessProfitValues] = Right(aNetBusinessProfitValues)
 ) extends BusinessService {
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
@@ -57,4 +59,6 @@ final case class StubBusinessService(
       hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =
     EitherT.fromEither[Future](getBusinessIncomeSourcesSummaryRes)
 
+  def getNetBusinessProfitValues(journeyContextWithNino: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[NetBusinessProfitValues] =
+    EitherT.fromEither[Future](getNetBusinessProfitValuesRes)
 }
