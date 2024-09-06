@@ -25,7 +25,7 @@ import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.domain._
 import models.error.ServiceError
 import models.error.ServiceError.BusinessNotFoundError
-import models.frontend.adjustments.NetBusinessProfitValues
+import models.frontend.adjustments.NetBusinessProfitOrLossValues
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTOps.EitherTExtensions
 
@@ -46,7 +46,8 @@ trait BusinessService {
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
       hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse]
 
-  def getNetBusinessProfitValues(journeyContextWithNino: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[NetBusinessProfitValues]
+  def getNetBusinessProfitOrLossValues(journeyContextWithNino: JourneyContextWithNino)(implicit
+      hc: HeaderCarrier): ApiResultT[NetBusinessProfitOrLossValues]
 }
 
 @Singleton
@@ -88,12 +89,12 @@ class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnec
       hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =
     businessConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)
 
-  def getNetBusinessProfitValues(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[NetBusinessProfitValues] =
+  def getNetBusinessProfitOrLossValues(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[NetBusinessProfitOrLossValues] =
     for {
       incomeSummary    <- businessConnector.getBusinessIncomeSourcesSummary(ctx.taxYear, ctx.nino, ctx.businessId)
       periodSummary    <- EitherT(ifsConnector.getPeriodicSummaryDetail(ctx))
       annualSubmission <- EitherT[Future, ServiceError, api_1803.SuccessResponseSchema](ifsConnector.getAnnualSummaries(ctx))
-      result           <- EitherT.fromEither[Future](NetBusinessProfitValues.fromApiAnswers(incomeSummary, periodSummary, annualSubmission))
+      result           <- EitherT.fromEither[Future](NetBusinessProfitOrLossValues.fromApiAnswers(incomeSummary, periodSummary, annualSubmission))
     } yield {
       val res = result
       res

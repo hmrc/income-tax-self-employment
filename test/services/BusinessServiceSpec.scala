@@ -164,7 +164,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
     }
   }
 
-  "getNetBusinessProfitValues" should {
+  "getNetBusinessProfitOrLossValues" should {
     "return NetBusinessProfitValues for a business" in {
       val expectedResult = Right(aNetBusinessProfitValues)
       val stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
@@ -175,7 +175,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         getAnnualSummariesResult = Right(api_1803.SuccessResponseSchema(None, None, None))
       )
       val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), stubIFSConnector)
-      service.getNetBusinessProfitValues(journeyCtxWithNino).value.map { result =>
+      service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.map { result =>
         assert(result === expectedResult)
       }
     }

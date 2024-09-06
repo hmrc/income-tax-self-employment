@@ -18,42 +18,44 @@ package models.frontend.adjustments
 
 import models.connector.api_1786.IncomesType
 import models.connector.api_1803.AnnualAdjustmentsType
-import models.connector.{api_1786, api_1803}
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
-import models.error.DownstreamError.{MultipleDownstreamErrors, SingleDownstreamError}
-import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
+import models.connector.{api_1786, api_1803}
+import models.error.DownstreamError.SingleDownstreamError
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.{Format, Json}
 
-case class NetBusinessProfitValues(turnover: BigDecimal,
-                                   incomeNotCountedAsTurnover: BigDecimal,
-                                   totalExpenses: BigDecimal,
-                                   netProfit: BigDecimal,
-                                   balancingCharge: BigDecimal,
-                                   goodsAndServicesForOwnUse: BigDecimal,
-                                   disallowableExpenses: BigDecimal,
-                                   totalAdditionsToNetProfit: BigDecimal,
-                                   capitalAllowances: BigDecimal,
-                                   turnoverNotTaxableAsBusinessProfit: BigDecimal,
-                                   totalDeductionsFromNetProfit: BigDecimal) {}
+case class NetBusinessProfitOrLossValues(turnover: BigDecimal,
+                                         incomeNotCountedAsTurnover: BigDecimal,
+                                         totalExpenses: BigDecimal,
+                                         netProfit: BigDecimal,
+                                         netLoss: BigDecimal,
+                                         balancingCharge: BigDecimal,
+                                         goodsAndServicesForOwnUse: BigDecimal,
+                                         disallowableExpenses: BigDecimal,
+                                         totalAdditionsToNetProfit: BigDecimal,
+                                         capitalAllowances: BigDecimal,
+                                         turnoverNotTaxableAsBusinessProfit: BigDecimal,
+                                         totalDeductionsFromNetProfit: BigDecimal) {}
 
-object NetBusinessProfitValues {
-  implicit val formats: Format[NetBusinessProfitValues] = Json.format[NetBusinessProfitValues]
+object NetBusinessProfitOrLossValues {
+  implicit val formats: Format[NetBusinessProfitOrLossValues] = Json.format[NetBusinessProfitOrLossValues]
 
   def fromApiAnswers(incomeSummary: BusinessIncomeSourcesSummaryResponse,
                      periodSummary: api_1786.SuccessResponseSchema,
-                     annualSubmission: api_1803.SuccessResponseSchema): Either[ServiceError, NetBusinessProfitValues] = {
+                     annualSubmission: api_1803.SuccessResponseSchema): Either[ServiceError, NetBusinessProfitOrLossValues] = {
     val maybePeriodIncomes: Option[IncomesType]               = periodSummary.financials.incomes
     val maybeAnnualAdjustments: Option[AnnualAdjustmentsType] = annualSubmission.annualAdjustments
     maybePeriodIncomes match {
       case Some(periodIncomes) =>
         Right(
-          NetBusinessProfitValues(
+          NetBusinessProfitOrLossValues(
             turnover = periodIncomes.turnover.getOrElse(0),
             incomeNotCountedAsTurnover = periodIncomes.other.getOrElse(0),
             totalExpenses = incomeSummary.totalExpenses,
             netProfit = incomeSummary.netProfit,
+            netLoss = incomeSummary.netLoss,
             balancingCharge = BigDecimal(0), // TODO when developed, this should be annualAdjustments.balancingChargeOther
             goodsAndServicesForOwnUse = maybeAnnualAdjustments.flatMap(_.goodsAndServicesOwnUse).getOrElse(BigDecimal(0)),
             disallowableExpenses = getDisallowableExpenses(periodSummary).getOrElse(0),
