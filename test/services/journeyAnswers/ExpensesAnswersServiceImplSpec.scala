@@ -23,10 +23,11 @@ import gens.genOne
 import models.common.JourneyName.ExpensesTailoring
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
+import models.connector.api_1895.request._
 import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
 import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers}
-import models.frontend.expenses.tailoring.ExpensesTailoring.{NoExpenses, TotalAmount}
+import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategories, NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
@@ -259,6 +260,25 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
         .some)
       val result = underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe WorkplaceRunningCostsAnswers(workplaceRunningCostsDb, api1786DeductionsSuccessResponse).some.asRight
+    }
+  }
+
+  "deleteSimplifiedExpensesAnswers" should {
+    def buildPeriodData(deductions: Option[Deductions]): AmendSEPeriodSummaryRequestData =
+      AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), deductions))
+    "delete Tailoring DB answers and SimplifiedAmount API answer" in new Test {
+      val existingPeriodData = buildPeriodData(Some(DeductionsTestData.sample))
+
+      override val connector = StubIFSConnector()
+      connector.amendSEPeriodSummaryResultData = Some(existingPeriodData)
+      override val repo = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers.some)
+      repo.lastUpsertedAnswer = Some(Json.toJson(ExpensesCategoriesDb(IndividualCategories)))
+
+      underTest.deleteSimplifiedExpensesAnswers(journeyCtxWithNino).value.map { result =>
+        result shouldBe ().asRight
+        connector.amendSEPeriodSummaryResultData shouldBe None
+        repo.lastUpsertedAnswer shouldBe None
+      }
     }
   }
 }
