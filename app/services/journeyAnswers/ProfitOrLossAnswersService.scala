@@ -17,6 +17,7 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
+import cats.implicits.catsSyntaxEitherId
 import connectors.IFSConnector
 import models.common.{JourneyContextWithNino, JourneyName}
 import models.connector.api_1803
@@ -43,18 +44,25 @@ class ProfitOrLossAnswersServiceImpl @Inject() (connector: IFSConnector, reposit
 
   def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      // TODO get and send data for API 1500
-      maybeAnnualSummaries <- getExistingAnnualSummaries(ctx)
-      _ <- EitherT[Future, ServiceError, Unit](connector.createAmendSEAnnualSubmission(answers.toAnnualSummariesData(ctx, maybeAnnualSummaries))) // TODO delete if empty?
+      _ <- createUpdateOrDeleteAnnualSummaries(ctx, answers)
+      _ <- createUpdateOrDeleteBroughtForwardLoss
       _ <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(answers.toDbAnswers))
     } yield NoContent
 
-  private def getExistingAnnualSummaries(ctx: JourneyContextWithNino)(implicit
-      hc: HeaderCarrier): ApiResultT[Option[api_1803.SuccessResponseSchema]] = {
-    val result = connector.getAnnualSummaries(JourneyContextWithNino(ctx.taxYear, ctx.businessId, ctx.mtditid, ctx.nino)).map {
-      case Right(annualSummaries) => Right(Some(annualSummaries))
-      case Left(_)                => Right(None) // TODO return non not found errors as Left
-    }
-    EitherT[Future, ServiceError, Option[api_1803.SuccessResponseSchema]](result)
-  }
+  private def createUpdateOrDeleteAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
+    for {
+      annualSummaries <- EitherT[Future, ServiceError, api_1803.SuccessResponseSchema](connector.getAnnualSummaries(ctx))
+      _ <- EitherT[Future, ServiceError, Unit](
+        connector.createAmendSEAnnualSubmission(answers.toAnnualSummariesData(ctx, annualSummaries))
+      ) // TODO delete if empty
+    } yield NoContent
+
+  private def createUpdateOrDeleteBroughtForwardLoss: ApiResultT[Unit] =
+    // 1. Get API answers if they exist (1502)
+    // 2. If API answers not found, and journey answers (CYA) are none, do nothing
+    // 3. If API answers not found, and journey answers are some, create new 1500
+    // 4. If API existing answers, and journey answers are some, amend and send 1501
+    // 5. If API existing answers, and journey answers are none, delete 1504
+    EitherT[Future, ServiceError, Unit](Future.successful(().asRight))
 }

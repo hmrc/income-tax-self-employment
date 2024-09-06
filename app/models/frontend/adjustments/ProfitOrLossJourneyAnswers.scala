@@ -31,8 +31,8 @@ case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,   
   def toDbAnswers: ProfitOrLossDb = ProfitOrLossDb(goodsAndServicesForYourOwnUse, previousUnusedLosses)
 
   def toAnnualSummariesData(ctx: JourneyContextWithNino,
-                            existingAnnualSummaries: Option[api_1803.SuccessResponseSchema]): CreateAmendSEAnnualSubmissionRequestData = {
-    val existingAdjustments: Option[AnnualAdjustmentsType] = existingAnnualSummaries.flatMap(_.annualAdjustments)
+                            existingAnnualSummaries: api_1803.SuccessResponseSchema): CreateAmendSEAnnualSubmissionRequestData = {
+    val existingAdjustments: Option[AnnualAdjustmentsType] = existingAnnualSummaries.annualAdjustments
 
     val updatedAdjustments: Option[AnnualAdjustments] = (existingAdjustments, goodsAndServicesAmount) match {
       case (Some(existing), _)  => Some(existing.toApi1802AnnualAdjustments.copy(goodsAndServicesOwnUse = goodsAndServicesAmount))
@@ -42,8 +42,8 @@ case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,   
 
     val submissionBody = CreateAmendSEAnnualSubmissionRequestBody(
       updatedAdjustments,
-      existingAnnualSummaries.flatMap(_.annualAllowances.map(_.toApi1802AnnualAllowance)),
-      existingAnnualSummaries.flatMap(_.maybeConvertNonFinancialsTypeToNonFinancials)
+      existingAnnualSummaries.annualAllowances.map(_.toApi1802AnnualAllowance),
+      existingAnnualSummaries.maybeConvertNonFinancialsTypeToNonFinancials
     )
     CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, submissionBody)
   }

@@ -147,6 +147,8 @@ object StubIFSConnector {
     None
   )
 
+  val api1803EmptyResponse: SuccessResponseSchema = SuccessResponseSchema.empty
+
   val api1965MatchedResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(
     Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05")))))
 
