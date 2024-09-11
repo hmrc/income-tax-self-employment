@@ -22,7 +22,7 @@ import models.connector.citizen_details.SuccessResponseSchema
 import models.connector.{api_1171, citizen_details}
 import models.domain.Business.mkBusiness
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
-import models.frontend.adjustments.NetBusinessProfitValues
+import models.frontend.adjustments.NetBusinessProfitOrLossValues
 import play.api.libs.json.Json
 
 import java.time.LocalDate
@@ -46,11 +46,12 @@ object BusinessDataBuilder {
     taxableLoss = 200
   )
 
-  lazy val aNetBusinessProfitValues: NetBusinessProfitValues = NetBusinessProfitValues(
+  lazy val aNetBusinessProfitValues: NetBusinessProfitOrLossValues = NetBusinessProfitOrLossValues(
     turnover = 100,
     incomeNotCountedAsTurnover = 20,
     totalExpenses = 50,
     netProfit = 400,
+    netLoss = 0,
     balancingCharge = 10,
     goodsAndServicesForOwnUse = 50,
     disallowableExpenses = 10,

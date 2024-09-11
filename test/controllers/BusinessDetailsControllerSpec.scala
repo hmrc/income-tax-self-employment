@@ -80,14 +80,14 @@ class BusinessDetailsControllerSpec extends AnyWordSpecLike {
     }
   }
 
-  s"getNetBusinessProfitValues" should {
+  s"getNetBusinessProfitOrLossValues" should {
     val underTest = mkUnderTest(
       StubBusinessService(
         getBusinessIncomeSourcesSummaryRes = Right(aBusinessIncomeSourcesSummaryResponse),
-        getNetBusinessProfitValuesRes = Right(aNetBusinessProfitValues)))
+        getNetBusinessProfitOrLossValuesRes = Right(aNetBusinessProfitValues)))
 
     "return net business profit values" in {
-      val result = underTest.getNetBusinessProfitValues(taxYear, nino, businessId)(TestUtils.fakeRequest)
+      val result = underTest.getNetBusinessProfitOrLossValues(taxYear, nino, businessId)(TestUtils.fakeRequest)
       assert(status(result) == OK)
       assert(bodyOf(result) == Json.toJson(aNetBusinessProfitValues).toString())
     }
