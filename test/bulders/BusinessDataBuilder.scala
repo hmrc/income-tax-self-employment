@@ -55,10 +55,10 @@ object BusinessDataBuilder {
     balancingCharge = 10,
     goodsAndServicesForOwnUse = 50,
     disallowableExpenses = 10,
-    totalAdditionsToNetProfit = 60,
+    totalAdditions = 60,
     capitalAllowances = 0,
     turnoverNotTaxableAsBusinessProfit = 50,
-    totalDeductionsFromNetProfit = 70
+    totalDeductions = 70
   )
 
   lazy val aGetBusinessDataResponse = Json.parse(aGetBusinessDataResponseStr).as[api_1171.SuccessResponseSchema]

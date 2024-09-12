@@ -34,10 +34,10 @@ case class NetBusinessProfitOrLossValues(turnover: BigDecimal,
                                          balancingCharge: BigDecimal,
                                          goodsAndServicesForOwnUse: BigDecimal,
                                          disallowableExpenses: BigDecimal,
-                                         totalAdditionsToNetProfit: BigDecimal,
+                                         totalAdditions: BigDecimal,
                                          capitalAllowances: BigDecimal,
                                          turnoverNotTaxableAsBusinessProfit: BigDecimal,
-                                         totalDeductionsFromNetProfit: BigDecimal) {}
+                                         totalDeductions: BigDecimal) {}
 
 object NetBusinessProfitOrLossValues {
   implicit val formats: Format[NetBusinessProfitOrLossValues] = Json.format[NetBusinessProfitOrLossValues]
@@ -59,10 +59,10 @@ object NetBusinessProfitOrLossValues {
             balancingCharge = BigDecimal(0), // TODO when developed, this should be annualAdjustments.balancingChargeOther
             goodsAndServicesForOwnUse = maybeAnnualAdjustments.flatMap(_.goodsAndServicesOwnUse).getOrElse(BigDecimal(0)),
             disallowableExpenses = getDisallowableExpenses(periodSummary).getOrElse(0),
-            totalAdditionsToNetProfit = incomeSummary.totalAdditions.getOrElse(0),
+            totalAdditions = incomeSummary.totalAdditions.getOrElse(0),
             capitalAllowances = getCapitalAllowances(annualSubmission).getOrElse(0),
             turnoverNotTaxableAsBusinessProfit = maybeAnnualAdjustments.flatMap(_.includedNonTaxableProfits).getOrElse(BigDecimal(0)),
-            totalDeductionsFromNetProfit = incomeSummary.totalDeductions.getOrElse(0)
+            totalDeductions = incomeSummary.totalDeductions.getOrElse(0)
           ))
       case None => Left(SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody("NOT_FOUND", "API 1786 Financials Incomes is empty")))
     }
