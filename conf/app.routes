@@ -11,6 +11,7 @@ GET         /user-date-of-birth/:nino                                           
 
 GET         /:taxYear/business-income-sources-summaries/:nino                                            controllers.BusinessDetailsController.getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)
 GET         /:taxYear/business-income-sources-summary/:nino/:businessId                                  controllers.BusinessDetailsController.getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)
+GET         /:taxYear/net-business-profit-or-loss-values/:nino/:businessId                               controllers.BusinessDetailsController.getNetBusinessProfitOrLossValues(taxYear: TaxYear, nino: Nino, businessId: BusinessId)
 
 # Journey Statuses
 GET         /:taxYear/:nino/task-list                                                                    controllers.JourneyStatusController.getTaskList(taxYear: TaxYear, nino: Nino)
@@ -105,3 +106,5 @@ POST        /:taxYear/:businessId/profit-or-loss/:nino/answers                  
 
 POST        /:taxYear/:businessId/national-insurance-contributions/:nino/answers                         controllers.JourneyAnswersController.saveNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/national-insurance-contributions/:nino/answers                         controllers.JourneyAnswersController.getNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
+POST        /:taxYear/clear-simplified-expenses-answers/:nino/:businessId                                controllers.JourneyAnswersController.clearExpensesSimplifiedOrNoExpensesAnswers(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

@@ -18,12 +18,14 @@ package services
 
 import cats.data.EitherT
 import cats.implicits.toTraverseOps
-import connectors.{IFSBusinessDetailsConnector, MDTPConnector}
-import models.common.{BusinessId, Nino, TaxYear}
+import connectors.{IFSBusinessDetailsConnector, IFSConnector, MDTPConnector}
+import models.common.{BusinessId, JourneyContextWithNino, Nino, TaxYear}
+import models.connector.api_1803
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.domain._
 import models.error.ServiceError
 import models.error.ServiceError.BusinessNotFoundError
+import models.frontend.adjustments.NetBusinessProfitOrLossValues
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTOps.EitherTExtensions
 
@@ -33,16 +35,24 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait BusinessService {
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]]
+
   def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business]
+
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate]
+
   def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)(implicit
       hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]]
+
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
       hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse]
+
+  def getNetBusinessProfitOrLossValues(journeyContextWithNino: JourneyContextWithNino)(implicit
+      hc: HeaderCarrier): ApiResultT[NetBusinessProfitOrLossValues]
 }
 
 @Singleton
-class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnector, mdtpConnector: MDTPConnector)(implicit ec: ExecutionContext)
+class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnector, mdtpConnector: MDTPConnector, ifsConnector: IFSConnector)(
+    implicit ec: ExecutionContext)
     extends BusinessService {
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
@@ -78,4 +88,15 @@ class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnec
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
       hc: HeaderCarrier): ApiResultT[BusinessIncomeSourcesSummaryResponse] =
     businessConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)
+
+  def getNetBusinessProfitOrLossValues(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[NetBusinessProfitOrLossValues] =
+    for {
+      incomeSummary    <- businessConnector.getBusinessIncomeSourcesSummary(ctx.taxYear, ctx.nino, ctx.businessId)
+      periodSummary    <- EitherT(ifsConnector.getPeriodicSummaryDetail(ctx))
+      annualSubmission <- EitherT[Future, ServiceError, api_1803.SuccessResponseSchema](ifsConnector.getAnnualSummaries(ctx))
+      result           <- EitherT.fromEither[Future](NetBusinessProfitOrLossValues.fromApiAnswers(incomeSummary, periodSummary, annualSubmission))
+    } yield {
+      val res = result
+      res
+    }
 }

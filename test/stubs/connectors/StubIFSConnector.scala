@@ -32,19 +32,20 @@ import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import models.connector.citizen_details.{Ids, LegalNames, Name}
-import models.connector.{api_1171, api_1786, api_1803, api_1871, citizen_details}
+import models.connector._
+import models.connector.api_1500.LossType
 import models.domain.ApiResultT
 import models.error.{DownstreamError, ServiceError}
 import stubs.connectors.StubIFSConnector._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
-import java.time.OffsetDateTime
+import java.time.{LocalDateTime, OffsetDateTime}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class StubIFSConnector(
     createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(().asRight),
-    amendSEPeriodSummaryResult: Future[Api1895Response] = Future.successful(().asRight),
+    amendSEPeriodSummaryResult: Either[DownstreamError, Unit] = Right(()),
     getAnnualSummariesResult: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
     createAmendSEAnnualSubmissionResult: Either[DownstreamError, Unit] = Right(()),
     listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
@@ -57,6 +58,7 @@ case class StubIFSConnector(
     getAnnualSummariesResultTest3: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
     getAnnualSummariesResultTest4: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse)
 ) extends IFSConnector {
+  var amendSEPeriodSummaryResultData: Option[AmendSEPeriodSummaryRequestData]                    = None
   var upsertDisclosuresSubmissionData: Option[RequestSchemaAPI1638]                              = None
   var upsertAnnualSummariesSubmissionData: Option[CreateAmendSEAnnualSubmissionRequestData]      = None
   var upsertAnnualSummariesSubmissionDataTest1: Option[CreateAmendSEAnnualSubmissionRequestData] = None
@@ -69,8 +71,10 @@ case class StubIFSConnector(
     createSEPeriodSummaryResult
 
   override def amendSEPeriodSummary(
-      data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] =
-    amendSEPeriodSummaryResult
+      data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] = {
+    amendSEPeriodSummaryResultData = Some(data)
+    Future.successful(amendSEPeriodSummaryResult)
+  }
 
   override def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response] =
     listSEPeriodSummariesResult
@@ -175,4 +179,7 @@ object StubIFSConnector {
 
   val api1871EmptyResponse: api_1871.BusinessIncomeSourcesSummaryResponse = api_1871.BusinessIncomeSourcesSummaryResponse.empty
 
+  val api1500EmptyResponse: api_1500.SuccessResponseSchema = api_1500.SuccessResponseSchema("")
+  val api1501EmptyResponse: api_1501.SuccessResponseSchema = api_1501.SuccessResponseSchema("", LossType.Income, 0, "", "", LocalDateTime.now)
+  val api1502EmptyResponse: api_1502.SuccessResponseSchema = api_1502.SuccessResponseSchema("", LossType.Income, 0, "", "", LocalDateTime.now)
 }
