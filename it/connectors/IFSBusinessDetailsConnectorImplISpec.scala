@@ -18,11 +18,11 @@ package connectors
 
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
-import connectors.data.{Api1171Test, Api1871Test}
+import connectors.data.{Api1171Test, Api1500Test, Api1501Test, Api1502Test, Api1504Test, Api1871Test}
 import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import play.api.http.Status.OK
+import play.api.http.Status.{NO_CONTENT, OK}
 
 class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
@@ -51,4 +51,49 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
     }
   }
 
+  "createBroughtForwardLoss" must {
+    "return successful response" in new Api1500Test {
+      stubPostWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = successResponseRaw,
+        expectedStatus = OK
+      )
+      connector.createBroughtForwardLoss(data).value.futureValue shouldBe successResponse.asRight
+    }
+  }
+
+  "updateBroughtForwardLoss" must {
+    "return successful response" in new Api1501Test {
+      stubPutWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = successResponseRaw,
+        expectedStatus = OK
+      )
+      connector.updateBroughtForwardLoss(data).value.futureValue shouldBe successResponse.asRight
+    }
+  }
+
+  "getBroughtForwardLoss" must {
+    "return successful response" in new Api1502Test {
+      stubGetWithResponseBody(
+        url = downstreamUrl,
+        expectedResponse = successResponseRaw,
+        expectedStatus = OK
+      )
+      connector.getBroughtForwardLoss(taxableEntityId, lossId).value.futureValue shouldBe successResponse.asRight
+    }
+  }
+
+  "deleteBroughtForwardLoss" must {
+    "return unit with NO_CONTENT status" in new Api1504Test {
+      stubDelete(
+        url = downstreamUrl,
+        expectedResponse = "",
+        expectedStatus = NO_CONTENT
+      )
+      connector.deleteBroughtForwardLoss(taxableEntityId, lossId).value.futureValue shouldBe Right(())
+    }
+  }
 }

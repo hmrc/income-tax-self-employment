@@ -32,14 +32,15 @@ import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import models.connector.citizen_details.{Ids, LegalNames, Name}
-import models.connector.{api_1171, api_1786, api_1803, api_1871, citizen_details}
+import models.connector._
+import models.connector.api_1500.LossType
 import models.domain.ApiResultT
 import models.error.{DownstreamError, ServiceError}
 import stubs.connectors.StubIFSConnector._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
-import java.time.OffsetDateTime
+import java.time.{LocalDateTime, OffsetDateTime}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class StubIFSConnector(
@@ -176,4 +177,7 @@ object StubIFSConnector {
 
   val api1871EmptyResponse: api_1871.BusinessIncomeSourcesSummaryResponse = api_1871.BusinessIncomeSourcesSummaryResponse.empty
 
+  val api1500EmptyResponse: api_1500.SuccessResponseSchema = api_1500.SuccessResponseSchema("")
+  val api1501EmptyResponse: api_1501.SuccessResponseSchema = api_1501.SuccessResponseSchema("", LossType.Income, 0, "", "", LocalDateTime.now)
+  val api1502EmptyResponse: api_1502.SuccessResponseSchema = api_1502.SuccessResponseSchema("", LossType.Income, 0, "", "", LocalDateTime.now)
 }
