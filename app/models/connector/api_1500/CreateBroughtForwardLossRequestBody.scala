@@ -16,13 +16,12 @@
 
 package models.connector.api_1500
 
-import models.common.TaxYear
 import play.api.libs.json.{Format, Json}
 
 case class CreateBroughtForwardLossRequestBody(incomeSourceId: String,
                                                lossType: LossType,
                                                broughtForwardLossAmount: BigDecimal,
-                                               taxYearBroughtForwardFrom: TaxYear)
+                                               taxYearBroughtForwardFrom: Int)
 
 object CreateBroughtForwardLossRequestBody {
   implicit val formats: Format[CreateBroughtForwardLossRequestBody] =

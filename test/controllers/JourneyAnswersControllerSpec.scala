@@ -327,7 +327,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         expensesService = StubExpensesAnswersService(),
         capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
         prepopAnswersService = StubPrepopAnswersService(),
-        nicsAnswersService = StubNICsAnswersService()
+        nicsAnswersService = StubNICsAnswersService(),
+        profitOrLossAnswersService = StubProfitOrLossAnswersService()
       )
       behave like testRoute(
         request = buildRequestNoContent,

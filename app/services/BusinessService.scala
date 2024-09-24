@@ -95,8 +95,5 @@ class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnec
       periodSummary    <- EitherT(ifsConnector.getPeriodicSummaryDetail(ctx))
       annualSubmission <- EitherT[Future, ServiceError, api_1803.SuccessResponseSchema](ifsConnector.getAnnualSummaries(ctx))
       result           <- EitherT.fromEither[Future](NetBusinessProfitOrLossValues.fromApiAnswers(incomeSummary, periodSummary, annualSubmission))
-    } yield {
-      val res = result
-      res
-    }
+    } yield result
 }

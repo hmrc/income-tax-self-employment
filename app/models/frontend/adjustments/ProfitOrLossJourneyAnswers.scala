@@ -17,6 +17,9 @@
 package models.frontend.adjustments
 
 import models.common.JourneyContextWithNino
+import models.connector.api_1500
+import models.connector.api_1500.LossType
+import models.connector.api_1501
 import models.connector.api_1802.request.{AnnualAdjustments, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1803
 import models.connector.api_1803.AnnualAdjustmentsType
@@ -51,4 +54,23 @@ case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,   
 
 object ProfitOrLossJourneyAnswers {
   implicit val formats: OFormat[ProfitOrLossJourneyAnswers] = Json.format[ProfitOrLossJourneyAnswers]
+
+  def toCreateBroughtForwardLossData(ctx: JourneyContextWithNino,
+                                     unusedLossAmount: BigDecimal,
+                                     whichYearIsLossReported: WhichYearIsLossReported): api_1500.CreateBroughtForwardLossRequestData = {
+    val updatedBroughtForwardLossBody = api_1500.CreateBroughtForwardLossRequestBody(
+      incomeSourceId = ctx.businessId.value,
+      lossType = LossType.Income,
+      broughtForwardLossAmount = unusedLossAmount,
+      taxYearBroughtForwardFrom = whichYearIsLossReported.apiTaxYear
+    )
+    api_1500.CreateBroughtForwardLossRequestData(ctx.nino, updatedBroughtForwardLossBody)
+  }
+
+  def toUpdateBroughtForwardLossData(ctx: JourneyContextWithNino, unusedLossAmount: BigDecimal): api_1501.UpdateBroughtForwardLossRequestData = {
+    val updatedBroughtForwardLossBody = api_1501.UpdateBroughtForwardLossRequestBody(
+      updatedBroughtForwardLossAmount = unusedLossAmount
+    )
+    api_1501.UpdateBroughtForwardLossRequestData(ctx.nino, ctx.businessId, updatedBroughtForwardLossBody)
+  }
 }
