@@ -17,14 +17,49 @@
 package models.frontend.nics
 
 import cats.implicits.catsSyntaxOptionId
+import models.common.BusinessId
 import models.connector.api_1639.SuccessResponseAPI1639
+import models.connector.api_1803
+import models.connector.api_1803.AnnualNonFinancialsType
 import models.database.nics.NICsStorageAnswers
+import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
 import play.api.libs.json.{Format, Json}
 
 case class NICsAnswers(class2Answers: Option[NICsClass2Answers], class4Answers: Option[NICsClass4Answers])
 
 object NICsAnswers {
   implicit val formats: Format[NICsAnswers] = Json.format[NICsAnswers]
+
+
+  def mkPriorData(maybeDisclosures: Option[SuccessResponseAPI1639],
+                  maybeAnnualSummaries: List[(api_1803.SuccessResponseSchema, BusinessId)],
+                  maybeDbAnswers: Option[NICsStorageAnswers]): Option[NICsAnswers] = {
+
+    val class2Data: Option[Boolean] = maybeDisclosures.flatMap(_.class2Nics.flatMap(_.class2VoluntaryContributions))
+    val class2DatabaseData: Option[Boolean] = maybeDbAnswers.flatMap(_.class2NICs)
+    val class4Data: List[Class4ExemptionAnswers] = mkClass4ExemptionData(maybeAnnualSummaries)
+    (class2Data, class2DatabaseData, class4Data) match {
+      case (_, _, class4Data) if class4Data.nonEmpty => mkPriorClass4Data(class4Data)
+      case (Some(true), _, _ ) => Some(NICsAnswers(class2Answers = NICsClass2Answers(true).some, None))
+      case (None, Some(false), _) => Some(NICsAnswers(class2Answers = NICsClass2Answers(false).some, None))
+      case _ => None
+    }
+  }
+
+  def mkClass4ExemptionData(multipleAnnualSummaries: List[(api_1803.SuccessResponseSchema, BusinessId)]): List[Class4ExemptionAnswers] = {
+    val exemptionList: List[Option[Class4ExemptionAnswers]] = multipleAnnualSummaries.map {
+      case (answers, businessId) =>
+        val maybeClass4Exemption: Option[Boolean] = answers.annualNonFinancials.flatMap(_.exemptFromPayingClass4Nics)
+        maybeClass4Exemption.map { class4Exempt =>
+          val class4ExemptReason: Option[ExemptionReason] = {
+            val reason: Option[AnnualNonFinancialsType.Class4NicsExemptionReason.Value] = answers.annualNonFinancials.flatMap(_.class4NicsExemptionReason)
+            reason.map(ExemptionReason.fromNonFinancialType)
+          }
+          Class4ExemptionAnswers(businessId, class4Exempt, class4ExemptReason)
+        }
+    }
+    exemptionList.flatten
+  }
 
   def mkPriorClass2Data(maybeApiAnswers: Option[SuccessResponseAPI1639], maybeDbAnswers: Option[NICsStorageAnswers]): Option[NICsAnswers] = {
     val existingClass2Nics = for {
@@ -35,6 +70,26 @@ object NICsAnswers {
 
     val maybeNics = existingClass2Nics.map(value => NICsAnswers(class2Answers = NICsClass2Answers(value).some, None))
     maybeNics.orElse(maybeDbAnswers.flatMap(_.class2NICs.map(value => NICsAnswers(class2Answers = NICsClass2Answers(value).some, None))))
+  }
+
+  def mkPriorClass4Data(class4Answers: List[Class4ExemptionAnswers]): Option[NICsAnswers] = {
+
+    if (class4Answers.length > 1) {
+      val class4NicsBoolean = class4Answers.map(_.class4Exempt).contains(true)
+      val listDivingExemptions: List[Class4ExemptionAnswers] = class4Answers.filter(_.exemptionReason.contains(ExemptionReason.DiverDivingInstructor))
+      val listTrusteeExemptions: List[Class4ExemptionAnswers] = class4Answers.filter(_.exemptionReason.contains(ExemptionReason.TrusteeExecutorAdmin))
+      val class4DivingBusinessIds: Option[List[BusinessId]] = if (listDivingExemptions.nonEmpty) Some(listDivingExemptions.map(_.businessId)) else None
+      val class4TrusteeBusinessIds: Option[List[BusinessId]] = if (listTrusteeExemptions.nonEmpty) Some(listTrusteeExemptions.map(_.businessId)) else None
+      val multipleClass4Answers: Option[NICsClass4Answers] = Some(NICsClass4Answers(class4NicsBoolean,
+        None, class4DivingBusinessIds, class4TrusteeBusinessIds))
+      Some(NICsAnswers(None, multipleClass4Answers))
+    } else {
+      class4Answers.headOption.map { singleExemption =>
+        val singleClass4Answers: Option[NICsClass4Answers] = Some(NICsClass4Answers(singleExemption.class4Exempt, singleExemption.exemptionReason, None, None))
+        NICsAnswers(None, singleClass4Answers)
+      }
+    }
+
   }
 
 }

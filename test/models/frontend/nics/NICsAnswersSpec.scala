@@ -44,4 +44,28 @@ class NICsAnswersSpec extends AnyWordSpecLike {
       assert(result === Some(NICsClass2Answers(true)))
     }
   }
+
+  "3 - mkPriorData" in {
+    // No Data
+    // Class 2 Yes Journey
+    // Class 2 No Journey
+    // Class 4 Yes
+    // Class 4 No
+  }
+
+  "1 - mkClass4ExemptionData" in {
+    // Empty List
+    // Single Businesses
+    // Multiple Businesses with different exemption reason
+
+  }
+
+  "2 - mkPriorClass4Data" in {
+    // Empty List
+    // Single Business
+    // Multiple Businesses
+        // - Both reasons
+        // Trustee
+        // Diver
+  }
 }

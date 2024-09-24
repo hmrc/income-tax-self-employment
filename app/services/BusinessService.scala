@@ -38,6 +38,8 @@ trait BusinessService {
 
   def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business]
 
+  def getUserBusinessIds(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[BusinessId]]
+
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate]
 
   def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)(implicit
@@ -68,6 +70,10 @@ class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnec
       maybeBusiness = businesses.find(_.businessId == businessId.value)
       business <- EitherT.fromOption[Future](maybeBusiness, BusinessNotFoundError(businessId)).leftAs[ServiceError]
     } yield business
+
+  def getUserBusinessIds(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[BusinessId]] = {
+    getBusinesses(nino).map(_.map(business => BusinessId(business.businessId)))
+  }
 
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
     for {

@@ -17,6 +17,7 @@
 package models.frontend.nics
 
 import enumeratum.{Enum, EnumEntry}
+import models.connector.api_1803.AnnualNonFinancialsType
 
 sealed abstract class ExemptionReason(override val entryName: String) extends EnumEntry {
   val exemptionCode: String
@@ -31,6 +32,15 @@ object ExemptionReason extends Enum[ExemptionReason] with utils.PlayJsonEnum[Exe
   }
   case object DiverDivingInstructor extends ExemptionReason("diverDivingInstructor") {
     override val exemptionCode: String = "003"
+  }
+
+   def fromNonFinancialType(exemption: AnnualNonFinancialsType.Class4NicsExemptionReason.Value): ExemptionReason = {
+    exemption match {
+      case AnnualNonFinancialsType.Class4NicsExemptionReason._003 =>
+        ExemptionReason.DiverDivingInstructor
+      case AnnualNonFinancialsType.Class4NicsExemptionReason._002 =>
+        ExemptionReason.TrusteeExecutorAdmin
+    }
   }
 
 }

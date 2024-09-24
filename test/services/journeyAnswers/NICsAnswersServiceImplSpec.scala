@@ -38,6 +38,7 @@ import play.api.libs.json.{JsObject, Json}
 import stubs.connectors.StubIFSConnector.api1171SingleBusinessResponse
 import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.repositories.StubJourneyAnswersRepository
+import stubs.services.StubBusinessService
 import utils.BaseSpec.{businessId, currTaxYearEnd, hc, journeyCtxWithNino, nino, taxYear}
 import utils.EitherTTestOps.convertScalaFuture
 
@@ -232,8 +233,9 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
     val connector         = StubIFSConnector()
     val businessConnector = StubIFSBusinessDetailsConnector(getBusinessesResult = api1171SingleBusinessResponse(businessId).asRight)
     val repository        = StubJourneyAnswersRepository()
+    val businessService   = StubBusinessService()
 
-    def service = new NICsAnswersServiceImpl(connector, businessConnector, repository)
+    def service = new NICsAnswersServiceImpl(connector, businessConnector, repository, businessService)
 
     def buildDataResponse(annualNonFinancialsData: AnnualNonFinancialsType) =
       Right(api_1803.SuccessResponseSchema(None, None, Some(annualNonFinancialsData)))
