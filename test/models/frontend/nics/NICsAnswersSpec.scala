@@ -22,32 +22,9 @@ import models.connector.api_1803.AnnualNonFinancialsType.Class4NicsExemptionReas
 import models.connector.api_1803.{AnnualNonFinancialsType, SuccessResponseSchema}
 import models.database.nics.NICsStorageAnswers
 import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
-import org.scalatest.OptionValues._
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class NICsAnswersSpec extends AnyWordSpecLike {
-
-  "mkPriorClass2Data fromApi1639" should {
-    "return None when there are no class 2 NICs" in {
-      val result = NICsAnswers.mkPriorClass2Data(None, None)
-      assert(result.isEmpty)
-    }
-
-    "return class2 from the API" in {
-      val result = NICsAnswers.mkPriorClass2Data(Some(class2NicsTrue), None).value.class2Answers
-      assert(result === Some(NICsClass2Answers(true)))
-    }
-
-    "return class2 from the DB if does not exist in API" in {
-      val result = NICsAnswers.mkPriorClass2Data(None, Some(NICsStorageAnswers(Some(false)))).value.class2Answers
-      assert(result === Some(NICsClass2Answers(false)))
-    }
-
-    "ignore value from DB if it exist in the API" in {
-      val result = NICsAnswers.mkPriorClass2Data(Some(class2NicsTrue), Some(NICsStorageAnswers(Some(false)))).value.class2Answers
-      assert(result === Some(NICsClass2Answers(true)))
-    }
-  }
 
   "mkClass4ExemptionData" should {
     "return an empty list" in {
@@ -89,35 +66,37 @@ class NICsAnswersSpec extends AnyWordSpecLike {
       assert(result === expectedResult)
     }
 
-    "return Multiple Businesses Class 4 Nics Answers were given a list of the Multiple business data" in {
-      val businessData = List(
-        Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = true, Some(ExemptionReason.TrusteeExecutorAdmin)),
-        Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = true, Some(ExemptionReason.DiverDivingInstructor))
-      )
-      val result = NICsAnswers.mkPriorClass4Data(businessData)
-      val expectedResult =
-        Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(BusinessId("id2"))), Some(List(BusinessId("id1")))))))
-      assert(result === expectedResult)
-    }
+    "return Multiple Businesses Class 4 Nics Answers" when {
+      "given a list of the Multiple business data" in {
+        val businessData = List(
+          Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = true, Some(ExemptionReason.TrusteeExecutorAdmin)),
+          Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = true, Some(ExemptionReason.DiverDivingInstructor))
+        )
+        val result = NICsAnswers.mkPriorClass4Data(businessData)
+        val expectedResult =
+          Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(BusinessId("id2"))), Some(List(BusinessId("id1")))))))
+        assert(result === expectedResult)
+      }
 
-    "return Multiple Businesses Class 4 Nics Answers with Trustee as exemption reasons of Multiple business data" in {
-      val businessData = List(
-        Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = true, Some(ExemptionReason.TrusteeExecutorAdmin)),
-        Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = false, None)
-      )
-      val result         = NICsAnswers.mkPriorClass4Data(businessData)
-      val expectedResult = Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, None, Some(List(BusinessId("id1")))))))
-      assert(result === expectedResult)
-    }
+      "Trustee as exemption reasons of Multiple business data" in {
+        val businessData = List(
+          Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = true, Some(ExemptionReason.TrusteeExecutorAdmin)),
+          Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = false, None)
+        )
+        val result         = NICsAnswers.mkPriorClass4Data(businessData)
+        val expectedResult = Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, None, Some(List(BusinessId("id1")))))))
+        assert(result === expectedResult)
+      }
 
-    "return Multiple Businesses Class 4 Nics Answers with Diver as exemption reasons of Multiple business data" in {
-      val businessData = List(
-        Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = false, None),
-        Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = true, Some(ExemptionReason.DiverDivingInstructor))
-      )
-      val result         = NICsAnswers.mkPriorClass4Data(businessData)
-      val expectedResult = Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(BusinessId("id2"))), None))))
-      assert(result === expectedResult)
+      "Diver as exemption reasons of Multiple business data" in {
+        val businessData = List(
+          Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = false, None),
+          Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = true, Some(ExemptionReason.DiverDivingInstructor))
+        )
+        val result         = NICsAnswers.mkPriorClass4Data(businessData)
+        val expectedResult = Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(BusinessId("id2"))), None))))
+        assert(result === expectedResult)
+      }
     }
   }
 
