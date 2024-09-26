@@ -24,7 +24,16 @@ import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
 case class CreateAmendSEAnnualSubmissionRequestData(taxYear: TaxYear,
                                                     nino: Nino,
                                                     businessId: BusinessId,
-                                                    body: CreateAmendSEAnnualSubmissionRequestBody)
+                                                    body: CreateAmendSEAnnualSubmissionRequestBody) {
+  def replaceEmptyModelsWithNone: CreateAmendSEAnnualSubmissionRequestData = {
+    val annualAllowances  = body.annualAllowances
+    val annualAdjustments = body.annualAdjustments
+    this.copy(body = body.copy(
+      annualAdjustments = if (annualAdjustments.exists(_.isDefined)) annualAdjustments else None,
+      annualAllowances = if (annualAllowances.exists(_.isDefined)) annualAllowances else None
+    ))
+  }
+}
 
 object CreateAmendSEAnnualSubmissionRequestData {
   def mkNicsClassFourRequestData(ctx: JourneyContextWithNino,

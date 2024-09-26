@@ -70,7 +70,7 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
   private def updateBroughtForwardLossUrl(taxableEntityId: Nino, lossId: BusinessId) =
     s"${appConfig.ifsBaseUrl}/income-tax/brought-forward-losses/$taxableEntityId/$lossId"
 
-  private def retrieveBroughtForwardLossUrl(taxableEntityId: Nino, lossId: BusinessId) =
+  private def getBroughtForwardLossUrl(taxableEntityId: Nino, lossId: BusinessId) =
     s"${appConfig.ifsBaseUrl}/income-tax/brought-forward-losses/$taxableEntityId/$lossId"
 
   private def deleteBroughtForwardLossUrl(taxableEntityId: Nino, lossId: BusinessId) =
@@ -114,7 +114,7 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
   def getBroughtForwardLoss(taxableEntityId: Nino, lossId: BusinessId)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1502.SuccessResponseSchema] = {
-    val url     = retrieveBroughtForwardLossUrl(taxableEntityId, lossId)
+    val url     = getBroughtForwardLossUrl(taxableEntityId, lossId)
     val context = appConfig.mkMetadata(IFSApiName.Api1502, url)
     implicit val reads: HttpReads[ApiResponse[api_1502.SuccessResponseSchema]] =
       commonReads[api_1502.SuccessResponseSchema]

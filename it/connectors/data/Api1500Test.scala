@@ -27,7 +27,7 @@ trait Api1500Test {
     incomeSourceId = "SJPR05893938418",
     lossType = LossType.Income,
     broughtForwardLossAmount = BigDecimal(250),
-    taxYearBroughtForwardFrom = taxYear
+    taxYearBroughtForwardFrom = 2024
   )
   val data = CreateBroughtForwardLossRequestData(
     taxableEntityId = taxableEntityId,
