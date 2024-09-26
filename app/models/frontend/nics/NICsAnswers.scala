@@ -60,17 +60,6 @@ object NICsAnswers {
     exemptionList.flatten
   }
 
-  def mkPriorClass2Data(maybeApiAnswers: Option[SuccessResponseAPI1639], maybeDbAnswers: Option[NICsStorageAnswers]): Option[NICsAnswers] = {
-    val existingClass2Nics = for {
-      answers     <- maybeApiAnswers
-      nicsAnswers <- answers.class2Nics
-      class2Nics  <- nicsAnswers.class2VoluntaryContributions
-    } yield class2Nics
-
-    val maybeNics = existingClass2Nics.map(value => NICsAnswers(class2Answers = NICsClass2Answers(value).some, None))
-    maybeNics.orElse(maybeDbAnswers.flatMap(_.class2NICs.map(value => NICsAnswers(class2Answers = NICsClass2Answers(value).some, None))))
-  }
-
   def mkPriorClass4Data(class4Answers: List[Class4ExemptionAnswers]): Option[NICsAnswers] =
     if (class4Answers.length > 1) {
       val class4NicsBoolean                                  = class4Answers.map(_.class4Exempt).contains(true)
