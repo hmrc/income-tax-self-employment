@@ -21,24 +21,19 @@ import cats.implicits._
 import controllers.actions.AuthorisedAction
 import models.common.JourneyName._
 import models.common._
-import models.database.capitalAllowances.{NewStructuresBuildingsDb, SpecialTaxSitesDb, WritingDownAllowanceDb}
+import models.database.capitalAllowances._
 import models.database.expenses.TaxiMinicabOrRoadHaulageDb
 import models.domain.ApiResultT
 import models.error.ServiceError.InvalidNICsAnswer
-import models.frontend.FrontendAnswers
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
-import models.frontend.capitalAllowances.annualInvestmentAllowance.{
-  AnnualInvestmentAllowanceAnswers,
-  AnnualInvestmentAllowanceDb,
-  AnnualInvestmentAllowanceJourneyAnswers
-}
-import models.frontend.capitalAllowances.balancingAllowance.{BalancingAllowanceAnswers, BalancingAllowanceJourneyAnswers}
-import models.frontend.capitalAllowances.electricVehicleChargePoints.{ElectricVehicleChargePointsAnswers, ElectricVehicleChargePointsJourneyAnswers}
+import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
+import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
+import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
 import models.frontend.capitalAllowances.structuresBuildings.NewStructuresBuildingsAnswers
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
-import models.frontend.capitalAllowances.zeroEmissionCars.{ZeroEmissionCarsAnswers, ZeroEmissionCarsJourneyAnswers}
+import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
@@ -58,10 +53,8 @@ import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswe
 import models.frontend.income.IncomeJourneyAnswers
 import models.frontend.nics.NICsAnswers
 import play.api.libs.json.Format.GenericFormat
-import play.api.libs.json.{Reads, Writes}
-import play.api.mvc.{Action, AnyContent, ControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.journeyAnswers._
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.Logging
 
@@ -304,43 +297,40 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
   def saveCapitalAllowancesTailoring(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
     getBody[CapitalAllowancesTailoringAnswers](user) { value =>
-      capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, CapitalAllowancesTailoring, value).map(_ => NoContent)
+      capitalAllowancesService.persistAnswersInDatabase(businessId, taxYear, user.getMtditid, CapitalAllowancesTailoring, value).map(_ => NoContent)
     }
   }
   def saveZeroEmissionCars(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    getBodyWithCtx[ZeroEmissionCarsAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      for {
-        _ <- value.zecClaimAmount.traverse(claimAmount =>
-          capitalAllowancesService.saveAnswers(ctx, ZeroEmissionCarsJourneyAnswers(zeroEmissionsCarAllowance = claimAmount)))
-        _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, ZeroEmissionCars, value.toDbModel)
-      } yield NoContent
-    }
+    capitalAllowancesService.saveAnswers[ZeroEmissionCarsDb, ZeroEmissionCarsAnswers](
+      WritingDownAllowance,
+      taxYear,
+      businessId,
+      nino
+    )
   }
   def getZeroEmissionCars(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(capitalAllowancesService.getZeroEmissionCars(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def saveZeroEmissionGoodsVehicle(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    getBodyWithCtx[ZeroEmissionGoodsVehicleAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      for {
-        _ <- value.zegvClaimAmount.traverse(claimAmount =>
-          capitalAllowancesService.saveAnswers(ctx, ZeroEmissionCarsJourneyAnswers(zeroEmissionsCarAllowance = claimAmount)))
-        _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, ZeroEmissionGoodsVehicle, value.toDbModel)
-      } yield NoContent
-    }
+    capitalAllowancesService.saveAnswers[ZeroEmissionGoodsVehicleDb, ZeroEmissionGoodsVehicleAnswers](
+      WritingDownAllowance,
+      taxYear,
+      businessId,
+      nino
+    )
   }
   def getZeroEmissionGoodsVehicle(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(capitalAllowancesService.getZeroEmissionGoodsVehicle(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def saveElectricVehicleChargePoints(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    getBodyWithCtx[ElectricVehicleChargePointsAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      for {
-        _ <- value.evcpClaimAmount.traverse(claimAmount =>
-          capitalAllowancesService.saveAnswers(ctx, ElectricVehicleChargePointsJourneyAnswers(electricChargePointAllowance = claimAmount)))
-        _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, ElectricVehicleChargePoints, value.toDbModel)
-      } yield NoContent
-    }
+    capitalAllowancesService.saveAnswers[ElectricVehicleChargePointsDb, ElectricVehicleChargePointsAnswers](
+      WritingDownAllowance,
+      taxYear,
+      businessId,
+      nino
+    )
   }
   def getElectricVehicleChargePoints(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(
@@ -348,13 +338,12 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def saveBalancingAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    getBodyWithCtx[BalancingAllowanceAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      for {
-        _ <- value.balancingAllowanceAmount.traverse(allowanceAmount =>
-          capitalAllowancesService.saveAnswers(ctx, BalancingAllowanceJourneyAnswers(allowanceOnSales = allowanceAmount)))
-        _ <- capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, BalancingAllowance, value.toDbModel)
-      } yield NoContent
-    }
+    capitalAllowancesService.saveAnswers[BalancingAllowanceDb, BalancingAllowanceAnswers](
+      WritingDownAllowance,
+      taxYear,
+      businessId,
+      nino
+    )
   }
 
   def getBalancingAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
@@ -362,41 +351,20 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def saveAnnualInvestmentAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    getBodyWithCtx[AnnualInvestmentAllowanceAnswers](taxYear, businessId, nino) { (ctx, value) =>
-      for {
-        _ <- value.annualInvestmentAllowanceAmount.traverse(allowanceAmount =>
-          capitalAllowancesService.saveAnswers(ctx, AnnualInvestmentAllowanceJourneyAnswers(annualInvestmentAllowance = allowanceAmount)))
-        _ <- capitalAllowancesService.persistAnswers(
-          businessId,
-          taxYear,
-          user.getMtditid,
-          AnnualInvestmentAllowance,
-          AnnualInvestmentAllowanceDb(value.annualInvestmentAllowance))
-      } yield NoContent
-    }
+    capitalAllowancesService.saveAnswers[AnnualInvestmentAllowanceDb, AnnualInvestmentAllowanceAnswers](
+      WritingDownAllowance,
+      taxYear,
+      businessId,
+      nino
+    )
   }
 
   def getAnnualInvestmentAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(capitalAllowancesService.getAnnualInvestmentAllowance(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
-  private def saveCapitalAllowancesAnswers[DbAnswers: Writes, A <: FrontendAnswers[DbAnswers]: Reads](
-      journeyName: JourneyName,
-      taxYear: TaxYear,
-      businessId: BusinessId,
-      nino: Nino)(implicit hc: HeaderCarrier, user: AuthorisedAction.User[AnyContent]): Future[Result] =
-    getBodyWithCtx[A](taxYear, businessId, nino) { (ctx, answers) =>
-      for {
-        maybeCurrent <- capitalAllowancesService.getAnnualSummaries(JourneyContextWithNino(ctx.taxYear, ctx.businessId, ctx.mtditid, ctx.nino))
-        maybeAnnualAllowance = maybeCurrent.flatMap(_.annualAllowances.map(_.toApi1802AnnualAllowance))
-        _ <- capitalAllowancesService.saveAnnualAllowances(ctx, answers.toDownStream(maybeAnnualAllowance))
-        _ <- answers.toDbModel.traverse(dbAnswers =>
-          capitalAllowancesService.persistAnswers(ctx.businessId, ctx.taxYear, ctx.mtditid, journeyName, dbAnswers))
-      } yield NoContent
-    }
-
   def saveWritingDownAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    saveCapitalAllowancesAnswers[WritingDownAllowanceDb, WritingDownAllowanceAnswers](
+    capitalAllowancesService.saveAnswers[WritingDownAllowanceDb, WritingDownAllowanceAnswers](
       WritingDownAllowance,
       taxYear,
       businessId,
@@ -409,7 +377,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def saveSpecialTaxSites(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    saveCapitalAllowancesAnswers[SpecialTaxSitesDb, SpecialTaxSitesAnswers](
+    capitalAllowancesService.saveAnswers[SpecialTaxSitesDb, SpecialTaxSitesAnswers](
       SpecialTaxSites,
       taxYear,
       businessId,
@@ -422,7 +390,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def saveStructuresBuildings(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    saveCapitalAllowancesAnswers[NewStructuresBuildingsDb, NewStructuresBuildingsAnswers](
+    capitalAllowancesService.saveAnswers[NewStructuresBuildingsDb, NewStructuresBuildingsAnswers](
       StructuresBuildings,
       taxYear,
       businessId,

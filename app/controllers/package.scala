@@ -16,9 +16,11 @@
 
 import controllers.actions.AuthorisedAction
 import models.common.{BusinessId, JourneyContextWithNino, Nino, TaxYear}
+import models.database.DatabaseAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.error.ServiceError.{CannotParseJsonError, CannotReadJsonError}
+import models.frontend.FrontendAnswers
 import play.api.Logger
 import play.api.http.Status.BAD_REQUEST
 import play.api.libs.json.Format.GenericFormat
@@ -68,6 +70,14 @@ package object controllers {
       case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
     }
 
+  def getCapitalAllowanceBodyWithCtx[A <: DatabaseAnswers, B <: FrontendAnswers[A]: Reads](taxYear: TaxYear, businessId: BusinessId, nino: Nino)(
+      invokeBlock: (JourneyContextWithNino, B) => ApiResultT[Result])(implicit
+      ec: ExecutionContext,
+      logger: Logger,
+      request: AuthorisedAction.User[AnyContent]): Future[Result] = {
+    val ctx = JourneyContextWithNino(taxYear, businessId, request.getMtditid, nino)
+    getBody(request)(invokeBlock(ctx, _))
+  }
   def getBodyWithCtx[A: Reads](taxYear: TaxYear, businessId: BusinessId, nino: Nino)(
       invokeBlock: (JourneyContextWithNino, A) => ApiResultT[Result])(implicit
       ec: ExecutionContext,

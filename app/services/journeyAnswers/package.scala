@@ -29,10 +29,10 @@ import scala.reflect.ClassTag
 
 package object journeyAnswers {
 
-  def getPersistedAnswers[A: Reads](row: Option[JourneyAnswers])(implicit ec: ExecutionContext, ct: ClassTag[A]): ApiResultT[Option[A]] =
-    row.traverse(getPersistedAnswers[A])
+  def getPersistedDatabaseAnswers[A: Reads](row: Option[JourneyAnswers])(implicit ec: ExecutionContext, ct: ClassTag[A]): ApiResultT[Option[A]] =
+    row.traverse(getPersistedDatabaseAnswers[A])
 
-  def getPersistedAnswers[A: Reads](row: JourneyAnswers)(implicit ec: ExecutionContext, ct: ClassTag[A]): ApiResultT[A] =
+  def getPersistedDatabaseAnswers[A: Reads](row: JourneyAnswers)(implicit ec: ExecutionContext, ct: ClassTag[A]): ApiResultT[A] =
     EitherT.fromEither[Future](row.validatedAs[A]).leftAs[ServiceError]
 
 }

@@ -74,16 +74,19 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
     } yield ()
 
   def saveClass4MultipleBusinesses(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
-    val multipleBusinessExemptionAnswers: List[Class4ExemptionAnswers] = answers.toMultipleBusinessesAnswers
-    val idsWithExemption: List[String]                                 = multipleBusinessExemptionAnswers.map(_.businessId.value)
-    val updateOtherIdsToNotExempt: ApiResultT[Unit]                    = clearOtherExistingClass4Data(ctx, idsToNotClear = idsWithExemption).void
+    val multipleBusinessExemptionAnswers = answers.toMultipleBusinessesAnswers
+    val idsWithExemption                 = multipleBusinessExemptionAnswers.map(_.businessId.value)
+    val updateOtherIdsToNotExempt        = clearOtherExistingClass4Data(ctx, idsToNotClear = idsWithExemption)
 
     val saveAllNewExemptionAnswers = multipleBusinessExemptionAnswers.traverse { answer =>
       val businessContext = ctx(newId = answer.businessId)
       saveClass4BusinessData(businessContext, answer)
     }
 
-    EitherT.rightT[Future, ServiceError](updateOtherIdsToNotExempt.map(_ => saveAllNewExemptionAnswers))
+    for {
+      _ <- updateOtherIdsToNotExempt
+      _ <- saveAllNewExemptionAnswers
+    } yield ()
   }
 
   def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
@@ -93,7 +96,8 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
       upsertRequest = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourRequestData(ctx, businessExemptionAnswer, existingAnswers)
       _ <- connector.createAmendSEAnnualSubmission(upsertRequest)
     } yield ()
-    EitherT.rightT[Future, ServiceError](result)
+
+    EitherT.liftF(result)
   }
 
   private def clearOtherExistingClass4Data(ctx: JourneyContextWithNino, idsToNotClear: List[String])(implicit hc: HeaderCarrier): ApiResultT[Unit] =

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,10 @@
 package models.database.capitalAllowances
 
 import models.database.DatabaseAnswers
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
 
-final case class WritingDownAllowanceDb(wdaSpecialRate: Option[Boolean], wdaMainRate: Option[Boolean], wdaSingleAsset: Option[Boolean])
-    extends DatabaseAnswers
+final case class AnnualInvestmentAllowanceDb(annualInvestmentAllowance: Boolean) extends DatabaseAnswers
 
-object WritingDownAllowanceDb {
-  implicit val format: Format[WritingDownAllowanceDb] = Json.format[WritingDownAllowanceDb]
+object AnnualInvestmentAllowanceDb {
+  implicit val format: OFormat[AnnualInvestmentAllowanceDb] = Json.format[AnnualInvestmentAllowanceDb]
 }

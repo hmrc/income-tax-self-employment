@@ -16,12 +16,10 @@
 
 package models.database.capitalAllowances
 
+import models.database.DatabaseAnswers
 import play.api.libs.json.{Format, Json}
 
-final case class SpecialTaxSitesDb(
-    specialTaxSites: Boolean,
-    newSpecialTaxSites: Option[List[NewSpecialTaxSiteDb]]
-)
+final case class SpecialTaxSitesDb(specialTaxSites: Boolean, newSpecialTaxSites: Option[List[NewSpecialTaxSiteDb]]) extends DatabaseAnswers
 
 object SpecialTaxSitesDb {
   implicit val format: Format[SpecialTaxSitesDb] = Json.format[SpecialTaxSitesDb]

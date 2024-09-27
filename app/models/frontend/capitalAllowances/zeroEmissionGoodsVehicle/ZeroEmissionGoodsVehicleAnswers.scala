@@ -16,27 +16,35 @@
 
 package models.frontend.capitalAllowances.zeroEmissionGoodsVehicle
 
-import models.database.capitalAllowances.ZeroEmissionGoodsVehicleDb
-import play.api.libs.json.{Format, Json}
+import models.connector.api_1802.request.AnnualAllowances
 import models.connector.api_1803
+import models.database.capitalAllowances.ZeroEmissionGoodsVehicleDb
+import models.frontend.FrontendAnswers
+import play.api.libs.json.{Format, Json}
 
-case class ZeroEmissionGoodsVehicleAnswers(zeroEmissionGoodsVehicle: Boolean,
-                                           zegvAllowance: Option[Boolean],
-                                           zegvTotalCostOfVehicle: Option[BigDecimal],
-                                           zegvOnlyForSelfEmployment: Option[Boolean],
-                                           zegvUsedOutsideSE: Option[ZegvUseOutsideSE],
-                                           zegvUsedOutsideSEPercentage: Option[Int],
-                                           zegvHowMuchDoYouWantToClaim: Option[ZegvHowMuchDoYouWantToClaim],
-                                           zegvClaimAmount: Option[BigDecimal]) {
-  def toDbModel: ZeroEmissionGoodsVehicleDb = ZeroEmissionGoodsVehicleDb(
-    zeroEmissionGoodsVehicle,
-    zegvAllowance,
-    zegvTotalCostOfVehicle,
-    zegvOnlyForSelfEmployment,
-    zegvUsedOutsideSE,
-    zegvUsedOutsideSEPercentage,
-    zegvHowMuchDoYouWantToClaim
-  )
+final case class ZeroEmissionGoodsVehicleAnswers(zeroEmissionGoodsVehicle: Boolean,
+                                                 zegvAllowance: Option[Boolean],
+                                                 zegvTotalCostOfVehicle: Option[BigDecimal],
+                                                 zegvOnlyForSelfEmployment: Option[Boolean],
+                                                 zegvUsedOutsideSE: Option[ZegvUseOutsideSE],
+                                                 zegvUsedOutsideSEPercentage: Option[Int],
+                                                 zegvHowMuchDoYouWantToClaim: Option[ZegvHowMuchDoYouWantToClaim],
+                                                 zegvClaimAmount: Option[BigDecimal])
+    extends FrontendAnswers[ZeroEmissionGoodsVehicleDb] {
+
+  def toDbModel: Option[ZeroEmissionGoodsVehicleDb] = Some(
+    ZeroEmissionGoodsVehicleDb(
+      zeroEmissionGoodsVehicle,
+      zegvAllowance,
+      zegvTotalCostOfVehicle,
+      zegvOnlyForSelfEmployment,
+      zegvUsedOutsideSE,
+      zegvUsedOutsideSEPercentage,
+      zegvHowMuchDoYouWantToClaim
+    ))
+
+  def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances =
+    current.getOrElse(AnnualAllowances.empty).copy(zeroEmissionGoodsVehicleAllowance = zegvClaimAmount)
 }
 
 object ZeroEmissionGoodsVehicleAnswers {

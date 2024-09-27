@@ -16,21 +16,19 @@
 
 package models.frontend.capitalAllowances.balancingAllowance
 
+import models.connector.api_1802.request.AnnualAllowances
 import models.connector.api_1803
 import models.database.capitalAllowances.BalancingAllowanceDb
+import models.frontend.FrontendAnswers
 import play.api.libs.json.{Json, OFormat}
 
-case class BalancingAllowanceJourneyAnswers(allowanceOnSales: BigDecimal)
+final case class BalancingAllowanceAnswers(balancingAllowance: Boolean, balancingAllowanceAmount: Option[BigDecimal])
+    extends FrontendAnswers[BalancingAllowanceDb] {
 
-object BalancingAllowanceJourneyAnswers {
-  implicit val formats: OFormat[BalancingAllowanceJourneyAnswers] = Json.format[BalancingAllowanceJourneyAnswers]
-}
+  def toDbModel: Option[BalancingAllowanceDb] = Some(BalancingAllowanceDb(balancingAllowance))
 
-case class BalancingAllowanceAnswers(balancingAllowance: Boolean, balancingAllowanceAmount: Option[BigDecimal]) {
-
-  def toDbModel: BalancingAllowanceDb = BalancingAllowanceDb(
-    balancingAllowance
-  )
+  def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances =
+    current.getOrElse(AnnualAllowances.empty).copy(allowanceOnSales = balancingAllowanceAmount)
 }
 
 object BalancingAllowanceAnswers {

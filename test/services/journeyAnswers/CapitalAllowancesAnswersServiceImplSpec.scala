@@ -57,7 +57,7 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
   "persistAnswers" should {
     "persist answers successfully" in {
       val answers = genOne(capitalAllowancesTailoringAnswersGen)
-      val result  = service.persistAnswers(businessId, currTaxYear, mtditid, CapitalAllowancesTailoring, answers).value.futureValue
+      val result  = service.persistAnswersInDatabase(businessId, currTaxYear, mtditid, CapitalAllowancesTailoring, answers).value.futureValue
       assert(result === ().asRight)
     }
   }

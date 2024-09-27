@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-package models.database.capitalAllowances
+package models.database
 
-import models.database.DatabaseAnswers
-import play.api.libs.json.{Format, Json}
-
-final case class WritingDownAllowanceDb(wdaSpecialRate: Option[Boolean], wdaMainRate: Option[Boolean], wdaSingleAsset: Option[Boolean])
-    extends DatabaseAnswers
-
-object WritingDownAllowanceDb {
-  implicit val format: Format[WritingDownAllowanceDb] = Json.format[WritingDownAllowanceDb]
-}
+trait DatabaseAnswers

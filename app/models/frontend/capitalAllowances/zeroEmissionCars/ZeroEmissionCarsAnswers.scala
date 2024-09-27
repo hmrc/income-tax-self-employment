@@ -16,34 +16,35 @@
 
 package models.frontend.capitalAllowances.zeroEmissionCars
 
+import models.connector.api_1802.request.AnnualAllowances
 import models.connector.api_1803
 import models.database.capitalAllowances.ZeroEmissionCarsDb
+import models.frontend.FrontendAnswers
 import play.api.libs.json.{Json, OFormat}
 
-case class ZeroEmissionCarsJourneyAnswers(zeroEmissionsCarAllowance: BigDecimal)
+final case class ZeroEmissionCarsAnswers(zeroEmissionCars: Boolean,
+                                         zecAllowance: Option[Boolean],
+                                         zecTotalCostOfCar: Option[BigDecimal],
+                                         zecOnlyForSelfEmployment: Option[Boolean],
+                                         zecUsedOutsideSE: Option[ZecUseOutsideSE],
+                                         zecUsedOutsideSEPercentage: Option[Int],
+                                         zecHowMuchDoYouWantToClaim: Option[ZecHowMuchDoYouWantToClaim],
+                                         zecClaimAmount: Option[BigDecimal])
+    extends FrontendAnswers[ZeroEmissionCarsDb] {
 
-object ZeroEmissionCarsJourneyAnswers {
-  implicit val formats: OFormat[ZeroEmissionCarsJourneyAnswers] = Json.format[ZeroEmissionCarsJourneyAnswers]
-}
+  def toDbModel: Option[ZeroEmissionCarsDb] = Some(
+    ZeroEmissionCarsDb(
+      zeroEmissionCars,
+      zecAllowance,
+      zecTotalCostOfCar,
+      zecOnlyForSelfEmployment,
+      zecUsedOutsideSE,
+      zecUsedOutsideSEPercentage,
+      zecHowMuchDoYouWantToClaim
+    ))
 
-case class ZeroEmissionCarsAnswers(zeroEmissionCars: Boolean,
-                                   zecAllowance: Option[Boolean],
-                                   zecTotalCostOfCar: Option[BigDecimal],
-                                   zecOnlyForSelfEmployment: Option[Boolean],
-                                   zecUsedOutsideSE: Option[ZecUseOutsideSE],
-                                   zecUsedOutsideSEPercentage: Option[Int],
-                                   zecHowMuchDoYouWantToClaim: Option[ZecHowMuchDoYouWantToClaim],
-                                   zecClaimAmount: Option[BigDecimal]) {
-
-  def toDbModel: ZeroEmissionCarsDb = ZeroEmissionCarsDb(
-    zeroEmissionCars,
-    zecAllowance,
-    zecTotalCostOfCar,
-    zecOnlyForSelfEmployment,
-    zecUsedOutsideSE,
-    zecUsedOutsideSEPercentage,
-    zecHowMuchDoYouWantToClaim
-  )
+  def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances =
+    current.getOrElse(AnnualAllowances.empty).copy(zeroEmissionsCarAllowance = zecClaimAmount)
 }
 
 object ZeroEmissionCarsAnswers {
