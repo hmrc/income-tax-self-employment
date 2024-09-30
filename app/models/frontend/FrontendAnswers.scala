@@ -18,7 +18,7 @@ package models.frontend
 
 import models.connector.api_1802.request.AnnualAllowances
 
- abstract class FrontendAnswers[A] {
+abstract class FrontendAnswers[A] {
 
   def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances
 

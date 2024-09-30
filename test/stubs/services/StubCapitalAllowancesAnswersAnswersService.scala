@@ -19,7 +19,6 @@ package stubs.services
 import cats.data.EitherT
 import controllers.actions.AuthorisedAction
 import models.common._
-import models.connector.api_1802.request.AnnualAllowances
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.FrontendAnswers
@@ -44,8 +43,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class StubCapitalAllowancesAnswersAnswersService(
     saveAnswers: Future[Result] = Future.successful(NoContent),
-    saveAnnualAllowances: ApiResultT[Unit] = serviceUnitT,
-    persistCapitalAllowancesTailoring: ApiResultT[Unit] = serviceUnitT,
+    persistAnswersInDatabase: ApiResultT[Unit] = serviceUnitT,
     getCapitalAllowancesTailoring: Either[ServiceError, Option[CapitalAllowancesTailoringAnswers]] = Right(None),
     getZeroEmissionCars: Either[ServiceError, Option[ZeroEmissionCarsAnswers]] = Right(None),
     getZeroEmissionGoodsVehicleCars: Either[ServiceError, Option[ZeroEmissionGoodsVehicleAnswers]] = Right(None),
@@ -66,7 +64,7 @@ case class StubCapitalAllowancesAnswersAnswersService(
     saveAnswers
 
   def persistAnswersInDatabase[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
-      writes: Writes[A]): ApiResultT[Unit] = persistCapitalAllowancesTailoring
+      writes: Writes[A]): ApiResultT[Unit] = persistAnswersInDatabase
 
   def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]] =
     EitherT.fromEither[Future](getCapitalAllowancesTailoring)
@@ -86,10 +84,6 @@ case class StubCapitalAllowancesAnswersAnswersService(
 
   def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]] =
     EitherT.fromEither[Future](getAnnualInvestmentAllowance)
-
-  def submitAnnualAllowancesToApi(ctx: JourneyContextWithNino, updatedAnnualAllowances: AnnualAllowances)(implicit
-      hc: HeaderCarrier): ApiResultT[Unit] =
-    saveAnnualAllowances
 
   def getWritingDownAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WritingDownAllowanceAnswers]] =
     EitherT.fromEither[Future](getWritingDownAllowance)
