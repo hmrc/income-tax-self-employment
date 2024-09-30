@@ -152,6 +152,8 @@ object StubIFSConnector {
     None
   )
 
+  val api1803EmptyResponse: SuccessResponseSchema = SuccessResponseSchema.empty
+
   val api1965MatchedResponse: ListSEPeriodSummariesResponse = ListSEPeriodSummariesResponse(
     Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05")))))
 
@@ -178,7 +180,12 @@ object StubIFSConnector {
 
   val api1871EmptyResponse: api_1871.BusinessIncomeSourcesSummaryResponse = api_1871.BusinessIncomeSourcesSummaryResponse.empty
 
-  val api1500EmptyResponse: api_1500.SuccessResponseSchema = api_1500.SuccessResponseSchema("")
-  val api1501EmptyResponse: api_1501.SuccessResponseSchema = api_1501.SuccessResponseSchema("", LossType.Income, 0, "", "", LocalDateTime.now)
+  val api1500EmptyResponse: api_1500.SuccessResponseSchema   = api_1500.SuccessResponseSchema("")
+  val api1500SuccessResponse: api_1500.SuccessResponseSchema = api_1500.SuccessResponseSchema("5678")
+  val api1501EmptyResponse: api_1501.SuccessResponseSchema   = api_1501.SuccessResponseSchema("", LossType.Income, 0, "", "", LocalDateTime.now)
+  val api1501SuccessResponse: api_1501.SuccessResponseSchema =
+    api_1501.SuccessResponseSchema("1234", LossType.Income, 400, "2024", "5678", LocalDateTime.now)
   val api1502EmptyResponse: api_1502.SuccessResponseSchema = api_1502.SuccessResponseSchema("", LossType.Income, 0, "", "", LocalDateTime.now)
+  val api1502SuccessResponse: api_1502.SuccessResponseSchema =
+    api_1502.SuccessResponseSchema("1234", LossType.Income, 400, "2024", "5678", LocalDateTime.now)
 }

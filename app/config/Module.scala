@@ -40,6 +40,7 @@ class Module extends AbstractModule {
     bind(classOf[IFSBusinessDetailsConnector]).to(classOf[IFSBusinessDetailsConnectorImpl])
     bind(classOf[MDTPConnector]).to(classOf[MDTPConnectorImpl])
     bind(classOf[JourneyStatusService]).to(classOf[JourneyStatusServiceImpl])
+    bind(classOf[ProfitOrLossAnswersService]).to(classOf[ProfitOrLossAnswersServiceImpl])
     bind(classOf[NICsAnswersService]).to(classOf[NICsAnswersServiceImpl])
     bind(classOf[JourneyAnswersRepository]).to(classOf[MongoJourneyAnswersRepository])
     ()

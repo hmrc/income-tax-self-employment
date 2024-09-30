@@ -34,7 +34,7 @@ import scala.reflect.ClassTag
 case class StubJourneyAnswersRepository(
     getAnswer: Option[JourneyAnswers] = None,
     getAnswers: Either[ServiceError, Option[JsValue]] = Right(None),
-    upsertDateField: Either[ServiceError, Unit] = Right(()),
+    upsertDataField: Either[ServiceError, Unit] = Right(()),
     upsertStatusField: Either[ServiceError, Unit] = Right(()),
     getAllResult: Either[ServiceError, TaskList] = Right(TaskList.empty),
     deleteOneOrMoreJourneys: Either[ServiceError, Unit] = Right(())
@@ -44,7 +44,7 @@ case class StubJourneyAnswersRepository(
 
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] = {
     lastUpsertedAnswer = Some(newData)
-    EitherT.fromEither[Future](upsertDateField)
+    EitherT.fromEither[Future](upsertDataField)
   }
 
   def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] =

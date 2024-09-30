@@ -29,9 +29,12 @@ case class SuccessResponseSchema(annualAdjustments: Option[AnnualAdjustmentsType
   def toRequestBody: CreateAmendSEAnnualSubmissionRequestBody = CreateAmendSEAnnualSubmissionRequestBody(
     annualAdjustments = annualAdjustments.map(_.toApi1802AnnualAdjustments),
     annualAllowances = annualAllowances.map(_.toApi1802AnnualAllowance),
-    annualNonFinancials = annualNonFinancials.flatMap(
-      _.exemptFromPayingClass4Nics.map(AnnualNonFinancials(_, annualNonFinancials.flatMap(_.class4NicsExemptionReason.map(_.toString)))))
+    annualNonFinancials = this.maybeConvertNonFinancialsTypeToNonFinancials
   )
+
+  def maybeConvertNonFinancialsTypeToNonFinancials: Option[AnnualNonFinancials] =
+    annualNonFinancials.flatMap(
+      _.exemptFromPayingClass4Nics.map(AnnualNonFinancials(_, annualNonFinancials.flatMap(_.class4NicsExemptionReason.map(_.toString)))))
 }
 
 object SuccessResponseSchema {

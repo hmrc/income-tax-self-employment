@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-package models.connector.api_1500
+package models.database.adjustments
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
 
-case class CreateBroughtForwardLossRequestBody(incomeSourceId: String,
-                                               lossType: LossType,
-                                               broughtForwardLossAmount: BigDecimal,
-                                               taxYearBroughtForwardFrom: Int)
+final case class ProfitOrLossDb(goodsAndServicesForYourOwnUse: Boolean, previousUnusedLosses: Boolean)
 
-object CreateBroughtForwardLossRequestBody {
-  implicit val formats: Format[CreateBroughtForwardLossRequestBody] =
-    Json.format[CreateBroughtForwardLossRequestBody]
+object ProfitOrLossDb {
+  implicit val format: OFormat[ProfitOrLossDb] = Json.format[ProfitOrLossDb]
 }

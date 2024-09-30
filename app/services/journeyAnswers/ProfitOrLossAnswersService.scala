@@ -1,0 +1,102 @@
+/*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package services.journeyAnswers
+
+import cats.data.EitherT
+import connectors.{IFSBusinessDetailsConnector, IFSConnector}
+import models.common.{JourneyContextWithNino, JourneyName}
+import models.connector.api_1803
+import models.connector.api_1502
+import models.domain.ApiResultT
+import models.error.ServiceError
+import models.frontend.adjustments.ProfitOrLossJourneyAnswers
+import play.api.http.Status.NOT_FOUND
+import play.api.libs.json.Json
+import play.api.mvc.Results.NoContent
+import repositories.JourneyAnswersRepository
+import uk.gov.hmrc.http.HeaderCarrier
+
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
+
+trait ProfitOrLossAnswersService {
+
+  def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+
+}
+
+@Singleton
+class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
+                                                ifsBusinessDetailsConnector: IFSBusinessDetailsConnector,
+                                                repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
+    extends ProfitOrLossAnswersService {
+  def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    for {
+      _ <- createUpdateOrDeleteAnnualSummaries(ctx, answers)
+      _ <- createUpdateOrDeleteBroughtForwardLoss(ctx, answers)
+      _ <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(answers.toDbAnswers))
+    } yield NoContent
+
+  private def createUpdateOrDeleteAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
+    for {
+      annualSummaries <- EitherT[Future, ServiceError, api_1803.SuccessResponseSchema](ifsConnector.getAnnualSummaries(ctx))
+      annualSummariesData = answers.toAnnualSummariesData(ctx, annualSummaries).replaceEmptyModelsWithNone
+      _ <- EitherT[Future, ServiceError, Unit](
+        ifsConnector.createAmendSEAnnualSubmission(annualSummariesData)
+      ) // TODO delete if empty
+    } yield NoContent
+
+  private def createUpdateOrDeleteBroughtForwardLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
+      hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] =
+    EitherT {
+      for {
+        existingLoss <- ifsBusinessDetailsConnector.getBroughtForwardLoss(ctx.nino, ctx.businessId).value
+        result       <- handleBroughtForwardLoss(existingLoss, ctx, answers)
+      } yield result
+    }
+
+  private def handleBroughtForwardLoss(existingLoss: Either[ServiceError, api_1502.SuccessResponseSchema],
+                                       ctx: JourneyContextWithNino,
+                                       answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): Future[Either[ServiceError, Unit]] =
+    (answers.unusedLossAmount, answers.whichYearIsLossReported, existingLoss) match {
+      // No previous data, data to be submitted -> create
+      case (Some(amount), Some(year), Left(error)) if error.status == NOT_FOUND =>
+        ifsBusinessDetailsConnector
+          .createBroughtForwardLoss(
+            ProfitOrLossJourneyAnswers
+              .toCreateBroughtForwardLossData(ctx, amount, year))
+          .value
+          .map(_.map(_ => ()))
+      // Previous data, data to be submitted -> update
+      case (Some(amount), Some(_), Right(_)) =>
+        ifsBusinessDetailsConnector
+          .updateBroughtForwardLoss(
+            ProfitOrLossJourneyAnswers
+              .toUpdateBroughtForwardLossData(ctx, amount))
+          .value
+          .map(_.map(_ => ()))
+      // Previous data, no data to be submitted -> delete
+      case (None, None, Right(_)) =>
+        ifsBusinessDetailsConnector.deleteBroughtForwardLoss(ctx.nino, ctx.businessId).value.map(_.map(_ => ()))
+      // No previous data, no data to submit -> do nothing
+      case (None, None, Left(error)) if error.status == NOT_FOUND =>
+        Future.successful(Right())
+      // API error case
+      case (_, _, Left(error)) => Future.successful(Left(error))
+    }
+}
