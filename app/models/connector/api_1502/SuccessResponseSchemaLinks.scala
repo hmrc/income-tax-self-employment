@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-package models.connector.api_1500
+package models.connector.api_1502
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json._
 
-case class CreateBroughtForwardLossRequestBody(taxYearBroughtForwardFrom: String, typeOfLoss: LossType, businessId: String, lossAmount: BigDecimal)
+case class SuccessResponseSchemaLinks(
+    href: String,
+    rel: String,
+    method: String
+)
 
-object CreateBroughtForwardLossRequestBody {
-  implicit val formats: Format[CreateBroughtForwardLossRequestBody] =
-    Json.format[CreateBroughtForwardLossRequestBody]
+object SuccessResponseSchemaLinks {
+  implicit val formats: Format[SuccessResponseSchemaLinks] =
+    Json.format[SuccessResponseSchemaLinks]
 }

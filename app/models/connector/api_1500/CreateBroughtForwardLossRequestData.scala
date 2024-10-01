@@ -18,4 +18,4 @@ package models.connector.api_1500
 
 import models.common.Nino
 
-case class CreateBroughtForwardLossRequestData(taxableEntityId: Nino, body: CreateBroughtForwardLossRequestBody)
+case class CreateBroughtForwardLossRequestData(nino: Nino, body: CreateBroughtForwardLossRequestBody)

@@ -44,6 +44,8 @@ case class StubJourneyAnswersRepository(
 
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] = {
     lastUpsertedAnswer = Some(newData)
+    println("last upserted answer: " + lastUpsertedAnswer)
+    println("1")
     EitherT.fromEither[Future](upsertDataField)
   }
 

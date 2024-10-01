@@ -21,26 +21,24 @@ import play.api.libs.json.Json
 import utils.BaseSpec._
 
 trait Api1501Test {
-  val taxableEntityId = nino
-  val lossId          = businessId
-  val downstreamUrl   = s"/income-tax/brought-forward-losses/$taxableEntityId/$lossId"
+  val lossId        = "1234568790ABCDE"
+  val downstreamUrl = s"/individuals/losses/$nino/brought-forward-losses/$lossId/change-loss-amount"
   val requestBody = UpdateBroughtForwardLossRequestBody(
-    updatedBroughtForwardLossAmount = BigDecimal(260)
+    lossAmount = BigDecimal(260)
   )
   val data = UpdateBroughtForwardLossRequestData(
-    taxableEntityId = taxableEntityId,
+    nino = nino,
     lossId = lossId,
     body = requestBody
   )
 
   val successResponseRaw: String =
     s"""{
-      |   "incomeSourceId": "12345678912345",
-      |   "lossType": "INCOME",
-      |   "broughtForwardLossAmount": 260,
-      |   "taxYear": "2020",
-      |   "lossId": "123",
-      |   "submissionDate": "2020-07-13T12:13:48.763Z"
+      |  "businessId": "12345678912345",
+      |  "typeOfLoss": "self-employment",
+      |  "lossAmount": 260,
+      |  "taxYearBroughtForwardFrom": "2020-21",
+      |  "lastModified": "2022-11-05T11:56:27Z"
       |}
       |""".stripMargin
 

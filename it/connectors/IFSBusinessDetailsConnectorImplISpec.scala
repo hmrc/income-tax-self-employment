@@ -18,7 +18,7 @@ package connectors
 
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
-import connectors.data.{Api1171Test, Api1500Test, Api1501Test, Api1502Test, Api1504Test, Api1871Test}
+import connectors.data.{Api1171Test, Api1500Test, Api1501Test, Api1502Test, Api1504Test, Api1870Test, Api1871Test}
 import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -65,7 +65,7 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
 
   "updateBroughtForwardLoss" must {
     "return successful response" in new Api1501Test {
-      stubPutWithRequestAndResponseBody(
+      stubPostWithRequestAndResponseBody(
         url = downstreamUrl,
         requestBody = requestBody,
         expectedResponse = successResponseRaw,
@@ -82,7 +82,7 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.getBroughtForwardLoss(taxableEntityId, lossId).value.futureValue shouldBe successResponse.asRight
+      connector.getBroughtForwardLoss(nino, lossId).value.futureValue shouldBe successResponse.asRight
     }
   }
 
@@ -93,7 +93,18 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         expectedResponse = "",
         expectedStatus = NO_CONTENT
       )
-      connector.deleteBroughtForwardLoss(taxableEntityId, lossId).value.futureValue shouldBe Right(())
+      connector.deleteBroughtForwardLoss(nino, lossId).value.futureValue shouldBe Right(())
+    }
+  }
+
+  "listBroughtForwardLoss" must {
+    "return successful response" in new Api1870Test {
+      stubGetWithResponseBody(
+        url = downstreamUrl,
+        expectedResponse = successResponseRaw,
+        expectedStatus = OK
+      )
+      connector.listBroughtForwardLosses(nino, taxYear).value.futureValue shouldBe successResponse.asRight
     }
   }
 }

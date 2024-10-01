@@ -21,6 +21,7 @@ import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common.{JourneyContextWithNino, JourneyName}
 import models.connector.api_1803
 import models.connector.api_1502
+import models.connector.api_1870.LossData
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.adjustments.ProfitOrLossJourneyAnswers
@@ -51,6 +52,21 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       _ <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(answers.toDbAnswers))
     } yield NoContent
 
+  private def getLossIdByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[String]] =
+    getLossByBusinessId(ctx).map(_.map(_.lossId))
+
+  private def getLossByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[LossData]] = {
+    val losses = ifsBusinessDetailsConnector.listBroughtForwardLosses(ctx.nino, ctx.taxYear)
+    losses.transform {
+      case Right(list) =>
+        Right(list.losses.find(_.businessId == ctx.businessId.value))
+      case Left(error) if error.status == NOT_FOUND =>
+        Right(None)
+      case Left(otherError) =>
+        Left(otherError)
+    }
+  }
+
   private def createUpdateOrDeleteAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
     for {
@@ -63,15 +79,36 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 
   private def createUpdateOrDeleteBroughtForwardLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] =
-    EitherT {
-      for {
-        existingLoss <- ifsBusinessDetailsConnector.getBroughtForwardLoss(ctx.nino, ctx.businessId).value
-        result       <- handleBroughtForwardLoss(existingLoss, ctx, answers)
-      } yield result
+    for {
+      maybeLossId <- getLossIdByBusinessId(ctx)
+      result = maybeLossId match {
+        case Some(lossId) =>
+          for {
+            existingLoss <- ifsBusinessDetailsConnector.getBroughtForwardLoss(ctx.nino, lossId).value
+            res          <- handleBroughtForwardLoss(existingLoss, ctx, lossId, answers)
+          } yield res
+        case None => handleBroughtForwardLossNoExistingLoss(ctx, answers)
+      }
+    } yield result
+
+  private def handleBroughtForwardLossNoExistingLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
+      hc: HeaderCarrier): Future[Either[ServiceError, Unit]] =
+    (answers.unusedLossAmount, answers.whichYearIsLossReported) match {
+      // No previous data, data to be submitted -> create
+      case (Some(amount), Some(year)) =>
+        ifsBusinessDetailsConnector
+          .createBroughtForwardLoss(
+            ProfitOrLossJourneyAnswers
+              .toCreateBroughtForwardLossData(ctx, amount, year))
+          .value
+          .map(_.map(_ => ()))
+      // No previous data, no data to submit -> do nothing
+      case _ => Future.successful(Right())
     }
 
   private def handleBroughtForwardLoss(existingLoss: Either[ServiceError, api_1502.SuccessResponseSchema],
                                        ctx: JourneyContextWithNino,
+                                       lossId: String,
                                        answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): Future[Either[ServiceError, Unit]] =
     (answers.unusedLossAmount, answers.whichYearIsLossReported, existingLoss) match {
       // No previous data, data to be submitted -> create
@@ -87,16 +124,17 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
         ifsBusinessDetailsConnector
           .updateBroughtForwardLoss(
             ProfitOrLossJourneyAnswers
-              .toUpdateBroughtForwardLossData(ctx, amount))
+              .toUpdateBroughtForwardLossData(ctx, lossId, amount))
           .value
           .map(_.map(_ => ()))
       // Previous data, no data to be submitted -> delete
       case (None, None, Right(_)) =>
-        ifsBusinessDetailsConnector.deleteBroughtForwardLoss(ctx.nino, ctx.businessId).value.map(_.map(_ => ()))
+        ifsBusinessDetailsConnector.deleteBroughtForwardLoss(ctx.nino, lossId).value.map(_.map(_ => ()))
       // No previous data, no data to submit -> do nothing
       case (None, None, Left(error)) if error.status == NOT_FOUND =>
         Future.successful(Right())
       // API error case
-      case (_, _, Left(error)) => Future.successful(Left(error))
+      case (_, _, Left(error)) =>
+        Future.successful(Left(error))
     }
 }

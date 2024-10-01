@@ -59,18 +59,20 @@ object ProfitOrLossJourneyAnswers {
                                      unusedLossAmount: BigDecimal,
                                      whichYearIsLossReported: WhichYearIsLossReported): api_1500.CreateBroughtForwardLossRequestData = {
     val updatedBroughtForwardLossBody = api_1500.CreateBroughtForwardLossRequestBody(
-      incomeSourceId = ctx.businessId.value,
-      lossType = LossType.Income,
-      broughtForwardLossAmount = unusedLossAmount,
+      businessId = ctx.businessId.value,
+      typeOfLoss = LossType.SelfEmployment,
+      lossAmount = unusedLossAmount,
       taxYearBroughtForwardFrom = whichYearIsLossReported.apiTaxYear
     )
     api_1500.CreateBroughtForwardLossRequestData(ctx.nino, updatedBroughtForwardLossBody)
   }
 
-  def toUpdateBroughtForwardLossData(ctx: JourneyContextWithNino, unusedLossAmount: BigDecimal): api_1501.UpdateBroughtForwardLossRequestData = {
+  def toUpdateBroughtForwardLossData(ctx: JourneyContextWithNino,
+                                     lossId: String,
+                                     unusedLossAmount: BigDecimal): api_1501.UpdateBroughtForwardLossRequestData = {
     val updatedBroughtForwardLossBody = api_1501.UpdateBroughtForwardLossRequestBody(
-      updatedBroughtForwardLossAmount = unusedLossAmount
+      lossAmount = unusedLossAmount
     )
-    api_1501.UpdateBroughtForwardLossRequestData(ctx.nino, ctx.businessId, updatedBroughtForwardLossBody)
+    api_1501.UpdateBroughtForwardLossRequestData(ctx.nino, lossId, updatedBroughtForwardLossBody)
   }
 }

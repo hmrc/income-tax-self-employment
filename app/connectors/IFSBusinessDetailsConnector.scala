@@ -41,11 +41,11 @@ trait IFSBusinessDetailsConnector {
       data: CreateBroughtForwardLossRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1500.SuccessResponseSchema]
   def updateBroughtForwardLoss(
       data: UpdateBroughtForwardLossRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1501.SuccessResponseSchema]
-  def getBroughtForwardLoss(taxableEntityId: Nino, lossId: BusinessId)(implicit
+  def getBroughtForwardLoss(nino: Nino, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1502.SuccessResponseSchema]
+  def deleteBroughtForwardLoss(nino: Nino, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
+  def listBroughtForwardLosses(nino: Nino, taxYear: TaxYear)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): ApiResultT[api_1502.SuccessResponseSchema]
-
-  def deleteBroughtForwardLoss(taxableEntityId: Nino, lossId: BusinessId)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
+      ec: ExecutionContext): ApiResultT[api_1870.SuccessResponseSchema]
 }
 
 object IFSBusinessDetailsConnector {
@@ -54,6 +54,7 @@ object IFSBusinessDetailsConnector {
   type Api1500Response = ApiResponse[api_1500.SuccessResponseSchema]
   type Api1501Response = ApiResponse[api_1501.SuccessResponseSchema]
   type Api1502Response = ApiResponse[api_1502.SuccessResponseSchema]
+  type Api1870Response = ApiResponse[api_1870.SuccessResponseSchema]
 }
 
 @Singleton
@@ -64,17 +65,20 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
   private def businessIncomeSourcesSummaryUrl(taxYear: TaxYear, nino: Nino, businessId: BusinessId) =
     s"${appConfig.ifsBaseUrl}/income-tax/income-sources/${asTys(taxYear)}/$nino/$businessId/self-employment/biss"
 
-  private def createBroughtForwardLossUrl(taxableEntityId: Nino) =
-    s"${appConfig.ifsBaseUrl}/income-tax/brought-forward-losses/$taxableEntityId"
+  private def createBroughtForwardLossUrl(nino: Nino) =
+    s"${appConfig.ifsBaseUrl}/individuals/losses/$nino/brought-forward-losses"
 
-  private def updateBroughtForwardLossUrl(taxableEntityId: Nino, lossId: BusinessId) =
-    s"${appConfig.ifsBaseUrl}/income-tax/brought-forward-losses/$taxableEntityId/$lossId"
+  private def updateBroughtForwardLossUrl(nino: Nino, lossId: String) =
+    s"${appConfig.ifsBaseUrl}/individuals/losses/$nino/brought-forward-losses/$lossId/change-loss-amount"
 
-  private def getBroughtForwardLossUrl(taxableEntityId: Nino, lossId: BusinessId) =
-    s"${appConfig.ifsBaseUrl}/income-tax/brought-forward-losses/$taxableEntityId/$lossId"
+  private def getBroughtForwardLossUrl(nino: Nino, lossId: String) =
+    s"${appConfig.ifsBaseUrl}/individuals/losses/$nino/brought-forward-losses/$lossId"
 
-  private def deleteBroughtForwardLossUrl(taxableEntityId: Nino, lossId: BusinessId) =
-    s"${appConfig.ifsBaseUrl}/income-tax/brought-forward-losses/$taxableEntityId/$lossId"
+  private def deleteBroughtForwardLossUrl(nino: Nino, lossId: String) =
+    s"${appConfig.ifsBaseUrl}/individuals/losses/$nino/brought-forward-losses/$lossId"
+
+  private def listBroughtForwardLossesUrl(nino: Nino, taxYear: TaxYear) =
+    s"${appConfig.ifsBaseUrl}/individuals/losses/$nino/brought-forward-losses/tax-year/${taxYear.toYYYY_YY}"
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] = {
     val url                                                                    = api1171BusinessDetailsUrl(IdType.Nino, nino.value)
@@ -97,7 +101,7 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
 
   def createBroughtForwardLoss(
       data: CreateBroughtForwardLossRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1500.SuccessResponseSchema] = {
-    val url     = createBroughtForwardLossUrl(data.taxableEntityId)
+    val url     = createBroughtForwardLossUrl(data.nino)
     val context = appConfig.mkMetadata(IFSApiName.Api1500, url)
 
     EitherT(post[CreateBroughtForwardLossRequestBody, Api1500Response](http, context, data.body))
@@ -105,16 +109,16 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
 
   def updateBroughtForwardLoss(
       data: UpdateBroughtForwardLossRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1501.SuccessResponseSchema] = {
-    val url     = updateBroughtForwardLossUrl(data.taxableEntityId, data.lossId)
+    val url     = updateBroughtForwardLossUrl(data.nino, data.lossId)
     val context = appConfig.mkMetadata(IFSApiName.Api1501, url)
 
-    EitherT(put[UpdateBroughtForwardLossRequestBody, Api1501Response](http, context, data.body))
+    EitherT(post[UpdateBroughtForwardLossRequestBody, Api1501Response](http, context, data.body))
   }
 
-  def getBroughtForwardLoss(taxableEntityId: Nino, lossId: BusinessId)(implicit
+  def getBroughtForwardLoss(nino: Nino, lossId: String)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1502.SuccessResponseSchema] = {
-    val url     = getBroughtForwardLossUrl(taxableEntityId, lossId)
+    val url     = getBroughtForwardLossUrl(nino, lossId)
     val context = appConfig.mkMetadata(IFSApiName.Api1502, url)
     implicit val reads: HttpReads[ApiResponse[api_1502.SuccessResponseSchema]] =
       commonReads[api_1502.SuccessResponseSchema]
@@ -122,11 +126,22 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
     EitherT(get[Api1502Response](http, context))
   }
 
-  def deleteBroughtForwardLoss(taxableEntityId: Nino, lossId: BusinessId)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
-    val url                                          = deleteBroughtForwardLossUrl(taxableEntityId, lossId)
+  def deleteBroughtForwardLoss(nino: Nino, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
+    val url                                          = deleteBroughtForwardLossUrl(nino, lossId)
     val context                                      = appConfig.mkMetadata(IFSApiName.Api1504, url)
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
 
     EitherT(delete(http, context))
+  }
+
+  def listBroughtForwardLosses(nino: Nino, taxYear: TaxYear)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[api_1870.SuccessResponseSchema] = {
+    val url     = listBroughtForwardLossesUrl(nino, taxYear)
+    val context = appConfig.mkMetadata(IFSApiName.Api1870, url)
+    implicit val reads: HttpReads[ApiResponse[api_1870.SuccessResponseSchema]] =
+      commonReads[api_1870.SuccessResponseSchema]
+
+    EitherT(get[Api1870Response](http, context))
   }
 }

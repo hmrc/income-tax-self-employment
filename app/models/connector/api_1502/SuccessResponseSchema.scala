@@ -21,12 +21,12 @@ import play.api.libs.json.{Format, Json}
 
 import java.time.LocalDateTime
 
-case class SuccessResponseSchema(incomeSourceId: String,
-                                 lossType: LossType,
-                                 broughtForwardLossAmount: BigDecimal,
-                                 taxYear: String,
-                                 lossId: String,
-                                 submissionDate: LocalDateTime)
+case class SuccessResponseSchema(businessId: String,
+                                 typeOfLoss: LossType,
+                                 lossAmount: BigDecimal,
+                                 taxYearBroughtForwardFrom: String,
+                                 lastModified: LocalDateTime,
+                                 links: Option[List[SuccessResponseSchemaLinks]])
 
 object SuccessResponseSchema {
   implicit val formats: Format[SuccessResponseSchema] =
