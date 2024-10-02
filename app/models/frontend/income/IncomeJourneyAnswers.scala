@@ -16,8 +16,7 @@
 
 package models.frontend.income
 
-import models.connector.api_1803
-import models.connector.api_1786
+import models.connector.{api_1786, api_1803}
 import models.database.income.IncomeStorageAnswers
 import play.api.libs.json.{Json, OFormat}
 
@@ -49,7 +48,7 @@ object IncomeJourneyAnswers {
       otherIncomeAmount = annualSummaries.annualAdjustments.flatMap(_.outstandingBusinessIncome),
       notTaxableAmount = annualSummaries.annualAdjustments.flatMap(_.includedNonTaxableProfits),
       tradingAllowanceAmount = annualSummaries.annualAllowances.flatMap(
-        _.annualInvestmentAllowance
+        _.tradingIncomeAllowance
       ) // TODO should tradingAllowanceAmount have 'if (tradingAllowance == declareExpenses) None else ...'
     )
 }
