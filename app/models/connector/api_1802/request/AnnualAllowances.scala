@@ -34,6 +34,8 @@ case class AnnualAllowances(annualInvestmentAllowance: Option[BigDecimal],
                             zeroEmissionsCarAllowance: Option[BigDecimal],
                             tradingIncomeAllowance: Option[BigDecimal]) {
   def isDefined: Boolean = this != AnnualAllowances.empty
+
+  def returnNoneIfEmpty: Option[AnnualAllowances] = if (isDefined) Some(this) else None
 }
 
 object AnnualAllowances {

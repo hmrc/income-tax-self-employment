@@ -16,8 +16,10 @@
 
 package models.frontend.income
 
+import models.connector.api_1802.request.{AnnualAdjustments, AnnualAllowances}
 import models.connector.{api_1786, api_1803}
 import models.database.income.IncomeStorageAnswers
+import models.frontend.FrontendAnswers
 import play.api.libs.json.{Json, OFormat}
 
 case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
@@ -30,6 +32,23 @@ case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
                                 tradingAllowance: TradingAllowance,
                                 howMuchTradingAllowance: Option[HowMuchTradingAllowance],
                                 tradingAllowanceAmount: Option[BigDecimal])
+    extends FrontendAnswers[IncomeStorageAnswers] {
+
+  def toDbModel: Option[IncomeStorageAnswers] = Some(
+    IncomeStorageAnswers(
+      incomeNotCountedAsTurnover,
+      anyOtherIncome,
+      turnoverNotTaxable,
+      tradingAllowance,
+      howMuchTradingAllowance
+    ))
+
+  def toDownStreamAnnualAllowances(current: Option[AnnualAdjustments]): AnnualAdjustments =
+    current.getOrElse(AnnualAdjustments.empty).copy(includedNonTaxableProfits = notTaxableAmount, outstandingBusinessIncome = otherIncomeAmount)
+
+  def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
+    current.getOrElse(AnnualAllowances.empty).copy(tradingIncomeAllowance = tradingAllowanceAmount)
+}
 
 object IncomeJourneyAnswers {
   implicit val formats: OFormat[IncomeJourneyAnswers] = Json.format[IncomeJourneyAnswers]
