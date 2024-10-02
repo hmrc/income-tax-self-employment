@@ -135,7 +135,6 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     val context                                      = appConfig.mkMetadata(IFSApiName.Api1787, url)
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
 
-    println("------- url " + url)
     EitherT(delete(http, context))
   }
 
