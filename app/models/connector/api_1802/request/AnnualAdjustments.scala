@@ -27,7 +27,10 @@ case class AnnualAdjustments(includedNonTaxableProfits: Option[BigDecimal],
                              balancingChargeBpra: Option[BigDecimal],
                              balancingChargeOther: Option[BigDecimal],
                              goodsAndServicesOwnUse: Option[BigDecimal]) {
+
   def isDefined: Boolean = this != AnnualAdjustments.empty
+
+  def returnNoneIfEmpty: Option[AnnualAdjustments] = if (isDefined) Some(this) else None
 }
 
 object AnnualAdjustments {

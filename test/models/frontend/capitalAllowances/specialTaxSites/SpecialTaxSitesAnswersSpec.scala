@@ -39,7 +39,7 @@ class SpecialTaxSitesAnswersSpec extends AnyWordSpecLike {
   "toDownStream" should {
     "create downstream model" in {
       val previous = AnnualAllowancesData.example
-      val result   = answers.toDownStream(Some(previous))
+      val result   = answers.toDownStreamAnnualAllowances(Some(previous))
       assert(
         result ===
           previous.copy(enhancedStructuredBuildingAllowance = Some(Nil))

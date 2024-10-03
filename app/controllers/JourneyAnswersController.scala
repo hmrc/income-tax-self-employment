@@ -397,7 +397,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
       for {
         maybeCurrent <- capitalAllowancesService.getAnnualSummaries(JourneyContextWithNino(ctx.taxYear, ctx.businessId, ctx.mtditid, ctx.nino))
         maybeAnnualAllowance = maybeCurrent.flatMap(_.annualAllowances.map(_.toApi1802AnnualAllowance))
-        _ <- capitalAllowancesService.saveAnnualAllowances(ctx, answers.toDownStream(maybeAnnualAllowance))
+        _ <- capitalAllowancesService.saveAnnualAllowances(ctx, answers.toDownStreamAnnualAllowances(maybeAnnualAllowance))
         _ <- answers.toDbModel.traverse(dbAnswers =>
           capitalAllowancesService.persistAnswers(ctx.businessId, ctx.taxYear, ctx.mtditid, journeyName, dbAnswers))
       } yield NoContent
