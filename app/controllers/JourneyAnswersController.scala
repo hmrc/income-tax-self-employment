@@ -307,7 +307,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveZeroEmissionCars(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     capitalAllowancesService.saveAnswers[ZeroEmissionCarsDb, ZeroEmissionCarsAnswers](
-      WritingDownAllowance,
+      ZeroEmissionCars,
       taxYear,
       businessId,
       nino
@@ -320,7 +320,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveZeroEmissionGoodsVehicle(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     capitalAllowancesService.saveAnswers[ZeroEmissionGoodsVehicleDb, ZeroEmissionGoodsVehicleAnswers](
-      WritingDownAllowance,
+      ZeroEmissionGoodsVehicle,
       taxYear,
       businessId,
       nino
@@ -333,7 +333,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveElectricVehicleChargePoints(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     capitalAllowancesService.saveAnswers[ElectricVehicleChargePointsDb, ElectricVehicleChargePointsAnswers](
-      WritingDownAllowance,
+      ElectricVehicleChargePoints,
       taxYear,
       businessId,
       nino
@@ -347,7 +347,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveBalancingAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     capitalAllowancesService.saveAnswers[BalancingAllowanceDb, BalancingAllowanceAnswers](
-      WritingDownAllowance,
+      BalancingAllowance,
       taxYear,
       businessId,
       nino
@@ -360,7 +360,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveAnnualInvestmentAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     capitalAllowancesService.saveAnswers[AnnualInvestmentAllowanceDb, AnnualInvestmentAllowanceAnswers](
-      WritingDownAllowance,
+      AnnualInvestmentAllowance,
       taxYear,
       businessId,
       nino

@@ -24,13 +24,12 @@ import play.api.libs.json.{Format, Json}
 
 import java.time.LocalDate
 
-final case class NewStructuresBuildingsAnswers(
-    structuresBuildingsAllowance: Boolean,
-    structuresBuildingsEligibleClaim: Option[Boolean],
-    structuresBuildingsPreviousClaimUse: Option[Boolean],
-    structuresBuildingsClaimed: Option[Boolean],
-    newStructuresBuildings: Option[List[NewStructureBuilding]]
-) extends FrontendAnswers[NewStructuresBuildingsDb] {
+final case class NewStructuresBuildingsAnswers(structuresBuildingsAllowance: Boolean,
+                                               structuresBuildingsEligibleClaim: Option[Boolean],
+                                               structuresBuildingsPreviousClaimUse: Option[Boolean],
+                                               structuresBuildingsClaimed: Option[Boolean],
+                                               newStructuresBuildings: Option[List[NewStructureBuilding]])
+    extends FrontendAnswers[NewStructuresBuildingsDb] {
 
   def toDbModel: Option[NewStructuresBuildingsDb] = Some(
     NewStructuresBuildingsDb(
