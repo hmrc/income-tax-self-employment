@@ -83,17 +83,8 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[IncomeStorageAnswers](maybeAnnualSummaries, answers)
     } yield updatedAnnualSubmissionBody
 
-    EitherT(submissionBody).flatMap(createUpdateOrDeleteApiAnnualSummaries(ctx, _))
+    EitherT(submissionBody).flatMap(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
   }
-
-  private def createUpdateOrDeleteApiAnnualSummaries(ctx: JourneyContextWithNino, requestBody: Option[CreateAmendSEAnnualSubmissionRequestBody])(
-      implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    requestBody match {
-      case Some(body) =>
-        val requestData = CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, body)
-        EitherT(connector.createAmendSEAnnualSubmission(requestData))
-      case None => EitherT.fromEither(().asRight[ServiceError]) // TODO Delete when API endpoint is set up
-    }
 
   private def maybeDeleteExpenses(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers): EitherT[Future, ServiceError, Unit] =
     answers.tradingAllowance match {

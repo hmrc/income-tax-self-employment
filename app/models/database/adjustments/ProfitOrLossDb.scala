@@ -16,9 +16,10 @@
 
 package models.database.adjustments
 
+import models.database.DatabaseAnswers
 import play.api.libs.json.{Json, OFormat}
 
-final case class ProfitOrLossDb(goodsAndServicesForYourOwnUse: Boolean, previousUnusedLosses: Boolean)
+final case class ProfitOrLossDb(goodsAndServicesForYourOwnUse: Boolean, previousUnusedLosses: Boolean) extends DatabaseAnswers
 
 object ProfitOrLossDb {
   implicit val format: OFormat[ProfitOrLossDb] = Json.format[ProfitOrLossDb]

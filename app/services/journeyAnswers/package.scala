@@ -49,7 +49,7 @@ package object journeyAnswers {
       updatedSubmissionBody = createUpdatedAnnualSummariesRequestBody(existingData, answers)
     } yield updatedSubmissionBody
 
-  private def handleOptionalAnnualSummaries(response: Api1803Response): ApiResponse[Option[api_1803.SuccessResponseSchema]] =
+  def handleOptionalAnnualSummaries(response: Api1803Response): ApiResponse[Option[api_1803.SuccessResponseSchema]] =
     response match {
       case Right(data)                              => Right(Some(data))
       case Left(error) if error.status == NOT_FOUND => Right(None)

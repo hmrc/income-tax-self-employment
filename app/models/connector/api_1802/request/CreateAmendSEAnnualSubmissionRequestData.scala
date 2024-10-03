@@ -24,16 +24,7 @@ import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
 case class CreateAmendSEAnnualSubmissionRequestData(taxYear: TaxYear,
                                                     nino: Nino,
                                                     businessId: BusinessId,
-                                                    body: CreateAmendSEAnnualSubmissionRequestBody) {
-  def replaceEmptyModelsWithNone: CreateAmendSEAnnualSubmissionRequestData = {
-    val annualAllowances  = body.annualAllowances
-    val annualAdjustments = body.annualAdjustments
-    this.copy(body = body.copy(
-      annualAdjustments = if (annualAdjustments.exists(_.isDefined)) annualAdjustments else None,
-      annualAllowances = if (annualAllowances.exists(_.isDefined)) annualAllowances else None
-    ))
-  }
-}
+                                                    body: CreateAmendSEAnnualSubmissionRequestBody)
 
 object CreateAmendSEAnnualSubmissionRequestData {
   def mkNicsClassFourRequestData(ctx: JourneyContextWithNino,
@@ -41,8 +32,8 @@ object CreateAmendSEAnnualSubmissionRequestData {
                                  existingAnswers: api_1803.SuccessResponseSchema): CreateAmendSEAnnualSubmissionRequestData =
     CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, mkNicsClassFourRequestBody(answer, existingAnswers))
 
-  private def mkNicsClassFourRequestBody(answer: Class4ExemptionAnswers,
-                                         existingAnswers: api_1803.SuccessResponseSchema): CreateAmendSEAnnualSubmissionRequestBody =
+  def mkNicsClassFourRequestBody(answer: Class4ExemptionAnswers,
+                                 existingAnswers: api_1803.SuccessResponseSchema): CreateAmendSEAnnualSubmissionRequestBody =
     CreateAmendSEAnnualSubmissionRequestBody(
       existingAnswers.annualAdjustments.map(_.toApi1802AnnualAdjustments),
       existingAnswers.annualAllowances.map(_.toApi1802AnnualAllowance),

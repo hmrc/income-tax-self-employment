@@ -19,14 +19,14 @@ package services.journeyAnswers
 import cats.data.EitherT
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common.{JourneyContextWithNino, JourneyName}
-import models.connector.api_1803
 import models.connector.api_1502
+import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestBody
+import models.database.adjustments.ProfitOrLossDb
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.adjustments.ProfitOrLossJourneyAnswers
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Json
-import play.api.mvc.Results.NoContent
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -44,22 +44,23 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
                                                 ifsBusinessDetailsConnector: IFSBusinessDetailsConnector,
                                                 repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends ProfitOrLossAnswersService {
+
   def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      _ <- createUpdateOrDeleteAnnualSummaries(ctx, answers)
-      _ <- createUpdateOrDeleteBroughtForwardLoss(ctx, answers)
-      _ <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(answers.toDbAnswers))
-    } yield NoContent
+      _      <- submitAnnualSummaries(ctx, answers)
+      _      <- createUpdateOrDeleteBroughtForwardLoss(ctx, answers)
+      result <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(answers.toDbAnswers))
+    } yield result
 
-  private def createUpdateOrDeleteAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
-      hc: HeaderCarrier): ApiResultT[Unit] =
-    for {
-      annualSummaries <- EitherT[Future, ServiceError, api_1803.SuccessResponseSchema](ifsConnector.getAnnualSummaries(ctx))
-      annualSummariesData = answers.toAnnualSummariesData(ctx, annualSummaries).replaceEmptyModelsWithNone
-      _ <- EitherT[Future, ServiceError, Unit](
-        ifsConnector.createAmendSEAnnualSubmission(annualSummariesData)
-      ) // TODO delete if empty
-    } yield NoContent
+  private def submitAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] = {
+    val submissionBody: Future[Either[ServiceError, Option[CreateAmendSEAnnualSubmissionRequestBody]]] = for {
+      maybeAnnualSummaries <- ifsConnector.getAnnualSummaries(ctx)
+      updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[ProfitOrLossDb](maybeAnnualSummaries, answers)
+    } yield updatedAnnualSubmissionBody
+
+    EitherT(submissionBody).flatMap(ifsConnector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
+  }
 
   private def createUpdateOrDeleteBroughtForwardLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] =
@@ -91,11 +92,9 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
           .value
           .map(_.map(_ => ()))
       // Previous data, no data to be submitted -> delete
-      case (None, None, Right(_)) =>
-        ifsBusinessDetailsConnector.deleteBroughtForwardLoss(ctx.nino, ctx.businessId).value.map(_.map(_ => ()))
+      case (None, None, Right(_)) => ifsBusinessDetailsConnector.deleteBroughtForwardLoss(ctx.nino, ctx.businessId).value.map(_.map(_ => ()))
       // No previous data, no data to submit -> do nothing
-      case (None, None, Left(error)) if error.status == NOT_FOUND =>
-        Future.successful(Right())
+      case (None, None, Left(error)) if error.status == NOT_FOUND => Future.successful(Right(()))
       // API error case
       case (_, _, Left(error)) => Future.successful(Left(error))
     }

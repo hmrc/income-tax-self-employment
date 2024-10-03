@@ -39,7 +39,7 @@ final case class NewStructuresBuildingsAnswers(
       structuresBuildingsClaimed
     ))
 
-  def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances = {
+  override def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances = {
     val buildingAllowance = if (structuresBuildingsAllowance) {
       val updated = newStructuresBuildings.getOrElse(Nil).map { structure =>
         structure.toBuildingAllowance

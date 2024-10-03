@@ -52,8 +52,10 @@ case class StubJourneyAnswersRepository(
 
   def testOnlyClearAllData(): ApiResultT[Unit] = ???
 
-  def deleteOneOrMoreJourneys(ctx: models.common.JourneyContext, multiplePrefix: Option[String]): ApiResultT[Unit] =
+  def deleteOneOrMoreJourneys(ctx: models.common.JourneyContext, multiplePrefix: Option[String]): ApiResultT[Unit] = {
+    lastUpsertedAnswer = None
     EitherT.fromEither[Future](deleteOneOrMoreJourneys)
+  }
 
   def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]] =
     EitherT.rightT[Future, ServiceError](getAnswer)

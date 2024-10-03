@@ -17,6 +17,7 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
+import cats.implicits._
 import connectors.IFSConnector
 import models.common.JourneyName.{
   AnnualInvestmentAllowance,
@@ -30,12 +31,11 @@ import models.common.JourneyName.{
   ZeroEmissionGoodsVehicle
 }
 import models.common._
-import models.connector.api_1802.request.{AnnualAllowances, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1802.request.{AnnualAllowances, CreateAmendSEAnnualSubmissionRequestBody}
 import models.connector.{Api1802AnnualAllowancesBuilder, api_1803}
 import models.database.JourneyAnswers
 import models.database.capitalAllowances._
 import models.domain.ApiResultT
-import models.error.ServiceError
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.capitalAllowances.annualInvestmentAllowance.{AnnualInvestmentAllowanceAnswers, AnnualInvestmentAllowanceDb}
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
@@ -50,9 +50,7 @@ import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-import cats.implicits._
-import utils.EitherTOps.EitherTExtensions
+import scala.concurrent.ExecutionContext
 
 trait CapitalAllowancesAnswersService {
   def saveAnnualAllowances(ctx: JourneyContextWithNino, updatedAnnualAllowances: AnnualAllowances)(implicit hc: HeaderCarrier): ApiResultT[Unit]
@@ -76,13 +74,8 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
     extends CapitalAllowancesAnswersService {
 
   def saveAnnualAllowances(ctx: JourneyContextWithNino, updatedAnnualAllowances: AnnualAllowances)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
-    val maybeUpsertBody  = CreateAmendSEAnnualSubmissionRequestBody.mkRequest(None, Some(updatedAnnualAllowances), None)
-    val maybeRequestData = maybeUpsertBody.map(CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, _))
-    val result = maybeRequestData.map(requestData => connector.createAmendSEAnnualSubmission(requestData)).map {
-      EitherT(_).leftAs[ServiceError]
-    }
-
-    result.getOrElse(EitherT.rightT[Future, ServiceError](()))
+    val maybeUpsertBody = CreateAmendSEAnnualSubmissionRequestBody.mkRequest(None, Some(updatedAnnualAllowances), None)
+    connector.createUpdateOrDeleteApiAnnualSummaries(ctx, maybeUpsertBody)
   }
 
   def saveAnswers[A: Api1802AnnualAllowancesBuilder: Writes](ctx: JourneyContextWithNino, answers: A)(implicit

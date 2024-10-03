@@ -17,15 +17,17 @@
 package services
 
 import bulders.BusinessDataBuilder._
-import cats.implicits.catsSyntaxEitherId
+import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import models.common.BusinessId
 import models.connector.api_1171._
+import models.connector.api_1786.{FinancialsType, IncomeTypeTestData}
 import models.connector.api_1803
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.domain.BusinessTestData
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
-import models.error.ServiceError
+import models.error.{DownstreamErrorBody, ServiceError}
+import models.frontend.adjustments.NetBusinessProfitOrLossValues
 import org.scalatest.EitherValues._
 import org.scalatest.wordspec.AnyWordSpecLike
 import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
@@ -165,19 +167,66 @@ class BusinessServiceSpec extends AnyWordSpecLike {
   }
 
   "getNetBusinessProfitOrLossValues" should {
-    "return NetBusinessProfitValues for a business" in {
-      val expectedResult = Right(aNetBusinessProfitValues)
-      val stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+    "return NetBusinessProfitValues for a business" in new Test {
+      override def stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
         getBusinessIncomeSourcesSummaryResult = aBusinessIncomeSourcesSummaryResponse.asRight
       )
-      val stubIFSConnector = StubIFSConnector(
-        getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight),
+      override def stubIFSConnector = StubIFSConnector(
+        getPeriodicSummaryDetailResult =
+          Future.successful(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Some(IncomeTypeTestData.sample))).asRight),
         getAnnualSummariesResult = Right(api_1803.SuccessResponseSchema(None, None, None))
       )
-      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), stubIFSConnector)
-      service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.map { result =>
-        assert(result === expectedResult)
+      val result = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
+
+      assert(result === expectedSuccessResult.asRight)
+    }
+
+    "return an error from downstream" when {
+      "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in new Test {
+        override def stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(getBusinessIncomeSourcesSummaryResult = error.asLeft)
+
+        val result = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
+
+        assert(result === error.asLeft)
+      }
+      "IFSConnector .getPeriodicSummaryDetail returns an error" in new Test {
+        override def stubIFSConnector = StubIFSConnector(getPeriodicSummaryDetailResult = Future(error.asLeft))
+
+        val result = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
+
+        assert(result === error.asLeft)
+      }
+      "IFSConnector .getAnnualSummaries returns an error" in new Test {
+        override def stubIFSConnector = StubIFSConnector(getAnnualSummariesResult = error.asLeft)
+
+        val result = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
+
+        assert(result === error.asLeft)
       }
     }
+  }
+
+  trait Test {
+    val error = SingleDownstreamError(400, DownstreamErrorBody.SingleDownstreamErrorBody.serverError)
+
+    val expectedSuccessResult = NetBusinessProfitOrLossValues(
+      IncomeTypeTestData.sample.turnover.getOrElse(0),
+      IncomeTypeTestData.sample.other.getOrElse(0),
+      aBusinessIncomeSourcesSummaryResponse.totalExpenses,
+      aBusinessIncomeSourcesSummaryResponse.netProfit,
+      aBusinessIncomeSourcesSummaryResponse.netLoss,
+      0,
+      0,
+      0,
+      aBusinessIncomeSourcesSummaryResponse.totalAdditions.getOrElse(0),
+      0,
+      0,
+      aBusinessIncomeSourcesSummaryResponse.totalDeductions.getOrElse(0)
+    )
+
+    def stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
+    def stubIFSConnector                = StubIFSConnector()
+
+    def service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), stubIFSConnector)
   }
 }

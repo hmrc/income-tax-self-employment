@@ -20,7 +20,14 @@ import play.api.libs.json.{Json, OFormat}
 
 case class CreateAmendSEAnnualSubmissionRequestBody(annualAdjustments: Option[AnnualAdjustments],
                                                     annualAllowances: Option[AnnualAllowances],
-                                                    annualNonFinancials: Option[AnnualNonFinancials])
+                                                    annualNonFinancials: Option[AnnualNonFinancials]) {
+
+  def replaceEmptyModelsWithNone: Option[CreateAmendSEAnnualSubmissionRequestBody] = {
+    val adjustments = if (annualAdjustments.exists(_.isDefined)) annualAdjustments else None
+    val allowances  = if (annualAllowances.exists(_.isDefined)) annualAllowances else None
+    CreateAmendSEAnnualSubmissionRequestBody.mkRequest(adjustments, allowances, annualNonFinancials)
+  }
+}
 
 object CreateAmendSEAnnualSubmissionRequestBody {
   implicit val formats: OFormat[CreateAmendSEAnnualSubmissionRequestBody] = Json.format[CreateAmendSEAnnualSubmissionRequestBody]

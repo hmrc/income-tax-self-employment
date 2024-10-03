@@ -83,18 +83,19 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
       saveClass4BusinessData(businessContext, answer)
     }
 
-    EitherT.rightT[Future, ServiceError](updateOtherIdsToNotExempt.map(_ => saveAllNewExemptionAnswers))
+    EitherT.rightT[Future, ServiceError](updateOtherIdsToNotExempt.flatMap(_ => saveAllNewExemptionAnswers))
   }
 
   def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
-      hc: HeaderCarrier): ApiResultT[Unit] = {
-    val result = for {
-      existingAnswers <- connector.getAnnualSummaries(ctx).map(_.getOrElse(api_1803.SuccessResponseSchema.empty))
-      upsertRequest = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourRequestData(ctx, businessExemptionAnswer, existingAnswers)
-      _ <- connector.createAmendSEAnnualSubmission(upsertRequest)
-    } yield ()
-    EitherT.rightT[Future, ServiceError](result)
-  }
+      hc: HeaderCarrier): ApiResultT[Unit] =
+    for {
+      maybeExistingAnswers <- EitherT(connector.getAnnualSummaries(ctx).map(handleOptionalAnnualSummaries))
+      existingAnswers = maybeExistingAnswers.getOrElse(api_1803.SuccessResponseSchema.empty)
+      updatedAnnualSubmissionBody = CreateAmendSEAnnualSubmissionRequestData
+        .mkNicsClassFourRequestBody(businessExemptionAnswer, existingAnswers)
+        .replaceEmptyModelsWithNone
+      result <- connector.createUpdateOrDeleteApiAnnualSummaries(ctx, updatedAnnualSubmissionBody)
+    } yield result
 
   private def clearOtherExistingClass4Data(ctx: JourneyContextWithNino, idsToNotClear: List[String])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
@@ -107,8 +108,8 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
     val result = connector.getAnnualSummaries(ctx) flatMap {
       case Right(summary) if summary.hasNICsClassFourData =>
         val noExemptionAnswer = Class4ExemptionAnswers(ctx.businessId, class4Exempt = false, None)
-        val requestData       = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourRequestData(ctx, noExemptionAnswer, summary)
-        connector.createAmendSEAnnualSubmission(requestData)
+        val requestBody = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourRequestBody(noExemptionAnswer, summary).replaceEmptyModelsWithNone
+        connector.createUpdateOrDeleteApiAnnualSummaries(ctx, requestBody).value
       case Right(_)                                 => Future.successful(Right[ServiceError, Unit](()))
       case Left(error) if error.status == NOT_FOUND => Future.successful(Right[ServiceError, Unit](()))
       case leftResult                               => Future(leftResult.void)
