@@ -37,10 +37,12 @@ import scala.concurrent.{ExecutionContext, Future}
 /** Keep the methods sorted by API number
   */
 trait IFSConnector {
-  def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response]
+  def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response]
   def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response]
-  def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response]
+  def deleteSEAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
+
+  def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response]
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response]
   def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response]
   def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response]
@@ -110,6 +112,15 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     get[Api1786Response](http, context)
   }
 
+  def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] = {
+    val url                                                                            = annualSummariesUrl(ctx.nino, ctx.businessId, ctx.taxYear)
+    val context                                                                        = appConfig.mkMetadata(IFSApiName.Api1803, url)
+    implicit val reads: HttpReads[ApiResponse[Option[api_1803.SuccessResponseSchema]]] = commonGetReads[api_1803.SuccessResponseSchema]
+
+    val result = EitherT(get[ApiResponseOption[api_1803.SuccessResponseSchema]](http, context))
+    result.map(_.getOrElse(api_1803.SuccessResponseSchema.empty)).value
+  }
+
   def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
     val url                                          = annualSummariesUrl(data.nino, data.businessId, data.taxYear)
@@ -119,13 +130,12 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     put[CreateAmendSEAnnualSubmissionRequestBody, Api1802Response](http, context, data.body)
   }
 
-  def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] = {
-    val url                                                                            = annualSummariesUrl(ctx.nino, ctx.businessId, ctx.taxYear)
-    val context                                                                        = appConfig.mkMetadata(IFSApiName.Api1803, url)
-    implicit val reads: HttpReads[ApiResponse[Option[api_1803.SuccessResponseSchema]]] = commonGetReads[api_1803.SuccessResponseSchema]
+  def deleteSEAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
+    val url                                          = annualSummariesUrl(ctx.nino, ctx.businessId, ctx.taxYear)
+    val context                                      = appConfig.mkMetadata(IFSApiName.Api1787, url)
+    implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
 
-    val result = EitherT(get[ApiResponseOption[api_1803.SuccessResponseSchema]](http, context))
-    result.map(_.getOrElse(api_1803.SuccessResponseSchema.empty)).value
+    EitherT(delete(http, context))
   }
 
   def getDisclosuresSubmission(
