@@ -28,6 +28,18 @@ case class NICsClass4Answers(class4NICs: Boolean,
 
   def userHasSingleBusinessExemption: Boolean = class4ExemptionReason.isDefined
 
+  def cleanUpExemptionListsFromFE: NICsClass4Answers = {
+    val diving      = class4DivingExempt.map(_.filterNot(_.value == "class-four-other-exemption")).filter(_.nonEmpty)
+    val trustee     = class4NonDivingExempt.map(_.filterNot(_.value == "class-four-none-exempt")).filter(_.nonEmpty)
+    val class4YesNo = if (diving.isEmpty && trustee.isEmpty) false else class4NICs
+    NICsClass4Answers(
+      class4YesNo,
+      class4ExemptionReason,
+      diving,
+      trustee
+    )
+  }
+
   def toMultipleBusinessesAnswers: List[Class4ExemptionAnswers] = {
     val divers =
       class4DivingExempt.fold(List.empty[Class4ExemptionAnswers])(_.map(id =>

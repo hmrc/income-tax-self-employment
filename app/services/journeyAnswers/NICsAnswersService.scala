@@ -56,8 +56,8 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
       upsertRequest = RequestSchemaAPI1638.mkRequestBody(answers, existingAnswers)
       _ <- upsertOrDeleteClass2Data(upsertRequest, ctx)
       storageAnswers = NICsStorageAnswers.fromJourneyAnswers(answers)
-      _ <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.NationalInsuranceContributions), Json.toJson(storageAnswers))
-    } yield ()
+      result <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.NationalInsuranceContributions), Json.toJson(storageAnswers))
+    } yield result
 
   private def upsertOrDeleteClass2Data(maybeClass2Nics: Option[RequestSchemaAPI1638], ctx: JourneyContextWithNino)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
@@ -70,38 +70,41 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
     for {
       updatedContext <- updateJourneyContextWithSingleBusinessId(ctx)
       exemptionAnswer = Class4ExemptionAnswers(updatedContext.businessId, answers.class4NICs, answers.class4ExemptionReason)
-      _ <- saveClass4BusinessData(updatedContext, exemptionAnswer)
-    } yield ()
+      result <- saveClass4BusinessData(updatedContext, exemptionAnswer)
+    } yield result
 
-  def saveClass4MultipleBusinesses(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
-    val multipleBusinessExemptionAnswers: List[Class4ExemptionAnswers] = answers.toMultipleBusinessesAnswers
+  def saveClass4MultipleBusinesses(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit
+      hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
+    val multipleBusinessExemptionAnswers: List[Class4ExemptionAnswers] = answers.cleanUpExemptionListsFromFE.toMultipleBusinessesAnswers
     val idsWithExemption: List[String]                                 = multipleBusinessExemptionAnswers.map(_.businessId.value)
-    val updateOtherIdsToNotExempt: ApiResultT[Unit]                    = clearOtherExistingClass4Data(ctx, idsToNotClear = idsWithExemption).void
+    val updateOtherIdsToNotExempt: ApiResultT[Unit]                    = clearOtherExistingClass4Data(ctx, idsToNotClear = idsWithExemption)
 
-    val saveAllNewExemptionAnswers = multipleBusinessExemptionAnswers.traverse { answer =>
-      val businessContext = ctx(newId = answer.businessId)
-      saveClass4BusinessData(businessContext, answer)
-    }
+    val saveAllNewExemptionAnswers: EitherT[Future, ServiceError, Unit] = multipleBusinessExemptionAnswers
+      .traverse { answer =>
+        val businessContext = ctx(newId = answer.businessId)
+        saveClass4BusinessData(businessContext, answer)
+      }
+      .map(_ => ())
 
-    EitherT.rightT[Future, ServiceError](updateOtherIdsToNotExempt.map(_ => saveAllNewExemptionAnswers))
+    updateOtherIdsToNotExempt.flatMap(_ => saveAllNewExemptionAnswers)
   }
 
-  def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
+  private def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
     val result = for {
       existingAnswers <- connector.getAnnualSummaries(ctx).map(_.getOrElse(api_1803.SuccessResponseSchema.empty))
       upsertRequest = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourRequestData(ctx, businessExemptionAnswer, existingAnswers)
-      _ <- connector.createAmendSEAnnualSubmission(upsertRequest)
-    } yield ()
-    EitherT.rightT[Future, ServiceError](result)
+      result <- connector.createAmendSEAnnualSubmission(upsertRequest)
+    } yield result
+    EitherT(result)
   }
 
   private def clearOtherExistingClass4Data(ctx: JourneyContextWithNino, idsToNotClear: List[String])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       allUserBusinessIds <- businessConnector.getBusinesses(ctx.nino).map(_.taxPayerDisplayResponse.businessData.map(_.map(_.incomeSourceId)))
-      idsToClearData = allUserBusinessIds.filterNot(idsToNotClear.contains(_))
-      _              = idsToClearData.traverse(_.map(id => setExistingClass4DataToNotExempt(ctx(newId = BusinessId(id)))))
-    } yield ()
+      idsToClearData = allUserBusinessIds.map(_.filterNot(idsToNotClear.contains(_)))
+      result <- idsToClearData.traverse(ids => ids.traverse(id => setExistingClass4DataToNotExempt(ctx(newId = BusinessId(id))))).map(_ => ())
+    } yield result
 
   private def setExistingClass4DataToNotExempt(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     val result = connector.getAnnualSummaries(ctx) flatMap {
