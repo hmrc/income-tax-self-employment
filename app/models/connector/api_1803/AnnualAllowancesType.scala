@@ -40,21 +40,26 @@ case class AnnualAllowancesType(
     zeroEmissionsCarAllowance: Option[BigDecimal],
     tradingIncomeAllowance: Option[BigDecimal]
 ) {
-  def toApi1802AnnualAllowance: AnnualAllowances = AnnualAllowances(
-    annualInvestmentAllowance = annualInvestmentAllowance,
-    capitalAllowanceMainPool = capitalAllowanceMainPool,
-    capitalAllowanceSpecialRatePool = capitalAllowanceSpecialRatePool,
-    zeroEmissionGoodsVehicleAllowance = zeroEmissionGoodsVehicleAllowance,
-    businessPremisesRenovationAllowance = businessPremisesRenovationAllowance,
-    enhanceCapitalAllowance = enhanceCapitalAllowance,
-    allowanceOnSales = allowanceOnSales,
-    capitalAllowanceSingleAssetPool = capitalAllowanceSingleAssetPool,
-    electricChargePointAllowance = electricChargePointAllowance,
-    structuredBuildingAllowance = None,         // TODO SASS-6247 - fix all save and continue, we first need to GET before we call PUT
-    enhancedStructuredBuildingAllowance = None, // TODO SASS-6247 - fix all save and continue, we first need to GET before we call PUT
-    zeroEmissionsCarAllowance = zeroEmissionsCarAllowance,
-    tradingIncomeAllowance = tradingIncomeAllowance
-  )
+  def toApi1802AnnualAllowance: AnnualAllowances = {
+    val sba = if (structuredBuildingAllowance.exists(_.nonEmpty)) structuredBuildingAllowance.map(_.map(_.toBuildingAllowance)) else None
+    val esba =
+      if (enhancedStructuredBuildingAllowance.exists(_.nonEmpty)) enhancedStructuredBuildingAllowance.map(_.map(_.toBuildingAllowance)) else None
+    AnnualAllowances(
+      annualInvestmentAllowance = annualInvestmentAllowance,
+      capitalAllowanceMainPool = capitalAllowanceMainPool,
+      capitalAllowanceSpecialRatePool = capitalAllowanceSpecialRatePool,
+      zeroEmissionGoodsVehicleAllowance = zeroEmissionGoodsVehicleAllowance,
+      businessPremisesRenovationAllowance = businessPremisesRenovationAllowance,
+      enhanceCapitalAllowance = enhanceCapitalAllowance,
+      allowanceOnSales = allowanceOnSales,
+      capitalAllowanceSingleAssetPool = capitalAllowanceSingleAssetPool,
+      electricChargePointAllowance = electricChargePointAllowance,
+      structuredBuildingAllowance = sba,
+      enhancedStructuredBuildingAllowance = esba,
+      zeroEmissionsCarAllowance = zeroEmissionsCarAllowance,
+      tradingIncomeAllowance = tradingIncomeAllowance
+    )
+  }
 }
 
 object AnnualAllowancesType {
