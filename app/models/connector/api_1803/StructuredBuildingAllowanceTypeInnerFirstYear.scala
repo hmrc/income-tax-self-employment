@@ -16,6 +16,7 @@
 
 package models.connector.api_1803
 
+import models.connector.api_1802.request.FirstYear
 import play.api.libs.json._
 
 /** Represents the Swagger definition for structuredBuildingAllowanceType_inner_firstYear.
@@ -24,10 +25,10 @@ import play.api.libs.json._
   * @param qualifyingAmountExpenditure
   *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   */
-case class StructuredBuildingAllowanceTypeInnerFirstYear(
-    qualifyingDate: String,
-    qualifyingAmountExpenditure: BigDecimal
-)
+case class StructuredBuildingAllowanceTypeInnerFirstYear(qualifyingDate: String, qualifyingAmountExpenditure: BigDecimal) {
+
+  def toFirstYear: FirstYear = FirstYear(qualifyingDate, qualifyingAmountExpenditure)
+}
 
 object StructuredBuildingAllowanceTypeInnerFirstYear {
   implicit lazy val structuredBuildingAllowanceTypeInnerFirstYearJsonFormat: Format[StructuredBuildingAllowanceTypeInnerFirstYear] =

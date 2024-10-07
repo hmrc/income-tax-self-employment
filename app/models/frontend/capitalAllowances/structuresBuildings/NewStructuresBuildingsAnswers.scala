@@ -24,13 +24,13 @@ import play.api.libs.json.{Format, Json}
 
 import java.time.LocalDate
 
-final case class NewStructuresBuildingsAnswers(
-    structuresBuildingsAllowance: Boolean,
-    structuresBuildingsEligibleClaim: Option[Boolean],
-    structuresBuildingsPreviousClaimUse: Option[Boolean],
-    structuresBuildingsClaimed: Option[Boolean],
-    newStructuresBuildings: Option[List[NewStructureBuilding]]
-) extends FrontendAnswers[NewStructuresBuildingsDb] {
+final case class NewStructuresBuildingsAnswers(structuresBuildingsAllowance: Boolean,
+                                               structuresBuildingsEligibleClaim: Option[Boolean],
+                                               structuresBuildingsPreviousClaimUse: Option[Boolean],
+                                               structuresBuildingsClaimed: Option[Boolean],
+                                               newStructuresBuildings: Option[List[NewStructureBuilding]])
+    extends FrontendAnswers[NewStructuresBuildingsDb] {
+
   def toDbModel: Option[NewStructuresBuildingsDb] = Some(
     NewStructuresBuildingsDb(
       structuresBuildingsAllowance,
@@ -41,9 +41,7 @@ final case class NewStructuresBuildingsAnswers(
 
   def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances = {
     val buildingAllowance = if (structuresBuildingsAllowance) {
-      val updated = newStructuresBuildings.getOrElse(Nil).map { structure =>
-        structure.toBuildingAllowance
-      }
+      val updated = newStructuresBuildings.getOrElse(Nil).map(_.toBuildingAllowance)
       Some(updated.flatten)
     } else {
       None

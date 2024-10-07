@@ -152,6 +152,7 @@ object StubIFSConnector {
     Some(
       AnnualAllowancesType.emptyAnnualAllowancesType.copy(
         zeroEmissionsCarAllowance = Some(5000.00),
+        zeroEmissionGoodsVehicleAllowance = Some(5000.00),
         electricChargePointAllowance = Some(4000.00)
       )),
     None
