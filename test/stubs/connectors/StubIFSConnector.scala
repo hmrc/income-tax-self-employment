@@ -22,7 +22,9 @@ import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.IFSConnector
 import connectors.IFSConnector._
 import models.common.{BusinessId, JourneyContextWithNino}
+import models.connector._
 import models.connector.api_1171.BusinessDataDetailsTestData
+import models.connector.api_1500.LossType
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
@@ -32,8 +34,6 @@ import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import models.connector.citizen_details.{Ids, LegalNames, Name}
-import models.connector._
-import models.connector.api_1500.LossType
 import models.domain.ApiResultT
 import models.error.{DownstreamError, ServiceError}
 import stubs.connectors.StubIFSConnector._
@@ -48,6 +48,7 @@ case class StubIFSConnector(
     amendSEPeriodSummaryResult: Either[DownstreamError, Unit] = Right(()),
     getAnnualSummariesResult: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
     createAmendSEAnnualSubmissionResult: Either[DownstreamError, Unit] = Right(()),
+    deleteSEAnnualSummariesResult: Either[ServiceError, Unit] = Right(()),
     listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
     getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight),
     getDisclosuresSubmissionResult: Either[ServiceError, Option[SuccessResponseAPI1639]] = Right(None),
@@ -101,6 +102,11 @@ case class StubIFSConnector(
       case _                         => upsertAnnualSummariesSubmissionData = Some(data)
     }
     Future.successful(createAmendSEAnnualSubmissionResult)
+  }
+
+  def deleteSEAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
+    upsertAnnualSummariesSubmissionData = None
+    EitherT.fromEither[Future](deleteSEAnnualSummariesResult)
   }
 
   def getDisclosuresSubmission(

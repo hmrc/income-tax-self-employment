@@ -37,7 +37,7 @@ final case class WritingDownAllowanceAnswers(wdaSpecialRate: Option[Boolean],
       wdaSingleAsset
     ))
 
-  def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances =
+  def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
     current
       .getOrElse(AnnualAllowances.empty)
       .copy(

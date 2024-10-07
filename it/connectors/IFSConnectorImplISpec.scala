@@ -84,6 +84,19 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
     }
   }
 
+  "deleteSEAnnualSummaries" must {
+    "return unit" in {
+      val downstreamUrl = s"/income-tax/${asTys(taxYear)}/${nino.value}/self-employments/${businessId.value}/annual-summaries"
+      stubDelete(
+        url = downstreamUrl,
+        expectedResponse = "",
+        expectedStatus = OK
+      )
+      val result = connector.deleteSEAnnualSummaries(ctx).value.futureValue
+      assert(result === Right(()))
+    }
+  }
+
   "createSEPeriodSummary" must {
     "return the submission id" in new Api1894Test {
       stubPostWithRequestAndResponseBody(

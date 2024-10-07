@@ -105,7 +105,7 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
   private def createUpdatedRequestBody[A <: DatabaseAnswers](existingData: api_1803.SuccessResponseSchema,
                                                              answers: FrontendAnswers[A]): Option[CreateAmendSEAnnualSubmissionRequestBody] = {
     val requestBody             = existingData.toRequestBody
-    val updatedAnnualAllowances = answers.toDownStream(requestBody.annualAllowances).returnNoneIfEmpty
+    val updatedAnnualAllowances = answers.toDownStreamAnnualAllowances(requestBody.annualAllowances).returnNoneIfEmpty
     CreateAmendSEAnnualSubmissionRequestBody.mkRequest(requestBody.annualAdjustments, updatedAnnualAllowances, requestBody.annualNonFinancials)
   }
 

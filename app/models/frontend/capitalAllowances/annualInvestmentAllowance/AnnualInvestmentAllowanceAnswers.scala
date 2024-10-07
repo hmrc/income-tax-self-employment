@@ -27,7 +27,7 @@ final case class AnnualInvestmentAllowanceAnswers(annualInvestmentAllowance: Boo
 
   def toDbModel: Option[AnnualInvestmentAllowanceDb] = Some(AnnualInvestmentAllowanceDb(annualInvestmentAllowance))
 
-  def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances =
+  def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
     current.getOrElse(AnnualAllowances.empty).copy(annualInvestmentAllowance = annualInvestmentAllowanceAmount)
 }
 
