@@ -55,7 +55,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 
   def getLossByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[LossData]] = {
     val losses = ifsBusinessDetailsConnector.listBroughtForwardLosses(ctx.nino, ctx.taxYear)
-    val result = losses.transform {
+    losses.transform {
       case Right(list) =>
         Right(list.losses.find(_.businessId == ctx.businessId.value))
       case Left(error) if error.status == NOT_FOUND =>
@@ -63,7 +63,6 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       case Left(otherError) =>
         Left(otherError)
     }
-    result
   }
 
   private def createUpdateOrDeleteAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
