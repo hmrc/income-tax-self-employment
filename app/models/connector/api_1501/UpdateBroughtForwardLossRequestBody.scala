@@ -18,7 +18,7 @@ package models.connector.api_1501
 
 import play.api.libs.json.{Format, Json}
 
-case class UpdateBroughtForwardLossRequestBody(updatedBroughtForwardLossAmount: BigDecimal)
+case class UpdateBroughtForwardLossRequestBody(lossAmount: BigDecimal)
 
 object UpdateBroughtForwardLossRequestBody {
   implicit val formats: Format[UpdateBroughtForwardLossRequestBody] =

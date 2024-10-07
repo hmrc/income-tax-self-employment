@@ -16,30 +16,28 @@
 
 package connectors.data
 
-import models.connector.api_1502._
+import models.connector.api_1870._
 import play.api.libs.json.Json
 import utils.BaseSpec._
 
-trait Api1502Test {
-  val lossId        = "1234568790ABCDE"
-  val downstreamUrl = s"/individuals/losses/$nino/brought-forward-losses/$lossId"
+trait Api1870Test {
+  val currentTaxYear: String = taxYear.toYYYY_YY
+  val downstreamUrl          = s"/individuals/losses/$nino/brought-forward-losses/tax-year/$currentTaxYear"
 
   val successResponseRaw: String =
     s"""{
-      |   "businessId": "12345678912345",
-      |   "typeOfLoss": "self-employment",
-      |   "lossAmount": 260,
-      |   "taxYearBroughtForwardFrom": "2020-21",
-      |   "lastModified": "2020-07-13T12:13:48.763Z",
-      |   "links": [
-      |    {
-      |      "href": "/individuals/losses/TC663795B/brought-forward-losses/AAZZ1234567890a",
-      |      "rel": "self",
-      |      "method": "GET"
-      |    }
-      |  ]
-      |}
-      |""".stripMargin
+       |  "losses": [
+       |   {
+       |      "lossId": "1234568790ABCDE",
+       |      "businessId": "12345678912345",
+       |      "typeOfLoss": "self-employment",
+       |      "lossAmount": 260,
+       |      "taxYearBroughtForwardFrom": "2020-21",
+       |      "lastModified": "2020-07-13T12:13:48.763Z"
+       |   }
+       |   ]
+       |}
+       |""".stripMargin
 
   val successResponse = Json.parse(successResponseRaw).as[SuccessResponseSchema]
 }

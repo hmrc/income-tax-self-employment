@@ -30,6 +30,7 @@ import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.connector.api_1803.{AnnualAllowancesType, SuccessResponseSchema}
+import models.connector.api_1870.LossData
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
@@ -73,7 +74,7 @@ case class StubIFSConnector(
 
   override def amendSEPeriodSummary(
       data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] = {
-    amendSEPeriodSummaryResultData = Some(data)
+    if (amendSEPeriodSummaryResult.isRight) amendSEPeriodSummaryResultData = Some(data)
     Future.successful(amendSEPeriodSummaryResult)
   }
 
@@ -94,7 +95,7 @@ case class StubIFSConnector(
 
   override def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
-    data.businessId match {
+    if (createAmendSEAnnualSubmissionResult.isRight) data.businessId match {
       case BusinessId("BusinessId1") => upsertAnnualSummariesSubmissionDataTest1 = Some(data)
       case BusinessId("BusinessId2") => upsertAnnualSummariesSubmissionDataTest2 = Some(data)
       case BusinessId("BusinessId3") => upsertAnnualSummariesSubmissionDataTest3 = Some(data)
@@ -116,12 +117,12 @@ case class StubIFSConnector(
   def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[Unit] = {
-    upsertDisclosuresSubmissionData = Some(data)
+    if (upsertDisclosuresSubmissionResult.isRight) upsertDisclosuresSubmissionData = Some(data)
     EitherT.fromEither[Future](upsertDisclosuresSubmissionResult)
   }
 
   def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
-    upsertDisclosuresSubmissionData = None
+    if (deleteDisclosuresSubmissionResult.isRight) upsertDisclosuresSubmissionData = None
     EitherT.fromEither[Future](deleteDisclosuresSubmissionResult)
   }
 
@@ -188,10 +189,31 @@ object StubIFSConnector {
 
   val api1500EmptyResponse: api_1500.SuccessResponseSchema   = api_1500.SuccessResponseSchema("")
   val api1500SuccessResponse: api_1500.SuccessResponseSchema = api_1500.SuccessResponseSchema("5678")
-  val api1501EmptyResponse: api_1501.SuccessResponseSchema   = api_1501.SuccessResponseSchema("", LossType.Income, 0, "", "", LocalDateTime.now)
+  val api1501EmptyResponse: api_1501.SuccessResponseSchema   = api_1501.SuccessResponseSchema("", LossType.SelfEmployment, 0, "", LocalDateTime.now)
   val api1501SuccessResponse: api_1501.SuccessResponseSchema =
-    api_1501.SuccessResponseSchema("1234", LossType.Income, 400, "2024", "5678", LocalDateTime.now)
-  val api1502EmptyResponse: api_1502.SuccessResponseSchema = api_1502.SuccessResponseSchema("", LossType.Income, 0, "", "", LocalDateTime.now)
+    api_1501.SuccessResponseSchema("1234", LossType.SelfEmployment, 400, "2022-23", LocalDateTime.now)
+  val api1502EmptyResponse: api_1502.SuccessResponseSchema =
+    api_1502.SuccessResponseSchema("", LossType.SelfEmployment, 0, "", LocalDateTime.now, None)
   val api1502SuccessResponse: api_1502.SuccessResponseSchema =
-    api_1502.SuccessResponseSchema("1234", LossType.Income, 400, "2024", "5678", LocalDateTime.now)
+    api_1502.SuccessResponseSchema(
+      "1234",
+      LossType.SelfEmployment,
+      400,
+      "2022-23",
+      LocalDateTime.now,
+      Some(
+        List(
+          api_1502.SuccessResponseSchemaLinks(
+            "/individuals/losses/TC663795B/brought-forward-losses/AAZZ1234567890a",
+            "self",
+            "GET"
+          )))
+    )
+  val api1870EmptyResponse: api_1870.SuccessResponseSchema = api_1870.SuccessResponseSchema(List.empty)
+  val api1870SuccessResponse: api_1870.SuccessResponseSchema = api_1870.SuccessResponseSchema(
+    List(
+      LossData("5678", "SJPR05893938418", LossType.SelfEmployment, 400, "2022-23", LocalDateTime.now),
+      LossData("5689", "1245", LossType.SelfEmployment, 500, "2021-22", LocalDateTime.now)
+    )
+  )
 }
