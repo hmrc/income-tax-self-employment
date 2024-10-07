@@ -16,6 +16,6 @@
 
 package models.connector.api_1501
 
-import models.common.{BusinessId, Nino}
+import models.common.Nino
 
 case class UpdateBroughtForwardLossRequestData(nino: Nino, lossId: String, body: UpdateBroughtForwardLossRequestBody)

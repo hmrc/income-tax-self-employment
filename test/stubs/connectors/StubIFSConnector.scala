@@ -22,19 +22,19 @@ import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.IFSConnector
 import connectors.IFSConnector._
 import models.common.{BusinessId, JourneyContextWithNino}
+import models.connector._
 import models.connector.api_1171.BusinessDataDetailsTestData
+import models.connector.api_1500.LossType
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.connector.api_1803.{AnnualAllowancesType, SuccessResponseSchema}
+import models.connector.api_1870.LossData
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import models.connector.citizen_details.{Ids, LegalNames, Name}
-import models.connector._
-import models.connector.api_1500.LossType
-import models.connector.api_1870.LossData
 import models.domain.ApiResultT
 import models.error.{DownstreamError, ServiceError}
 import stubs.connectors.StubIFSConnector._
@@ -73,7 +73,7 @@ case class StubIFSConnector(
 
   override def amendSEPeriodSummary(
       data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] = {
-    amendSEPeriodSummaryResultData = Some(data)
+    if (amendSEPeriodSummaryResult.isRight) amendSEPeriodSummaryResultData = Some(data)
     Future.successful(amendSEPeriodSummaryResult)
   }
 
@@ -94,7 +94,7 @@ case class StubIFSConnector(
 
   override def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
-    data.businessId match {
+    if (createAmendSEAnnualSubmissionResult.isRight) data.businessId match {
       case BusinessId("BusinessId1") => upsertAnnualSummariesSubmissionDataTest1 = Some(data)
       case BusinessId("BusinessId2") => upsertAnnualSummariesSubmissionDataTest2 = Some(data)
       case BusinessId("BusinessId3") => upsertAnnualSummariesSubmissionDataTest3 = Some(data)
@@ -111,12 +111,12 @@ case class StubIFSConnector(
   def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[Unit] = {
-    upsertDisclosuresSubmissionData = Some(data)
+    if (upsertDisclosuresSubmissionResult.isRight) upsertDisclosuresSubmissionData = Some(data)
     EitherT.fromEither[Future](upsertDisclosuresSubmissionResult)
   }
 
   def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
-    upsertDisclosuresSubmissionData = None
+    if (deleteDisclosuresSubmissionResult.isRight) upsertDisclosuresSubmissionData = None
     EitherT.fromEither[Future](deleteDisclosuresSubmissionResult)
   }
 
