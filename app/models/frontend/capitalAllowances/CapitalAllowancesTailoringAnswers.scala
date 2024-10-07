@@ -17,11 +17,9 @@
 package models.frontend.capitalAllowances
 
 import models.common.{Enumerable, WithName}
-import models.database.DatabaseAnswers
 import play.api.libs.json.{Json, OFormat}
 
 case class CapitalAllowancesTailoringAnswers(claimCapitalAllowances: Boolean, selectCapitalAllowances: List[CapitalAllowances])
-    extends DatabaseAnswers
 
 object CapitalAllowancesTailoringAnswers {
   implicit val formats: OFormat[CapitalAllowancesTailoringAnswers] = Json.format[CapitalAllowancesTailoringAnswers]

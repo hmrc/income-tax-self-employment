@@ -16,10 +16,9 @@
 
 package models.database.capitalAllowances
 
-import models.database.DatabaseAnswers
 import play.api.libs.json.{Json, OFormat}
 
-final case class AnnualInvestmentAllowanceDb(annualInvestmentAllowance: Boolean) extends DatabaseAnswers
+final case class AnnualInvestmentAllowanceDb(annualInvestmentAllowance: Boolean)
 
 object AnnualInvestmentAllowanceDb {
   implicit val format: OFormat[AnnualInvestmentAllowanceDb] = Json.format[AnnualInvestmentAllowanceDb]

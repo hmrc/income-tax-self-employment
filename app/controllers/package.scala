@@ -16,7 +16,6 @@
 
 import controllers.actions.AuthorisedAction
 import models.common.{BusinessId, JourneyContextWithNino, Nino, TaxYear}
-import models.database.DatabaseAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.error.ServiceError.{CannotParseJsonError, CannotReadJsonError}
@@ -70,7 +69,7 @@ package object controllers {
       case Failure(err) => Future.successful(toBadRequest(CannotParseJsonError(err)))
     }
 
-  def getCapitalAllowanceBodyWithCtx[A <: DatabaseAnswers, B <: FrontendAnswers[A]: Reads](taxYear: TaxYear, businessId: BusinessId, nino: Nino)(
+  def getCapitalAllowanceBodyWithCtx[A, B <: FrontendAnswers[A]: Reads](taxYear: TaxYear, businessId: BusinessId, nino: Nino)(
       invokeBlock: (JourneyContextWithNino, B) => ApiResultT[Result])(implicit
       ec: ExecutionContext,
       logger: Logger,

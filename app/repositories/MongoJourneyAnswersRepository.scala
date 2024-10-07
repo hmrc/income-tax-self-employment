@@ -33,7 +33,7 @@ import org.mongodb.scala.model._
 import org.mongodb.scala.result.UpdateResult
 import play.api.Logger
 import play.api.libs.json.{JsValue, Json, Reads}
-import services.journeyAnswers.getPersistedDatabaseAnswers
+import services.journeyAnswers.getPersistedAnswers
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import utils.Logging
@@ -107,7 +107,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
   def getAnswers[A: Reads](ctx: JourneyContext)(implicit ct: ClassTag[A]): ApiResultT[Option[A]] =
     for {
       row            <- get(ctx)
-      maybeDbAnswers <- getPersistedDatabaseAnswers[A](row)
+      maybeDbAnswers <- getPersistedAnswers[A](row)
     } yield maybeDbAnswers
 
   def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): ApiResultT[TaskList] = {

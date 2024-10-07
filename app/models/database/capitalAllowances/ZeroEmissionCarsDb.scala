@@ -16,7 +16,6 @@
 
 package models.database.capitalAllowances
 
-import models.database.DatabaseAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars._
 import play.api.libs.json.{Json, OFormat}
 
@@ -27,7 +26,6 @@ final case class ZeroEmissionCarsDb(zeroEmissionCars: Boolean,
                                     zecUsedOutsideSE: Option[ZecUseOutsideSE],
                                     zecUsedOutsideSEPercentage: Option[Int],
                                     zecHowMuchDoYouWantToClaim: Option[ZecHowMuchDoYouWantToClaim])
-    extends DatabaseAnswers
 
 object ZeroEmissionCarsDb {
   implicit val format: OFormat[ZeroEmissionCarsDb] = Json.format[ZeroEmissionCarsDb]

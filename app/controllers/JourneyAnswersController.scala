@@ -301,7 +301,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveCapitalAllowancesTailoring(taxYear: TaxYear, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
     getBody[CapitalAllowancesTailoringAnswers](user) { value =>
-      capitalAllowancesService.persistAnswersInDatabase(businessId, taxYear, user.getMtditid, CapitalAllowancesTailoring, value).map(_ => NoContent)
+      capitalAllowancesService.persistAnswers(businessId, taxYear, user.getMtditid, CapitalAllowancesTailoring, value).map(_ => NoContent)
     }
   }
 

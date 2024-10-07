@@ -16,7 +16,6 @@
 
 package models.database.capitalAllowances
 
-import models.database.DatabaseAnswers
 import models.frontend.capitalAllowances.electricVehicleChargePoints.{EvcpHowMuchDoYouWantToClaim, EvcpUseOutsideSE}
 import play.api.libs.json.{Json, OFormat}
 
@@ -27,7 +26,6 @@ final case class ElectricVehicleChargePointsDb(evcpAllowance: Boolean,
                                                evcpUsedOutsideSE: Option[EvcpUseOutsideSE],
                                                evcpUsedOutsideSEPercentage: Option[Int],
                                                evcpHowMuchDoYouWantToClaim: Option[EvcpHowMuchDoYouWantToClaim])
-    extends DatabaseAnswers
 
 object ElectricVehicleChargePointsDb {
   implicit val format: OFormat[ElectricVehicleChargePointsDb] = Json.format[ElectricVehicleChargePointsDb]

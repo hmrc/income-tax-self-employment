@@ -16,11 +16,9 @@
 
 package models.database.capitalAllowances
 
-import models.database.DatabaseAnswers
 import play.api.libs.json.{Format, Json}
 
 final case class WritingDownAllowanceDb(wdaSpecialRate: Option[Boolean], wdaMainRate: Option[Boolean], wdaSingleAsset: Option[Boolean])
-    extends DatabaseAnswers
 
 object WritingDownAllowanceDb {
   implicit val format: Format[WritingDownAllowanceDb] = Json.format[WritingDownAllowanceDb]

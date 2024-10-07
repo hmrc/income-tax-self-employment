@@ -68,10 +68,10 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
     }
   }
 
-  "persistAnswersInDatabase" should {
+  "persistAnswers" should {
     "persist answers successfully" in {
       val answers = genOne(zeroEmissionCarsAnswersGen).toDbModel.get
-      service.persistAnswersInDatabase[ZeroEmissionCarsDb](businessId, currTaxYear, mtditid, ZeroEmissionCars, answers).value.map { result =>
+      service.persistAnswers[ZeroEmissionCarsDb](businessId, currTaxYear, mtditid, ZeroEmissionCars, answers).value.map { result =>
         assert(result === ().asRight)
         assert(repository.lastUpsertedAnswer === Some(Json.toJson(answers)))
       }

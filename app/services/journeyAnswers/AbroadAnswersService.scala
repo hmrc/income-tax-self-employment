@@ -39,7 +39,7 @@ class AbroadAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository)(
   def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SelfEmploymentAbroadAnswers]] =
     for {
       row    <- repository.get(ctx.toJourneyContext(SelfEmploymentAbroad))
-      result <- getPersistedDatabaseAnswers[SelfEmploymentAbroadAnswers](row)
+      result <- getPersistedAnswers[SelfEmploymentAbroadAnswers](row)
     } yield result
 
   def persistAnswers(ctx: JourneyContextWithNino, answers: SelfEmploymentAbroadAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =

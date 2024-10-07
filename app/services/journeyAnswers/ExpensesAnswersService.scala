@@ -221,13 +221,13 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
     }
 
   private def getExpenseTailoringCategory(answers: JourneyAnswers): ApiResultT[ExpensesCategoriesDb] =
-    getPersistedDatabaseAnswers(answers)
+    getPersistedAnswers(answers)
 
   private def getNoExpensesTailoring: ApiResultT[ExpensesTailoringAnswers] =
     EitherT.rightT[Future, ServiceError](ExpensesTailoringAnswers.NoExpensesAnswers: ExpensesTailoringAnswers)
 
   private def getExpensesIndividualCategories(answers: JourneyAnswers): ApiResultT[ExpensesTailoringAnswers] =
-    getPersistedDatabaseAnswers(answers)
+    getPersistedAnswers(answers)
 
   private def getExpenseTailoringAsOneTotal(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[ExpensesTailoringAnswers] =
     getAnswers[AsOneTotalAnswers](ctx).map(identity[ExpensesTailoringAnswers])
@@ -241,7 +241,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   private def getTaxiAnswer(ctx: JourneyContextWithNino): ApiResultT[Option[TaxiMinicabOrRoadHaulageDb]] =
     for {
       maybeData <- getDbAnswers(ctx, GoodsToSellOrUse)
-      dbAnswer  <- getPersistedDatabaseAnswers[TaxiMinicabOrRoadHaulageDb](maybeData)
+      dbAnswer  <- getPersistedAnswers[TaxiMinicabOrRoadHaulageDb](maybeData)
     } yield dbAnswer
 
   private def getFullGoodsAnswers(ctx: JourneyContextWithNino, dbTaxiAnswer: Option[TaxiMinicabOrRoadHaulageDb])(implicit
@@ -262,7 +262,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   private def getWorkplaceRunningCostsDbAnswers(ctx: JourneyContextWithNino): ApiResultT[Option[WorkplaceRunningCostsDb]] =
     for {
       maybeData <- getDbAnswers(ctx, WorkplaceRunningCosts)
-      dbAnswers <- getPersistedDatabaseAnswers[WorkplaceRunningCostsDb](maybeData)
+      dbAnswers <- getPersistedAnswers[WorkplaceRunningCostsDb](maybeData)
     } yield dbAnswers
 
   private def getFullWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino, dbAnswers: Option[WorkplaceRunningCostsDb])(implicit

@@ -36,8 +36,8 @@ import models.common._
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1803
 import models.connector.api_1803.SuccessResponseSchema
+import models.database.JourneyAnswers
 import models.database.capitalAllowances._
-import models.database.{DatabaseAnswers, JourneyAnswers}
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.FrontendAnswers
@@ -62,16 +62,11 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait CapitalAllowancesAnswersService {
-  def saveAnswers[A <: DatabaseAnswers: Writes, B <: FrontendAnswers[A]: Reads](
-      journeyName: JourneyName,
-      taxYear: TaxYear,
-      businessId: BusinessId,
-      nino: Nino)(implicit hc: HeaderCarrier, user: AuthorisedAction.User[AnyContent], logger: Logger): Future[Result]
-  def persistAnswersInDatabase[A <: DatabaseAnswers: Writes](businessId: BusinessId,
-                                                             taxYear: TaxYear,
-                                                             mtditid: Mtditid,
-                                                             journey: JourneyName,
-                                                             answers: A): ApiResultT[Unit]
+  def saveAnswers[A: Writes, B <: FrontendAnswers[A]: Reads](journeyName: JourneyName, taxYear: TaxYear, businessId: BusinessId, nino: Nino)(implicit
+      hc: HeaderCarrier,
+      user: AuthorisedAction.User[AnyContent],
+      logger: Logger): Future[Result]
+  def persistAnswers[A: Writes](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A): ApiResultT[Unit]
   def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]]
   def getZeroEmissionCars(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]]
   def getZeroEmissionGoodsVehicle(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionGoodsVehicleAnswers]]
@@ -87,23 +82,22 @@ trait CapitalAllowancesAnswersService {
 class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends CapitalAllowancesAnswersService {
 
-  def saveAnswers[A <: DatabaseAnswers: Writes, B <: FrontendAnswers[A]: Reads](
-      journeyName: JourneyName,
-      taxYear: TaxYear,
-      businessId: BusinessId,
-      nino: Nino)(implicit hc: HeaderCarrier, user: AuthorisedAction.User[AnyContent], logger: Logger): Future[Result] =
+  def saveAnswers[A: Writes, B <: FrontendAnswers[A]: Reads](journeyName: JourneyName, taxYear: TaxYear, businessId: BusinessId, nino: Nino)(implicit
+      hc: HeaderCarrier,
+      user: AuthorisedAction.User[AnyContent],
+      logger: Logger): Future[Result] =
     getCapitalAllowanceBodyWithCtx[A, B](taxYear, businessId, nino) { (ctx, answers) =>
       for {
         maybeCurrent <- getAnnualSummaries(JourneyContextWithNino(ctx.taxYear, ctx.businessId, ctx.mtditid, ctx.nino))
         existingData          = maybeCurrent.getOrElse(api_1803.SuccessResponseSchema.empty)
         updatedSubmissionBody = createUpdatedRequestBody(existingData, answers)
         _ <- createUpdateOrDeleteApiAnnualSummaries(ctx, updatedSubmissionBody)
-        _ <- answers.toDbModel.traverse(dbAnswers => persistAnswersInDatabase(ctx.businessId, ctx.taxYear, ctx.mtditid, journeyName, dbAnswers))
+        _ <- answers.toDbModel.traverse(dbAnswers => persistAnswers(ctx.businessId, ctx.taxYear, ctx.mtditid, journeyName, dbAnswers))
       } yield NoContent
     }
 
-  private def createUpdatedRequestBody[A <: DatabaseAnswers](existingData: api_1803.SuccessResponseSchema,
-                                                             answers: FrontendAnswers[A]): Option[CreateAmendSEAnnualSubmissionRequestBody] = {
+  private def createUpdatedRequestBody[A](existingData: api_1803.SuccessResponseSchema,
+                                          answers: FrontendAnswers[A]): Option[CreateAmendSEAnnualSubmissionRequestBody] = {
     val requestBody             = existingData.toRequestBody
     val updatedAnnualAllowances = answers.toDownStreamAnnualAllowances(requestBody.annualAllowances).returnNoneIfEmpty
     CreateAmendSEAnnualSubmissionRequestBody.mkRequest(requestBody.annualAdjustments, updatedAnnualAllowances, requestBody.annualNonFinancials)
@@ -118,11 +112,7 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
       case None => EitherT.fromEither(().asRight[ServiceError]) // TODO Delete when API endpoint is set up
     }
 
-  def persistAnswersInDatabase[A <: DatabaseAnswers: Writes](businessId: BusinessId,
-                                                             taxYear: TaxYear,
-                                                             mtditid: Mtditid,
-                                                             journey: JourneyName,
-                                                             answers: A): ApiResultT[Unit] =
+  def persistAnswers[A: Writes](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A): ApiResultT[Unit] =
     repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, journey), Json.toJson(answers))
 
   private def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[api_1803.SuccessResponseSchema]] = {
@@ -140,20 +130,20 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
   def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]] =
     for {
       maybeDbAnswers           <- repository.get(ctx.toJourneyContext(CapitalAllowancesTailoring))
-      existingTailoringAnswers <- getPersistedDatabaseAnswers[CapitalAllowancesTailoringAnswers](maybeDbAnswers)
+      existingTailoringAnswers <- getPersistedAnswers[CapitalAllowancesTailoringAnswers](maybeDbAnswers)
     } yield existingTailoringAnswers
 
   def getZeroEmissionCars(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, ZeroEmissionCars)
-      dbAnswers   <- getPersistedDatabaseAnswers[ZeroEmissionCarsDb](maybeData)
+      dbAnswers   <- getPersistedAnswers[ZeroEmissionCarsDb](maybeData)
       fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
     } yield fullAnswers.asInstanceOf[Option[ZeroEmissionCarsAnswers]]
 
   def getZeroEmissionGoodsVehicle(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionGoodsVehicleAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, ZeroEmissionGoodsVehicle)
-      dbAnswers   <- getPersistedDatabaseAnswers[ZeroEmissionGoodsVehicleDb](maybeData)
+      dbAnswers   <- getPersistedAnswers[ZeroEmissionGoodsVehicleDb](maybeData)
       fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
     } yield fullAnswers.asInstanceOf[Option[ZeroEmissionGoodsVehicleAnswers]]
 
@@ -161,46 +151,46 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
       hc: HeaderCarrier): ApiResultT[Option[ElectricVehicleChargePointsAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, ElectricVehicleChargePoints)
-      dbAnswers   <- getPersistedDatabaseAnswers[ElectricVehicleChargePointsDb](maybeData)
+      dbAnswers   <- getPersistedAnswers[ElectricVehicleChargePointsDb](maybeData)
       fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
     } yield fullAnswers.asInstanceOf[Option[ElectricVehicleChargePointsAnswers]]
 
   def getBalancingAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, BalancingAllowance)
-      dbAnswers   <- getPersistedDatabaseAnswers[BalancingAllowanceDb](maybeData)
+      dbAnswers   <- getPersistedAnswers[BalancingAllowanceDb](maybeData)
       fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
     } yield fullAnswers.asInstanceOf[Option[BalancingAllowanceAnswers]]
 
   def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, AnnualInvestmentAllowance)
-      dbAnswers   <- getPersistedDatabaseAnswers[AnnualInvestmentAllowanceDb](maybeData)
+      dbAnswers   <- getPersistedAnswers[AnnualInvestmentAllowanceDb](maybeData)
       fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
     } yield fullAnswers.asInstanceOf[Option[AnnualInvestmentAllowanceAnswers]]
 
   def getWritingDownAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WritingDownAllowanceAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, WritingDownAllowance)
-      dbAnswers   <- getPersistedDatabaseAnswers[WritingDownAllowanceDb](maybeData)
+      dbAnswers   <- getPersistedAnswers[WritingDownAllowanceDb](maybeData)
       fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
     } yield fullAnswers.asInstanceOf[Option[WritingDownAllowanceAnswers]]
 
   def getSpecialTaxSites(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, SpecialTaxSites)
-      dbAnswers   <- getPersistedDatabaseAnswers[SpecialTaxSitesDb](maybeData)
+      dbAnswers   <- getPersistedAnswers[SpecialTaxSitesDb](maybeData)
       fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
     } yield fullAnswers.asInstanceOf[Option[SpecialTaxSitesAnswers]]
 
   def getStructuresBuildings(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NewStructuresBuildingsAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, StructuresBuildings)
-      dbAnswers   <- getPersistedDatabaseAnswers[NewStructuresBuildingsDb](maybeData)
+      dbAnswers   <- getPersistedAnswers[NewStructuresBuildingsDb](maybeData)
       fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
     } yield fullAnswers.asInstanceOf[Option[NewStructuresBuildingsAnswers]]
 
-  private def createFullJourneyAnswersWithApiData[A <: DatabaseAnswers](ctx: JourneyContextWithNino, dbAnswers: Option[A])(implicit
+  private def createFullJourneyAnswersWithApiData[A](ctx: JourneyContextWithNino, dbAnswers: Option[A])(implicit
       hc: HeaderCarrier): ApiResultT[Option[FrontendAnswers[A]]] = {
     val result = connector.getAnnualSummaries(ctx).map {
       case Right(annualSummaries) => buildJourneyAnswers(dbAnswers, annualSummaries)
@@ -209,7 +199,7 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
     EitherT.liftF(result)
   }
 
-  private def buildJourneyAnswers[A <: DatabaseAnswers](dbAnswers: Option[A], annualSummaries: SuccessResponseSchema): Option[FrontendAnswers[A]] =
+  private def buildJourneyAnswers[A](dbAnswers: Option[A], annualSummaries: SuccessResponseSchema): Option[FrontendAnswers[A]] =
     dbAnswers
       .collect {
         case answers: ZeroEmissionCarsDb            => ZeroEmissionCarsAnswers(answers, annualSummaries)

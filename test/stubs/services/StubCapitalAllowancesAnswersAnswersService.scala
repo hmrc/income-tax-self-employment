@@ -43,7 +43,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class StubCapitalAllowancesAnswersAnswersService(
     saveAnswers: Future[Result] = Future.successful(NoContent),
-    persistAnswersInDatabase: ApiResultT[Unit] = serviceUnitT,
+    persistAnswers: ApiResultT[Unit] = serviceUnitT,
     getCapitalAllowancesTailoring: Either[ServiceError, Option[CapitalAllowancesTailoringAnswers]] = Right(None),
     getZeroEmissionCars: Either[ServiceError, Option[ZeroEmissionCarsAnswers]] = Right(None),
     getZeroEmissionGoodsVehicleCars: Either[ServiceError, Option[ZeroEmissionGoodsVehicleAnswers]] = Right(None),
@@ -63,8 +63,8 @@ case class StubCapitalAllowancesAnswersAnswersService(
       nino: Nino)(implicit hc: HeaderCarrier, user: AuthorisedAction.User[AnyContent], logger: Logger): Future[Result] =
     saveAnswers
 
-  def persistAnswersInDatabase[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
-      writes: Writes[A]): ApiResultT[Unit] = persistAnswersInDatabase
+  def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
+      writes: Writes[A]): ApiResultT[Unit] = persistAnswers
 
   def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]] =
     EitherT.fromEither[Future](getCapitalAllowancesTailoring)
