@@ -20,7 +20,6 @@ import cats.data.EitherT
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common.{JourneyContextWithNino, JourneyName}
 import models.connector.api_1502
-import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestBody
 import models.database.adjustments.ProfitOrLossDb
 import models.domain.ApiResultT
 import models.error.ServiceError
@@ -54,7 +53,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 
   private def submitAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
-    val submissionBody: Future[Either[ServiceError, Option[CreateAmendSEAnnualSubmissionRequestBody]]] = for {
+    val submissionBody = for {
       maybeAnnualSummaries <- ifsConnector.getAnnualSummaries(ctx)
       updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[ProfitOrLossDb](maybeAnnualSummaries, answers)
     } yield updatedAnnualSubmissionBody

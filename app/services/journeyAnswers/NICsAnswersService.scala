@@ -22,7 +22,6 @@ import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common._
 import models.connector._
 import models.connector.api_1638.RequestSchemaAPI1638
-import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.database.nics.NICsStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
@@ -74,28 +73,30 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
     } yield ()
 
   def saveClass4MultipleBusinesses(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
-    val multipleBusinessExemptionAnswers: List[Class4ExemptionAnswers] = answers.toMultipleBusinessesAnswers
-    val idsWithExemption: List[String]                                 = multipleBusinessExemptionAnswers.map(_.businessId.value)
-    val updateOtherIdsToNotExempt: ApiResultT[Unit]                    = clearOtherExistingClass4Data(ctx, idsToNotClear = idsWithExemption).void
+    val multipleBusinessExemptionAnswers = answers.toMultipleBusinessesAnswers
+    val idsWithExemption                 = multipleBusinessExemptionAnswers.map(_.businessId.value)
+    val updateOtherIdsToNotExempt        = clearOtherExistingClass4Data(ctx, idsToNotClear = idsWithExemption)
 
     val saveAllNewExemptionAnswers = multipleBusinessExemptionAnswers.traverse { answer =>
       val businessContext = ctx(newId = answer.businessId)
       saveClass4BusinessData(businessContext, answer)
     }
 
-    EitherT.rightT[Future, ServiceError](updateOtherIdsToNotExempt.flatMap(_ => saveAllNewExemptionAnswers))
+    for {
+      _ <- updateOtherIdsToNotExempt
+      _ <- saveAllNewExemptionAnswers
+    } yield ()
   }
 
   def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
-      hc: HeaderCarrier): ApiResultT[Unit] =
-    for {
-      maybeExistingAnswers <- EitherT(connector.getAnnualSummaries(ctx).map(handleOptionalAnnualSummaries))
-      existingAnswers = maybeExistingAnswers.getOrElse(api_1803.SuccessResponseSchema.empty)
-      updatedAnnualSubmissionBody = CreateAmendSEAnnualSubmissionRequestData
-        .mkNicsClassFourRequestBody(businessExemptionAnswer, existingAnswers)
-        .replaceEmptyModelsWithNone
-      result <- connector.createUpdateOrDeleteApiAnnualSummaries(ctx, updatedAnnualSubmissionBody)
-    } yield result
+      hc: HeaderCarrier): ApiResultT[Unit] = {
+    val submissionBody = for {
+      maybeAnnualSummaries <- connector.getAnnualSummaries(ctx)
+      updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[Unit](maybeAnnualSummaries, businessExemptionAnswer)
+    } yield updatedAnnualSubmissionBody
+
+    EitherT(submissionBody).flatMap(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
+  }
 
   private def clearOtherExistingClass4Data(ctx: JourneyContextWithNino, idsToNotClear: List[String])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
@@ -107,9 +108,9 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
   private def setExistingClass4DataToNotExempt(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     val result = connector.getAnnualSummaries(ctx) flatMap {
       case Right(summary) if summary.hasNICsClassFourData =>
-        val noExemptionAnswer = Class4ExemptionAnswers(ctx.businessId, class4Exempt = false, None)
-        val requestBody = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourRequestBody(noExemptionAnswer, summary).replaceEmptyModelsWithNone
-        connector.createUpdateOrDeleteApiAnnualSummaries(ctx, requestBody).value
+        val noExemptionAnswer  = Class4ExemptionAnswers(ctx.businessId, class4Exempt = false, None)
+        val updatedRequestBody = createUpdatedAnnualSummariesRequestBody(summary, noExemptionAnswer)
+        connector.createUpdateOrDeleteApiAnnualSummaries(ctx, updatedRequestBody).value
       case Right(_)                                 => Future.successful(Right[ServiceError, Unit](()))
       case Left(error) if error.status == NOT_FOUND => Future.successful(Right[ServiceError, Unit](()))
       case leftResult                               => Future(leftResult.void)

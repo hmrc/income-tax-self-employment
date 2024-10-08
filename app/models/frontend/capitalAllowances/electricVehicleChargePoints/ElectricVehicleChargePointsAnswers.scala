@@ -16,34 +16,35 @@
 
 package models.frontend.capitalAllowances.electricVehicleChargePoints
 
+import models.connector.api_1802.request.AnnualAllowances
 import models.connector.api_1803
 import models.database.capitalAllowances.ElectricVehicleChargePointsDb
+import models.frontend.FrontendAnswers
 import play.api.libs.json.{Json, OFormat}
 
-case class ElectricVehicleChargePointsJourneyAnswers(electricChargePointAllowance: BigDecimal)
+final case class ElectricVehicleChargePointsAnswers(evcpAllowance: Boolean,
+                                                    chargePointTaxRelief: Option[Boolean],
+                                                    amountSpentOnEvcp: Option[BigDecimal],
+                                                    evcpOnlyForSelfEmployment: Option[Boolean],
+                                                    evcpUsedOutsideSE: Option[EvcpUseOutsideSE],
+                                                    evcpUsedOutsideSEPercentage: Option[Int],
+                                                    evcpHowMuchDoYouWantToClaim: Option[EvcpHowMuchDoYouWantToClaim],
+                                                    evcpClaimAmount: Option[BigDecimal])
+    extends FrontendAnswers[ElectricVehicleChargePointsDb] {
 
-object ElectricVehicleChargePointsJourneyAnswers {
-  implicit val formats: OFormat[ElectricVehicleChargePointsJourneyAnswers] = Json.format[ElectricVehicleChargePointsJourneyAnswers]
-}
+  def toDbModel: Option[ElectricVehicleChargePointsDb] = Some(
+    ElectricVehicleChargePointsDb(
+      evcpAllowance,
+      chargePointTaxRelief,
+      amountSpentOnEvcp,
+      evcpOnlyForSelfEmployment,
+      evcpUsedOutsideSE,
+      evcpUsedOutsideSEPercentage,
+      evcpHowMuchDoYouWantToClaim
+    ))
 
-case class ElectricVehicleChargePointsAnswers(evcpAllowance: Boolean,
-                                              chargePointTaxRelief: Option[Boolean],
-                                              amountSpentOnEvcp: Option[BigDecimal],
-                                              evcpOnlyForSelfEmployment: Option[Boolean],
-                                              evcpUsedOutsideSE: Option[EvcpUseOutsideSE],
-                                              evcpUsedOutsideSEPercentage: Option[Int],
-                                              evcpHowMuchDoYouWantToClaim: Option[EvcpHowMuchDoYouWantToClaim],
-                                              evcpClaimAmount: Option[BigDecimal]) {
-
-  def toDbModel: ElectricVehicleChargePointsDb = ElectricVehicleChargePointsDb(
-    evcpAllowance,
-    chargePointTaxRelief,
-    amountSpentOnEvcp,
-    evcpOnlyForSelfEmployment,
-    evcpUsedOutsideSE,
-    evcpUsedOutsideSEPercentage,
-    evcpHowMuchDoYouWantToClaim
-  )
+  override def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
+    current.getOrElse(AnnualAllowances.empty).copy(electricChargePointAllowance = evcpClaimAmount)
 }
 
 object ElectricVehicleChargePointsAnswers {

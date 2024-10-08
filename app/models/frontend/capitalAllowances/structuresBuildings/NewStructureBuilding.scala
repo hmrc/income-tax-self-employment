@@ -22,9 +22,9 @@ import play.api.libs.json.{Format, Json}
 
 import java.time.LocalDate
 
-case class NewStructureBuilding(qualifyingUse: Option[LocalDate] = None,
-                                newStructureBuildingLocation: Option[StructuresBuildingsLocation] = None,
-                                newStructureBuildingClaimingAmount: Option[BigDecimal] = None) {
+final case class NewStructureBuilding(qualifyingUse: Option[LocalDate] = None,
+                                      newStructureBuildingLocation: Option[StructuresBuildingsLocation] = None,
+                                      newStructureBuildingClaimingAmount: Option[BigDecimal] = None) {
   private def toFirstYear: Option[FirstYear] =
     qualifyingUse.map(startDate =>
       FirstYear(

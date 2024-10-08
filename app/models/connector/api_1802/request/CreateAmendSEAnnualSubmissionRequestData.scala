@@ -16,27 +16,11 @@
 
 package models.connector.api_1802.request
 
-import cats.implicits.catsSyntaxOptionId
-import models.common.{BusinessId, JourneyContextWithNino, Nino, TaxYear}
-import models.connector.api_1803
-import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
+import models.common.{BusinessId, Nino, TaxYear}
 
 case class CreateAmendSEAnnualSubmissionRequestData(taxYear: TaxYear,
                                                     nino: Nino,
                                                     businessId: BusinessId,
                                                     body: CreateAmendSEAnnualSubmissionRequestBody)
 
-object CreateAmendSEAnnualSubmissionRequestData {
-  def mkNicsClassFourRequestData(ctx: JourneyContextWithNino,
-                                 answer: Class4ExemptionAnswers,
-                                 existingAnswers: api_1803.SuccessResponseSchema): CreateAmendSEAnnualSubmissionRequestData =
-    CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, mkNicsClassFourRequestBody(answer, existingAnswers))
-
-  def mkNicsClassFourRequestBody(answer: Class4ExemptionAnswers,
-                                 existingAnswers: api_1803.SuccessResponseSchema): CreateAmendSEAnnualSubmissionRequestBody =
-    CreateAmendSEAnnualSubmissionRequestBody(
-      existingAnswers.annualAdjustments.map(_.toApi1802AnnualAdjustments),
-      existingAnswers.annualAllowances.map(_.toApi1802AnnualAllowance),
-      AnnualNonFinancials(answer.class4Exempt, answer.exemptionReason.map(_.exemptionCode)).some
-    )
-}
+object CreateAmendSEAnnualSubmissionRequestData

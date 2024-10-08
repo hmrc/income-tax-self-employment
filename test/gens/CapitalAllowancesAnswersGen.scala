@@ -16,14 +16,10 @@
 
 package gens
 
-import models.database.capitalAllowances.{ElectricVehicleChargePointsDb, ZeroEmissionCarsDb}
-import models.frontend.capitalAllowances.annualInvestmentAllowance.{AnnualInvestmentAllowanceAnswers, AnnualInvestmentAllowanceDb}
+import models.database.capitalAllowances._
+import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
-import models.frontend.capitalAllowances.electricVehicleChargePoints.{
-  ElectricVehicleChargePointsAnswers,
-  EvcpHowMuchDoYouWantToClaim,
-  EvcpUseOutsideSE
-}
+import models.frontend.capitalAllowances.electricVehicleChargePoints._
 import models.frontend.capitalAllowances.specialTaxSites.{NewSpecialTaxSite, SpecialTaxSiteLocation, SpecialTaxSitesAnswers}
 import models.frontend.capitalAllowances.structuresBuildings.{NewStructureBuilding, NewStructuresBuildingsAnswers, StructuresBuildingsLocation}
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
@@ -83,10 +79,6 @@ object CapitalAllowancesAnswersGen {
     zecHowMuchDoYouWantToClaim
   )
 
-  val zeroEmissionCarsJourneyAnswersGen: Gen[ZeroEmissionCarsJourneyAnswers] = for {
-    zeroEmissionCarsClaimAmount <- bigDecimalGen
-  } yield ZeroEmissionCarsJourneyAnswers(zeroEmissionCarsClaimAmount)
-
   val zeroEmissionGoodsVehicleAnswersGen: Gen[ZeroEmissionGoodsVehicleAnswers] = for {
     zeroEmissionGoodsVehicle    <- booleanGen
     zegvAllowance               <- Gen.option(booleanGen)
@@ -105,6 +97,24 @@ object CapitalAllowancesAnswersGen {
     zegvUsedOutsideSEPercentage,
     zegvHowMuchDoYouWantToClaim,
     zegvClaimAmount
+  )
+
+  val zeroEmissionGoodsVehicleDbAnswersGen: Gen[ZeroEmissionGoodsVehicleDb] = for {
+    zeroEmissionGoodsVehicle    <- booleanGen
+    zegvAllowance               <- Gen.option(booleanGen)
+    zegvTotalCostOfCar          <- Gen.option(bigDecimalGen)
+    zegvOnlyForSelfEmployment   <- Gen.option(booleanGen)
+    zegvUsedOutsideSE           <- Gen.option(Gen.oneOf(ZegvUseOutsideSE.values))
+    zegvUsedOutsideSEPercentage <- Gen.option(intGen)
+    zegvHowMuchDoYouWantToClaim <- Gen.option(Gen.oneOf(ZegvHowMuchDoYouWantToClaim.values))
+  } yield ZeroEmissionGoodsVehicleDb(
+    zeroEmissionGoodsVehicle,
+    zegvAllowance,
+    zegvTotalCostOfCar,
+    zegvOnlyForSelfEmployment,
+    zegvUsedOutsideSE,
+    zegvUsedOutsideSEPercentage,
+    zegvHowMuchDoYouWantToClaim
   )
 
   val electricVehicleChargePointsAnswersGen: Gen[ElectricVehicleChargePointsAnswers] = for {

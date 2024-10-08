@@ -25,7 +25,7 @@ import utils.Logging
 
 import java.time.LocalDate
 
-case class SpecialTaxSitesAnswers(
+final case class SpecialTaxSitesAnswers(
     specialTaxSites: Boolean,
     newSpecialTaxSites: Option[List[NewSpecialTaxSite]],
     doYouHaveAContinuingClaim: Option[Boolean],                // TODO, we ignore this question until business decide what to do
@@ -40,9 +40,7 @@ case class SpecialTaxSitesAnswers(
 
   override def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances = {
     val enhancedStructuredBuildingAllowance = if (specialTaxSites) {
-      val updated = newSpecialTaxSites.getOrElse(Nil).map { site =>
-        site.toBuildingAllowance
-      }
+      val updated = newSpecialTaxSites.getOrElse(Nil).map(_.toBuildingAllowance)
       Some(updated.flatten)
     } else {
       None

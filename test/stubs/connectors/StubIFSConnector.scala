@@ -73,7 +73,7 @@ case class StubIFSConnector(
 
   override def amendSEPeriodSummary(
       data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] = {
-    amendSEPeriodSummaryResultData = Some(data)
+    if (amendSEPeriodSummaryResult.isRight) amendSEPeriodSummaryResultData = Some(data)
     Future.successful(amendSEPeriodSummaryResult)
   }
 
@@ -94,7 +94,7 @@ case class StubIFSConnector(
 
   override def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
-    data.businessId match {
+    if (createAmendSEAnnualSubmissionResult.isRight) data.businessId match {
       case BusinessId("BusinessId1") => upsertAnnualSummariesSubmissionDataTest1 = Some(data)
       case BusinessId("BusinessId2") => upsertAnnualSummariesSubmissionDataTest2 = Some(data)
       case BusinessId("BusinessId3") => upsertAnnualSummariesSubmissionDataTest3 = Some(data)
@@ -105,7 +105,7 @@ case class StubIFSConnector(
   }
 
   def deleteSEAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
-    upsertAnnualSummariesSubmissionData = None
+    if (deleteDisclosuresSubmissionResult.isRight) upsertAnnualSummariesSubmissionData = None
     EitherT.fromEither[Future](deleteSEAnnualSummariesResult)
   }
 
@@ -126,12 +126,12 @@ case class StubIFSConnector(
   def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[Unit] = {
-    upsertDisclosuresSubmissionData = Some(data)
+    if (upsertDisclosuresSubmissionResult.isRight) upsertDisclosuresSubmissionData = Some(data)
     EitherT.fromEither[Future](upsertDisclosuresSubmissionResult)
   }
 
   def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
-    upsertDisclosuresSubmissionData = None
+    if (deleteDisclosuresSubmissionResult.isRight) upsertDisclosuresSubmissionData = None
     EitherT.fromEither[Future](deleteDisclosuresSubmissionResult)
   }
 
@@ -162,6 +162,7 @@ object StubIFSConnector {
     Some(
       AnnualAllowancesType.emptyAnnualAllowancesType.copy(
         zeroEmissionsCarAllowance = Some(5000.00),
+        zeroEmissionGoodsVehicleAllowance = Some(5000.00),
         electricChargePointAllowance = Some(4000.00)
       )),
     None
