@@ -37,6 +37,6 @@ object AnnualInvestmentAllowanceAnswers {
   def apply(dbAnswers: AnnualInvestmentAllowanceDb, annualSummaries: api_1803.SuccessResponseSchema): AnnualInvestmentAllowanceAnswers =
     new AnnualInvestmentAllowanceAnswers(
       dbAnswers.annualInvestmentAllowance,
-      annualInvestmentAllowanceAmount = annualSummaries.annualAllowances.flatMap(_.allowanceOnSales)
+      annualInvestmentAllowanceAmount = annualSummaries.annualAllowances.flatMap(_.annualInvestmentAllowance)
     )
 }
