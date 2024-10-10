@@ -27,7 +27,7 @@ final case class AnnualInvestmentAllowanceAnswers(annualInvestmentAllowance: Boo
 
   def toDbModel: Option[AnnualInvestmentAllowanceDb] = Some(AnnualInvestmentAllowanceDb(annualInvestmentAllowance))
 
-  def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
+  override def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
     current.getOrElse(AnnualAllowances.empty).copy(annualInvestmentAllowance = annualInvestmentAllowanceAmount)
 }
 
@@ -37,6 +37,6 @@ object AnnualInvestmentAllowanceAnswers {
   def apply(dbAnswers: AnnualInvestmentAllowanceDb, annualSummaries: api_1803.SuccessResponseSchema): AnnualInvestmentAllowanceAnswers =
     new AnnualInvestmentAllowanceAnswers(
       dbAnswers.annualInvestmentAllowance,
-      annualInvestmentAllowanceAmount = annualSummaries.annualAllowances.flatMap(_.allowanceOnSales)
+      annualInvestmentAllowanceAmount = annualSummaries.annualAllowances.flatMap(_.annualInvestmentAllowance)
     )
 }

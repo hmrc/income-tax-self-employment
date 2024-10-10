@@ -55,11 +55,12 @@ package object journeyAnswers {
       case Left(error)                              => Left(error)
     }
 
-  private def createUpdatedAnnualSummariesRequestBody[A](existingData: api_1803.SuccessResponseSchema,
-                                                         answers: FrontendAnswers[A]): Option[CreateAmendSEAnnualSubmissionRequestBody] = {
-    val requestBody              = existingData.toRequestBody
-    val updatedAnnualAdjustments = answers.toDownStreamAnnualAdjustments(requestBody.annualAdjustments).returnNoneIfEmpty
-    val updatedAnnualAllowances  = answers.toDownStreamAnnualAllowances(requestBody.annualAllowances).returnNoneIfEmpty
-    CreateAmendSEAnnualSubmissionRequestBody.mkRequest(updatedAnnualAdjustments, updatedAnnualAllowances, requestBody.annualNonFinancials)
+  def createUpdatedAnnualSummariesRequestBody[A](existingData: api_1803.SuccessResponseSchema,
+                                                 answers: FrontendAnswers[A]): Option[CreateAmendSEAnnualSubmissionRequestBody] = {
+    val requestBody                = existingData.toRequestBody
+    val updatedAnnualAdjustments   = answers.toDownStreamAnnualAdjustments(requestBody.annualAdjustments).returnNoneIfEmpty
+    val updatedAnnualAllowances    = answers.toDownStreamAnnualAllowances(requestBody.annualAllowances).returnNoneIfEmpty
+    val updatedAnnualNonFinancials = answers.toDownStreamAnnualNonFinancials(requestBody.annualNonFinancials)
+    CreateAmendSEAnnualSubmissionRequestBody.mkRequest(updatedAnnualAdjustments, updatedAnnualAllowances, updatedAnnualNonFinancials)
   }
 }

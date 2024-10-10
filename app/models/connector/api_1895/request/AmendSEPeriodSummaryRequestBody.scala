@@ -34,6 +34,8 @@ import play.api.libs.json.{Json, OFormat}
 
 case class AmendSEPeriodSummaryRequestBody(incomes: Option[Incomes], deductions: Option[Deductions]) {
 
+  def returnNoneIfEmpty = if (this == AmendSEPeriodSummaryRequestBody.empty) None else Some(this)
+
   private def getDeductions: Deductions = deductions.getOrElse(Deductions.empty)
 
   def updateOfficeSupplies(answers: OfficeSuppliesJourneyAnswers): AmendSEPeriodSummaryRequestBody =
@@ -181,4 +183,6 @@ case class AmendSEPeriodSummaryRequestBody(incomes: Option[Incomes], deductions:
 
 object AmendSEPeriodSummaryRequestBody {
   implicit val formats: OFormat[AmendSEPeriodSummaryRequestBody] = Json.format[AmendSEPeriodSummaryRequestBody]
+
+  val empty = AmendSEPeriodSummaryRequestBody(None, None)
 }

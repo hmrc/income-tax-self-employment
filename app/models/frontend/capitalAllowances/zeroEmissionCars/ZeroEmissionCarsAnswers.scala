@@ -43,7 +43,7 @@ final case class ZeroEmissionCarsAnswers(zeroEmissionCars: Boolean,
       zecHowMuchDoYouWantToClaim
     ))
 
-  def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
+  override def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
     current.getOrElse(AnnualAllowances.empty).copy(zeroEmissionsCarAllowance = zecClaimAmount)
 }
 

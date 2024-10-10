@@ -16,6 +16,7 @@
 
 package services.journeyAnswers
 
+import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
@@ -98,8 +99,8 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         connector.getAnnualSummaries(*)(*, *) returns
           Future.successful(SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound).asLeft)
 
-        connector.createAmendSEAnnualSubmission(*)(*, *) returns
-          Future.successful(().asRight)
+        connector.createUpdateOrDeleteApiAnnualSummaries(*, *)(*, *) returns
+          EitherT.rightT(())
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
         val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
@@ -123,8 +124,8 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         connector.getAnnualSummaries(*)(*, *) returns
           Future.successful(api1803SuccessResponse.asRight)
 
-        connector.createAmendSEAnnualSubmission(*)(*, *) returns
-          Future.successful(().asRight)
+        connector.createUpdateOrDeleteApiAnnualSummaries(*, *)(*, *) returns
+          EitherT.rightT(())
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
         val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)

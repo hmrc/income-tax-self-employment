@@ -27,7 +27,7 @@ final case class BalancingAllowanceAnswers(balancingAllowance: Boolean, balancin
 
   def toDbModel: Option[BalancingAllowanceDb] = Some(BalancingAllowanceDb(balancingAllowance))
 
-  def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
+  override def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
     current.getOrElse(AnnualAllowances.empty).copy(allowanceOnSales = balancingAllowanceAmount)
 }
 
