@@ -18,6 +18,8 @@ package models.frontend.nics
 
 import cats.implicits.catsSyntaxOptionId
 import models.common.BusinessId
+import models.connector.api_1802.request.AnnualNonFinancials
+import models.frontend.FrontendAnswers
 import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
 import play.api.libs.json.{Format, Json}
 
@@ -56,4 +58,10 @@ object NICsClass4Answers {
   implicit val formats: Format[NICsClass4Answers] = Json.format[NICsClass4Answers]
 
   case class Class4ExemptionAnswers(businessId: BusinessId, class4Exempt: Boolean, exemptionReason: Option[ExemptionReason])
+      extends FrontendAnswers[Unit] {
+    override def toDbModel: Option[Unit] = None
+
+    override def toDownStreamAnnualNonFinancials(current: Option[AnnualNonFinancials]): Option[AnnualNonFinancials] =
+      AnnualNonFinancials(class4Exempt, exemptionReason.map(_.exemptionCode)).some
+  }
 }

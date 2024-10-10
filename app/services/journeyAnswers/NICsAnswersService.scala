@@ -22,7 +22,6 @@ import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common._
 import models.connector._
 import models.connector.api_1638.RequestSchemaAPI1638
-import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.database.nics.NICsStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
@@ -93,12 +92,12 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
 
   private def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
-    val result = for {
-      existingAnswers <- connector.getAnnualSummaries(ctx).map(_.getOrElse(api_1803.SuccessResponseSchema.empty))
-      upsertRequest = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourRequestData(ctx, businessExemptionAnswer, existingAnswers)
-      result <- connector.createAmendSEAnnualSubmission(upsertRequest)
-    } yield result
-    EitherT(result)
+    val submissionBody = for {
+      maybeAnnualSummaries <- connector.getAnnualSummaries(ctx)
+      updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[Unit](maybeAnnualSummaries, businessExemptionAnswer)
+    } yield updatedAnnualSubmissionBody
+
+    EitherT(submissionBody).flatMap(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
   }
 
   private def clearOtherExistingClass4Data(ctx: JourneyContextWithNino, idsToNotClear: List[String])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
@@ -111,9 +110,9 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
   private def setExistingClass4DataToNotExempt(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     val result = connector.getAnnualSummaries(ctx) flatMap {
       case Right(summary) if summary.hasNICsClassFourData =>
-        val noExemptionAnswer = Class4ExemptionAnswers(ctx.businessId, class4Exempt = false, None)
-        val requestData       = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourRequestData(ctx, noExemptionAnswer, summary)
-        connector.createAmendSEAnnualSubmission(requestData)
+        val noExemptionAnswer  = Class4ExemptionAnswers(ctx.businessId, class4Exempt = false, None)
+        val updatedRequestBody = createUpdatedAnnualSummariesRequestBody(summary, noExemptionAnswer)
+        connector.createUpdateOrDeleteApiAnnualSummaries(ctx, updatedRequestBody).value
       case Right(_)                                 => Future.successful(Right[ServiceError, Unit](()))
       case Left(error) if error.status == NOT_FOUND => Future.successful(Right[ServiceError, Unit](()))
       case leftResult                               => Future(leftResult.void)

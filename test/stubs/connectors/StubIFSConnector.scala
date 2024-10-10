@@ -28,7 +28,7 @@ import models.connector.api_1500.LossType
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
-import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
+import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1803.{AnnualAllowancesType, SuccessResponseSchema}
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
@@ -73,7 +73,7 @@ case class StubIFSConnector(
 
   override def amendSEPeriodSummary(
       data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] = {
-    amendSEPeriodSummaryResultData = Some(data)
+    if (amendSEPeriodSummaryResult.isRight) amendSEPeriodSummaryResultData = Some(data)
     Future.successful(amendSEPeriodSummaryResult)
   }
 
@@ -94,7 +94,7 @@ case class StubIFSConnector(
 
   override def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
-    data.businessId match {
+    if (createAmendSEAnnualSubmissionResult.isRight) data.businessId match {
       case BusinessId("BusinessId1") => upsertAnnualSummariesSubmissionDataTest1 = Some(data)
       case BusinessId("BusinessId2") => upsertAnnualSummariesSubmissionDataTest2 = Some(data)
       case BusinessId("BusinessId3") => upsertAnnualSummariesSubmissionDataTest3 = Some(data)
@@ -105,9 +105,19 @@ case class StubIFSConnector(
   }
 
   def deleteSEAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
-    upsertAnnualSummariesSubmissionData = None
+    if (deleteDisclosuresSubmissionResult.isRight) upsertAnnualSummariesSubmissionData = None
     EitherT.fromEither[Future](deleteSEAnnualSummariesResult)
   }
+
+  def createUpdateOrDeleteApiAnnualSummaries(ctx: JourneyContextWithNino, requestBody: Option[CreateAmendSEAnnualSubmissionRequestBody])(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[Unit] =
+    requestBody match {
+      case Some(body) =>
+        val requestData = CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, body)
+        EitherT(createAmendSEAnnualSubmission(requestData))
+      case None => deleteSEAnnualSummaries(ctx)
+    }
 
   def getDisclosuresSubmission(
       ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[SuccessResponseAPI1639]] =
@@ -116,12 +126,12 @@ case class StubIFSConnector(
   def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[Unit] = {
-    upsertDisclosuresSubmissionData = Some(data)
+    if (upsertDisclosuresSubmissionResult.isRight) upsertDisclosuresSubmissionData = Some(data)
     EitherT.fromEither[Future](upsertDisclosuresSubmissionResult)
   }
 
   def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
-    upsertDisclosuresSubmissionData = None
+    if (deleteDisclosuresSubmissionResult.isRight) upsertDisclosuresSubmissionData = None
     EitherT.fromEither[Future](deleteDisclosuresSubmissionResult)
   }
 

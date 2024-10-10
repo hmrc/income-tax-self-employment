@@ -38,7 +38,7 @@ final case class SpecialTaxSitesAnswers(
       newSpecialTaxSites.map(sites => sites.flatMap(_.toDbModel))
     ))
 
-  def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances = {
+  override def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances = {
     val enhancedStructuredBuildingAllowance = if (specialTaxSites) {
       val updated = newSpecialTaxSites.getOrElse(Nil).map(_.toBuildingAllowance)
       Some(updated.flatten)

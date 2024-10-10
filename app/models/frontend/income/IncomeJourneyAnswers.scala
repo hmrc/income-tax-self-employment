@@ -43,10 +43,10 @@ case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
       howMuchTradingAllowance
     ))
 
-  def toDownStreamAnnualAllowances(current: Option[AnnualAdjustments]): AnnualAdjustments =
+  override def toDownStreamAnnualAdjustments(current: Option[AnnualAdjustments]): AnnualAdjustments =
     current.getOrElse(AnnualAdjustments.empty).copy(includedNonTaxableProfits = notTaxableAmount, outstandingBusinessIncome = otherIncomeAmount)
 
-  def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
+  override def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
     current.getOrElse(AnnualAllowances.empty).copy(tradingIncomeAllowance = tradingAllowanceAmount)
 }
 

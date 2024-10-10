@@ -274,11 +274,12 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       override val repo = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers.some)
       repo.lastUpsertedAnswer = Some(Json.toJson(ExpensesCategoriesDb(IndividualCategories)))
 
-      underTest.deleteSimplifiedExpensesAnswers(journeyCtxWithNino).value.map { result =>
-        result shouldBe ().asRight
-        connector.amendSEPeriodSummaryResultData shouldBe None
-        repo.lastUpsertedAnswer shouldBe None
-      }
+      val result = underTest.deleteSimplifiedExpensesAnswers(journeyCtxWithNino).value.futureValue
+
+      result shouldBe ().asRight
+      val apiResult = connector.amendSEPeriodSummaryResultData.flatMap(_.body.returnNoneIfEmpty)
+      apiResult shouldBe None
+      repo.lastUpsertedAnswer shouldBe None
     }
   }
 }

@@ -33,8 +33,6 @@ import models.common.JourneyName.{
   ZeroEmissionGoodsVehicle
 }
 import models.common._
-import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
-import models.connector.api_1803
 import models.connector.api_1803.SuccessResponseSchema
 import models.database.JourneyAnswers
 import models.database.capitalAllowances._
@@ -51,7 +49,6 @@ import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowan
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
 import play.api.Logger
-import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.{Json, Reads, Writes}
 import play.api.mvc.Results.NoContent
 import play.api.mvc.{AnyContent, Result}
@@ -88,41 +85,23 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
       logger: Logger): Future[Result] =
     getCapitalAllowanceBodyWithCtx[A, B](taxYear, businessId, nino) { (ctx, answers) =>
       for {
-        maybeCurrent <- getAnnualSummaries(JourneyContextWithNino(ctx.taxYear, ctx.businessId, ctx.mtditid, ctx.nino))
-        existingData          = maybeCurrent.getOrElse(api_1803.SuccessResponseSchema.empty)
-        updatedSubmissionBody = createUpdatedRequestBody(existingData, answers)
-        _ <- createUpdateOrDeleteApiAnnualSummaries(ctx, updatedSubmissionBody)
+        _ <- submitAnnualSummaries[A, B](ctx, answers)
         _ <- answers.toDbModel.traverse(dbAnswers => persistAnswers(ctx.businessId, ctx.taxYear, ctx.mtditid, journeyName, dbAnswers))
       } yield NoContent
     }
 
-  private def createUpdatedRequestBody[A](existingData: api_1803.SuccessResponseSchema,
-                                          answers: FrontendAnswers[A]): Option[CreateAmendSEAnnualSubmissionRequestBody] = {
-    val requestBody             = existingData.toRequestBody
-    val updatedAnnualAllowances = answers.toDownStreamAnnualAllowances(requestBody.annualAllowances).returnNoneIfEmpty
-    CreateAmendSEAnnualSubmissionRequestBody.mkRequest(requestBody.annualAdjustments, updatedAnnualAllowances, requestBody.annualNonFinancials)
-  }
+  private def submitAnnualSummaries[A, B <: FrontendAnswers[A]](ctx: JourneyContextWithNino, answers: B)(implicit
+      hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
+    val submissionBody = for {
+      maybeAnnualSummaries <- connector.getAnnualSummaries(ctx)
+      updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[A](maybeAnnualSummaries, answers)
+    } yield updatedAnnualSubmissionBody
 
-  private def createUpdateOrDeleteApiAnnualSummaries(ctx: JourneyContextWithNino, requestBody: Option[CreateAmendSEAnnualSubmissionRequestBody])(
-      implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    requestBody match {
-      case Some(body) =>
-        val requestData = CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, body)
-        EitherT(connector.createAmendSEAnnualSubmission(requestData))
-      case None => EitherT.fromEither(().asRight[ServiceError]) // TODO Delete when API endpoint is set up
-    }
+    EitherT(submissionBody).flatMap(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
+  }
 
   def persistAnswers[A: Writes](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A): ApiResultT[Unit] =
     repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, journey), Json.toJson(answers))
-
-  private def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[api_1803.SuccessResponseSchema]] = {
-    val result = connector.getAnnualSummaries(ctx).map {
-      case Right(data)                              => Right(Some(data))
-      case Left(error) if error.status == NOT_FOUND => Right(None)
-      case Left(error)                              => Left(error)
-    }
-    EitherT(result)
-  }
 
   private def getDbAnswers(ctx: JourneyContextWithNino, journey: JourneyName): ApiResultT[Option[JourneyAnswers]] =
     repository.get(ctx.toJourneyContext(journey))
