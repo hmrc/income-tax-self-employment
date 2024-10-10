@@ -23,12 +23,12 @@ import play.api.libs.json.{Format, Json}
 
 import java.time.LocalDate
 
-case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boolean],
-                             contractStartDate: Option[LocalDate],
-                             constructionStartDate: Option[LocalDate],
-                             qualifyingUseStartDate: Option[LocalDate],
-                             specialTaxSiteLocation: Option[SpecialTaxSiteLocation],
-                             newSiteClaimingAmount: Option[BigDecimal]) {
+final case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boolean],
+                                   contractStartDate: Option[LocalDate],
+                                   constructionStartDate: Option[LocalDate],
+                                   qualifyingUseStartDate: Option[LocalDate],
+                                   specialTaxSiteLocation: Option[SpecialTaxSiteLocation],
+                                   newSiteClaimingAmount: Option[BigDecimal]) {
 
   def toDbModel: Option[NewSpecialTaxSiteDb] = Some(
     NewSpecialTaxSiteDb(

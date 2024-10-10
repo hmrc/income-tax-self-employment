@@ -16,7 +16,6 @@
 
 package models.database.income
 
-import models.database.DatabaseAnswers
 import models.frontend.income._
 import play.api.libs.json._
 
@@ -25,7 +24,6 @@ case class IncomeStorageAnswers(incomeNotCountedAsTurnover: Boolean,
                                 turnoverNotTaxable: Option[Boolean],
                                 tradingAllowance: TradingAllowance,
                                 howMuchTradingAllowance: Option[HowMuchTradingAllowance])
-    extends DatabaseAnswers
 
 object IncomeStorageAnswers {
   implicit val formats: OFormat[IncomeStorageAnswers] = Json.format[IncomeStorageAnswers]

@@ -20,7 +20,7 @@ import models.connector.api_1802.request.Building
 import models.connector.api_1803.StructuredBuildingAllowanceTypeInnerBuilding
 import play.api.libs.json.{Json, OFormat}
 
-case class StructuresBuildingsLocation(buildingName: Option[String], buildingNumber: Option[String], postCode: String) {
+final case class StructuresBuildingsLocation(buildingName: Option[String], buildingNumber: Option[String], postCode: String) {
   def toBuilding: Building =
     Building(
       buildingName,

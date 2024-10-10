@@ -16,7 +16,7 @@
 
 package models.connector.api_1803
 
-import models.connector.api_1802.request.AnnualAllowances
+import models.connector.api_1802.request.{AnnualAllowances, Building, BuildingAllowance, FirstYear}
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class AnnualAllowancesTypeSpec extends AnyWordSpecLike {
@@ -59,8 +59,10 @@ class AnnualAllowancesTypeSpec extends AnyWordSpecLike {
           allowanceOnSales = Some(7),
           capitalAllowanceSingleAssetPool = Some(8),
           electricChargePointAllowance = Some(9),
-          structuredBuildingAllowance = None,
-          enhancedStructuredBuildingAllowance = None,
+          structuredBuildingAllowance =
+            Some(List(BuildingAllowance(1.0, Some(FirstYear("1/1/2024", 4.0)), Building(Some("name"), Some("24"), "ABC")))),
+          enhancedStructuredBuildingAllowance =
+            Some(List(BuildingAllowance(3.0, Some(FirstYear("2/2/2024", 3.0)), Building(Some("name"), Some("24"), "ABC")))),
           zeroEmissionsCarAllowance = Some(10),
           tradingIncomeAllowance = Some(11)
         ))

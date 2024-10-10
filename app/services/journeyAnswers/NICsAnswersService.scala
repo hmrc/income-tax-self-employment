@@ -73,11 +73,10 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
       result <- saveClass4BusinessData(updatedContext, exemptionAnswer)
     } yield result
 
-  def saveClass4MultipleBusinesses(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit
-      hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
-    val multipleBusinessExemptionAnswers: List[Class4ExemptionAnswers] = answers.cleanUpExemptionListsFromFE.toMultipleBusinessesAnswers
-    val idsWithExemption: List[String]                                 = multipleBusinessExemptionAnswers.map(_.businessId.value)
-    val updateOtherIdsToNotExempt: ApiResultT[Unit]                    = clearOtherExistingClass4Data(ctx, idsToNotClear = idsWithExemption)
+  def saveClass4MultipleBusinesses(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+    val multipleBusinessExemptionAnswers = answers.cleanUpExemptionListsFromFE.toMultipleBusinessesAnswers
+    val idsWithExemption                 = multipleBusinessExemptionAnswers.map(_.businessId.value)
+    val updateOtherIdsToNotExempt        = clearOtherExistingClass4Data(ctx, idsToNotClear = idsWithExemption)
 
     val saveAllNewExemptionAnswers: EitherT[Future, ServiceError, Unit] = multipleBusinessExemptionAnswers
       .traverse { answer =>
@@ -86,7 +85,10 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
       }
       .map(_ => ())
 
-    updateOtherIdsToNotExempt.flatMap(_ => saveAllNewExemptionAnswers)
+    for {
+      _      <- updateOtherIdsToNotExempt
+      result <- saveAllNewExemptionAnswers
+    } yield result
   }
 
   private def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit

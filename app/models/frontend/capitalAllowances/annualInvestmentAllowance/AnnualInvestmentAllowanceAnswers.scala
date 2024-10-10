@@ -16,22 +16,27 @@
 
 package models.frontend.capitalAllowances.annualInvestmentAllowance
 
-import play.api.libs.json.{Format, Json, OFormat}
+import models.connector.api_1802.request.AnnualAllowances
+import models.connector.api_1803
+import models.database.capitalAllowances.AnnualInvestmentAllowanceDb
+import models.frontend.FrontendAnswers
+import play.api.libs.json.{Json, OFormat}
 
-case class AnnualInvestmentAllowanceJourneyAnswers(annualInvestmentAllowance: BigDecimal)
+final case class AnnualInvestmentAllowanceAnswers(annualInvestmentAllowance: Boolean, annualInvestmentAllowanceAmount: Option[BigDecimal])
+    extends FrontendAnswers[AnnualInvestmentAllowanceDb] {
 
-object AnnualInvestmentAllowanceJourneyAnswers {
-  implicit val formats: Format[AnnualInvestmentAllowanceJourneyAnswers] = Json.format[AnnualInvestmentAllowanceJourneyAnswers]
+  def toDbModel: Option[AnnualInvestmentAllowanceDb] = Some(AnnualInvestmentAllowanceDb(annualInvestmentAllowance))
+
+  def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
+    current.getOrElse(AnnualAllowances.empty).copy(annualInvestmentAllowance = annualInvestmentAllowanceAmount)
 }
-
-case class AnnualInvestmentAllowanceAnswers(annualInvestmentAllowance: Boolean, annualInvestmentAllowanceAmount: Option[BigDecimal])
 
 object AnnualInvestmentAllowanceAnswers {
-  implicit val formats: Format[AnnualInvestmentAllowanceAnswers] = Json.format[AnnualInvestmentAllowanceAnswers]
-}
+  implicit val formats: OFormat[AnnualInvestmentAllowanceAnswers] = Json.format[AnnualInvestmentAllowanceAnswers]
 
-final case class AnnualInvestmentAllowanceDb(annualInvestmentAllowance: Boolean)
-
-object AnnualInvestmentAllowanceDb {
-  implicit val format: OFormat[AnnualInvestmentAllowanceDb] = Json.format[AnnualInvestmentAllowanceDb]
+  def apply(dbAnswers: AnnualInvestmentAllowanceDb, annualSummaries: api_1803.SuccessResponseSchema): AnnualInvestmentAllowanceAnswers =
+    new AnnualInvestmentAllowanceAnswers(
+      dbAnswers.annualInvestmentAllowance,
+      annualInvestmentAllowanceAmount = annualSummaries.annualAllowances.flatMap(_.allowanceOnSales)
+    )
 }

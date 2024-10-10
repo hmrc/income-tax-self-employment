@@ -16,15 +16,15 @@
 
 package models.connector.api_1803
 
+import models.connector.api_1802.request.Building
 import play.api.libs.json._
 
 /** Post code is mandatory and minimum one of name and number field is required.
   */
-case class StructuredBuildingAllowanceTypeInnerBuilding(
-    name: Option[String],
-    number: Option[String],
-    postCode: String
-)
+case class StructuredBuildingAllowanceTypeInnerBuilding(name: Option[String], number: Option[String], postCode: String) {
+
+  def toBuilding: Building = Building(name, number, postCode)
+}
 
 object StructuredBuildingAllowanceTypeInnerBuilding {
   implicit lazy val structuredBuildingAllowanceTypeInnerBuildingJsonFormat: Format[StructuredBuildingAllowanceTypeInnerBuilding] =
