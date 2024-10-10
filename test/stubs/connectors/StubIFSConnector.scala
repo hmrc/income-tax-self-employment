@@ -23,7 +23,7 @@ import connectors.IFSConnector
 import connectors.IFSConnector._
 import models.common.{BusinessId, JourneyContextWithNino}
 import models.connector._
-import models.connector.api_1171.BusinessDataDetailsTestData
+import models.connector.api_1171.{BusinessDataDetails, BusinessDataDetailsTestData}
 import models.connector.api_1500.LossType
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
@@ -156,6 +156,14 @@ object StubIFSConnector {
       OffsetDateTime.now().toString,
       api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Some(List(BusinessDataDetailsTestData.mkExample(businessId))))
     )
+
+  def api1171MultipleBusinessResponse(businessIds: List[BusinessId]): api_1171.SuccessResponseSchema = {
+    val businessData: List[BusinessDataDetails] = businessIds.map(BusinessDataDetailsTestData.mkExample)
+    api_1171.SuccessResponseSchema(
+      OffsetDateTime.now().toString,
+      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Some(businessData))
+    )
+  }
 
   val api1803SuccessResponse: SuccessResponseSchema = SuccessResponseSchema(
     None,

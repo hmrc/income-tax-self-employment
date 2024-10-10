@@ -26,8 +26,8 @@ object NICsAnswersBuilder {
   val class4SingleBusinessAnswers = NICsClass4Answers(true, Some(ExemptionReason.TrusteeExecutorAdmin), None, None)
 
   val class4DiverAndTrusteeMultipleBusinessesAnswers =
-    NICsClass4Answers(true, None, Some(List(BusinessId("businessId1"), BusinessId("businessId2"))), Some(List(BusinessId("businessId3"))))
-  val class4DiverMultipleBusinessesAnswers   = NICsClass4Answers(true, None, Some(List(BusinessId("businessId1"), BusinessId("businessId2"))), None)
-  val class4TrusteeMultipleBusinessesAnswers = NICsClass4Answers(true, None, None, Some(List(BusinessId("businessId3"))))
+    NICsClass4Answers(true, None, Some(List(BusinessId("BusinessId1"), BusinessId("BusinessId2"))), Some(List(BusinessId("BusinessId3"))))
+  val class4DiverMultipleBusinessesAnswers   = NICsClass4Answers(true, None, Some(List(BusinessId("BusinessId1"), BusinessId("BusinessId2"))), None)
+  val class4TrusteeMultipleBusinessesAnswers = NICsClass4Answers(true, None, None, Some(List(BusinessId("BusinessId3"))))
 
 }
