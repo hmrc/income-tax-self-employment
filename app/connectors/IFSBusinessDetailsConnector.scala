@@ -99,8 +99,8 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
     EitherT(get[Api1871Response](http, context))
   }
 
-  def createBroughtForwardLoss(data: CreateBroughtForwardLossRequestData)(implicit
-       hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1500.SuccessResponseSchema] = {
+  def createBroughtForwardLoss(
+      data: CreateBroughtForwardLossRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1500.SuccessResponseSchema] = {
     val url     = createBroughtForwardLossUrl(data.nino, data.taxYear)
     val context = appConfig.mkMetadata(IFSApiName.Api1500, url)
 

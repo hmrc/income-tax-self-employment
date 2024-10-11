@@ -22,7 +22,7 @@ import play.api.libs.json.Json
 import utils.BaseSpec._
 
 trait Api1500Test {
-  val taxYearStr = TaxYear(2024).toYYYY_YY
+  val taxYearStr    = TaxYear(2024).toYYYY_YY
   val downstreamUrl = s"/individuals/losses/$nino/brought-forward-losses/$taxYearStr"
   val requestBody = CreateBroughtForwardLossRequestBody(
     businessId = "SJPR05893938418",
