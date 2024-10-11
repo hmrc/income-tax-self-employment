@@ -64,7 +64,7 @@ object ProfitOrLossJourneyAnswers {
       lossAmount = unusedLossAmount,
       taxYearBroughtForwardFrom = whichYearIsLossReported.apiTaxYear
     )
-    api_1500.CreateBroughtForwardLossRequestData(ctx.nino, updatedBroughtForwardLossBody)
+    api_1500.CreateBroughtForwardLossRequestData(ctx.nino, ctx.taxYear, updatedBroughtForwardLossBody)
   }
 
   def toUpdateBroughtForwardLossData(ctx: JourneyContextWithNino,

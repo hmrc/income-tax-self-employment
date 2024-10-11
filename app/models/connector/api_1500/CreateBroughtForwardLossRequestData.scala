@@ -16,6 +16,6 @@
 
 package models.connector.api_1500
 
-import models.common.Nino
+import models.common.{Nino, TaxYear}
 
-case class CreateBroughtForwardLossRequestData(nino: Nino, body: CreateBroughtForwardLossRequestBody)
+case class CreateBroughtForwardLossRequestData(nino: Nino, taxYear: TaxYear, body: CreateBroughtForwardLossRequestBody)
