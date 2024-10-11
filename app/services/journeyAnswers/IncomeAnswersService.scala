@@ -68,7 +68,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
 
   def saveAnswers(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      _               <- submitAnnualSubmission(ctx, answers)
+      _               <- submitAnnualSummaries(ctx, answers)
       periodSummaries <- EitherT(connector.listSEPeriodSummary(ctx)).leftAs[ServiceError]
       _               <- upsertPeriodSummary(periodSummaries, ctx, answers)
       storageAnswers = IncomeStorageAnswers.fromJourneyAnswers(answers)
@@ -76,19 +76,14 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       _ <- maybeDeleteExpenses(ctx, answers)
     } yield ()
 
-  // TODO: We need to confirm what actual APIs in QA returns for this, based on that we may have to change
-  //  `annualNonFinancials` value. SASS-9292 is the ticket for this.
-  private def submitAnnualSubmission(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier) = {
-    val upsertBody = CreateAmendSEAnnualSubmissionRequestBody.mkRequest(
-      annualAdjustments = Some(
-        AnnualAdjustments.empty.copy(includedNonTaxableProfits = answers.notTaxableAmount, outstandingBusinessIncome = answers.otherIncomeAmount)),
-      annualAllowances = Some(AnnualAllowances.empty.copy(tradingIncomeAllowance = answers.tradingAllowanceAmount)),
-      annualNonFinancials =
-        None // TODO: Verify in QA if we need to set it to empty or copy values if exists. And link between annualNonFinancials and annualAllowances
-    )
+  private def submitAnnualSummaries(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit
+      hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
+    val submissionBody: Future[Either[ServiceError, Option[CreateAmendSEAnnualSubmissionRequestBody]]] = for {
+      maybeAnnualSummaries <- connector.getAnnualSummaries(ctx)
+      updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[IncomeStorageAnswers](maybeAnnualSummaries, answers)
+    } yield updatedAnnualSubmissionBody
 
-    val maybeUpsertData = upsertBody.map(CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, _))
-    maybeUpsertData.traverse(upsertData => EitherT(connector.createAmendSEAnnualSubmission(upsertData))).leftAs[ServiceError]
+    EitherT(submissionBody).flatMap(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
   }
 
   private def maybeDeleteExpenses(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers): EitherT[Future, ServiceError, Unit] =

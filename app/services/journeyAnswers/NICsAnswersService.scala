@@ -22,7 +22,6 @@ import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common._
 import models.connector._
 import models.connector.api_1638.RequestSchemaAPI1638
-import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestData
 import models.database.nics.NICsStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
@@ -56,8 +55,8 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
       upsertRequest = RequestSchemaAPI1638.mkRequestBody(answers, existingAnswers)
       _ <- upsertOrDeleteClass2Data(upsertRequest, ctx)
       storageAnswers = NICsStorageAnswers.fromJourneyAnswers(answers)
-      _ <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.NationalInsuranceContributions), Json.toJson(storageAnswers))
-    } yield ()
+      result <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.NationalInsuranceContributions), Json.toJson(storageAnswers))
+    } yield result
 
   private def upsertOrDeleteClass2Data(maybeClass2Nics: Option[RequestSchemaAPI1638], ctx: JourneyContextWithNino)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
@@ -70,45 +69,50 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
     for {
       updatedContext <- updateJourneyContextWithSingleBusinessId(ctx)
       exemptionAnswer = Class4ExemptionAnswers(updatedContext.businessId, answers.class4NICs, answers.class4ExemptionReason)
-      _ <- saveClass4BusinessData(updatedContext, exemptionAnswer)
-    } yield ()
+      result <- saveClass4BusinessData(updatedContext, exemptionAnswer)
+    } yield result
 
   def saveClass4MultipleBusinesses(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
-    val multipleBusinessExemptionAnswers: List[Class4ExemptionAnswers] = answers.toMultipleBusinessesAnswers
-    val idsWithExemption: List[String]                                 = multipleBusinessExemptionAnswers.map(_.businessId.value)
-    val updateOtherIdsToNotExempt: ApiResultT[Unit]                    = clearOtherExistingClass4Data(ctx, idsToNotClear = idsWithExemption).void
+    val multipleBusinessExemptionAnswers = answers.cleanUpExemptionListsFromFE.toMultipleBusinessesAnswers
+    val idsWithExemption                 = multipleBusinessExemptionAnswers.map(_.businessId.value)
+    val updateOtherIdsToNotExempt        = clearOtherExistingClass4Data(ctx, idsToNotClear = idsWithExemption)
 
-    val saveAllNewExemptionAnswers = multipleBusinessExemptionAnswers.traverse { answer =>
-      val businessContext = ctx(newId = answer.businessId)
-      saveClass4BusinessData(businessContext, answer)
-    }
+    val saveAllNewExemptionAnswers: EitherT[Future, ServiceError, Unit] = multipleBusinessExemptionAnswers
+      .traverse { answer =>
+        val businessContext = ctx(newId = answer.businessId)
+        saveClass4BusinessData(businessContext, answer)
+      }
+      .map(_ => ())
 
-    EitherT.rightT[Future, ServiceError](updateOtherIdsToNotExempt.map(_ => saveAllNewExemptionAnswers))
+    for {
+      _      <- updateOtherIdsToNotExempt
+      result <- saveAllNewExemptionAnswers
+    } yield result
   }
 
-  def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
+  private def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
-    val result = for {
-      existingAnswers <- connector.getAnnualSummaries(ctx).map(_.getOrElse(api_1803.SuccessResponseSchema.empty))
-      upsertRequest = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourRequestData(ctx, businessExemptionAnswer, existingAnswers)
-      _ <- connector.createAmendSEAnnualSubmission(upsertRequest)
-    } yield ()
-    EitherT.rightT[Future, ServiceError](result)
+    val submissionBody = for {
+      maybeAnnualSummaries <- connector.getAnnualSummaries(ctx)
+      updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[Unit](maybeAnnualSummaries, businessExemptionAnswer)
+    } yield updatedAnnualSubmissionBody
+
+    EitherT(submissionBody).flatMap(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
   }
 
   private def clearOtherExistingClass4Data(ctx: JourneyContextWithNino, idsToNotClear: List[String])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       allUserBusinessIds <- businessConnector.getBusinesses(ctx.nino).map(_.taxPayerDisplayResponse.businessData.map(_.map(_.incomeSourceId)))
-      idsToClearData = allUserBusinessIds.filterNot(idsToNotClear.contains(_))
-      _              = idsToClearData.traverse(_.map(id => setExistingClass4DataToNotExempt(ctx(newId = BusinessId(id)))))
-    } yield ()
+      idsToClearData = allUserBusinessIds.map(_.filterNot(idsToNotClear.contains(_)))
+      result <- idsToClearData.traverse(ids => ids.traverse(id => setExistingClass4DataToNotExempt(ctx(newId = BusinessId(id))))).map(_ => ())
+    } yield result
 
   private def setExistingClass4DataToNotExempt(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     val result = connector.getAnnualSummaries(ctx) flatMap {
       case Right(summary) if summary.hasNICsClassFourData =>
-        val noExemptionAnswer = Class4ExemptionAnswers(ctx.businessId, class4Exempt = false, None)
-        val requestData       = CreateAmendSEAnnualSubmissionRequestData.mkNicsClassFourRequestData(ctx, noExemptionAnswer, summary)
-        connector.createAmendSEAnnualSubmission(requestData)
+        val noExemptionAnswer  = Class4ExemptionAnswers(ctx.businessId, class4Exempt = false, None)
+        val updatedRequestBody = createUpdatedAnnualSummariesRequestBody(summary, noExemptionAnswer)
+        connector.createUpdateOrDeleteApiAnnualSummaries(ctx, updatedRequestBody).value
       case Right(_)                                 => Future.successful(Right[ServiceError, Unit](()))
       case Left(error) if error.status == NOT_FOUND => Future.successful(Right[ServiceError, Unit](()))
       case leftResult                               => Future(leftResult.void)

@@ -18,12 +18,10 @@ package models.database.capitalAllowances
 
 import play.api.libs.json.{Format, Json}
 
-final case class NewStructuresBuildingsDb(
-    structuresBuildingsAllowance: Boolean,
-    structuresBuildingsEligibleClaim: Option[Boolean],
-    structuresBuildingsPreviousClaimUse: Option[Boolean],
-    structuresBuildingsClaimed: Option[Boolean]
-)
+final case class NewStructuresBuildingsDb(structuresBuildingsAllowance: Boolean,
+                                          structuresBuildingsEligibleClaim: Option[Boolean],
+                                          structuresBuildingsPreviousClaimUse: Option[Boolean],
+                                          structuresBuildingsClaimed: Option[Boolean])
 
 object NewStructuresBuildingsDb {
   implicit val format: Format[NewStructuresBuildingsDb] = Json.format[NewStructuresBuildingsDb]

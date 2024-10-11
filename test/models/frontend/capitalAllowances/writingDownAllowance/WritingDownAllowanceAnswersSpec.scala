@@ -40,7 +40,7 @@ class WritingDownAllowanceAnswersSpec extends AnyWordSpecLike {
 
   "toWritingDownDownstream" should {
     "convert to AnnualAllowances without previous answers" in {
-      val result = answers.toDownStream(None)
+      val result = answers.toDownStreamAnnualAllowances(None)
       assert(
         result ===
           models.connector.api_1802.request.AnnualAllowances.empty.copy(
@@ -54,7 +54,7 @@ class WritingDownAllowanceAnswersSpec extends AnyWordSpecLike {
     "convert to AnnualAllowances with previous answers" in {
       val previous = AnnualAllowancesData.example
 
-      val result = answers.toDownStream(Some(previous))
+      val result = answers.toDownStreamAnnualAllowances(Some(previous))
       assert(
         result ===
           previous.copy(

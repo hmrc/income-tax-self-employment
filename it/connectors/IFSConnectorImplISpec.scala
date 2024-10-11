@@ -17,14 +17,14 @@
 package connectors
 
 import base.IntegrationBaseSpec
-import cats.implicits.catsSyntaxEitherId
+import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.data.{Api1786Test, Api1803Test}
 import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import models.common.TaxYear.{asTys, endDate, startDate}
 import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics}
 import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics}
-import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1802.request.{AnnualAdjustments, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1803.SuccessResponseSchema
 import models.connector.api_1894.request._
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
@@ -81,6 +81,40 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
       )
 
       connector.getAnnualSummaries(ctx).futureValue shouldBe SuccessResponseSchema(None, None, None).asRight
+    }
+  }
+
+  "deleteSEAnnualSummaries" must {
+    "return unit" in {
+      val downstreamUrl = s"/income-tax/${asTys(taxYear)}/${nino.value}/self-employments/${businessId.value}/annual-summaries"
+      stubDelete(
+        url = downstreamUrl,
+        expectedResponse = "",
+        expectedStatus = OK
+      )
+      val result = connector.deleteSEAnnualSummaries(ctx).value.futureValue
+      assert(result === Right(()))
+    }
+  }
+
+  "createUpdateOrDeleteApiAnnualSummaries" must {
+    "send a PUT request when given valid data to submit" in new Api1802Test {
+      stubDelete(
+        url = downstreamUrl,
+        expectedResponse = "",
+        expectedStatus = OK
+      )
+
+      connector.createUpdateOrDeleteApiAnnualSummaries(ctx, None).value.futureValue shouldBe ().asRight
+    }
+    "send a DELETE request when given no data to submit" in new Api1802Test {
+      stubPutWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = downstreamSuccessResponse,
+        expectedStatus = OK)
+
+      connector.createUpdateOrDeleteApiAnnualSummaries(ctx, requestBody.some).value.futureValue shouldBe ().asRight
     }
   }
 
@@ -170,9 +204,10 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
   }
 
   trait Api1802Test {
-    val downstreamSuccessResponse: String                     = Json.stringify(Json.obj("transactionReference" -> "someId"))
-    val requestBody: CreateAmendSEAnnualSubmissionRequestBody = CreateAmendSEAnnualSubmissionRequestBody(None, None, None)
-    val data: CreateAmendSEAnnualSubmissionRequestData        = CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, requestBody)
+    val downstreamSuccessResponse: String = Json.stringify(Json.obj("transactionReference" -> "someId"))
+    val requestBody: CreateAmendSEAnnualSubmissionRequestBody =
+      CreateAmendSEAnnualSubmissionRequestBody(AnnualAdjustments.empty.copy(goodsAndServicesOwnUse = Some(100)).some, None, None)
+    val data: CreateAmendSEAnnualSubmissionRequestData = CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, requestBody)
 
     val downstreamUrl =
       s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/annual-summaries"

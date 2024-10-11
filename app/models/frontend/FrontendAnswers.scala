@@ -16,10 +16,12 @@
 
 package models.frontend
 
-import models.connector.api_1802.request.AnnualAllowances
+import models.connector.api_1802.request.{AnnualAdjustments, AnnualAllowances, AnnualNonFinancials}
 
 abstract class FrontendAnswers[A] {
-  def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances
+  def toDownStreamAnnualAdjustments(current: Option[AnnualAdjustments]): AnnualAdjustments               = current.getOrElse(AnnualAdjustments.empty)
+  def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances                  = current.getOrElse(AnnualAllowances.empty)
+  def toDownStreamAnnualNonFinancials(current: Option[AnnualNonFinancials]): Option[AnnualNonFinancials] = current
 
   def toDbModel: Option[A]
 }

@@ -16,7 +16,6 @@
 
 package models.connector.api_1802.request
 
-import models.connector.Api1802AnnualAllowancesBuilder
 import play.api.libs.json.{Json, OFormat}
 
 // The `tradingIncomeAllowance` cannot be present with other allowances. It has a min value of 0, max of 1000 (2 dp).
@@ -34,15 +33,12 @@ case class AnnualAllowances(annualInvestmentAllowance: Option[BigDecimal],
                             zeroEmissionsCarAllowance: Option[BigDecimal],
                             tradingIncomeAllowance: Option[BigDecimal]) {
   def isDefined: Boolean = this != AnnualAllowances.empty
+
+  def returnNoneIfEmpty: Option[AnnualAllowances] = if (isDefined) Some(this) else None
 }
 
 object AnnualAllowances {
   implicit val format: OFormat[AnnualAllowances] = Json.format[AnnualAllowances]
 
   val empty: AnnualAllowances = AnnualAllowances(None, None, None, None, None, None, None, None, None, None, None, None, None)
-
-  def fromFrontendModel[A: Api1802AnnualAllowancesBuilder](answers: A): AnnualAllowances = {
-    val builder = implicitly[Api1802AnnualAllowancesBuilder[A]]
-    builder.build(answers)
-  }
 }

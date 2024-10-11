@@ -17,19 +17,19 @@
 package models.frontend.capitalAllowances.writingDownAllowance
 
 import models.connector.api_1802.request.AnnualAllowances
-import models.database.capitalAllowances.WritingDownAllowanceDb
-import play.api.libs.json.{Format, Json}
 import models.connector.api_1803
+import models.database.capitalAllowances.WritingDownAllowanceDb
 import models.frontend.FrontendAnswers
+import play.api.libs.json.{Format, Json}
 
-final case class WritingDownAllowanceAnswers(
-    wdaSpecialRate: Option[Boolean],
-    wdaSpecialRateClaimAmount: Option[BigDecimal],
-    wdaMainRate: Option[Boolean],
-    wdaMainRateClaimAmount: Option[BigDecimal],
-    wdaSingleAsset: Option[Boolean],
-    wdaSingleAssetClaimAmounts: Option[BigDecimal]
-) extends FrontendAnswers[WritingDownAllowanceDb] {
+final case class WritingDownAllowanceAnswers(wdaSpecialRate: Option[Boolean],
+                                             wdaSpecialRateClaimAmount: Option[BigDecimal],
+                                             wdaMainRate: Option[Boolean],
+                                             wdaMainRateClaimAmount: Option[BigDecimal],
+                                             wdaSingleAsset: Option[Boolean],
+                                             wdaSingleAssetClaimAmounts: Option[BigDecimal])
+    extends FrontendAnswers[WritingDownAllowanceDb] {
+
   def toDbModel: Option[WritingDownAllowanceDb] = Some(
     WritingDownAllowanceDb(
       wdaSpecialRate,
@@ -37,7 +37,7 @@ final case class WritingDownAllowanceAnswers(
       wdaSingleAsset
     ))
 
-  def toDownStream(current: Option[AnnualAllowances]): AnnualAllowances =
+  override def toDownStreamAnnualAllowances(current: Option[AnnualAllowances]): AnnualAllowances =
     current
       .getOrElse(AnnualAllowances.empty)
       .copy(
@@ -45,7 +45,6 @@ final case class WritingDownAllowanceAnswers(
         capitalAllowanceMainPool = wdaMainRateClaimAmount,
         capitalAllowanceSingleAssetPool = wdaSingleAssetClaimAmounts
       )
-
 }
 
 object WritingDownAllowanceAnswers {
