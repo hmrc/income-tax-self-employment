@@ -23,7 +23,7 @@ import models.common.TaxYear.asTys
 import models.common._
 import models.connector._
 import models.connector.api_1500.{CreateBroughtForwardLossRequestBody, CreateBroughtForwardLossRequestData}
-import models.connector.api_1501.{UpdateBroughtForwardLossRequestBody, UpdateBroughtForwardLossRequestData}
+import models.connector.api_1501.{UpdateBroughtForwardLossRequestBody, UpdateBroughtForwardLossRequestData, UpdateBroughtForwardLossYear}
 import models.domain.ApiResultT
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import utils.Logging
@@ -41,6 +41,8 @@ trait IFSBusinessDetailsConnector {
       data: CreateBroughtForwardLossRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1500.SuccessResponseSchema]
   def updateBroughtForwardLoss(
       data: UpdateBroughtForwardLossRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1501.SuccessResponseSchema]
+
+  def updateBroughtForwardLossYear(data: UpdateBroughtForwardLossYear)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
   def getBroughtForwardLoss(nino: Nino, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1502.SuccessResponseSchema]
   def deleteBroughtForwardLoss(nino: Nino, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
   def listBroughtForwardLosses(nino: Nino, taxYear: TaxYear)(implicit
@@ -114,6 +116,10 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
 
     EitherT(post[UpdateBroughtForwardLossRequestBody, Api1501Response](http, context, data.body))
   }
+
+  def updateBroughtForwardLossYear(data: UpdateBroughtForwardLossYear)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] =
+    deleteBroughtForwardLoss(data.nino, data.lossId).map(_ =>
+      createBroughtForwardLoss(CreateBroughtForwardLossRequestData(data.nino, data.taxYear, data.body)))
 
   def getBroughtForwardLoss(nino: Nino, lossId: String)(implicit
       hc: HeaderCarrier,

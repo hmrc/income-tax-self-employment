@@ -230,7 +230,7 @@ object StubIFSConnector {
   val api1870EmptyResponse: api_1870.SuccessResponseSchema = api_1870.SuccessResponseSchema(List.empty)
   val api1870SuccessResponse: api_1870.SuccessResponseSchema = api_1870.SuccessResponseSchema(
     List(
-      LossData("5678", "SJPR05893938418", LossType.SelfEmployment, 400, "2022-23", LocalDateTime.now),
+      LossData("5678", "SJPR05893938418", LossType.SelfEmployment, 400, "2018-19", LocalDateTime.now),
       LossData("5689", "1245", LossType.SelfEmployment, 500, "2021-22", LocalDateTime.now)
     )
   )

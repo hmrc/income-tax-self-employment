@@ -19,9 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common.{JourneyContextWithNino, JourneyName}
-import models.connector.api_1803
 import models.connector.api_1870.LossData
-import models.connector.api_1502
 import models.database.adjustments.ProfitOrLossDb
 import models.domain.ApiResultT
 import models.error.ServiceError
@@ -63,9 +61,6 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     EitherT(submissionBody).flatMap(ifsConnector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
   }
 
-  private def getLossIdByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[String]] =
-    getLossByBusinessId(ctx).map(_.map(_.lossId))
-
   def getLossByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[LossData]] = {
     val losses = ifsBusinessDetailsConnector.listBroughtForwardLosses(ctx.nino, ctx.taxYear)
     losses.transform {
@@ -81,25 +76,32 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
   def createUpdateOrDeleteBroughtForwardLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] =
     for {
-      maybeLossId <- getLossIdByBusinessId(ctx)
-      result      <- handleBroughtForwardLoss(ctx, maybeLossId, answers)
+      maybeLoss <- getLossByBusinessId(ctx)
+      result    <- handleBroughtForwardLoss(ctx, maybeLoss, answers)
     } yield result
 
-  private def handleBroughtForwardLoss(ctx: JourneyContextWithNino, maybeLossId: Option[String], answers: ProfitOrLossJourneyAnswers)(implicit
-                                                                                                                                      hc: HeaderCarrier): ApiResultT[Unit] =
-    maybeLossId match {
-      case Some(lossId) => handleBroughtForwardLossWithExistingLoss(ctx, lossId, answers)
-      case None => handleBroughtForwardLossNoExistingLoss(ctx, answers)
+  private def handleBroughtForwardLoss(ctx: JourneyContextWithNino, maybeLoss: Option[LossData], answers: ProfitOrLossJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
+    maybeLoss match {
+      case Some(lossData) => handleBroughtForwardLossWithExistingLoss(ctx, lossData, answers)
+      case None           => handleBroughtForwardLossNoExistingLoss(ctx, answers)
     }
 
-  private def handleBroughtForwardLossWithExistingLoss(ctx: JourneyContextWithNino, lossId: String, answers: ProfitOrLossJourneyAnswers)(implicit
+  private def handleBroughtForwardLossWithExistingLoss(ctx: JourneyContextWithNino, lossData: LossData, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
-    answers.unusedLossAmount match {
-      case Some(amount) =>
-        ifsBusinessDetailsConnector
-          .updateBroughtForwardLoss(ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossData(ctx, lossId, amount))
-          .map(_ => ())
-      case _ => ifsBusinessDetailsConnector.deleteBroughtForwardLoss(ctx.nino, lossId)
+    (answers.unusedLossAmount, answers.whichYearIsLossReported) match {
+      case (Some(amount), Some(whichYear)) =>
+        if (whichYear.apiTaxYear == lossData.taxYearBroughtForwardFrom) {
+          ifsBusinessDetailsConnector
+            .updateBroughtForwardLoss(ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossData(ctx, lossData.lossId, amount))
+            .map(_ => ())
+        } else {
+          ifsBusinessDetailsConnector
+            .updateBroughtForwardLossYear(
+              ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossYearData(ctx, lossData.lossId, amount, whichYear.apiTaxYear))
+            .map(_ => ())
+        }
+      case _ => ifsBusinessDetailsConnector.deleteBroughtForwardLoss(ctx.nino, lossData.lossId)
     }
 
   private def handleBroughtForwardLossNoExistingLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit

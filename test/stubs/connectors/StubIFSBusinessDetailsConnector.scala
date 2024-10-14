@@ -22,7 +22,7 @@ import connectors.IFSBusinessDetailsConnector
 import connectors.IFSBusinessDetailsConnector._
 import models.common.{BusinessId, Nino, TaxYear}
 import models.connector.api_1500.CreateBroughtForwardLossRequestData
-import models.connector.api_1501.{UpdateBroughtForwardLossRequestBody, UpdateBroughtForwardLossRequestData}
+import models.connector.api_1501.{UpdateBroughtForwardLossRequestBody, UpdateBroughtForwardLossRequestData, UpdateBroughtForwardLossYear}
 import models.connector.{api_1171, api_1500, api_1501, api_1502, api_1870, api_1871}
 import models.domain.ApiResultT
 import models.error.ServiceError
@@ -36,6 +36,7 @@ case class StubIFSBusinessDetailsConnector(
     getBusinessIncomeSourcesSummaryResult: Api1871Response = api1871EmptyResponse.asRight,
     createBroughtForwardLossResult: Api1500Response = api1500EmptyResponse.asRight,
     updateBroughtForwardLossResult: Api1501Response = api1501EmptyResponse.asRight,
+    updateBroughtForwardLossYearResult: Either[ServiceError, Unit] = Right(()),
     getBroughtForwardLossResult: Api1502Response = api1502EmptyResponse.asRight,
     deleteBroughtForwardLossResult: Either[ServiceError, Unit] = Right(()),
     listBroughtForwardLossesResult: Api1870Response = api1870EmptyResponse.asRight
@@ -60,6 +61,11 @@ case class StubIFSBusinessDetailsConnector(
       data: UpdateBroughtForwardLossRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1501.SuccessResponseSchema] = {
     if (updateBroughtForwardLossResult.isRight) updatedBroughtForwardLossData = Some(data.body)
     EitherT.fromEither[Future](updateBroughtForwardLossResult)
+  }
+
+  def updateBroughtForwardLossYear(data: UpdateBroughtForwardLossYear)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
+    if (updateBroughtForwardLossYearResult.isRight) updatedBroughtForwardLossData = Some(UpdateBroughtForwardLossRequestBody(data.body.lossAmount))
+    EitherT.fromEither[Future](updateBroughtForwardLossYearResult)
   }
 
   def getBroughtForwardLoss(nino: Nino, lossId: String)(implicit

@@ -18,7 +18,7 @@ package connectors
 
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
-import connectors.data.{Api1171Test, Api1500Test, Api1501Test, Api1502Test, Api1504Test, Api1870Test, Api1871Test}
+import connectors.data.{Api1171Test, Api1500Test, Api1501Test, Api1501UpdateYearTest, Api1502Test, Api1504Test, Api1870Test, Api1871Test}
 import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -72,6 +72,23 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         expectedStatus = OK
       )
       connector.updateBroughtForwardLoss(data).value.futureValue shouldBe successResponse.asRight
+    }
+  }
+
+  "updateBroughtForwardLossYear" must {
+    "return unit with NO_CONTENT status" in new Api1501UpdateYearTest {
+      stubDelete(
+        url = downstreamDeleteUrl,
+        expectedResponse = "",
+        expectedStatus = NO_CONTENT
+      )
+      stubPostWithRequestAndResponseBody(
+        url = downstreamCreateUrl,
+        requestBody = requestBody,
+        expectedResponse = successResponseRaw,
+        expectedStatus = OK
+      )
+      connector.updateBroughtForwardLossYear(data).value.futureValue shouldBe Right(())
     }
   }
 

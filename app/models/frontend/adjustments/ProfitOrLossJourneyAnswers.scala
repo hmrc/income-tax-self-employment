@@ -61,4 +61,12 @@ object ProfitOrLossJourneyAnswers {
     )
     api_1501.UpdateBroughtForwardLossRequestData(ctx.nino, lossId, updatedBroughtForwardLossBody)
   }
+
+  def toUpdateBroughtForwardLossYearData(ctx: JourneyContextWithNino,
+                                         lossId: String,
+                                         amount: BigDecimal,
+                                         whichYear: String): api_1501.UpdateBroughtForwardLossYear = {
+    val body = api_1500.CreateBroughtForwardLossRequestBody(whichYear, LossType.SelfEmployment, ctx.businessId.toString, amount)
+    api_1501.UpdateBroughtForwardLossYear(ctx.nino, lossId, ctx.taxYear, body)
+  }
 }
