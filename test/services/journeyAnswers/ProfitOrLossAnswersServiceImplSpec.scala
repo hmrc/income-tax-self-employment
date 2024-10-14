@@ -232,8 +232,12 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       "given a valid submissions to update existing BroughtForwardLoss data with a different year and amount" in new StubbedService {
         override val ifsBusinessDetailsConnector = StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
 
-        val result = service.createUpdateOrDeleteBroughtForwardLoss(journeyCtxWithNino,
-          yesBroughtForwardLossAnswers.copy(whichYearIsLossReported = Some(WhichYearIsLossReported.Year2019to2020))).value.futureValue
+        val result = service
+          .createUpdateOrDeleteBroughtForwardLoss(
+            journeyCtxWithNino,
+            yesBroughtForwardLossAnswers.copy(whichYearIsLossReported = Some(WhichYearIsLossReported.Year2019to2020)))
+          .value
+          .futureValue
 
         assert(result == ().asRight)
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === Some(UpdateBroughtForwardLossRequestBody(unusedLossAmount)))
