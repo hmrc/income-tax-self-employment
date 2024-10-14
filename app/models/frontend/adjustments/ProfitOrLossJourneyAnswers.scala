@@ -17,39 +17,25 @@
 package models.frontend.adjustments
 
 import models.common.JourneyContextWithNino
-import models.connector.api_1500
 import models.connector.api_1500.LossType
-import models.connector.api_1501
-import models.connector.api_1802.request.{AnnualAdjustments, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
-import models.connector.api_1803
-import models.connector.api_1803.AnnualAdjustmentsType
+import models.connector.api_1802.request.AnnualAdjustments
+import models.connector.{api_1500, api_1501}
 import models.database.adjustments.ProfitOrLossDb
+import models.frontend.FrontendAnswers
 import play.api.libs.json._
 
-case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,     // db
-                                      goodsAndServicesAmount: Option[BigDecimal], // adjustments > goodsAndServicesOwnUse API 1802
-                                      previousUnusedLosses: Boolean,              // db
-                                      unusedLossAmount: Option[BigDecimal],       // lossAmount API 1500
-                                      whichYearIsLossReported: Option[WhichYearIsLossReported]) { // taxYearBroughtForwardFrom API 1500
-  def toDbAnswers: ProfitOrLossDb = ProfitOrLossDb(goodsAndServicesForYourOwnUse, previousUnusedLosses)
+case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,                   // db
+                                      goodsAndServicesAmount: Option[BigDecimal],               // adjustments > goodsAndServicesOwnUse API 1802
+                                      previousUnusedLosses: Boolean,                            // db
+                                      unusedLossAmount: Option[BigDecimal],                     // lossAmount API 1500
+                                      whichYearIsLossReported: Option[WhichYearIsLossReported]) // taxYearBroughtForwardFrom API 1500
+    extends FrontendAnswers[ProfitOrLossDb] {
 
-  def toAnnualSummariesData(ctx: JourneyContextWithNino,
-                            existingAnnualSummaries: api_1803.SuccessResponseSchema): CreateAmendSEAnnualSubmissionRequestData = {
-    val existingAdjustments: Option[AnnualAdjustmentsType] = existingAnnualSummaries.annualAdjustments
+  def toDbModel: Option[ProfitOrLossDb] = Some(ProfitOrLossDb(goodsAndServicesForYourOwnUse, previousUnusedLosses))
+  def toDbAnswers: ProfitOrLossDb       = ProfitOrLossDb(goodsAndServicesForYourOwnUse, previousUnusedLosses)
 
-    val updatedAdjustments: Option[AnnualAdjustments] = (existingAdjustments, goodsAndServicesAmount) match {
-      case (Some(existing), _)  => Some(existing.toApi1802AnnualAdjustments.copy(goodsAndServicesOwnUse = goodsAndServicesAmount))
-      case (None, Some(amount)) => Some(AnnualAdjustmentsType.empty.toApi1802AnnualAdjustments.copy(goodsAndServicesOwnUse = Some(amount)))
-      case (None, None)         => None
-    }
-
-    val submissionBody = CreateAmendSEAnnualSubmissionRequestBody(
-      updatedAdjustments,
-      existingAnnualSummaries.annualAllowances.map(_.toApi1802AnnualAllowance),
-      existingAnnualSummaries.maybeConvertNonFinancialsTypeToNonFinancials
-    )
-    CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, submissionBody)
-  }
+  override def toDownStreamAnnualAdjustments(current: Option[AnnualAdjustments]): AnnualAdjustments =
+    current.getOrElse(AnnualAdjustments.empty).copy(goodsAndServicesOwnUse = goodsAndServicesAmount)
 }
 
 object ProfitOrLossJourneyAnswers {

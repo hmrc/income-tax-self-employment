@@ -17,20 +17,38 @@
 package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
+import models.connector.api_1802.request.{
+  AnnualAdjustments,
+  AnnualAllowances,
+  CreateAmendSEAnnualSubmissionRequestBody,
+  CreateAmendSEAnnualSubmissionRequestData
+}
 import models.database.adjustments.ProfitOrLossDb
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhichYearIsLossReported}
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
-import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.connectors.StubIFSConnector._
+import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec.{hc, journeyCtxWithNino}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike {
+
+  def expectedAnnualSummariesData(adjustments: Option[AnnualAdjustments], allowances: Option[AnnualAllowances]) =
+    CreateAmendSEAnnualSubmissionRequestData(
+      journeyCtxWithNino.taxYear,
+      journeyCtxWithNino.nino,
+      journeyCtxWithNino.businessId,
+      CreateAmendSEAnnualSubmissionRequestBody(
+        adjustments,
+        allowances,
+        None
+      )
+    )
 
   "Saving ProfitOrLoss answers" must {
     "successfully save data when answers are true" in new StubbedService {
@@ -39,7 +57,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike {
           getAnnualSummariesResult = api1803SuccessResponse.asRight
         )
       val answers                        = ProfitOrLossJourneyAnswers(true, Some(200), true, Some(400), Some(WhichYearIsLossReported.Year2018to2019))
-      val expectedAnnualSummariesAnswers = answers.toAnnualSummariesData(journeyCtxWithNino, api1803SuccessResponse)
+      val expectedAnnualSummariesAnswers = expectedAnnualSummariesData(Some(answers.toDownStreamAnnualAdjustments(None)), None)
       service.saveProfitOrLoss(journeyCtxWithNino, answers).value.map { result =>
         assert(result == ().asRight)
         assert(ifsConnector.upsertAnnualSummariesSubmissionData === Some(expectedAnnualSummariesAnswers))
@@ -52,7 +70,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike {
           getAnnualSummariesResult = api1803SuccessResponse.asRight
         )
       val answers                        = ProfitOrLossJourneyAnswers(false, None, false, None, None)
-      val expectedAnnualSummariesAnswers = answers.toAnnualSummariesData(journeyCtxWithNino, api1803SuccessResponse)
+      val expectedAnnualSummariesAnswers = expectedAnnualSummariesData(Some(answers.toDownStreamAnnualAdjustments(None)), None)
       service.saveProfitOrLoss(journeyCtxWithNino, answers).value.map { result =>
         assert(result == ().asRight)
         assert(ifsConnector.upsertAnnualSummariesSubmissionData === Some(expectedAnnualSummariesAnswers))
@@ -65,7 +83,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike {
           getAnnualSummariesResult = api1803EmptyResponse.asRight
         )
       val answers                        = ProfitOrLossJourneyAnswers(true, Some(200), false, None, None)
-      val expectedAnnualSummariesAnswers = answers.toAnnualSummariesData(journeyCtxWithNino, api1803SuccessResponse)
+      val expectedAnnualSummariesAnswers = expectedAnnualSummariesData(Some(answers.toDownStreamAnnualAdjustments(None)), None)
       service.saveProfitOrLoss(journeyCtxWithNino, answers).value.map { result =>
         assert(result == ().asRight)
         assert(ifsConnector.upsertAnnualSummariesSubmissionData === Some(expectedAnnualSummariesAnswers))

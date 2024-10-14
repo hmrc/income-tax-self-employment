@@ -16,17 +16,19 @@
 
 package models.connector.api_1803
 
+import models.connector.api_1802.request.BuildingAllowance
 import play.api.libs.json._
 
 /** Represents the Swagger definition for structuredBuildingAllowanceType_inner.
   * @param amount
   *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   */
-case class StructuredBuildingAllowanceTypeInner(
-    amount: BigDecimal,
-    firstYear: Option[StructuredBuildingAllowanceTypeInnerFirstYear],
-    building: StructuredBuildingAllowanceTypeInnerBuilding
-)
+case class StructuredBuildingAllowanceTypeInner(amount: BigDecimal,
+                                                firstYear: Option[StructuredBuildingAllowanceTypeInnerFirstYear],
+                                                building: StructuredBuildingAllowanceTypeInnerBuilding) {
+
+  def toBuildingAllowance: BuildingAllowance = BuildingAllowance(amount, firstYear.map(_.toFirstYear), building.toBuilding)
+}
 
 object StructuredBuildingAllowanceTypeInner {
   implicit lazy val structuredBuildingAllowanceTypeInnerJsonFormat: Format[StructuredBuildingAllowanceTypeInner] =

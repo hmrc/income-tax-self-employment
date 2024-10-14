@@ -16,12 +16,15 @@
 
 package services.journeyAnswers
 
+import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import models.common.{JourneyContextWithNino, JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import models.database.income.IncomeStorageAnswers
+import models.error.DownstreamError.SingleDownstreamError
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
 import org.mockito.IdiomaticMockito.StubbingOps
@@ -33,6 +36,7 @@ import org.scalatest.OptionValues._
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import services.journeyAnswers.IncomeAnswersServiceImplSpec._
@@ -84,7 +88,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
   }
 
   "saving income answers" when {
-    "no period summary submission exists" must {
+    "no period summary or annual submission data exists" must {
       "successfully store data and create the period summary" in new TestCase(connector = mock[IFSConnector]) {
         connector.listSEPeriodSummary(*)(*, *) returns
           Future.successful(api1965EmptyResponse.asRight)
@@ -92,8 +96,11 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         connector.createSEPeriodSummary(*)(*, *) returns
           Future.successful(().asRight)
 
-        connector.createAmendSEAnnualSubmission(*)(*, *) returns
-          Future.successful(().asRight)
+        connector.getAnnualSummaries(*)(*, *) returns
+          Future.successful(SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound).asLeft)
+
+        connector.createUpdateOrDeleteApiAnnualSummaries(*, *)(*, *) returns
+          EitherT.rightT(())
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
         val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
@@ -104,18 +111,21 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         verify(connector, never).amendSEPeriodSummary(*)(*, *)
       }
     }
-    "a submission exists" must {
+    "prior submission data exists" must {
       "successfully store data and amend the period summary" in new TestCase(connector = mock[IFSConnector]) {
         connector.listSEPeriodSummary(*)(*, *) returns
           Future.successful(api1965MatchedResponse.asRight)
 
-        connector.amendSEPeriodSummary(*)(*, *) returns Future.successful(().asRight)
-
-        connector.createAmendSEAnnualSubmission(*)(*, *) returns
-          Future.successful(().asRight)
-
         connector.getPeriodicSummaryDetail(*)(*, *) returns
           Future.successful(api1786DeductionsSuccessResponse.asRight)
+
+        connector.amendSEPeriodSummary(*)(*, *) returns Future.successful(().asRight)
+
+        connector.getAnnualSummaries(*)(*, *) returns
+          Future.successful(api1803SuccessResponse.asRight)
+
+        connector.createUpdateOrDeleteApiAnnualSummaries(*, *)(*, *) returns
+          EitherT.rightT(())
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
         val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
