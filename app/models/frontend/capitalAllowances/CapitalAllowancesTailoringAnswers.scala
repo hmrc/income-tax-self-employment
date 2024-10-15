@@ -31,7 +31,6 @@ object CapitalAllowances extends Enumerable.Implicits {
 
   case object ZeroEmissionCar                       extends WithName("zeroEmissionCar") with CapitalAllowances
   case object ZeroEmissionGoodsVehicle              extends WithName("zeroEmissionGoodsVehicle") with CapitalAllowances
-  case object ElectricVehicleChargepoint            extends WithName("electricVehicleChargepoint") with CapitalAllowances
   case object StructuresAndBuildings                extends WithName("structuresAndBuildings") with CapitalAllowances
   case object SpecialTaxSitesStructuresAndBuildings extends WithName("specialTaxSitesStructuresAndBuildings") with CapitalAllowances
   case object AnnualInvestment                      extends WithName("annualInvestment") with CapitalAllowances
@@ -43,7 +42,6 @@ object CapitalAllowances extends Enumerable.Implicits {
     List(
       ZeroEmissionCar,
       ZeroEmissionGoodsVehicle,
-      ElectricVehicleChargepoint,
       StructuresAndBuildings,
       SpecialTaxSitesStructuresAndBuildings,
       AnnualInvestment,

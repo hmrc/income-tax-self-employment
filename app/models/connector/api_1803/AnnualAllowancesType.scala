@@ -20,8 +20,6 @@ import models.connector.api_1802.request.AnnualAllowances
 import play.api.libs.json._
 
 /** Represents the Swagger definition for annualAllowancesType.
-  * @param electricChargePointAllowance
-  *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   * @param zeroEmissionsCarAllowance
   *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   */
@@ -34,7 +32,6 @@ case class AnnualAllowancesType(
     enhanceCapitalAllowance: Option[BigDecimal],
     allowanceOnSales: Option[BigDecimal],
     capitalAllowanceSingleAssetPool: Option[BigDecimal],
-    electricChargePointAllowance: Option[BigDecimal],
     structuredBuildingAllowance: Option[List[StructuredBuildingAllowanceTypeInner]],
     enhancedStructuredBuildingAllowance: Option[List[StructuredBuildingAllowanceTypeInner]],
     zeroEmissionsCarAllowance: Option[BigDecimal],
@@ -53,7 +50,6 @@ case class AnnualAllowancesType(
       enhanceCapitalAllowance = enhanceCapitalAllowance,
       allowanceOnSales = allowanceOnSales,
       capitalAllowanceSingleAssetPool = capitalAllowanceSingleAssetPool,
-      electricChargePointAllowance = electricChargePointAllowance,
       structuredBuildingAllowance = sba,
       enhancedStructuredBuildingAllowance = esba,
       zeroEmissionsCarAllowance = zeroEmissionsCarAllowance,
@@ -66,7 +62,6 @@ object AnnualAllowancesType {
   implicit lazy val annualAllowancesTypeJsonFormat: Format[AnnualAllowancesType] = Json.format[AnnualAllowancesType]
 
   val emptyAnnualAllowancesType: AnnualAllowancesType = AnnualAllowancesType(
-    None,
     None,
     None,
     None,

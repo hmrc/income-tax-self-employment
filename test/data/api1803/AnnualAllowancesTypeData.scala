@@ -28,7 +28,6 @@ object AnnualAllowancesTypeData {
     enhanceCapitalAllowance = Some(6),
     allowanceOnSales = Some(7),
     capitalAllowanceSingleAssetPool = Some(8),
-    electricChargePointAllowance = Some(9),
     structuredBuildingAllowance = None,
     enhancedStructuredBuildingAllowance = Some(
       List(

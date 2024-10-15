@@ -29,7 +29,6 @@ import models.database.capitalAllowances.ZeroEmissionCarsDb
 import models.frontend.capitalAllowances.CapitalAllowances.{ZeroEmissionCar, ZeroEmissionGoodsVehicle}
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
-import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
 import org.scalatest.matchers.should.Matchers
@@ -139,28 +138,6 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
         ))
       val result          = services.getZeroEmissionGoodsVehicle(journeyCtxWithNino).rightValue
       val expectedAnswers = ZeroEmissionGoodsVehicleAnswers(dbAnswers, api1803SuccessResponse)
-
-      result shouldBe Some(expectedAnswers)
-    }
-  }
-
-  "getElectricVehicleChargePoints" should {
-    "return empty if no answers" in {
-      val result = service.getElectricVehicleChargePoints(journeyCtxWithNino).rightValue
-      assert(result === None)
-    }
-
-    "return answers if they exist" in {
-      val dbAnswers = genOne(electricVehicleChargePointsDbAnswersGen)
-      val journeyAnswers: JourneyAnswers =
-        mkJourneyAnswers(JourneyName.ElectricVehicleChargePoints, JourneyStatus.Completed, Json.toJsObject(dbAnswers))
-      val services = new CapitalAllowancesAnswersServiceImpl(
-        connector,
-        StubJourneyAnswersRepository(
-          getAnswer = Some(journeyAnswers)
-        ))
-      val result          = services.getElectricVehicleChargePoints(journeyCtxWithNino).rightValue
-      val expectedAnswers = ElectricVehicleChargePointsAnswers(dbAnswers, api1803SuccessResponse)
 
       result shouldBe Some(expectedAnswers)
     }

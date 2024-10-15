@@ -30,7 +30,6 @@ import models.frontend.adjustments.ProfitOrLossJourneyAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
-import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
 import models.frontend.capitalAllowances.structuresBuildings.NewStructuresBuildingsAnswers
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
@@ -329,20 +328,6 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def getZeroEmissionGoodsVehicle(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(capitalAllowancesService.getZeroEmissionGoodsVehicle(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
-  }
-
-  def saveElectricVehicleChargePoints(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    capitalAllowancesService.saveAnswers[ElectricVehicleChargePointsDb, ElectricVehicleChargePointsAnswers](
-      ElectricVehicleChargePoints,
-      taxYear,
-      businessId,
-      nino
-    )
-  }
-
-  def getElectricVehicleChargePoints(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleOptionalApiResult(
-      capitalAllowancesService.getElectricVehicleChargePoints(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def saveBalancingAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>

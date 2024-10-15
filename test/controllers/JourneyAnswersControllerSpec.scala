@@ -795,20 +795,6 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
-  "ElectricVehicleChargePoints" should {
-    val answers = genOne(electricVehicleChargePointsAnswersGen)
-    def underTestWithData =
-      mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getElectricVehicleChargePoints = Some(answers).asRight))
-
-    checkGetAndSave(
-      actionForGetNoContent = underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino),
-      actionForGet = underTestWithData.getElectricVehicleChargePoints(currTaxYear, businessId, nino),
-      expectedBodyForGet = Json.toJson(answers).toString(),
-      dataGen = electricVehicleChargePointsAnswersGen,
-      actionForSave = underTest.getElectricVehicleChargePoints(currTaxYear, businessId, nino)
-    )
-  }
-
   "BalancingAllowance" should {
     val answers = genOne(balancingAllowanceAnswersGen)
     def underTestWithData =
