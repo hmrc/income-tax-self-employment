@@ -272,7 +272,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       (genOne[ExpensesTailoringIndividualCategoriesAnswers](expensesTailoringIndividualCategoriesAnswersGen).some, OK)
     )
 
-    s"Get return correct status if for get tailoring answers" in {
+    "Get return correct status if for get tailoring answers" in {
       forAll(cases) { (journeyAnswers, expectedStatus) =>
         val controller: JourneyAnswersController = new JourneyAnswersController(
           auth = mockAuthorisedAction,
@@ -317,26 +317,46 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => underTest.saveExpensesTailoringTotalAmount(currTaxYear, businessId, nino)
       )
     }
+  }
 
-    s"clearExpensesSimplifiedOrNoExpensesAnswers" in {
-      val controller: JourneyAnswersController = new JourneyAnswersController(
-        auth = mockAuthorisedAction,
-        cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(),
-        expensesService = StubExpensesAnswersService(),
-        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
-        prepopAnswersService = StubPrepopAnswersService(),
-        nicsAnswersService = StubNICsAnswersService(),
-        profitOrLossAnswersService = StubProfitOrLossAnswersService()
-      )
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = NO_CONTENT,
-        expectedBody = "",
-        methodBlock = () => controller.clearExpensesSimplifiedOrNoExpensesAnswers(currTaxYear, businessId, nino)
-      )
-    }
+  "clearExpensesSimplifiedOrNoExpensesAnswers" in {
+    val controller: JourneyAnswersController = new JourneyAnswersController(
+      auth = mockAuthorisedAction,
+      cc = stubControllerComponents,
+      abroadAnswersService = StubAbroadAnswersService(),
+      incomeService = StubIncomeAnswersService(),
+      expensesService = StubExpensesAnswersService(),
+      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+      prepopAnswersService = StubPrepopAnswersService(),
+      nicsAnswersService = StubNICsAnswersService(),
+      profitOrLossAnswersService = StubProfitOrLossAnswersService()
+    )
+    behave like testRoute(
+      request = buildRequestNoContent,
+      expectedStatus = NO_CONTENT,
+      expectedBody = "",
+      methodBlock = () => controller.clearExpensesSimplifiedOrNoExpensesAnswers(currTaxYear, businessId, nino)
+    )
+  }
+
+  s"clearExpensesAndCapitalAllowancesData" in {
+    val controller: JourneyAnswersController = new JourneyAnswersController(
+      auth = mockAuthorisedAction,
+      cc = stubControllerComponents,
+      abroadAnswersService = StubAbroadAnswersService(),
+      incomeService = StubIncomeAnswersService(),
+      expensesService = StubExpensesAnswersService(),
+      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+      prepopAnswersService = StubPrepopAnswersService(),
+      nicsAnswersService = StubNICsAnswersService(),
+      profitOrLossAnswersService = StubProfitOrLossAnswersService()
+    )
+    behave like testRoute(
+      request = buildRequestNoContent,
+      expectedStatus = NO_CONTENT,
+      expectedBody = "",
+      methodBlock = () => controller.clearExpensesAndCapitalAllowancesData(currTaxYear, businessId, nino)
+    )
   }
 
   "GoodsToSellOrUse" should {

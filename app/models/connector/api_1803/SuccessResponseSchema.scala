@@ -32,7 +32,7 @@ case class SuccessResponseSchema(annualAdjustments: Option[AnnualAdjustmentsType
     annualNonFinancials = this.maybeConvertNonFinancialsTypeToNonFinancials
   )
 
-  def maybeConvertNonFinancialsTypeToNonFinancials: Option[AnnualNonFinancials] =
+  private def maybeConvertNonFinancialsTypeToNonFinancials: Option[AnnualNonFinancials] =
     annualNonFinancials.flatMap(
       _.exemptFromPayingClass4Nics.map(AnnualNonFinancials(_, annualNonFinancials.flatMap(_.class4NicsExemptionReason.map(_.toString)))))
 }
