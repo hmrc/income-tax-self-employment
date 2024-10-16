@@ -92,7 +92,7 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
     } yield result
   }
 
-  private def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
+  def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
     val submissionBody = for {
       maybeAnnualSummaries <- connector.getAnnualSummaries(ctx)

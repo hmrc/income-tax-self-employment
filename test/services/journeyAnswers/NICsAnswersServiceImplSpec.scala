@@ -122,13 +122,13 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
 
           val expectedResult = buildExpectedRequestResult(expectedApiData)
 
-          val result = service.saveClass4SingleBusiness(journeyCtxWithNino, class4SingleBusinessAnswers).value.futureValue
+          val result = service.saveClass4BusinessData(journeyCtxWithNino, answer).value.futureValue
 
           assert(result.isRight)
           assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
         }
       }
-      "overriding existing details" in new StubbedService {
+      s"overriding existing details for $testDescription" in new StubbedService {
         override val connector = StubIFSConnector(getAnnualSummariesResult = Right(
           api_1803.SuccessResponseSchema(
             None,
@@ -137,7 +137,7 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
 
         val expectedResult = buildExpectedRequestResult(expectedApiData)
 
-        val result = service.saveClass4SingleBusiness(journeyCtxWithNino, class4SingleBusinessAnswers).value.futureValue
+        val result = service.saveClass4BusinessData(journeyCtxWithNino, answer).value.futureValue
 
         assert(result.isRight)
         assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
