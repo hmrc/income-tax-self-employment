@@ -83,8 +83,9 @@ class NICsAnswersSpec extends AnyWordSpecLike {
           Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = true, Some(ExemptionReason.TrusteeExecutorAdmin)),
           Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = false, None)
         )
-        val result         = NICsAnswers.mkPriorClass4Data(businessData)
-        val expectedResult = Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(classFourOtherExemption)), Some(List(BusinessId("id1")))))))
+        val result = NICsAnswers.mkPriorClass4Data(businessData)
+        val expectedResult = Some(
+          NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(classFourOtherExemption)), Some(List(BusinessId("id1")))))))
         assert(result === expectedResult)
       }
 
@@ -93,8 +94,9 @@ class NICsAnswersSpec extends AnyWordSpecLike {
           Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = false, None),
           Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = true, Some(ExemptionReason.DiverDivingInstructor))
         )
-        val result         = NICsAnswers.mkPriorClass4Data(businessData)
-        val expectedResult = Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(BusinessId("id2"))), Some(List(classFourNoneExempt))))))
+        val result = NICsAnswers.mkPriorClass4Data(businessData)
+        val expectedResult =
+          Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(BusinessId("id2"))), Some(List(classFourNoneExempt))))))
         assert(result === expectedResult)
       }
     }
