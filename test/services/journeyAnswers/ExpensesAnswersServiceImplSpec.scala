@@ -36,16 +36,18 @@ import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, Goods
 import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategories, NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.{JsObject, Json}
-import repositories.{MongoJourneyAnswersRepository, MongoSpec}
+import repositories.MongoJourneyAnswersRepository
 import services.journeyAnswers.ExpensesAnswersServiceImplSpec._
 import stubs.connectors.StubIFSConnector
 import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
 import stubs.repositories.StubJourneyAnswersRepository
-import support.MongoTestSupport
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mongo.test.MongoSupport
 import utils.BaseSpec._
 import utils.EitherTTestOps.EitherTExtensions
 
@@ -53,7 +55,7 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ExpensesAnswersServiceImplSpec extends MongoSpec with MongoTestSupport[JourneyAnswers] {
+class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with MongoSupport {
 
   "save answers" should {
     "saveTailoringAnswers" in new Test {
@@ -281,10 +283,8 @@ class ExpensesAnswersServiceImplSpec extends MongoSpec with MongoTestSupport[Jou
     }
   }
 
-  override val repository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, clock)
   "clearExpensesAndCapitalAllowancesData" must {
     "delete any expenses and capital allowances from DB and APIs" in new Test2 {
-      override val repo = repository
       prepareData()
       val result = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
 
@@ -302,7 +302,6 @@ class ExpensesAnswersServiceImplSpec extends MongoSpec with MongoTestSupport[Jou
 
     "return an error from downstream" when {
       "connector fails to update the PeriodicSummaries API" in new Test2 {
-        override val repo                             = repository
         override lazy val connector: StubIFSConnector = new StubIFSConnector(amendSEPeriodSummaryResult = downstreamError)
         prepareData()
         val result = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
@@ -313,7 +312,6 @@ class ExpensesAnswersServiceImplSpec extends MongoSpec with MongoTestSupport[Jou
         annualApiResult shouldBe None
       }
       "connector fails to update the AnnualSummaries API" in new Test2 {
-        override val repo                             = repository
         override lazy val connector: StubIFSConnector = new StubIFSConnector(getAnnualSummariesResult = downstreamError)
         prepareData()
         val result = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
@@ -343,19 +341,19 @@ class ExpensesAnswersServiceImplSpec extends MongoSpec with MongoTestSupport[Jou
     implicit val hc: HeaderCarrier = HeaderCarrier()
   }
   trait Test2 {
-    lazy val connector: StubIFSConnector = new StubIFSConnector()
-    val repo: MongoJourneyAnswersRepository
+    lazy val connector: StubIFSConnector          = new StubIFSConnector()
+    val repository: MongoJourneyAnswersRepository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, clock)
 
-    lazy val underTest = new ExpensesAnswersServiceImpl(connector, repo)
+    lazy val underTest = new ExpensesAnswersServiceImpl(connector, repository)
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
     def prepareDatabase() = for {
-      _ <- repo.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
-      _ <- repo.upsertAnswers(expensesTailoringCtx, Json.obj("field" -> "value"))
-      _ <- repo.upsertAnswers(goodsToSellOrUseCtx, Json.obj("field" -> "value"))
-      _ <- repo.upsertAnswers(capitalAllowancesTailoringCtx, Json.obj("field" -> "value"))
-      _ <- repo.upsertAnswers(zeroEmissionCarsCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(expensesTailoringCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(goodsToSellOrUseCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(capitalAllowancesTailoringCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(zeroEmissionCarsCtx, Json.obj("field" -> "value"))
     } yield ()
 
     def preparePeriodData() = {
