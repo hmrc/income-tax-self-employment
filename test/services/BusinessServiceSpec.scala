@@ -99,7 +99,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
 
   "getUserBusinessIds" should {
     "return an empty list" in {
-      val result = service.getUserBusinessIds(nino).value.futureValue.value
+      val result = testService.getUserBusinessIds(nino).value.futureValue.value
       assert(result === Nil)
     }
 

@@ -83,7 +83,7 @@ case class StubIFSConnector(
   def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response] =
     getPeriodicSummaryDetailResult
 
-  override def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] = {
+  override def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] =
     ctx.businessId match {
       case BusinessId("BusinessId1") => Future.successful(getAnnualSummariesResultTest1)
       case BusinessId("BusinessId2") => Future.successful(getAnnualSummariesResultTest2)
@@ -91,7 +91,6 @@ case class StubIFSConnector(
       case BusinessId("BusinessId4") => Future.successful(getAnnualSummariesResultTest4)
       case _                         => Future.successful(getAnnualSummariesResult)
     }
-  }
 
   override def createAmendSEAnnualSubmission(
       data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {

@@ -21,7 +21,7 @@ import models.common.BusinessId
 import models.connector.api_1803.AnnualNonFinancialsType.Class4NicsExemptionReason
 import models.connector.api_1803.{AnnualNonFinancialsType, SuccessResponseSchema}
 import models.database.nics.NICsStorageAnswers
-import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
+import models.frontend.nics.NICsClass4Answers.{Class4ExemptionAnswers, classFourNoneExempt, classFourOtherExemption}
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class NICsAnswersSpec extends AnyWordSpecLike {
@@ -84,7 +84,7 @@ class NICsAnswersSpec extends AnyWordSpecLike {
           Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = false, None)
         )
         val result         = NICsAnswers.mkPriorClass4Data(businessData)
-        val expectedResult = Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, None, Some(List(BusinessId("id1")))))))
+        val expectedResult = Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(classFourOtherExemption)), Some(List(BusinessId("id1")))))))
         assert(result === expectedResult)
       }
 
@@ -94,7 +94,7 @@ class NICsAnswersSpec extends AnyWordSpecLike {
           Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = true, Some(ExemptionReason.DiverDivingInstructor))
         )
         val result         = NICsAnswers.mkPriorClass4Data(businessData)
-        val expectedResult = Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(BusinessId("id2"))), None))))
+        val expectedResult = Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(BusinessId("id2"))), Some(List(classFourNoneExempt))))))
         assert(result === expectedResult)
       }
     }
