@@ -31,7 +31,6 @@ class AnnualAllowancesTypeSpec extends AnyWordSpecLike {
         enhanceCapitalAllowance = Some(6),
         allowanceOnSales = Some(7),
         capitalAllowanceSingleAssetPool = Some(8),
-        electricChargePointAllowance = Some(9),
         structuredBuildingAllowance = Some(
           List(
             StructuredBuildingAllowanceTypeInner(
@@ -58,7 +57,6 @@ class AnnualAllowancesTypeSpec extends AnyWordSpecLike {
           enhanceCapitalAllowance = Some(6),
           allowanceOnSales = Some(7),
           capitalAllowanceSingleAssetPool = Some(8),
-          electricChargePointAllowance = Some(9),
           structuredBuildingAllowance =
             Some(List(BuildingAllowance(1.0, Some(FirstYear("1/1/2024", 4.0)), Building(Some("name"), Some("24"), "ABC")))),
           enhancedStructuredBuildingAllowance =

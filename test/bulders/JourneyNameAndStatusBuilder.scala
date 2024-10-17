@@ -47,7 +47,6 @@ object JourneyNameAndStatusBuilder {
     JourneyNameAndStatus(CapitalAllowancesTailoring, Completed),
     JourneyNameAndStatus(ZeroEmissionCars, Completed),
     JourneyNameAndStatus(ZeroEmissionGoodsVehicle, Completed),
-    JourneyNameAndStatus(ElectricVehicleChargePoints, Completed),
     JourneyNameAndStatus(BalancingAllowance, Completed),
     JourneyNameAndStatus(WritingDownAllowance, Completed),
     JourneyNameAndStatus(AnnualInvestmentAllowance, Completed),
@@ -148,11 +147,6 @@ object JourneyNameAndStatusBuilder {
       SelfEmploymentTitles.ZeroEmissionGoodsVehicle(),
       TaskStatus.Completed(),
       SelfEmploymentTitles.ZeroEmissionGoodsVehicle().getHref(taxYear, businessId, toCYA = true).some
-    ),
-    TaskListSectionItem(
-      SelfEmploymentTitles.ElectricVehicleChargePoints(),
-      TaskStatus.Completed(),
-      SelfEmploymentTitles.ElectricVehicleChargePoints().getHref(taxYear, businessId, toCYA = true).some
     ),
     TaskListSectionItem(
       SelfEmploymentTitles.BalancingAllowance(),

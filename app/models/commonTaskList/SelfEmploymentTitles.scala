@@ -43,7 +43,6 @@ object SelfEmploymentTitles {
     CapitalAllowancesTailoring(),
     ZeroEmissionCars(),
     ZeroEmissionGoodsVehicle(),
-    ElectricVehicleChargePoints(),
     BalancingAllowance(),
     WritingDownAllowance(),
     AnnualInvestmentAllowance(),
@@ -256,16 +255,6 @@ object SelfEmploymentTitles {
   object ZeroEmissionGoodsVehicle {
     implicit val nonStrictReads: Reads[ZeroEmissionGoodsVehicle] = Reads.pure(ZeroEmissionGoodsVehicle())
     implicit val writes: OWrites[ZeroEmissionGoodsVehicle]       = OWrites[ZeroEmissionGoodsVehicle](_ => Json.obj())
-  }
-
-  case class ElectricVehicleChargePoints() extends WithName("capital-allowances-electric-vehicle-charge-points") with TaskTitle {
-    override def getHref(taxYear: TaxYear, businessId: BusinessId, toCYA: Boolean): String =
-      if (toCYA) s"/$taxYear/$businessId/capital-allowances/electric-vehicle-charge-points/check"
-      else s"/$taxYear/$businessId/capital-allowances/electric-vehicle-charge-points/buy"
-  }
-  object ElectricVehicleChargePoints {
-    implicit val nonStrictReads: Reads[ElectricVehicleChargePoints] = Reads.pure(ElectricVehicleChargePoints())
-    implicit val writes: OWrites[ElectricVehicleChargePoints]       = OWrites[ElectricVehicleChargePoints](_ => Json.obj())
   }
 
   case class BalancingAllowance() extends WithName("capital-allowances-balancing-allowance") with TaskTitle {

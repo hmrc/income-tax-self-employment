@@ -27,7 +27,6 @@ case class AnnualAllowances(annualInvestmentAllowance: Option[BigDecimal],
                             enhanceCapitalAllowance: Option[BigDecimal],
                             allowanceOnSales: Option[BigDecimal],
                             capitalAllowanceSingleAssetPool: Option[BigDecimal],
-                            electricChargePointAllowance: Option[BigDecimal],
                             structuredBuildingAllowance: Option[List[BuildingAllowance]],
                             enhancedStructuredBuildingAllowance: Option[List[BuildingAllowance]],
                             zeroEmissionsCarAllowance: Option[BigDecimal],
@@ -40,5 +39,5 @@ case class AnnualAllowances(annualInvestmentAllowance: Option[BigDecimal],
 object AnnualAllowances {
   implicit val format: OFormat[AnnualAllowances] = Json.format[AnnualAllowances]
 
-  val empty: AnnualAllowances = AnnualAllowances(None, None, None, None, None, None, None, None, None, None, None, None, None)
+  val empty: AnnualAllowances = AnnualAllowances(None, None, None, None, None, None, None, None, None, None, None, None)
 }

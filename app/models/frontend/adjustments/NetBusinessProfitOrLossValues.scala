@@ -79,7 +79,6 @@ object NetBusinessProfitOrLossValues {
         annualAllowances.enhanceCapitalAllowance,
         annualAllowances.allowanceOnSales,
         annualAllowances.capitalAllowanceSingleAssetPool,
-        annualAllowances.electricChargePointAllowance,
         annualAllowances.zeroEmissionsCarAllowance,
         annualAllowances.structuredBuildingAllowance.map(_.map(_.amount).sum),
         annualAllowances.enhancedStructuredBuildingAllowance.map(_.map(_.amount).sum)

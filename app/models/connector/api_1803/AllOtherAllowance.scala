@@ -19,8 +19,6 @@ package models.connector.api_1803
 import play.api.libs.json._
 
 /** Represents the Swagger definition for All_Other_Allowance.
-  * @param electricChargePointAllowance
-  *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   * @param zeroEmissionsCarAllowance
   *   Defines a monetary value (to 2 decimal places), between 0 and 99999999999.99
   */
@@ -33,7 +31,6 @@ case class AllOtherAllowance(
     enhanceCapitalAllowance: Option[BigDecimal],
     allowanceOnSales: Option[BigDecimal],
     capitalAllowanceSingleAssetPool: Option[BigDecimal],
-    electricChargePointAllowance: Option[BigDecimal],
     structuredBuildingAllowance: Option[List[StructuredBuildingAllowanceTypeInner]],
     enhancedStructuredBuildingAllowance: Option[List[StructuredBuildingAllowanceTypeInner]],
     zeroEmissionsCarAllowance: Option[BigDecimal]

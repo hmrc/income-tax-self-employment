@@ -25,7 +25,6 @@ import models.common.JourneyName.{
   AnnualInvestmentAllowance,
   BalancingAllowance,
   CapitalAllowancesTailoring,
-  ElectricVehicleChargePoints,
   SpecialTaxSites,
   StructuresBuildings,
   WritingDownAllowance,
@@ -42,7 +41,6 @@ import models.frontend.FrontendAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
-import models.frontend.capitalAllowances.electricVehicleChargePoints.ElectricVehicleChargePointsAnswers
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
 import models.frontend.capitalAllowances.structuresBuildings.NewStructuresBuildingsAnswers
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
@@ -67,7 +65,6 @@ trait CapitalAllowancesAnswersService {
   def getCapitalAllowancesTailoring(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[CapitalAllowancesTailoringAnswers]]
   def getZeroEmissionCars(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]]
   def getZeroEmissionGoodsVehicle(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionGoodsVehicleAnswers]]
-  def getElectricVehicleChargePoints(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ElectricVehicleChargePointsAnswers]]
   def getBalancingAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]]
   def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]]
   def getWritingDownAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WritingDownAllowanceAnswers]]
@@ -126,14 +123,6 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
       fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
     } yield fullAnswers.asInstanceOf[Option[ZeroEmissionGoodsVehicleAnswers]]
 
-  def getElectricVehicleChargePoints(ctx: JourneyContextWithNino)(implicit
-      hc: HeaderCarrier): ApiResultT[Option[ElectricVehicleChargePointsAnswers]] =
-    for {
-      maybeData   <- getDbAnswers(ctx, ElectricVehicleChargePoints)
-      dbAnswers   <- getPersistedAnswers[ElectricVehicleChargePointsDb](maybeData)
-      fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
-    } yield fullAnswers.asInstanceOf[Option[ElectricVehicleChargePointsAnswers]]
-
   def getBalancingAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, BalancingAllowance)
@@ -181,14 +170,13 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
   private def buildJourneyAnswers[A](dbAnswers: Option[A], annualSummaries: SuccessResponseSchema): Option[FrontendAnswers[A]] =
     dbAnswers
       .collect {
-        case answers: ZeroEmissionCarsDb            => ZeroEmissionCarsAnswers(answers, annualSummaries)
-        case answers: ZeroEmissionGoodsVehicleDb    => ZeroEmissionGoodsVehicleAnswers(answers, annualSummaries)
-        case answers: ElectricVehicleChargePointsDb => ElectricVehicleChargePointsAnswers(answers, annualSummaries)
-        case answers: BalancingAllowanceDb          => BalancingAllowanceAnswers(answers, annualSummaries)
-        case answers: AnnualInvestmentAllowanceDb   => AnnualInvestmentAllowanceAnswers(answers, annualSummaries)
-        case _: WritingDownAllowanceDb              => WritingDownAllowanceAnswers(annualSummaries)
-        case answers: SpecialTaxSitesDb             => SpecialTaxSitesAnswers(answers, annualSummaries)
-        case answers: NewStructuresBuildingsDb      => NewStructuresBuildingsAnswers(answers, annualSummaries)
+        case answers: ZeroEmissionCarsDb          => ZeroEmissionCarsAnswers(answers, annualSummaries)
+        case answers: ZeroEmissionGoodsVehicleDb  => ZeroEmissionGoodsVehicleAnswers(answers, annualSummaries)
+        case answers: BalancingAllowanceDb        => BalancingAllowanceAnswers(answers, annualSummaries)
+        case answers: AnnualInvestmentAllowanceDb => AnnualInvestmentAllowanceAnswers(answers, annualSummaries)
+        case _: WritingDownAllowanceDb            => WritingDownAllowanceAnswers(annualSummaries)
+        case answers: SpecialTaxSitesDb           => SpecialTaxSitesAnswers(answers, annualSummaries)
+        case answers: NewStructuresBuildingsDb    => NewStructuresBuildingsAnswers(answers, annualSummaries)
       }
       .map(_.asInstanceOf[FrontendAnswers[A]])
 
