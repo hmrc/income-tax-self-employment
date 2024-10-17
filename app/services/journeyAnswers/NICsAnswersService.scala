@@ -19,10 +19,12 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits.{toFunctorOps, toTraverseOps}
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
+import models.common.JourneyName.NationalInsuranceContributions
 import models.common._
 import models.connector._
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.database.nics.NICsStorageAnswers
+import models.database.nics.NICsStorageAnswers.journeyIsYesButNoneAreExemptStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.error.ServiceError.BusinessNotFoundError
@@ -75,6 +77,7 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
     } yield result
 
   def saveClass4MultipleBusinesses(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+    val journeyIsYesButNoneAreExempt     = answers.journeyIsYesButNoneAreExempt
     val multipleBusinessExemptionAnswers = answers.cleanUpExemptionListsFromFE.toMultipleBusinessesAnswers
     val idsWithExemption                 = multipleBusinessExemptionAnswers.map(_.businessId.value)
     val updateOtherIdsToNotExempt        = clearOtherExistingClass4Data(ctx, idsToNotClear = idsWithExemption)
@@ -87,10 +90,18 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
       .map(_ => ())
 
     for {
+      _      <- saveDbAnswersIfJourneyIsYesButNoneAreExempt(ctx, journeyIsYesButNoneAreExempt)
       _      <- updateOtherIdsToNotExempt
       result <- saveAllNewExemptionAnswers
     } yield result
   }
+
+  private def saveDbAnswersIfJourneyIsYesButNoneAreExempt(ctx: JourneyContextWithNino, journeyIsYesButNoneAreExempt: Boolean): ApiResultT[Unit] =
+    if (journeyIsYesButNoneAreExempt)
+      repository.upsertAnswers(
+        JourneyContext(ctx.taxYear, ctx.businessId, ctx.mtditid, NationalInsuranceContributions),
+        Json.toJson(journeyIsYesButNoneAreExemptStorageAnswers))
+    else EitherT.rightT[Future, ServiceError](())
 
   def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {

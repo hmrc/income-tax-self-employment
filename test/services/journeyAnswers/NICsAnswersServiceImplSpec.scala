@@ -87,7 +87,7 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
           )
         )
       )
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(NICsStorageAnswers(Some(false)))))
+      assert(repository.lastUpsertedAnswer === Some(Json.toJson(NICsStorageAnswers(Some(false), None))))
     }
 
     "call DELETE if setting to false and the object is empty" in new StubbedService {
@@ -212,7 +212,7 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
         override val connector: StubIFSConnector = StubIFSConnector(getDisclosuresSubmissionResult =
           Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))).asRight)
         override val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository(
-          getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(Some(false)))))
+          getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(Some(false), None))))
         )
 
         val result: Option[NICsAnswers] = service.getAnswers(journeyCtxWithNino).value.futureValue.value
@@ -222,7 +222,7 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
 
       "valid database answer exist and there is no API data" in new StubbedService {
         override val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository(
-          getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(Some(false)))))
+          getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(Some(false), None))))
         )
 
         val result: Option[NICsAnswers] = service.getAnswers(journeyCtxWithNino).value.futureValue.value

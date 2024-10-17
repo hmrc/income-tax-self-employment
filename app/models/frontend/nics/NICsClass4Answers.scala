@@ -30,6 +30,9 @@ case class NICsClass4Answers(class4NICs: Boolean,
 
   def userHasSingleBusinessExemption: Boolean = class4ExemptionReason.isDefined
 
+  def journeyIsYesButNoneAreExempt: Boolean =
+    class4DivingExempt.contains(classFourOtherExemption) && class4NonDivingExempt.contains(classFourNoneExempt)
+
   def cleanUpExemptionListsFromFE: NICsClass4Answers = {
     val diving      = class4DivingExempt.map(_.filterNot(_ == classFourOtherExemption)).filter(_.nonEmpty)
     val trustee     = class4NonDivingExempt.map(_.filterNot(_ == classFourNoneExempt)).filter(_.nonEmpty)

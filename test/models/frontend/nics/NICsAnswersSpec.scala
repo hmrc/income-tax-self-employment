@@ -54,14 +54,20 @@ class NICsAnswersSpec extends AnyWordSpecLike {
   }
 
   "mkPriorClass4Data" should {
-    "return a None when given an empty list" in {
-      val result = NICsAnswers.mkPriorClass4Data(List.empty)
-      assert(result === None)
+    "return a None when given an empty list" when {
+      "there are no database answers" in {
+        val result = NICsAnswers.mkPriorClass4Data(List.empty, None)
+        assert(result === None)
+      }
+      "there are database answers" in {
+        val result = NICsAnswers.mkPriorClass4Data(List.empty, Some(NICsStorageAnswers(None, Some(true))))
+        assert(result === None)
+      }
     }
 
     "return Single Business Class 4 Nics Answers when given a list of the single business data" in {
       val singleBusinessData = List(Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = true, Some(ExemptionReason.TrusteeExecutorAdmin)))
-      val result             = NICsAnswers.mkPriorClass4Data(singleBusinessData)
+      val result             = NICsAnswers.mkPriorClass4Data(singleBusinessData, None)
       val expectedResult = Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, Some(ExemptionReason.TrusteeExecutorAdmin), None, None))))
       assert(result === expectedResult)
     }
@@ -72,7 +78,7 @@ class NICsAnswersSpec extends AnyWordSpecLike {
           Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = true, Some(ExemptionReason.TrusteeExecutorAdmin)),
           Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = true, Some(ExemptionReason.DiverDivingInstructor))
         )
-        val result = NICsAnswers.mkPriorClass4Data(businessData)
+        val result = NICsAnswers.mkPriorClass4Data(businessData, None)
         val expectedResult =
           Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(BusinessId("id2"))), Some(List(BusinessId("id1")))))))
         assert(result === expectedResult)
@@ -83,7 +89,7 @@ class NICsAnswersSpec extends AnyWordSpecLike {
           Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = true, Some(ExemptionReason.TrusteeExecutorAdmin)),
           Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = false, None)
         )
-        val result = NICsAnswers.mkPriorClass4Data(businessData)
+        val result = NICsAnswers.mkPriorClass4Data(businessData, None)
         val expectedResult = Some(
           NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(classFourOtherExemption)), Some(List(BusinessId("id1")))))))
         assert(result === expectedResult)
@@ -94,10 +100,36 @@ class NICsAnswersSpec extends AnyWordSpecLike {
           Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = false, None),
           Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = true, Some(ExemptionReason.DiverDivingInstructor))
         )
-        val result = NICsAnswers.mkPriorClass4Data(businessData)
+        val result = NICsAnswers.mkPriorClass4Data(businessData, None)
         val expectedResult =
           Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(BusinessId("id2"))), Some(List(classFourNoneExempt))))))
         assert(result === expectedResult)
+      }
+
+      "API returns all false class 4 exemptions" when {
+        "there are no database answers" in {
+          val businessData = List(
+            Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = false, None),
+            Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = false, None)
+          )
+          val result = NICsAnswers.mkPriorClass4Data(businessData, None)
+          val expectedResult =
+            Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = false, None, None, None))))
+          assert(result === expectedResult)
+        }
+        "there are database answers" in {
+          val businessData = List(
+            Class4ExemptionAnswers(BusinessId("id1"), class4Exempt = false, None),
+            Class4ExemptionAnswers(BusinessId("id2"), class4Exempt = false, None)
+          )
+          val result = NICsAnswers.mkPriorClass4Data(businessData, Some(NICsStorageAnswers(None, Some(true))))
+          val expectedResult =
+            Some(
+              NICsAnswers(
+                None,
+                Some(NICsClass4Answers(class4NICs = true, None, Some(List(classFourOtherExemption)), Some(List(classFourNoneExempt))))))
+          assert(result === expectedResult)
+        }
       }
     }
   }
@@ -117,7 +149,7 @@ class NICsAnswersSpec extends AnyWordSpecLike {
       }
 
       "'No Class 2 exemption' answer is returned from the database" in {
-        val databaseData   = Some(NICsStorageAnswers(Some(false)))
+        val databaseData   = Some(NICsStorageAnswers(Some(false), None))
         val result         = NICsAnswers.mkPriorData(None, List.empty, databaseData)
         val expectedResult = Some(NICsAnswers(Some(NICsClass2Answers(false)), None))
         assert(result === expectedResult)
