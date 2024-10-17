@@ -68,7 +68,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           getAnnualSummariesResult = api1803SuccessResponse.asRight
         )
       val answers        = ProfitOrLossJourneyAnswers(true, Some(200), true, Some(400), Some(WhichYearIsLossReported.Year2018to2019))
-      val allowancesData = AnnualAllowances(None, None, None, Some(5000), None, None, None, None, Some(4000), None, None, Some(5000), None)
+      val allowancesData = AnnualAllowances(None, None, None, Some(5000), None, None, None, None, None, None, Some(5000), None)
       val expectedAnnualSummariesAnswers =
         expectedAnnualSummariesData(Some(answers.toDownStreamAnnualAdjustments(Some(AnnualAdjustments.empty))), Some(allowancesData))
       val result = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
@@ -81,8 +81,8 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         StubIFSConnector(
           getAnnualSummariesResult = api1803SuccessResponse.asRight
         )
-      val answers        = ProfitOrLossJourneyAnswers(false, None, false, None, None)
-      val allowancesData = AnnualAllowances(None, None, None, Some(5000), None, None, None, None, Some(4000), None, None, Some(5000), None)
+      val answers                        = ProfitOrLossJourneyAnswers(false, None, false, None, None)
+      val allowancesData                 = AnnualAllowances(None, None, None, Some(5000), None, None, None, None, None, None, Some(5000), None)
       val expectedAnnualSummariesAnswers = expectedAnnualSummariesData(None, Some(allowancesData))
       val result                         = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
