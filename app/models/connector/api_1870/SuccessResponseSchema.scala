@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package models.connector.api_1500
+package models.connector.api_1870
 
 import play.api.libs.json.{Format, Json}
 
-case class CreateBroughtForwardLossRequestBody(taxYearBroughtForwardFrom: String, typeOfLoss: LossType, businessId: String, lossAmount: BigDecimal)
+case class SuccessResponseSchema(losses: List[LossData])
 
-object CreateBroughtForwardLossRequestBody {
-  implicit val formats: Format[CreateBroughtForwardLossRequestBody] =
-    Json.format[CreateBroughtForwardLossRequestBody]
+object SuccessResponseSchema {
+  implicit val formats: Format[SuccessResponseSchema] =
+    Json.format[SuccessResponseSchema]
 }

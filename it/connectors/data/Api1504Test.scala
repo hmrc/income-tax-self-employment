@@ -19,7 +19,6 @@ package connectors.data
 import utils.BaseSpec._
 
 trait Api1504Test {
-  val taxableEntityId = nino
-  val lossId          = businessId
-  val downstreamUrl   = s"/income-tax/brought-forward-losses/$taxableEntityId/$lossId"
+  val lossId        = "1234568790ABCDE"
+  val downstreamUrl = s"/individuals/losses/$nino/brought-forward-losses/$lossId"
 }

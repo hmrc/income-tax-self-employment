@@ -34,6 +34,7 @@ object IFSApiName extends Enum[IFSApiName] {
   case object Api1501 extends IFSApiName("1501")
   case object Api1502 extends IFSApiName("1502")
   case object Api1504 extends IFSApiName("1504")
+  case object Api1870 extends IFSApiName("1870")
   case object Api1638 extends IFSApiName("1638")
   case object Api1639 extends IFSApiName("1639")
   case object Api1640 extends IFSApiName("1640")

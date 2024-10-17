@@ -14,13 +14,9 @@
  * limitations under the License.
  */
 
-package models.connector.api_1500
+package models.connector.api_1501
 
-import play.api.libs.json.{Format, Json}
+import models.common.{Nino, TaxYear}
+import models.connector.api_1500.CreateBroughtForwardLossRequestBody
 
-case class CreateBroughtForwardLossRequestBody(taxYearBroughtForwardFrom: String, typeOfLoss: LossType, businessId: String, lossAmount: BigDecimal)
-
-object CreateBroughtForwardLossRequestBody {
-  implicit val formats: Format[CreateBroughtForwardLossRequestBody] =
-    Json.format[CreateBroughtForwardLossRequestBody]
-}
+case class UpdateBroughtForwardLossYear(nino: Nino, lossId: String, taxYear: TaxYear, body: CreateBroughtForwardLossRequestBody)

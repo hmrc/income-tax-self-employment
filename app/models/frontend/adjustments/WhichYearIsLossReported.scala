@@ -18,25 +18,25 @@ package models.frontend.adjustments
 
 import models.common.{Enumerable, WithName}
 sealed trait WhichYearIsLossReported {
-  val apiTaxYear: Int
+  val apiTaxYear: String
 }
 
 object WhichYearIsLossReported extends Enumerable.Implicits {
 
   case object Year2018to2019 extends WithName("2018to2019") with WhichYearIsLossReported {
-    val apiTaxYear = 2018
+    val apiTaxYear = "2018-19"
   }
   case object Year2019to2020 extends WithName("2019to2020") with WhichYearIsLossReported {
-    val apiTaxYear = 2019
+    val apiTaxYear = "2019-20"
   }
   case object Year2020to2021 extends WithName("2020to2021") with WhichYearIsLossReported {
-    val apiTaxYear = 2020
+    val apiTaxYear = "2020-21"
   }
   case object Year2021to2022 extends WithName("2021to2022") with WhichYearIsLossReported {
-    val apiTaxYear = 2021
+    val apiTaxYear = "2021-22"
   }
   case object Year2022to2023 extends WithName("2022to2023") with WhichYearIsLossReported {
-    val apiTaxYear = 2022
+    val apiTaxYear = "2022-23"
   }
 
   val values: Seq[WhichYearIsLossReported] = Seq(
