@@ -45,7 +45,6 @@ trait Api1803Test {
                                      |    "enhanceCapitalAllowance": 563.23,
                                      |    "allowanceOnSales": 678.9,
                                      |    "capitalAllowanceSingleAssetPool": 563.89,
-                                     |    "electricChargePointAllowance": 0,
                                      |    "structuredBuildingAllowance": [
                                      |      {
                                      |        "amount": 564.89,
