@@ -61,11 +61,13 @@ object BaseSpec {
   val currTaxYearEnd: String   = TaxYear.endDate(currTaxYear)
 
   // more complex data
-  val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
-  val tradeDetailsCtx: JourneyContext            = journeyCtxWithNino.toJourneyContext(TradeDetails)
-  val incomeCtx: JourneyContext                  = journeyCtxWithNino.toJourneyContext(JourneyName.Income)
-  val expensesTailoringCtx: JourneyContext       = journeyCtxWithNino.toJourneyContext(JourneyName.ExpensesTailoring)
-  val goodsToSellOrUseCtx: JourneyContext        = journeyCtxWithNino.toJourneyContext(JourneyName.GoodsToSellOrUse)
+  val journeyCtxWithNino: JourneyContextWithNino    = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
+  val tradeDetailsCtx: JourneyContext               = journeyCtxWithNino.toJourneyContext(TradeDetails)
+  val incomeCtx: JourneyContext                     = journeyCtxWithNino.toJourneyContext(JourneyName.Income)
+  val expensesTailoringCtx: JourneyContext          = journeyCtxWithNino.toJourneyContext(JourneyName.ExpensesTailoring)
+  val goodsToSellOrUseCtx: JourneyContext           = journeyCtxWithNino.toJourneyContext(JourneyName.GoodsToSellOrUse)
+  val capitalAllowancesTailoringCtx: JourneyContext = journeyCtxWithNino.toJourneyContext(JourneyName.CapitalAllowancesTailoring)
+  val zeroEmissionCarsCtx: JourneyContext           = journeyCtxWithNino.toJourneyContext(JourneyName.ZeroEmissionCars)
 
   // operations
   def mkNow(): Instant                 = Instant.now().truncatedTo(ChronoUnit.SECONDS)

@@ -17,44 +17,45 @@
 package services.journeyAnswers
 
 import cats.implicits._
+import config.AppConfig
+import data.api1802.AnnualAllowancesData
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
+import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne
 import models.common.JourneyName.ExpensesTailoring
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
+import models.connector.api_1802.request.{AnnualNonFinancials, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1895.request._
 import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
+import models.error.DownstreamError.SingleDownstreamError
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers}
 import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategories, NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
-import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.mockito.MockitoSugar.mock
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.{JsObject, Json}
+import repositories.MongoJourneyAnswersRepository
 import services.journeyAnswers.ExpensesAnswersServiceImplSpec._
 import stubs.connectors.StubIFSConnector
 import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
 import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mongo.test.MongoSupport
 import utils.BaseSpec._
+import utils.EitherTTestOps.EitherTExtensions
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
-
-  trait Test {
-    val connector: StubIFSConnector = StubIFSConnector()
-
-    val repo           = StubJourneyAnswersRepository()
-    lazy val underTest = new ExpensesAnswersServiceImpl(connector, repo)
-
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-  }
+class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with MongoSupport {
 
   "save answers" should {
     "saveTailoringAnswers" in new Test {
@@ -173,6 +174,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       result shouldBe ().asRight
     }
   }
+
   "get journey answers" in new Test {
     override val connector =
       StubIFSConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
@@ -264,8 +266,6 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
   }
 
   "deleteSimplifiedExpensesAnswers" should {
-    def buildPeriodData(deductions: Option[Deductions]): AmendSEPeriodSummaryRequestData =
-      AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), deductions))
     "delete Tailoring DB answers and SimplifiedAmount API answer" in new Test {
       val existingPeriodData = buildPeriodData(Some(DeductionsTestData.sample))
 
@@ -282,9 +282,119 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
       repo.lastUpsertedAnswer shouldBe None
     }
   }
+
+  "clearExpensesAndCapitalAllowancesData" must {
+    "delete any expenses and capital allowances from DB and APIs" in new Test2 {
+      prepareData()
+      val result = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe ().asRight
+
+      periodicApiResult shouldBe None
+      annualApiResult shouldBe None
+
+      incomeResult should not be None
+      expensesTailoringResult shouldBe None
+      goodsToSellOrUseResult shouldBe None
+      capitalAllowancesResult shouldBe None
+      zeroEmissionCarsResult shouldBe None
+    }
+
+    "return an error from downstream" when {
+      "connector fails to update the PeriodicSummaries API" in new Test2 {
+        override lazy val connector: StubIFSConnector = new StubIFSConnector(amendSEPeriodSummaryResult = downstreamError)
+        prepareData()
+        val result = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
+
+        result shouldBe downstreamError
+
+        periodicApiResult should not be None
+        annualApiResult shouldBe None
+      }
+      "connector fails to update the AnnualSummaries API" in new Test2 {
+        override lazy val connector: StubIFSConnector = new StubIFSConnector(getAnnualSummariesResult = downstreamError)
+        prepareData()
+        val result = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
+
+        result shouldBe downstreamError
+
+        periodicApiResult shouldBe None
+        annualApiResult should not be None
+      }
+      "connector fails to update the repository database" in new Test {
+        override val repo = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
+
+        val result = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
+
+        result shouldBe downstreamError
+        repo.lastUpsertedAnswer shouldBe None
+      }
+    }
+  }
+
+  trait Test {
+    val connector: StubIFSConnector = new StubIFSConnector()
+
+    val repo           = StubJourneyAnswersRepository()
+    lazy val underTest = new ExpensesAnswersServiceImpl(connector, repo)
+
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+  }
+  trait Test2 {
+    lazy val connector: StubIFSConnector          = new StubIFSConnector()
+    val repository: MongoJourneyAnswersRepository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, clock)
+
+    lazy val underTest = new ExpensesAnswersServiceImpl(connector, repository)
+
+    implicit val hc: HeaderCarrier = HeaderCarrier()
+
+    def prepareDatabase() = for {
+      _ <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(expensesTailoringCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(goodsToSellOrUseCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(capitalAllowancesTailoringCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(zeroEmissionCarsCtx, Json.obj("field" -> "value"))
+    } yield ()
+
+    def preparePeriodData() = {
+      def existingPeriodData = buildPeriodData(Some(DeductionsTestData.sample))
+      connector.amendSEPeriodSummaryResultData = Some(existingPeriodData)
+    }
+
+    def prepareAnnualSummariesData() = {
+      val adjustments   = genOne(annualAdjustmentsTypeGen).toApi1802AnnualAdjustments
+      val allowances    = AnnualAllowancesData.example
+      val nonFinancials = AnnualNonFinancials(true, Some("002"))
+      val existingAnnualSummariesData = CreateAmendSEAnnualSubmissionRequestData(
+        taxYear,
+        nino,
+        businessId,
+        CreateAmendSEAnnualSubmissionRequestBody(adjustments.some, allowances.some, nonFinancials.some))
+      connector.upsertAnnualSummariesSubmissionData = Some(existingAnnualSummariesData)
+    }
+
+    def prepareData() = {
+      preparePeriodData()
+      prepareAnnualSummariesData()
+      prepareDatabase().value.futureValue
+    }
+
+    lazy val periodicApiResult = connector.amendSEPeriodSummaryResultData.flatMap(_.body.deductions)
+    lazy val annualApiResult   = connector.upsertAnnualSummariesSubmissionData.flatMap(_.body.annualAllowances)
+    lazy val (incomeResult, expensesTailoringResult, goodsToSellOrUseResult, capitalAllowancesResult, zeroEmissionCarsResult) = (for {
+      income                     <- repository.get(incomeCtx)
+      expensesTailoring          <- repository.get(expensesTailoringCtx)
+      goodsToSellOrUse           <- repository.get(goodsToSellOrUseCtx)
+      capitalAllowancesTailoring <- repository.get(capitalAllowancesTailoringCtx)
+      zeroEmissionCars           <- repository.get(zeroEmissionCarsCtx)
+    } yield (income, expensesTailoring, goodsToSellOrUse, capitalAllowancesTailoring, zeroEmissionCars)).rightValue
+  }
 }
 
 object ExpensesAnswersServiceImplSpec {
+  val clock         = mkClock(mkNow())
+  val mockAppConfig = mock[AppConfig]
+
   val tailoringJourneyAnswers: JourneyAnswers = JourneyAnswers(
     mtditid,
     businessId,
@@ -335,4 +445,8 @@ object ExpensesAnswersServiceImplSpec {
     None
   )
 
+  val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serverError).asLeft
+
+  def buildPeriodData(deductions: Option[Deductions]): AmendSEPeriodSummaryRequestData =
+    AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), deductions))
 }

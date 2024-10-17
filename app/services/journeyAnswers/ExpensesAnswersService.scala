@@ -19,7 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
-import models.common.JourneyName.{ExpensesTailoring, GoodsToSellOrUse, WorkplaceRunningCosts}
+import models.common.JourneyName.{CapitalAllowancesTailoring, ExpensesTailoring, GoodsToSellOrUse, WorkplaceRunningCosts}
 import models.common._
 import models.connector.api_1894.request.FinancialsType
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
@@ -46,6 +46,7 @@ import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategorie
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
 import models.frontend.expenses.workplaceRunningCosts.{WorkplaceRunningCostsAnswers, WorkplaceRunningCostsJourneyAnswers}
+import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.{Json, Writes}
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -85,6 +86,7 @@ trait ExpensesAnswersService {
   def getWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WorkplaceRunningCostsAnswers]]
 
   def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
 @Singleton
@@ -276,11 +278,38 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
 
   def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      existingIncome <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
-      deductionsWithoutSimplifiedExpenses = existingIncome.financials.toApi1894.deductions.map(_.copy(simplifiedExpenses = None))
-      financialsWithoutSimplifiedExpenses = existingIncome.financials.toApi1894.copy(deductions = deductionsWithoutSimplifiedExpenses)
-      _ <- submitTailoringAnswers(ctx, financialsWithoutSimplifiedExpenses, existingIncome.financials.incomes.flatMap(_.taxTakenOffTradingIncome))
+      existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
+      deductionsWithoutSimplifiedExpenses = existingPeriodicSummary.financials.toApi1894.deductions.map(_.copy(simplifiedExpenses = None))
+      financialsWithoutSimplifiedExpenses = existingPeriodicSummary.financials.toApi1894.copy(deductions = deductionsWithoutSimplifiedExpenses)
+      existingTaxTakenOffTradingIncome    = existingPeriodicSummary.financials.incomes.flatMap(_.taxTakenOffTradingIncome)
+      _ <- submitTailoringAnswers(ctx, financialsWithoutSimplifiedExpenses, existingTaxTakenOffTradingIncome)
       _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(ExpensesTailoring))
     } yield ()
+
+  def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+    val updateExpensesPeriodicSummaries =
+      connector.getPeriodicSummaryDetail(ctx).flatMap {
+        case Left(error) if error.status == NOT_FOUND => Future(Right(()))
+        case Left(error)                              => Future(Left(error))
+        case Right(periodicSummary) =>
+          val updatedFinancials = periodicSummary.financials.copy(deductions = None).toApi1895
+          connector.amendSEPeriodSummary(AmendSEPeriodSummaryRequestData(ctx.taxYear, ctx.nino, ctx.businessId, updatedFinancials))
+      }
+    val updateCapitalAllowancesAnnualSummaries =
+      connector.getAnnualSummaries(ctx).flatMap {
+        case Left(error) if error.status == NOT_FOUND => Future(Right(()))
+        case Left(error)                              => Future(Left(error))
+        case Right(annualSummaries) =>
+          val updatedAnnualSubmissionBody = annualSummaries.toRequestBody.copy(annualAllowances = None).replaceEmptyModelsWithNone
+          connector.createUpdateOrDeleteApiAnnualSummaries(ctx, updatedAnnualSubmissionBody).value
+      }
+
+    for {
+      _      <- EitherT(updateExpensesPeriodicSummaries)
+      _      <- EitherT(updateCapitalAllowancesAnnualSummaries)
+      _      <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(ExpensesTailoring), Some("expenses-"))
+      result <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(CapitalAllowancesTailoring), Some("capital-allowances-"))
+    } yield result
+  }
 
 }

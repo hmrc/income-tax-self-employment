@@ -50,7 +50,8 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
                                       getTailoringJourneyAnswers: Option[ExpensesTailoringAnswers] = None,
                                       getGoodsToSellOrUseAnswers: Option[GoodsToSellOrUseAnswers] = None,
                                       getWorkplaceRunningCostsAnswers: Option[WorkplaceRunningCostsAnswers] = None,
-                                      deleteSimplifiedExpensesAnswersRes: ApiResultT[Unit] = serviceUnitT)
+                                      deleteSimplifiedExpensesAnswersRes: ApiResultT[Unit] = serviceUnitT,
+                                      clearExpensesAndCapitalAllowancesDataRes: ApiResultT[Unit] = serviceUnitT)
     extends ExpensesAnswersService {
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
@@ -119,4 +120,7 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
     expensesSaveAnswersRes
 
   def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] = deleteSimplifiedExpensesAnswersRes
+
+  def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesAndCapitalAllowancesDataRes
 }
