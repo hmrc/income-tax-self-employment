@@ -16,31 +16,36 @@
 
 package connectors.data
 
+import models.common.TaxYear
+import models.connector.api_1500.{CreateBroughtForwardLossRequestBody, LossType, SuccessResponseSchema}
 import models.connector.api_1501._
 import play.api.libs.json.Json
-import utils.BaseSpec._
+import utils.BaseSpec.{nino, _}
 
-trait Api1501Test {
-  val lossId        = "1234568790ABCDE"
-  val downstreamUrl = s"/individuals/losses/$nino/brought-forward-losses/$lossId/change-loss-amount"
-  val requestBody = UpdateBroughtForwardLossRequestBody(
-    lossAmount = BigDecimal(260)
+trait Api1501UpdateYearTest {
+
+  val lossId              = "1234568790ABCDE"
+  val taxYearStr          = TaxYear(2024).toYYYY_YY
+  val downstreamCreateUrl = s"/individuals/losses/$nino/brought-forward-losses/$taxYearStr"
+  val downstreamDeleteUrl = s"/individuals/losses/$nino/brought-forward-losses/$lossId"
+  val requestBody = CreateBroughtForwardLossRequestBody(
+    businessId = "SJPR05893938418",
+    typeOfLoss = LossType.SelfEmployment,
+    lossAmount = BigDecimal(250),
+    taxYearBroughtForwardFrom = "2023-24"
   )
-  val data = UpdateBroughtForwardLossRequestData(
+  val data = UpdateBroughtForwardLossYear(
     nino = nino,
     lossId = lossId,
+    taxYear = taxYear,
     body = requestBody
   )
 
   val successResponseRaw: String =
     s"""{
-      |  "businessId": "12345678912345",
-      |  "typeOfLoss": "self-employment",
-      |  "lossAmount": 260,
-      |  "taxYearBroughtForwardFrom": "2020-21",
-      |  "lastModified": "2022-11-05T11:56:27Z"
-      |}
-      |""".stripMargin
+       |   "lossId": "1234568790ABCDE"
+       |}
+       |""".stripMargin
 
   val successResponse = Json.parse(successResponseRaw).as[SuccessResponseSchema]
 }

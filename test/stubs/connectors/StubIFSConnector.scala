@@ -30,6 +30,7 @@ import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1803.{AnnualAllowancesType, SuccessResponseSchema}
+import models.connector.api_1870.LossData
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
@@ -206,10 +207,31 @@ object StubIFSConnector {
 
   val api1500EmptyResponse: api_1500.SuccessResponseSchema   = api_1500.SuccessResponseSchema("")
   val api1500SuccessResponse: api_1500.SuccessResponseSchema = api_1500.SuccessResponseSchema("5678")
-  val api1501EmptyResponse: api_1501.SuccessResponseSchema   = api_1501.SuccessResponseSchema("", LossType.Income, 0, "", "", LocalDateTime.now)
+  val api1501EmptyResponse: api_1501.SuccessResponseSchema   = api_1501.SuccessResponseSchema("", LossType.SelfEmployment, 0, "", LocalDateTime.now)
   val api1501SuccessResponse: api_1501.SuccessResponseSchema =
-    api_1501.SuccessResponseSchema("1234", LossType.Income, 400, "2024", "5678", LocalDateTime.now)
-  val api1502EmptyResponse: api_1502.SuccessResponseSchema = api_1502.SuccessResponseSchema("", LossType.Income, 0, "", "", LocalDateTime.now)
+    api_1501.SuccessResponseSchema("1234", LossType.SelfEmployment, 400, "2022-23", LocalDateTime.now)
+  val api1502EmptyResponse: api_1502.SuccessResponseSchema =
+    api_1502.SuccessResponseSchema("", LossType.SelfEmployment, 0, "", LocalDateTime.now, None)
   val api1502SuccessResponse: api_1502.SuccessResponseSchema =
-    api_1502.SuccessResponseSchema("1234", LossType.Income, 400, "2024", "5678", LocalDateTime.now)
+    api_1502.SuccessResponseSchema(
+      "1234",
+      LossType.SelfEmployment,
+      400,
+      "2022-23",
+      LocalDateTime.now,
+      Some(
+        List(
+          api_1502.SuccessResponseSchemaLinks(
+            "/individuals/losses/TC663795B/brought-forward-losses/AAZZ1234567890a",
+            "self",
+            "GET"
+          )))
+    )
+  val api1870EmptyResponse: api_1870.SuccessResponseSchema = api_1870.SuccessResponseSchema(List.empty)
+  val api1870SuccessResponse: api_1870.SuccessResponseSchema = api_1870.SuccessResponseSchema(
+    List(
+      LossData("5678", "SJPR05893938418", LossType.SelfEmployment, 400, "2018-19", LocalDateTime.now),
+      LossData("5689", "1245", LossType.SelfEmployment, 500, "2021-22", LocalDateTime.now)
+    )
+  )
 }

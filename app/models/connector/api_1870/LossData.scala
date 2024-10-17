@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
-package models.connector.api_1500
+package models.connector.api_1870
 
+import models.connector.api_1500.LossType
 import play.api.libs.json.{Format, Json}
 
-case class CreateBroughtForwardLossRequestBody(taxYearBroughtForwardFrom: String, typeOfLoss: LossType, businessId: String, lossAmount: BigDecimal)
+import java.time.LocalDateTime
 
-object CreateBroughtForwardLossRequestBody {
-  implicit val formats: Format[CreateBroughtForwardLossRequestBody] =
-    Json.format[CreateBroughtForwardLossRequestBody]
+case class LossData(lossId: String,
+                    businessId: String,
+                    typeOfLoss: LossType,
+                    lossAmount: BigDecimal,
+                    taxYearBroughtForwardFrom: String,
+                    lastModified: LocalDateTime)
+object LossData {
+  implicit val formats: Format[LossData] =
+    Json.format[LossData]
 }

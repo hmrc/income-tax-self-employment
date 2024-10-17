@@ -21,12 +21,12 @@ import models.common.{Enumerable, WithName}
 sealed trait LossType
 object LossType extends Enumerable.Implicits {
 
-  case object Income extends WithName("INCOME") with LossType
-  case object Class4 extends WithName("CLASS4") with LossType
+  case object SelfEmployment       extends WithName("self-employment") with LossType
+  case object SelfEmploymentClass4 extends WithName("self-employment-class4") with LossType
 
   val values: Seq[LossType] = Seq(
-    Income,
-    Class4
+    SelfEmployment,
+    SelfEmploymentClass4
   )
 
   implicit val enumerable: Enumerable[LossType] = Enumerable(values.map(v => v.toString -> v): _*)

@@ -16,27 +16,29 @@
 
 package connectors.data
 
+import models.common.TaxYear
 import models.connector.api_1500._
 import play.api.libs.json.Json
 import utils.BaseSpec._
 
 trait Api1500Test {
-  val taxableEntityId = nino
-  val downstreamUrl   = s"/income-tax/brought-forward-losses/$taxableEntityId"
+  val taxYearStr    = TaxYear(2024).toYYYY_YY
+  val downstreamUrl = s"/individuals/losses/$nino/brought-forward-losses/$taxYearStr"
   val requestBody = CreateBroughtForwardLossRequestBody(
-    incomeSourceId = "SJPR05893938418",
-    lossType = LossType.Income,
-    broughtForwardLossAmount = BigDecimal(250),
-    taxYearBroughtForwardFrom = 2024
+    businessId = "SJPR05893938418",
+    typeOfLoss = LossType.SelfEmployment,
+    lossAmount = BigDecimal(250),
+    taxYearBroughtForwardFrom = "2023-24"
   )
   val data = CreateBroughtForwardLossRequestData(
-    taxableEntityId = taxableEntityId,
+    nino = nino,
+    taxYear = taxYear,
     body = requestBody
   )
 
   val successResponseRaw: String =
     s"""{
-      |   "lossId": "123"
+      |   "lossId": "1234568790ABCDE"
       |}
       |""".stripMargin
 
