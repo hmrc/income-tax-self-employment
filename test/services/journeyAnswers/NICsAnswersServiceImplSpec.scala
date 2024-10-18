@@ -127,22 +127,22 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
           assert(result.isRight)
           assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
         }
+
+        "overriding existing details" in new StubbedService {
+          override val connector = StubIFSConnector(getAnnualSummariesResult = Right(
+            api_1803.SuccessResponseSchema(
+              None,
+              None,
+              Some(AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)))))
+
+          val expectedResult = buildExpectedRequestResult(expectedApiData)
+
+          val result = service.saveClass4BusinessData(journeyCtxWithNino, answer).value.futureValue
+
+          assert(result.isRight)
+          assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
+        }
       }
-      s"overriding existing details for $testDescription" in new StubbedService {
-        override val connector = StubIFSConnector(getAnnualSummariesResult = Right(
-          api_1803.SuccessResponseSchema(
-            None,
-            None,
-            Some(AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)))))
-
-        val expectedResult = buildExpectedRequestResult(expectedApiData)
-
-        val result = service.saveClass4BusinessData(journeyCtxWithNino, answer).value.futureValue
-
-        assert(result.isRight)
-        assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
-      }
-
     }
   }
 
@@ -191,7 +191,8 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       val expectedResultId4 = // Clear existing answers
         buildExpectedRequestResult(AnnualNonFinancials(false, None), BusinessId("BusinessId4"))
 
-      val result = service.saveClass4MultipleBusinesses(journeyCtxWithNino, class4DiverAndTrusteeMultipleBusinessesAnswers).value.futureValue
+      val result =
+        service.saveClass4MultipleBusinessOrNoExemptionJourneys(journeyCtxWithNino, class4DiverAndTrusteeMultipleBusinessesAnswers).value.futureValue
       assert(result.isRight)
       assert(connector.upsertAnnualSummariesSubmissionDataTest1 === expectedResultId1)
       assert(connector.upsertAnnualSummariesSubmissionDataTest2 === expectedResultId2)

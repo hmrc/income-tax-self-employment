@@ -102,7 +102,7 @@ class NICsAnswersSpec extends AnyWordSpecLike {
         )
         val result = NICsAnswers.mkPriorClass4Data(businessData, None)
         val expectedResult =
-          Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(BusinessId("id2"))), Some(List(classFourNoneExempt))))))
+          Some(NICsAnswers(None, Some(NICsClass4Answers(class4NICs = true, None, Some(List(BusinessId("id2"))), None))))
         assert(result === expectedResult)
       }
 
@@ -155,6 +155,7 @@ class NICsAnswersSpec extends AnyWordSpecLike {
         assert(result === expectedResult)
       }
     }
+
     "return Nics Answers with NICS Class 4 answers" when {
       "Class 4 exemption answer is returned from the API" in {
         val businessResponse                   = AnnualNonFinancialsType(Some(true), Some(Class4NicsExemptionReason._002), None)
@@ -174,6 +175,5 @@ class NICsAnswersSpec extends AnyWordSpecLike {
         assert(result === expectedResult)
       }
     }
-
   }
 }

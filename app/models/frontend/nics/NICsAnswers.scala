@@ -45,8 +45,8 @@ object NICsAnswers {
     }
   }
 
-  def mkClass4ExemptionData(multipleAnnualSummaries: List[(api_1803.SuccessResponseSchema, BusinessId)]): List[Class4ExemptionAnswers] = {
-    val exemptionList: List[Option[Class4ExemptionAnswers]] = multipleAnnualSummaries.map { case (answers, businessId) =>
+  def mkClass4ExemptionData(multipleAnnualSummaries: List[(api_1803.SuccessResponseSchema, BusinessId)]): List[Class4ExemptionAnswers] =
+    multipleAnnualSummaries.flatMap { case (answers, businessId) =>
       val maybeClass4Exemption: Option[Boolean] = answers.annualNonFinancials.flatMap(_.exemptFromPayingClass4Nics)
       maybeClass4Exemption.map { class4Exempt =>
         val class4ExemptReason: Option[ExemptionReason] = {
@@ -57,37 +57,41 @@ object NICsAnswers {
         Class4ExemptionAnswers(businessId, class4Exempt, class4ExemptReason)
       }
     }
-    exemptionList.flatten
-  }
 
   def mkPriorClass4Data(class4Answers: List[Class4ExemptionAnswers], maybeDbAnswers: Option[NICsStorageAnswers]): Option[NICsAnswers] = {
-    def optionalBusinessIds(exemptions: List[Class4ExemptionAnswers], reason: ExemptionReason): Option[List[BusinessId]] = {
-      val filteredExemptions = exemptions.filter(_.exemptionReason.contains(reason))
-      if (filteredExemptions.nonEmpty) Some(filteredExemptions.map(_.businessId)) else None
-    }
-    def buildMultipleBusinessAnswers: Option[NICsAnswers] = {
-      val class4NicsBoolean            = class4Answers.exists(_.class4Exempt)
-      val class4DivingBusinessIds      = optionalBusinessIds(class4Answers, ExemptionReason.DiverDivingInstructor)
-      val class4TrusteeBusinessIds     = optionalBusinessIds(class4Answers, ExemptionReason.TrusteeExecutorAdmin)
-      val journeyIsYesButNoneAreExempt = maybeDbAnswers.exists(_.journeyIsYesButNoneAreExempt.contains(true))
+    val journeyIsYesButNoneAreExempt = maybeDbAnswers.exists(_.journeyIsYesButNoneAreExempt.contains(true))
 
-      val multipleClass4Answers = (class4NicsBoolean, class4DivingBusinessIds, class4TrusteeBusinessIds, journeyIsYesButNoneAreExempt) match {
-        case (false, None, None, true) => NICsClass4Answers(true, None, Some(List(classFourOtherExemption)), Some(List(classFourNoneExempt)))
-        case (true, diving, _, _) if !diving.exists(_.nonEmpty) =>
-          NICsClass4Answers(class4NicsBoolean, None, Some(List(classFourOtherExemption)), class4TrusteeBusinessIds)
-        case (true, _, nonDiving, _) if !nonDiving.exists(_.nonEmpty) =>
-          NICsClass4Answers(class4NicsBoolean, None, class4DivingBusinessIds, Some(List(classFourNoneExempt)))
-        case _ => NICsClass4Answers(class4NicsBoolean, None, class4DivingBusinessIds, class4TrusteeBusinessIds)
-      }
-      Some(NICsAnswers(None, Some(multipleClass4Answers)))
-    }
+    if (class4Answers.length > 1) buildMultipleBusinessAnswers(class4Answers, journeyIsYesButNoneAreExempt)
+    else buildSingleBusinessAnswers(class4Answers)
+  }
 
-    def buildSingleBusinessAnswers: Option[NICsAnswers] = class4Answers.headOption.map { singleExemption =>
+  private def buildSingleBusinessAnswers(class4Answers: List[Class4ExemptionAnswers]): Option[NICsAnswers] = class4Answers.headOption.map {
+    singleExemption =>
       val singleClass4Answers = NICsClass4Answers(singleExemption.class4Exempt, singleExemption.exemptionReason, None, None)
       NICsAnswers(None, Some(singleClass4Answers))
+  }
+
+  private def buildMultipleBusinessAnswers(class4Answers: List[Class4ExemptionAnswers],
+                                           journeyIsYesButNoneAreExempt: Boolean): Option[NICsAnswers] = {
+    val class4NicsBoolean        = class4Answers.exists(_.class4Exempt)
+    val class4DivingBusinessIds  = returnBusinessIdsForRelevantExemption(class4Answers, ExemptionReason.DiverDivingInstructor)
+    val class4TrusteeBusinessIds = returnBusinessIdsForRelevantExemption(class4Answers, ExemptionReason.TrusteeExecutorAdmin)
+
+    val multipleClass4Answers = (class4NicsBoolean, class4DivingBusinessIds, class4TrusteeBusinessIds, journeyIsYesButNoneAreExempt) match {
+      case (false, None, None, true) => NICsClass4Answers(true, None, Some(List(classFourOtherExemption)), Some(List(classFourNoneExempt)))
+      case (true, diving, _, _) if !diving.exists(_.nonEmpty) =>
+        NICsClass4Answers(class4NicsBoolean, None, Some(List(classFourOtherExemption)), class4TrusteeBusinessIds)
+      case (true, _, nonDiving, _) if !nonDiving.exists(_.nonEmpty) =>
+        NICsClass4Answers(class4NicsBoolean, None, class4DivingBusinessIds, None)
+      case _ => NICsClass4Answers(class4NicsBoolean, None, class4DivingBusinessIds, class4TrusteeBusinessIds)
     }
 
-    if (class4Answers.length > 1) buildMultipleBusinessAnswers else buildSingleBusinessAnswers
+    Some(NICsAnswers(None, Some(multipleClass4Answers)))
+  }
+
+  private def returnBusinessIdsForRelevantExemption(exemptions: List[Class4ExemptionAnswers], reason: ExemptionReason): Option[List[BusinessId]] = {
+    val filteredExemptions = exemptions.filter(_.exemptionReason.contains(reason))
+    if (filteredExemptions.nonEmpty) Some(filteredExemptions.map(_.businessId)) else None
   }
 
 }

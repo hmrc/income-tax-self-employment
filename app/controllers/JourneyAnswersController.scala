@@ -422,7 +422,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
         case (Some(class2Answers), None) => nicsAnswersService.saveClass2Answers(ctx, class2Answers)
         case (None, Some(class4Answers)) if class4Answers.userHasSingleBusinessExemption =>
           nicsAnswersService.saveClass4SingleBusiness(ctx, class4Answers)
-        case (None, Some(class4Answers)) => nicsAnswersService.saveClass4MultipleBusinesses(ctx, class4Answers)
+        case (None, Some(class4Answers)) => nicsAnswersService.saveClass4MultipleBusinessOrNoExemptionJourneys(ctx, class4Answers)
         case _                           => EitherT.leftT[Future, Unit](InvalidNICsAnswer(answers))
       }
       result.map(_ => NoContent)
