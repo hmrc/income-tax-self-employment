@@ -20,7 +20,7 @@ import cats.implicits.catsSyntaxOptionId
 import models.common.BusinessId
 import models.connector.api_1802.request.AnnualNonFinancials
 import models.frontend.FrontendAnswers
-import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
+import models.frontend.nics.NICsClass4Answers.{Class4ExemptionAnswers, classFourNoneExempt, classFourOtherExemption}
 import play.api.libs.json.{Format, Json}
 
 case class NICsClass4Answers(class4NICs: Boolean,
@@ -30,9 +30,12 @@ case class NICsClass4Answers(class4NICs: Boolean,
 
   def userHasSingleBusinessExemption: Boolean = class4ExemptionReason.isDefined
 
+  def journeyIsYesButNoneAreExempt: Boolean =
+    class4DivingExempt.exists(_.contains(classFourOtherExemption)) && class4NonDivingExempt.exists(_.contains(classFourNoneExempt))
+
   def cleanUpExemptionListsFromFE: NICsClass4Answers = {
-    val diving      = class4DivingExempt.map(_.filterNot(_.value == "class-four-other-exemption")).filter(_.nonEmpty)
-    val trustee     = class4NonDivingExempt.map(_.filterNot(_.value == "class-four-none-exempt")).filter(_.nonEmpty)
+    val diving      = class4DivingExempt.map(_.filterNot(_ == classFourOtherExemption)).filter(_.nonEmpty)
+    val trustee     = class4NonDivingExempt.map(_.filterNot(_ == classFourNoneExempt)).filter(_.nonEmpty)
     val class4YesNo = if (diving.isEmpty && trustee.isEmpty) false else class4NICs
     NICsClass4Answers(
       class4YesNo,
@@ -55,6 +58,10 @@ case class NICsClass4Answers(class4NICs: Boolean,
 }
 
 object NICsClass4Answers {
+
+  val classFourOtherExemption: BusinessId = BusinessId("class-four-other-exemption")
+  val classFourNoneExempt: BusinessId     = BusinessId("class-four-none-exempt")
+
   implicit val formats: Format[NICsClass4Answers] = Json.format[NICsClass4Answers]
 
   case class Class4ExemptionAnswers(businessId: BusinessId, class4Exempt: Boolean, exemptionReason: Option[ExemptionReason])

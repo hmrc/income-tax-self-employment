@@ -35,6 +35,7 @@ import scala.concurrent.Future
 final case class StubBusinessService(
     getBusinessesResult: Either[ServiceError, List[Business]] = Right(Nil),
     getBusinessResult: Either[ServiceError, Business] = Left(ServiceError.BusinessNotFoundError(businessId)),
+    getUserBusinessIdsResult: Either[ServiceError, List[BusinessId]] = Right(Nil),
     getUserDateOfBirthRes: Either[DownstreamError, LocalDate] = aUserDateOfBirth.asRight[DownstreamError],
     getAllBusinessIncomeSourcesSummariesRes: Either[DownstreamError, List[BusinessIncomeSourcesSummaryResponse]] =
       List.empty[BusinessIncomeSourcesSummaryResponse].asRight[DownstreamError],
@@ -47,6 +48,9 @@ final case class StubBusinessService(
 
   def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business] =
     EitherT.fromEither[Future](getBusinessResult)
+
+  def getUserBusinessIds(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[BusinessId]] =
+    EitherT.fromEither[Future](getUserBusinessIdsResult)
 
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
     EitherT.fromEither[Future](getUserDateOfBirthRes)

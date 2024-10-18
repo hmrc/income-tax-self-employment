@@ -35,7 +35,8 @@ case class StubNICsAnswersService(getAnswersRes: Either[ServiceError, Option[NIC
   def saveClass4SingleBusiness(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     EitherT.rightT[Future, ServiceError](())
 
-  def saveClass4MultipleBusinesses(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def saveClass4MultipleBusinessOrNoExemptionJourneys(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
     EitherT.rightT[Future, ServiceError](())
 
   def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NICsAnswers]] =
