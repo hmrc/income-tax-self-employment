@@ -78,10 +78,15 @@ object NICsAnswers {
     val class4TrusteeBusinessIds = returnBusinessIdsForRelevantExemption(class4Answers, ExemptionReason.TrusteeExecutorAdmin)
 
     val multipleClass4Answers = (class4NicsBoolean, class4DivingBusinessIds, class4TrusteeBusinessIds, journeyIsYesButNoneAreExempt) match {
-      case (false, None, None, true) => NICsClass4Answers(true, None, Some(List(classFourOtherExemption)), Some(List(classFourNoneExempt)))
+      case (false, None, None, true) =>
+        // User submitted 'Yes' journey but with no exemptions so 'false' sent to APIs.
+        //   'JIYBNAE' is gathered from DB so FE CYA will match user's submission, not API data.
+        NICsClass4Answers(true, None, Some(List(classFourOtherExemption)), Some(List(classFourNoneExempt)))
       case (true, diving, _, _) if !diving.exists(_.nonEmpty) =>
+        // If no diving exemptions, 'Exempt for other reason' message displayed in CYA row.
         NICsClass4Answers(class4NicsBoolean, None, Some(List(classFourOtherExemption)), class4TrusteeBusinessIds)
       case (true, _, nonDiving, _) if !nonDiving.exists(_.nonEmpty) =>
+        // If no non-diving exemptions, that row will not appear on CYA at all.
         NICsClass4Answers(class4NicsBoolean, None, class4DivingBusinessIds, None)
       case _ => NICsClass4Answers(class4NicsBoolean, None, class4DivingBusinessIds, class4TrusteeBusinessIds)
     }
