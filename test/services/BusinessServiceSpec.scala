@@ -97,6 +97,38 @@ class BusinessServiceSpec extends AnyWordSpecLike {
     }
   }
 
+  "getUserBusinessIds" should {
+    "return an empty list" in {
+      val result = testService.getUserBusinessIds(nino).value.futureValue.value
+      assert(result === Nil)
+    }
+
+    "return a list of businesses" in {
+      val businesses = SuccessResponseSchemaTestData.mkExample(
+        nino,
+        mtditid,
+        List(
+          BusinessDataDetailsTestData.mkExample(BusinessId("id1")),
+          BusinessDataDetailsTestData.mkExample(BusinessId("id2"))
+        )
+      )
+      val service = new BusinessServiceImpl(
+        StubIFSBusinessDetailsConnector(getBusinessesResult = Right(businesses)),
+        StubMDTPConnector(),
+        StubIFSConnector()
+      )
+
+      val result = service.getUserBusinessIds(nino).value.futureValue.value
+
+      val expectedBusiness = List(
+        BusinessId("id1"),
+        BusinessId("id2")
+      )
+
+      assert(result === expectedBusiness)
+    }
+  }
+
   "getUserDateOfBirth" should {
     "return a user's date of birth as a LocalDate" in {
       val expectedResult = Right(aUserDateOfBirth)
