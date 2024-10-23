@@ -220,7 +220,8 @@ class BusinessServiceSpec extends AnyWordSpecLike {
       aBusinessIncomeSourcesSummaryResponse.totalAdditions.getOrElse(0),
       0,
       0,
-      aBusinessIncomeSourcesSummaryResponse.totalDeductions.getOrElse(0)
+      aBusinessIncomeSourcesSummaryResponse.totalDeductions.getOrElse(0),
+      0
     )
 
     def stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
