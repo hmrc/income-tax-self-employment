@@ -24,6 +24,7 @@ import controllers.getCapitalAllowanceBodyWithCtx
 import models.common.JourneyName.{
   AnnualInvestmentAllowance,
   BalancingAllowance,
+  BalancingCharge,
   CapitalAllowancesTailoring,
   SpecialTaxSites,
   StructuresBuildings,
@@ -41,6 +42,7 @@ import models.frontend.FrontendAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
+import models.frontend.capitalAllowances.balancingCharge.BalancingChargeAnswers
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
 import models.frontend.capitalAllowances.structuresBuildings.NewStructuresBuildingsAnswers
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
@@ -66,6 +68,7 @@ trait CapitalAllowancesAnswersService {
   def getZeroEmissionCars(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionCarsAnswers]]
   def getZeroEmissionGoodsVehicle(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionGoodsVehicleAnswers]]
   def getBalancingAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]]
+  def getBalancingCharge(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingChargeAnswers]]
   def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]]
   def getWritingDownAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WritingDownAllowanceAnswers]]
   def getSpecialTaxSites(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SpecialTaxSitesAnswers]]
@@ -130,6 +133,13 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
       fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
     } yield fullAnswers.asInstanceOf[Option[BalancingAllowanceAnswers]]
 
+  def getBalancingCharge(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingChargeAnswers]] =
+    for {
+      maybeData   <- getDbAnswers(ctx, BalancingCharge)
+      dbAnswers   <- getPersistedAnswers[BalancingChargeDb](maybeData)
+      fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
+    } yield fullAnswers.asInstanceOf[Option[BalancingChargeAnswers]]
+
   def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]] =
     for {
       maybeData   <- getDbAnswers(ctx, AnnualInvestmentAllowance)
@@ -173,6 +183,7 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
         case answers: ZeroEmissionCarsDb          => ZeroEmissionCarsAnswers(answers, annualSummaries)
         case answers: ZeroEmissionGoodsVehicleDb  => ZeroEmissionGoodsVehicleAnswers(answers, annualSummaries)
         case answers: BalancingAllowanceDb        => BalancingAllowanceAnswers(answers, annualSummaries)
+        case answers: BalancingChargeDb           => BalancingChargeAnswers(answers, annualSummaries)
         case answers: AnnualInvestmentAllowanceDb => AnnualInvestmentAllowanceAnswers(answers, annualSummaries)
         case _: WritingDownAllowanceDb            => WritingDownAllowanceAnswers(annualSummaries)
         case answers: SpecialTaxSitesDb           => SpecialTaxSitesAnswers(answers, annualSummaries)

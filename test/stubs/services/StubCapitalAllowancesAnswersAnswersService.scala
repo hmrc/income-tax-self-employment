@@ -25,6 +25,7 @@ import models.frontend.FrontendAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
+import models.frontend.capitalAllowances.balancingCharge.BalancingChargeAnswers
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
 import models.frontend.capitalAllowances.structuresBuildings.NewStructuresBuildingsAnswers
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
@@ -47,6 +48,7 @@ case class StubCapitalAllowancesAnswersAnswersService(
     getZeroEmissionCars: Either[ServiceError, Option[ZeroEmissionCarsAnswers]] = Right(None),
     getZeroEmissionGoodsVehicleCars: Either[ServiceError, Option[ZeroEmissionGoodsVehicleAnswers]] = Right(None),
     getBalancingAllowance: Either[ServiceError, Option[BalancingAllowanceAnswers]] = Right(None),
+    getBalancingCharge: Either[ServiceError, Option[BalancingChargeAnswers]] = Right(None),
     getAnnualInvestmentAllowance: Either[ServiceError, Option[AnnualInvestmentAllowanceAnswers]] = Right(None),
     getWritingDownAllowance: Either[ServiceError, Option[WritingDownAllowanceAnswers]] = Right(None),
     getSpecialTaxSites: Either[ServiceError, Option[SpecialTaxSitesAnswers]] = Right(None),
@@ -72,6 +74,9 @@ case class StubCapitalAllowancesAnswersAnswersService(
 
   def getBalancingAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingAllowanceAnswers]] =
     EitherT.fromEither[Future](getBalancingAllowance)
+
+  def getBalancingCharge(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingChargeAnswers]] =
+    EitherT.fromEither[Future](getBalancingCharge)
 
   def getZeroEmissionGoodsVehicle(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ZeroEmissionGoodsVehicleAnswers]] =
     EitherT.fromEither[Future](getZeroEmissionGoodsVehicleCars)

@@ -19,6 +19,7 @@ package gens
 import models.database.capitalAllowances._
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
+import models.frontend.capitalAllowances.balancingCharge.BalancingChargeAnswers
 import models.frontend.capitalAllowances.specialTaxSites.{NewSpecialTaxSite, SpecialTaxSiteLocation, SpecialTaxSitesAnswers}
 import models.frontend.capitalAllowances.structuresBuildings.{NewStructureBuilding, NewStructuresBuildingsAnswers, StructuresBuildingsLocation}
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
@@ -122,6 +123,14 @@ object CapitalAllowancesAnswersGen {
   } yield BalancingAllowanceAnswers(
     balancingAllowance,
     balancingAllowanceAmount
+  )
+
+  val balancingChargeAnswersGen: Gen[BalancingChargeAnswers] = for {
+    balancingCharge       <- booleanGen
+    balancingChargeAmount <- Gen.option(bigDecimalGen)
+  } yield BalancingChargeAnswers(
+    balancingCharge,
+    balancingChargeAmount
   )
 
   val annualInvestmentAllowanceDbAnswersGen: Gen[AnnualInvestmentAllowanceDb] = for {

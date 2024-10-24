@@ -24,11 +24,13 @@ import gens.CapitalAllowancesAnswersGen._
 import gens.genOne
 import models.common.JourneyName.ZeroEmissionCars
 import models.common.{JourneyName, JourneyStatus}
+import models.connector.api_1803.{AnnualAdjustmentsType, SuccessResponseSchema}
 import models.database.JourneyAnswers
 import models.database.capitalAllowances.ZeroEmissionCarsDb
 import models.frontend.capitalAllowances.CapitalAllowances.{ZeroEmissionCar, ZeroEmissionGoodsVehicle}
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
+import models.frontend.capitalAllowances.balancingCharge.BalancingChargeAnswers
 import models.frontend.capitalAllowances.zeroEmissionCars.ZeroEmissionCarsAnswers
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.ZeroEmissionGoodsVehicleAnswers
 import org.scalatest.matchers.should.Matchers
@@ -163,6 +165,43 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
         dbAnswers.annualInvestmentAllowance,
         api1803SuccessResponse.annualAllowances.flatMap(_.annualInvestmentAllowance))
 
+      result shouldBe Some(expectedAnswers)
+    }
+  }
+
+  "getBalancingCharge" should {
+
+    "return empty if no answers" in {
+      val result = service.getBalancingCharge(journeyCtxWithNino).rightValue
+      assert(result === None)
+    }
+
+    "return answers if they exist" in {
+      val dbAnswers = genOne(balancingChargeAnswersGen)
+      val updatedResponse: SuccessResponseSchema =
+        api1803SuccessResponse.copy(annualAdjustments = Some(
+          AnnualAdjustmentsType.empty.copy(
+            balancingChargeOther = if (dbAnswers.balancingCharge) Some(100.00) else None
+          )))
+
+      val connector1: StubIFSConnector =
+        StubIFSConnector(
+          createAmendSEAnnualSubmissionResult = ().asRight,
+          getAnnualSummariesResult = updatedResponse.asRight
+        )
+
+      val journeyAnswers: JourneyAnswers =
+        mkJourneyAnswers(JourneyName.BalancingCharge, JourneyStatus.Completed, Json.toJsObject(dbAnswers))
+      val services = new CapitalAllowancesAnswersServiceImpl(
+        connector1,
+        StubJourneyAnswersRepository(
+          getAnswer = Some(journeyAnswers)
+        ))
+      val result = services.getBalancingCharge(journeyCtxWithNino).rightValue
+      val expectedAnswers = BalancingChargeAnswers(
+        dbAnswers.balancingCharge,
+        updatedResponse.annualAdjustments.flatMap(_.balancingChargeOther)
+      )
       result shouldBe Some(expectedAnswers)
     }
   }
