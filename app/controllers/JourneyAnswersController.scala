@@ -352,7 +352,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def saveBalancingCharge(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     capitalAllowancesService.saveAnswers[BalancingChargeDb, BalancingChargeAnswers](
-      BalancingAllowance,
+      BalancingCharge,
       taxYear,
       businessId,
       nino

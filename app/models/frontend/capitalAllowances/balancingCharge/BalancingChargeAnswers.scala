@@ -22,13 +22,13 @@ import models.database.capitalAllowances.BalancingChargeDb
 import models.frontend.FrontendAnswers
 import play.api.libs.json.{Json, OFormat}
 
-final case class BalancingChargeAnswers(balancingCharge: Boolean, balancingChargeOther: Option[BigDecimal])
+final case class BalancingChargeAnswers(balancingCharge: Boolean, balancingChargeAmount: Option[BigDecimal])
     extends FrontendAnswers[BalancingChargeDb] {
 
-  def toDbModel: Option[BalancingChargeDb] = Some(BalancingChargeDb(balancingCharge, balancingChargeOther))
+  def toDbModel: Option[BalancingChargeDb] = Some(BalancingChargeDb(balancingCharge))
 
   override def toDownStreamAnnualAdjustments(current: Option[AnnualAdjustments]): AnnualAdjustments =
-    current.getOrElse(AnnualAdjustments.empty).copy(balancingChargeOther = balancingChargeOther)
+    current.getOrElse(AnnualAdjustments.empty).copy(balancingChargeOther = balancingChargeAmount)
 }
 
 object BalancingChargeAnswers {
@@ -36,7 +36,7 @@ object BalancingChargeAnswers {
 
   def apply(dbAnswers: BalancingChargeDb, annualAdjustments: api_1803.SuccessResponseSchema): BalancingChargeAnswers =
     new BalancingChargeAnswers(
-      dbAnswers.balancingCharge,
-      balancingChargeOther = annualAdjustments.annualAdjustments.flatMap(_.balancingChargeOther)
+      annualAdjustments.annualAdjustments.flatMap(_.balancingChargeOther).isDefined,
+      balancingChargeAmount = annualAdjustments.annualAdjustments.flatMap(_.balancingChargeOther)
     )
 }
