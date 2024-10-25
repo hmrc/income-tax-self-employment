@@ -23,18 +23,20 @@ import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Clas
 import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics, SuccessResponseAPI1639TaxAvoidanceInner}
 import models.connector.api_1802.request.{AnnualNonFinancials, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1803
+import models.connector.api_1803.AnnualNonFinancialsType.Class4NicsExemptionReason
 import models.connector.api_1803.{AnnualNonFinancialsType, SuccessResponseSchema}
 import models.database.nics.NICsStorageAnswers
 import models.frontend.nics.ExemptionReason.{DiverDivingInstructor, TrusteeExecutorAdmin}
 import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
-import models.frontend.nics.{NICsAnswers, NICsClass2Answers}
+import models.frontend.nics.{ExemptionReason, NICsAnswers, NICsClass2Answers, NICsClass4Answers}
 import org.scalatest.EitherValues._
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsObject, Json}
-import stubs.connectors.StubIFSConnector.api1171MultipleBusinessResponse
+import stubs.connectors.StubIFSConnector.{api1171MultipleBusinessResponse, api1171SingleBusinessResponse}
 import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.repositories.StubJourneyAnswersRepository
+import stubs.services.StubBusinessService
 import utils.BaseSpec.{businessId, currTaxYearEnd, hc, journeyCtxWithNino, nino, taxYear}
 import utils.EitherTTestOps.convertScalaFuture
 
@@ -85,7 +87,7 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
           )
         )
       )
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(NICsStorageAnswers(Some(false)))))
+      assert(repository.lastUpsertedAnswer === Some(Json.toJson(NICsStorageAnswers(Some(false), None))))
     }
 
     "call DELETE if setting to false and the object is empty" in new StubbedService {
@@ -110,6 +112,39 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       AnnualNonFinancials(true, Some("002"))),
     ("save a Diver related exemption", Class4ExemptionAnswers(businessId, true, Some(DiverDivingInstructor)), AnnualNonFinancials(true, Some("003")))
   )
+
+  "saveClass4BusinessData" should {
+    forAll(saveClass4DataCases) { (testDescription, answer, expectedApiData) =>
+      testDescription when {
+        "creating a new answers model when there is no existing Class 4 data" in new StubbedService {
+          override val connector: StubIFSConnector =
+            StubIFSConnector(getAnnualSummariesResult = Right(api_1803.SuccessResponseSchema(None, None, None)))
+
+          val expectedResult = buildExpectedRequestResult(expectedApiData)
+
+          val result = service.saveClass4BusinessData(journeyCtxWithNino, answer).value.futureValue
+
+          assert(result.isRight)
+          assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
+        }
+
+        "overriding existing details" in new StubbedService {
+          override val connector = StubIFSConnector(getAnnualSummariesResult = Right(
+            api_1803.SuccessResponseSchema(
+              None,
+              None,
+              Some(AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)))))
+
+          val expectedResult = buildExpectedRequestResult(expectedApiData)
+
+          val result = service.saveClass4BusinessData(journeyCtxWithNino, answer).value.futureValue
+
+          assert(result.isRight)
+          assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
+        }
+      }
+    }
+  }
 
   "saveClass4SingleBusiness" should {
     "save Class 4 journey answers when user has a single business" in new StubbedService {
@@ -156,7 +191,8 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       val expectedResultId4 = // Clear existing answers
         buildExpectedRequestResult(AnnualNonFinancials(false, None), BusinessId("BusinessId4"))
 
-      val result = service.saveClass4MultipleBusinesses(journeyCtxWithNino, class4DiverAndTrusteeMultipleBusinessesAnswers).value.futureValue
+      val result =
+        service.saveClass4MultipleBusinessOrNoExemptionJourneys(journeyCtxWithNino, class4DiverAndTrusteeMultipleBusinessesAnswers).value.futureValue
       assert(result.isRight)
       assert(connector.upsertAnnualSummariesSubmissionDataTest1 === expectedResultId1)
       assert(connector.upsertAnnualSummariesSubmissionDataTest2 === expectedResultId2)
@@ -167,43 +203,68 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
 
   "get answers" should {
     "return None if there are no answers" in new StubbedService {
-      val result = service.getAnswers(journeyCtxWithNino).value.futureValue.value
+      val result: Option[NICsAnswers] = service.getAnswers(journeyCtxWithNino).value.futureValue.value
       assert(result === None)
     }
 
-    "return API version even if database exist" in new StubbedService {
-      override val connector = StubIFSConnector(getDisclosuresSubmissionResult =
-        Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))).asRight)
-      override val repository = StubJourneyAnswersRepository(
-        getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(Some(false)))))
-      )
+    "return Class 2 Answers" when {
 
-      val result = service.getAnswers(journeyCtxWithNino).value.futureValue.value
+      "API answers are returned even if database exist" in new StubbedService {
+        override val connector: StubIFSConnector = StubIFSConnector(getDisclosuresSubmissionResult =
+          Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))).asRight)
+        override val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository(
+          getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(Some(false), None))))
+        )
 
-      assert(result === Some(NICsAnswers(Some(NICsClass2Answers(true)), None)))
+        val result: Option[NICsAnswers] = service.getAnswers(journeyCtxWithNino).value.futureValue.value
+
+        assert(result === Some(NICsAnswers(Some(NICsClass2Answers(true)), None)))
+      }
+
+      "valid database answer exist and there is no API data" in new StubbedService {
+        override val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository(
+          getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(Some(false), None))))
+        )
+
+        val result: Option[NICsAnswers] = service.getAnswers(journeyCtxWithNino).value.futureValue.value
+
+        assert(result === Some(NICsAnswers(Some(NICsClass2Answers(false)), None)))
+      }
     }
 
-    "return database version if no API data exist" in new StubbedService {
-      override val repository = StubJourneyAnswersRepository(
-        getAnswers = Right(Some(Json.toJson(NICsStorageAnswers(Some(false)))))
+    "return Class 4 Answers from API data" in new StubbedService {
+
+      val annualNonFinancialsData: SuccessResponseSchema = SuccessResponseSchema(
+        None,
+        None,
+        Some(AnnualNonFinancialsType(Some(true), Some(Class4NicsExemptionReason._002), None))
       )
+      override val connector: StubIFSConnector = StubIFSConnector(getAnnualSummariesResult = annualNonFinancialsData.asRight)
 
-      val result = service.getAnswers(journeyCtxWithNino).value.futureValue.value
+      override val businessService: StubBusinessService = StubBusinessService(getUserBusinessIdsResult = Right(List(journeyCtxWithNino.businessId)))
 
-      assert(result === Some(NICsAnswers(Some(NICsClass2Answers(false)), None)))
+      val result: Option[NICsAnswers] = service.getAnswers(journeyCtxWithNino).value.futureValue.value
+
+      assert(result === Some(NICsAnswers(None, Some(NICsClass4Answers(true, Some(ExemptionReason.TrusteeExecutorAdmin), None, None)))))
     }
+
   }
 
   trait StubbedService {
     val connector         = new StubIFSConnector()
-    val businessConnector = StubIFSBusinessDetailsConnector()
+    val businessConnector = StubIFSBusinessDetailsConnector(getBusinessesResult = api1171SingleBusinessResponse(businessId).asRight)
     val repository        = StubJourneyAnswersRepository()
+    val businessService: StubBusinessService = StubBusinessService()
 
-    def service = new NICsAnswersServiceImpl(connector, businessConnector, repository)
+    def service = new NICsAnswersServiceImpl(connector, businessConnector, repository, businessService)
+
+    def buildDataResponse(annualNonFinancialsData: AnnualNonFinancialsType) =
+      Right(api_1803.SuccessResponseSchema(None, None, Some(annualNonFinancialsData)))
 
     def buildExpectedRequestResult(annualNonFinancials: AnnualNonFinancials,
                                    id: BusinessId = businessId): Option[CreateAmendSEAnnualSubmissionRequestData] =
       Some(
         CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, id, CreateAmendSEAnnualSubmissionRequestBody(None, None, Some(annualNonFinancials))))
+
   }
 }
