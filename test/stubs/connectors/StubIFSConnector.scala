@@ -28,8 +28,8 @@ import models.connector.api_1500.LossType
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
-import models.connector.api_1802.request.{AnnualAdjustments, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
-import models.connector.api_1803.{AnnualAdjustmentsType, AnnualAllowancesType, SuccessResponseSchema}
+import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1803.{AnnualAllowancesType, SuccessResponseSchema}
 import models.connector.api_1870.LossData
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
