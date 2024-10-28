@@ -87,6 +87,9 @@ GET         /:taxYear/:businessId/capital-allowances-zero-emission-goods-vehicle
 POST        /:taxYear/:businessId/capital-allowances-balancing-allowance/:nino/answers                   controllers.JourneyAnswersController.saveBalancingAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/capital-allowances-balancing-allowance/:nino/answers                   controllers.JourneyAnswersController.getBalancingAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
+POST        /:taxYear/:businessId/capital-allowances-balancing-charge/:nino/answers                      controllers.JourneyAnswersController.saveBalancingCharge(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+GET         /:taxYear/:businessId/capital-allowances-balancing-charge/:nino/answers                      controllers.JourneyAnswersController.getBalancingCharge(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
 POST        /:taxYear/:businessId/capital-allowances-annual-investment-allowance/:nino/answers           controllers.JourneyAnswersController.saveAnnualInvestmentAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /:taxYear/:businessId/capital-allowances-annual-investment-allowance/:nino/answers           controllers.JourneyAnswersController.getAnnualInvestmentAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 

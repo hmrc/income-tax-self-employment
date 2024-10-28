@@ -30,6 +30,7 @@ import models.frontend.adjustments.ProfitOrLossJourneyAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
+import models.frontend.capitalAllowances.balancingCharge.BalancingChargeAnswers
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers
 import models.frontend.capitalAllowances.structuresBuildings.NewStructuresBuildingsAnswers
 import models.frontend.capitalAllowances.writingDownAllowance.WritingDownAllowanceAnswers
@@ -347,6 +348,19 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def getBalancingAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleOptionalApiResult(capitalAllowancesService.getBalancingAllowance(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  def saveBalancingCharge(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    capitalAllowancesService.saveAnswers[BalancingChargeDb, BalancingChargeAnswers](
+      BalancingCharge,
+      taxYear,
+      businessId,
+      nino
+    )
+  }
+
+  def getBalancingCharge(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(capitalAllowancesService.getBalancingCharge(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
   def saveAnnualInvestmentAllowance(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
