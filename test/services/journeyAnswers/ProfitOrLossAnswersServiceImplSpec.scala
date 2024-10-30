@@ -62,51 +62,70 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
     )
 
   "Saving ProfitOrLoss answers" must {
+    val unusedLossAmount: BigDecimal = 400
+    val yesBroughtForwardLossAnswers =
+      ProfitOrLossJourneyAnswers(
+        true,
+        Some(200),
+        Some(true),
+        None,
+        Some(true),
+        true,
+        Some(unusedLossAmount),
+        Some(WhichYearIsLossReported.Year2018to2019))
+    val noBroughtForwardLossAnswers    = ProfitOrLossJourneyAnswers(false, None, Some(false), None, None, false, None, None)
+    val emptyBroughtForwardLossAnswers = ProfitOrLossJourneyAnswers(false, None, None, None, None, false, None, None)
     "successfully save data when answers are true" in new StubbedService {
       override val ifsConnector: StubIFSConnector =
         StubIFSConnector(
           getAnnualSummariesResult = api1803SuccessResponse.asRight
         )
-      val answers        = ProfitOrLossJourneyAnswers(true, Some(200), true, Some(400), Some(WhichYearIsLossReported.Year2018to2019))
+      val answers        = yesBroughtForwardLossAnswers
       val allowancesData = AnnualAllowances(None, None, None, Some(5000), None, None, None, None, None, None, Some(5000), None)
       val expectedAnnualSummariesAnswers =
         expectedAnnualSummariesData(Some(answers.toDownStreamAnnualAdjustments(Some(AnnualAdjustments.empty))), Some(allowancesData))
       val result = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
       assert(ifsConnector.upsertAnnualSummariesSubmissionData === Some(expectedAnnualSummariesAnswers))
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, previousUnusedLosses = true))))
+      assert(
+        repository.lastUpsertedAnswer === Some(
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))))
     }
     "successfully save data when answers are false" in new StubbedService {
       override val ifsConnector: StubIFSConnector =
         StubIFSConnector(
           getAnnualSummariesResult = api1803SuccessResponse.asRight
         )
-      val answers                        = ProfitOrLossJourneyAnswers(false, None, false, None, None)
+      val answers                        = noBroughtForwardLossAnswers
       val allowancesData                 = AnnualAllowances(None, None, None, Some(5000), None, None, None, None, None, None, Some(5000), None)
       val expectedAnnualSummariesAnswers = expectedAnnualSummariesData(None, Some(allowancesData))
       val result                         = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
       assert(ifsConnector.upsertAnnualSummariesSubmissionData === Some(expectedAnnualSummariesAnswers))
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = false, previousUnusedLosses = false))))
+      assert(
+        repository.lastUpsertedAnswer === Some(
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = false, claimLossRelief = Some(false), previousUnusedLosses = false))))
     }
     "successfully create and save answers if no existing answers" in new StubbedService {
       override val ifsConnector: StubIFSConnector =
         StubIFSConnector(
           getAnnualSummariesResult = api1803EmptyResponse.asRight
         )
-      val answers                        = ProfitOrLossJourneyAnswers(true, Some(200), false, None, None)
+      val answers                        = yesBroughtForwardLossAnswers
       val expectedAnnualSummariesAnswers = expectedAnnualSummariesData(Some(answers.toDownStreamAnnualAdjustments(None)), None)
       val result                         = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
       assert(ifsConnector.upsertAnnualSummariesSubmissionData === Some(expectedAnnualSummariesAnswers))
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, previousUnusedLosses = false))))
+      assert(
+        repository.lastUpsertedAnswer === Some(
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))))
     }
     "return left when getAnnualSummaries returns left" in new StubbedService {
       override val ifsConnector: StubIFSConnector =
         StubIFSConnector(
           getAnnualSummariesResult = downstreamError.asLeft
         )
-      val answers = ProfitOrLossJourneyAnswers(true, Some(200), false, None, None)
+      val answers = yesBroughtForwardLossAnswers
       val result  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == downstreamError.asLeft)
     }
@@ -115,13 +134,13 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         StubIFSConnector(
           createAmendSEAnnualSubmissionResult = downstreamError.asLeft
         )
-      val answers = ProfitOrLossJourneyAnswers(true, Some(200), false, None, None)
+      val answers = yesBroughtForwardLossAnswers
       val result  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == downstreamError.asLeft)
     }
     "return left when upsertAnswers returns left" in new StubbedService {
       override val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository(upsertDataField = downstreamError.asLeft)
-      val answers                                           = ProfitOrLossJourneyAnswers(true, Some(200), false, None, None)
+      val answers                                           = yesBroughtForwardLossAnswers
       val result                                            = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == downstreamError.asLeft)
     }
@@ -132,11 +151,13 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           getBroughtForwardLossResult = api1502SuccessResponse.asRight,
           updateBroughtForwardLossResult = api1501SuccessResponse.asRight
         )
-      val answers = ProfitOrLossJourneyAnswers(true, Some(200), true, Some(400), Some(WhichYearIsLossReported.Year2018to2019))
+      val answers = yesBroughtForwardLossAnswers
       val result  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
       assert(ifsBusinessDetailsConnector.updateBroughtForwardLossResult === api1501SuccessResponse.asRight)
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, previousUnusedLosses = true))))
+      assert(
+        repository.lastUpsertedAnswer === Some(
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))))
     }
     "successfully create brought forward loss answers when provided by user and get returns NOT_FOUND from API" in new StubbedService {
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
@@ -144,11 +165,13 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           getBroughtForwardLossResult = downstreamError.asLeft,
           createBroughtForwardLossResult = api1500SuccessResponse.asRight
         )
-      val answers = ProfitOrLossJourneyAnswers(true, Some(200), true, Some(400), Some(WhichYearIsLossReported.Year2018to2019))
+      val answers = yesBroughtForwardLossAnswers
       val result  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
       assert(ifsBusinessDetailsConnector.createBroughtForwardLossResult === api1500SuccessResponse.asRight)
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, previousUnusedLosses = true))))
+      assert(
+        repository.lastUpsertedAnswer === Some(
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))))
     }
     "successfully create brought forward loss answers when provided by user and list returns NOT_FOUND from API" in new StubbedService {
       val downstreamError = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
@@ -157,11 +180,13 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           listBroughtForwardLossesResult = downstreamError.asLeft,
           createBroughtForwardLossResult = api1500SuccessResponse.asRight
         )
-      val answers = ProfitOrLossJourneyAnswers(true, Some(200), true, Some(400), Some(WhichYearIsLossReported.Year2018to2019))
+      val answers = yesBroughtForwardLossAnswers
       val result  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
       assert(ifsBusinessDetailsConnector.createBroughtForwardLossResult === api1500SuccessResponse.asRight)
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, previousUnusedLosses = true))))
+      assert(
+        repository.lastUpsertedAnswer === Some(
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))))
     }
     "successfully delete brought forward loss answers when none provided by user and some from API" in new StubbedService {
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
@@ -169,26 +194,30 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           getBroughtForwardLossResult = api1502SuccessResponse.asRight,
           deleteBroughtForwardLossResult = Right(())
         )
-      val answers = ProfitOrLossJourneyAnswers(true, Some(200), true, None, None)
+      val answers = emptyBroughtForwardLossAnswers
       val result  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
       assert(ifsBusinessDetailsConnector.deleteBroughtForwardLossResult === Right(()))
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, previousUnusedLosses = true))))
+      assert(
+        repository.lastUpsertedAnswer === Some(
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = false, claimLossRelief = None, previousUnusedLosses = false))))
     }
     "do nothing when none provided by user and get returns NOT_FOUND from API" in new StubbedService {
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
         StubIFSBusinessDetailsConnector(
           getBroughtForwardLossResult = notFoundError.asLeft
         )
-      val answers = ProfitOrLossJourneyAnswers(true, Some(200), true, None, None)
+      val answers = emptyBroughtForwardLossAnswers
       val result  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
-      assert(repository.lastUpsertedAnswer === Some(Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, previousUnusedLosses = true))))
+      assert(
+        repository.lastUpsertedAnswer === Some(
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = false, claimLossRelief = None, previousUnusedLosses = false))))
     }
     "return error without updating AnnualSummaries, BFL or DB data when AnnualSummaries API returns a ServiceError" in new StubbedService {
       override val ifsConnector = new StubIFSConnector(getAnnualSummariesResult = downstreamError.asLeft)
 
-      val answers = ProfitOrLossJourneyAnswers(true, Some(200), true, Some(400), Some(WhichYearIsLossReported.Year2018to2019))
+      val answers = yesBroughtForwardLossAnswers
       val result  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
 
       assert(result === downstreamError.asLeft)
@@ -200,7 +229,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
         StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = downstreamError.asLeft)
 
-      val answers = ProfitOrLossJourneyAnswers(true, Some(200), true, None, None)
+      val answers = yesBroughtForwardLossAnswers
       val result  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
 
       assert(result == downstreamError.asLeft)
@@ -212,8 +241,16 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
   "createUpdateOrDeleteBroughtForwardLoss" should {
     val unusedLossAmount: BigDecimal = 400
     val yesBroughtForwardLossAnswers =
-      ProfitOrLossJourneyAnswers(true, Some(200), true, Some(unusedLossAmount), Some(WhichYearIsLossReported.Year2018to2019))
-    val noBroughtForwardLossAnswers = ProfitOrLossJourneyAnswers(true, Some(200), false, None, None)
+      ProfitOrLossJourneyAnswers(
+        true,
+        Some(200),
+        Some(true),
+        None,
+        Some(true),
+        true,
+        Some(unusedLossAmount),
+        Some(WhichYearIsLossReported.Year2018to2019))
+    val noBroughtForwardLossAnswers = ProfitOrLossJourneyAnswers(true, Some(200), Some(false), None, None, false, None, None)
     "return an empty success response" when {
       "given a valid submissions to create a new BroughtForwardLoss data" in new StubbedService {
         val result = service.createUpdateOrDeleteBroughtForwardLoss(journeyCtxWithNino, yesBroughtForwardLossAnswers).value.futureValue

@@ -16,21 +16,28 @@
 
 package gens
 
-import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhichYearIsLossReported}
+import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhatDoYouWantToDoWithLoss, WhichYearIsLossReported}
 import org.scalacheck.Gen
 
 object ProfitOrLossAnswersGen {
-  private val whichYearIsLossReportedGen: Gen[WhichYearIsLossReported] = Gen.oneOf(WhichYearIsLossReported.values)
+  private val whichYearIsLossReportedGen: Gen[WhichYearIsLossReported]          = Gen.oneOf(WhichYearIsLossReported.values)
+  private val whatDoYouWantToDoWithLossGen: Gen[Seq[WhatDoYouWantToDoWithLoss]] = Gen.someOf(WhatDoYouWantToDoWithLoss.values).map(_.toIndexedSeq)
 
   val profitOrLossAnswersGen: Gen[ProfitOrLossJourneyAnswers] = for {
     goodsAndServicesForYourOwnUse <- booleanGen
     goodsAndServicesAmount        <- Gen.option(bigDecimalGen)
+    claimLossRelief               <- Gen.option(booleanGen)
+    whatDoYouWantToDoWithLoss     <- Gen.option(whatDoYouWantToDoWithLossGen)
+    carryLossForward              <- Gen.option(booleanGen)
     previousUnusedLosses          <- booleanGen
     unusedLossAmount              <- Gen.option(bigDecimalGen)
     whichYearIsLossReported       <- Gen.option(whichYearIsLossReportedGen)
   } yield ProfitOrLossJourneyAnswers(
     goodsAndServicesForYourOwnUse,
     goodsAndServicesAmount,
+    claimLossRelief,
+    whatDoYouWantToDoWithLoss,
+    carryLossForward,
     previousUnusedLosses,
     unusedLossAmount,
     whichYearIsLossReported

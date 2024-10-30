@@ -24,15 +24,18 @@ import models.database.adjustments.ProfitOrLossDb
 import models.frontend.FrontendAnswers
 import play.api.libs.json._
 
-case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,                   // db
-                                      goodsAndServicesAmount: Option[BigDecimal],               // adjustments > goodsAndServicesOwnUse API 1802
-                                      previousUnusedLosses: Boolean,                            // db
-                                      unusedLossAmount: Option[BigDecimal],                     // lossAmount API 1500
-                                      whichYearIsLossReported: Option[WhichYearIsLossReported]) // taxYearBroughtForwardFrom API 1500
+case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,     // db
+                                      goodsAndServicesAmount: Option[BigDecimal], // adjustments > goodsAndServicesOwnUse API 1802
+                                      claimLossRelief: Option[Boolean],           // db
+                                      whatDoYouWantToDoWithLoss: Option[Seq[WhatDoYouWantToDoWithLoss]], // API 1505
+                                      carryLossForward: Option[Boolean],                                 // API 1505
+                                      previousUnusedLosses: Boolean,                                     // db
+                                      unusedLossAmount: Option[BigDecimal],                              // lossAmount API 1500
+                                      whichYearIsLossReported: Option[WhichYearIsLossReported])          // taxYearBroughtForwardFrom API 1500
     extends FrontendAnswers[ProfitOrLossDb] {
 
-  def toDbModel: Option[ProfitOrLossDb] = Some(ProfitOrLossDb(goodsAndServicesForYourOwnUse, previousUnusedLosses))
-  def toDbAnswers: ProfitOrLossDb       = ProfitOrLossDb(goodsAndServicesForYourOwnUse, previousUnusedLosses)
+  def toDbModel: Option[ProfitOrLossDb] = Some(ProfitOrLossDb(goodsAndServicesForYourOwnUse, claimLossRelief, previousUnusedLosses))
+  def toDbAnswers: ProfitOrLossDb       = ProfitOrLossDb(goodsAndServicesForYourOwnUse, claimLossRelief, previousUnusedLosses)
 
   override def toDownStreamAnnualAdjustments(current: Option[AnnualAdjustments]): AnnualAdjustments =
     current.getOrElse(AnnualAdjustments.empty).copy(goodsAndServicesOwnUse = goodsAndServicesAmount)
