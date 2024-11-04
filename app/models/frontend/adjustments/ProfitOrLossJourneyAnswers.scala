@@ -18,6 +18,7 @@ package models.frontend.adjustments
 
 import models.common.JourneyContextWithNino
 import models.connector.api_1500.LossType
+import models.connector.api_1505.CreateLossClaimRequestBody
 import models.connector.api_1802.request.AnnualAdjustments
 import models.connector.{api_1500, api_1501}
 import models.database.adjustments.ProfitOrLossDb
@@ -36,6 +37,12 @@ case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,   
 
   def toDbModel: Option[ProfitOrLossDb] = Some(ProfitOrLossDb(goodsAndServicesForYourOwnUse, claimLossRelief, previousUnusedLosses))
   def toDbAnswers: ProfitOrLossDb       = ProfitOrLossDb(goodsAndServicesForYourOwnUse, claimLossRelief, previousUnusedLosses)
+
+  def toLossClaimSubmission: Option[CreateLossClaimRequestBody] =
+    // TODO SASS-10335
+    // If loss to be submitted (dependent on 'whatDoYouWantToDoWithLoss' and 'carryLossForward'),
+    //    return answers in Some(CreateLossClaimRequestBody({answers})), else return None
+    None
 
   override def toDownStreamAnnualAdjustments(current: Option[AnnualAdjustments]): AnnualAdjustments =
     current.getOrElse(AnnualAdjustments.empty).copy(goodsAndServicesOwnUse = goodsAndServicesAmount)
