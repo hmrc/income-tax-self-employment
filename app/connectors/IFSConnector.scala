@@ -93,8 +93,6 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
   private def disclosuresSubmissionUrl(nino: Nino, taxYear: TaxYear) =
     s"${appConfig.ifsBaseUrl}/income-tax/disclosures/$nino/${taxYear.toYYYY_YY}"
 
-  private def createLossClaimUrl(nino: Nino) = s"${appConfig.ifsBaseUrl}/individuals/losses/$nino/loss-claims"
-
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {
     val url                                          = periodicSummaries(data.nino, data.businessId, data.taxYear)
     val context                                      = appConfig.mkMetadata(IFSApiName.Api1894, url)
