@@ -369,7 +369,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
     forAll(getLossByBusinessIdTestCases) { (testDescription, connectorResponse, expectedResult) =>
       s"return $testDescription" in new StubbedService {
         override val ifsBusinessDetailsConnector = StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = connectorResponse)
-        val result                               = service.getLossByBusinessId(journeyCtxWithNino).value.futureValue
+        val result                               = service.getBroughtForwardLossByBusinessId(journeyCtxWithNino).value.futureValue
 
         assert(result == expectedResult)
       }
