@@ -135,10 +135,14 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
 
   def getBalancingCharge(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BalancingChargeAnswers]] =
     for {
-      maybeData   <- getDbAnswers(ctx, BalancingCharge)
-      dbAnswers   <- getPersistedAnswers[BalancingChargeDb](maybeData)
-      fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
-    } yield fullAnswers.asInstanceOf[Option[BalancingChargeAnswers]]
+      maybeData               <- getDbAnswers(ctx, BalancingCharge)
+      mayBeDbAnswers          <- getPersistedAnswers[BalancingChargeDb](maybeData)
+      mayBeApiBalancingCharge <- getAnnualSummaries[BalancingChargeAnswers](ctx)
+    } yield (mayBeDbAnswers, mayBeApiBalancingCharge) match {
+      case (_, Some(balancingCharge)) => Option(BalancingChargeAnswers(balancingCharge = true, Option(balancingCharge)))
+      case (Some(db), None)           => Option(BalancingChargeAnswers(db.balancingCharge, None))
+      case _                          => None
+    }
 
   def getAnnualInvestmentAllowance(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[AnnualInvestmentAllowanceAnswers]] =
     for {
@@ -170,8 +174,17 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
 
   private def createFullJourneyAnswersWithApiData[A](ctx: JourneyContextWithNino, dbAnswers: Option[A])(implicit
       hc: HeaderCarrier): ApiResultT[Option[FrontendAnswers[A]]] = {
+
     val result = connector.getAnnualSummaries(ctx).map {
       case Right(annualSummaries) => buildJourneyAnswers(dbAnswers, annualSummaries)
+      case Left(_)                => None
+    }
+    EitherT.liftF(result)
+  }
+
+  private def getAnnualSummaries[A](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BigDecimal]] = {
+    val result = connector.getAnnualSummaries(ctx).map {
+      case Right(annualSummaries) => annualSummaries.annualAdjustments.flatMap(_.balancingChargeOther)
       case Left(_)                => None
     }
     EitherT.liftF(result)
@@ -183,7 +196,6 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
         case answers: ZeroEmissionCarsDb          => ZeroEmissionCarsAnswers(answers, annualSummaries)
         case answers: ZeroEmissionGoodsVehicleDb  => ZeroEmissionGoodsVehicleAnswers(answers, annualSummaries)
         case answers: BalancingAllowanceDb        => BalancingAllowanceAnswers(answers, annualSummaries)
-        case answers: BalancingChargeDb           => BalancingChargeAnswers(answers, annualSummaries)
         case answers: AnnualInvestmentAllowanceDb => AnnualInvestmentAllowanceAnswers(answers, annualSummaries)
         case _: WritingDownAllowanceDb            => WritingDownAllowanceAnswers(annualSummaries)
         case answers: SpecialTaxSitesDb           => SpecialTaxSitesAnswers(answers, annualSummaries)

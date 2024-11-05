@@ -33,10 +33,4 @@ final case class BalancingChargeAnswers(balancingCharge: Boolean, balancingCharg
 
 object BalancingChargeAnswers {
   implicit val formats: OFormat[BalancingChargeAnswers] = Json.format[BalancingChargeAnswers]
-
-  def apply(dbAnswers: BalancingChargeDb, annualAdjustments: api_1803.SuccessResponseSchema): BalancingChargeAnswers =
-    new BalancingChargeAnswers(
-      annualAdjustments.annualAdjustments.flatMap(_.balancingChargeOther).isDefined,
-      balancingChargeAmount = annualAdjustments.annualAdjustments.flatMap(_.balancingChargeOther)
-    )
 }
