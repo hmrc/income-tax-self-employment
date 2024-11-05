@@ -176,15 +176,15 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       assert(result === None)
     }
 
-    "return answers if they exist" in {
+    "return api answers when api answer and db answer both exists" in {
       val dbAnswers = genOne(balancingChargeAnswersGen)
       val updatedResponse: SuccessResponseSchema =
-        api1803SuccessResponse.copy(annualAdjustments = Some(
+        api1803SuccessResponse.copy(annualAdjustments = Option(
           AnnualAdjustmentsType.empty.copy(
-            balancingChargeOther = if (dbAnswers.balancingCharge) Some(100.00) else None
+            balancingChargeOther = if (dbAnswers.balancingCharge) Option(100.00) else None
           )))
 
-      val connector1: StubIFSConnector =
+      val connector: StubIFSConnector =
         StubIFSConnector(
           createAmendSEAnnualSubmissionResult = ().asRight,
           getAnnualSummariesResult = updatedResponse.asRight
@@ -192,17 +192,43 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
 
       val journeyAnswers: JourneyAnswers =
         mkJourneyAnswers(JourneyName.BalancingCharge, JourneyStatus.Completed, Json.toJsObject(dbAnswers))
-      val services = new CapitalAllowancesAnswersServiceImpl(
-        connector1,
+      val service = new CapitalAllowancesAnswersServiceImpl(
+        connector,
         StubJourneyAnswersRepository(
-          getAnswer = Some(journeyAnswers)
+          getAnswer = Option(journeyAnswers)
         ))
-      val result = services.getBalancingCharge(journeyCtxWithNino).rightValue
+      val result = service.getBalancingCharge(journeyCtxWithNino).rightValue
       val expectedAnswers = BalancingChargeAnswers(
         dbAnswers.balancingCharge,
         updatedResponse.annualAdjustments.flatMap(_.balancingChargeOther)
       )
-      result shouldBe Some(expectedAnswers)
+      result shouldBe Option(expectedAnswers)
+    }
+
+    "return API answer if they are available and there is no answer from the database." in {
+      val updatedResponse: SuccessResponseSchema =
+        api1803SuccessResponse.copy(annualAdjustments = Option(
+          AnnualAdjustmentsType.empty.copy(
+            balancingChargeOther = Option(500)
+          )))
+
+      val connector: StubIFSConnector =
+        StubIFSConnector(
+          createAmendSEAnnualSubmissionResult = ().asRight,
+          getAnnualSummariesResult = updatedResponse.asRight
+        )
+
+      val service = new CapitalAllowancesAnswersServiceImpl(
+        connector,
+        StubJourneyAnswersRepository(
+          getAnswer = None
+        ))
+      val result = service.getBalancingCharge(journeyCtxWithNino).rightValue
+      val expectedAnswers = BalancingChargeAnswers(
+        balancingCharge = true,
+        updatedResponse.annualAdjustments.flatMap(_.balancingChargeOther)
+      )
+      result shouldBe Option(expectedAnswers)
     }
   }
 }
