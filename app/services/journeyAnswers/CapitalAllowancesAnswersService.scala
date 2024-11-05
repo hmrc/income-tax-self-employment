@@ -183,11 +183,10 @@ class CapitalAllowancesAnswersServiceImpl @Inject() (connector: IFSConnector, re
   }
 
   private def getAnnualSummaries[A](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BigDecimal]] = {
-    val result = connector.getAnnualSummaries(ctx).map {
+    EitherT.liftF(connector.getAnnualSummaries(ctx).map {
       case Right(annualSummaries) => annualSummaries.annualAdjustments.flatMap(_.balancingChargeOther)
-      case Left(_)                => None
-    }
-    EitherT.liftF(result)
+      case Left(_) => None
+    })
   }
 
   private def buildJourneyAnswers[A](dbAnswers: Option[A], annualSummaries: SuccessResponseSchema): Option[FrontendAnswers[A]] =
