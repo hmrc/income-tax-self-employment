@@ -205,7 +205,7 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       result shouldBe Option(expectedAnswers)
     }
 
-    "return api answers if they exist and db answer is missing" in {
+    "return API answer if they are available and there is no answer from the database." in {
       val updatedResponse: SuccessResponseSchema =
         api1803SuccessResponse.copy(annualAdjustments = Option(
           AnnualAdjustmentsType.empty.copy(
