@@ -18,13 +18,8 @@ package models.connector.api_1505
 
 import play.api.libs.json.{Format, Json}
 
-// TODO SASS-10335 make necessary changes to these models. Split them into separate files if needed like other API folders do
-case class CreateLossClaimRequestBody(incomeSourceId: String, reliefClaimed: String, taxYear: Int)
-object CreateLossClaimRequestBody {
-  implicit lazy val format: Format[CreateLossClaimRequestBody] = Json.format[CreateLossClaimRequestBody]
-}
+case class SuccessResponseAPI1505(claimId: String)
 
-case class CreateLossClaimResponseBody(claimId: String)
-object CreateLossClaimResponseBody {
-  implicit lazy val format: Format[CreateLossClaimResponseBody] = Json.format[CreateLossClaimResponseBody]
+object SuccessResponseAPI1505 {
+  implicit lazy val format: Format[SuccessResponseAPI1505] = Json.format[SuccessResponseAPI1505]
 }

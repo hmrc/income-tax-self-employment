@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,13 @@ package services.journeyAnswers
 import cats.data.EitherT
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common.{JourneyContextWithNino, JourneyName}
-import models.connector.api_1505.CreateLossClaimRequestBody
+import models.connector.api_1505.{RequestSchemaAPI1505, SuccessResponseAPI1505}
 import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
 import models.domain.ApiResultT
-import models.error.ServiceError
+import models.error.{DownstreamError, ServiceError}
 import models.frontend.adjustments.ProfitOrLossJourneyAnswers
-import play.api.http.Status.NOT_FOUND
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -65,13 +65,14 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 
   private def createUpdateOrDeleteLossClaim(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
+
     for {
       maybeExistingLossClaim <- getLossClaimByBusinessId(ctx)
       result                 <- handleLossClaim(ctx, maybeExistingLossClaim, answers.toLossClaimSubmission)
     } yield result
 
   private def getLossClaimByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[Unit]] =
-    // TODO SASS-10335:
+    // TODO SASS-10335: -- this is now the List logic not 10335 connectivity ticket
     // 1. Call list of claims (individual claims are called/edited/deleted by claimId. We have businessId, not claimId)
     // 2. If returns Left(Error(Not_Found)), return Right(None)
     // 3. Filter Option{ single lossClaim } from the list by its businessId if it exists, else None
@@ -86,11 +87,43 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 //    }
     EitherT.rightT[Future, ServiceError](None)
 
-  private def handleLossClaim(ctx: JourneyContextWithNino, maybeExistingData: Option[Unit], maybeSubmissionData: Option[CreateLossClaimRequestBody])(
+  def mapDownstreamErrors(serviceError: ServiceError): DownstreamError = {
+    serviceError.status match {
+      case "INVALID_TAXABLE_ENTITY_ID"  => DownstreamError.GenericDownstreamError(BAD_REQUEST, "The provided NINO is invalid.")
+      case "DUPLICATE"                  => DownstreamError.GenericDownstreamError(BAD_REQUEST, "This claim matches a previous submission.")
+      case "ACCOUNTING_PERIOD_NOT_ENDED"=> DownstreamError.GenericDownstreamError(BAD_REQUEST, "The accounting period has not yet ended.")
+      case "INVALID_CLAIM_TYPE"         => DownstreamError.GenericDownstreamError(BAD_REQUEST, "The claim type supplied is not available for this type of loss.")
+      case "NO_ACCOUNTING_PERIOD"       => DownstreamError.GenericDownstreamError(BAD_REQUEST, "For the year of the claim there is no accounting period.")
+      case "TAX_YEAR_NOT_SUPPORTED"     => DownstreamError.GenericDownstreamError(BAD_REQUEST, "Tax year not supported, because it precedes the earliest allowable tax year.")
+      case "INCOME_SOURCE_NOT_FOUND"    => DownstreamError.GenericDownstreamError(NOT_FOUND, "Matching resource not found.")
+      case "INVALID_CORRELATIONID"      => DownstreamError.GenericDownstreamError(INTERNAL_SERVER_ERROR, "Internal server error.")
+      case "INVALID_PAYLOAD"            => DownstreamError.GenericDownstreamError(INTERNAL_SERVER_ERROR, "Internal server error.")
+      case "SERVER_ERROR"               => DownstreamError.GenericDownstreamError(INTERNAL_SERVER_ERROR, "Internal server error.")
+      case "SERVICE_UNAVAILABLE"        => DownstreamError.GenericDownstreamError(INTERNAL_SERVER_ERROR, "Internal server error.")
+      case _ => DownstreamError.GenericDownstreamError(INTERNAL_SERVER_ERROR, "An unexpected error occurred.")
+    }
+  }
+
+  def createLossClaimType(ctx: JourneyContextWithNino, request: RequestSchemaAPI1505)(implicit
+                                                         hc: HeaderCarrier,
+                                                         ec: ExecutionContext): ApiResultT[Option[SuccessResponseAPI1505]] = {
+
+    EitherT {
+      ifsConnector
+        .createLossClaim(ctx, request)
+        .value
+        .map {
+          case Right(successResponse) => Right(Some(successResponse))
+          case Left(error) => Left(mapDownstreamErrors(error))
+        }
+    }
+  }
+
+  private def handleLossClaim(ctx: JourneyContextWithNino, maybeExistingData: Option[Unit], maybeSubmissionData: Option[RequestSchemaAPI1505])(
       implicit hc: HeaderCarrier): ApiResultT[Unit] =
     (maybeExistingData, maybeSubmissionData) match {
-      // TODO SASS-10335 update endpoints below
-      case (None, Some(submissionData))               => ifsConnector.createLossClaim(ctx, submissionData).map(_ => ()) // Create
+      // TODO SASS-10335 update endpoints below -- not just this ticket anymore, it was split into CRUD
+      case (None, Some(submissionData))               => createLossClaimType(ctx, submissionData).map(_ => ())      // Create
       case (Some(existingData), Some(submissionData)) => EitherT.rightT[Future, ServiceError](())                       // Update
       case (Some(_), None)                            => EitherT.rightT[Future, ServiceError](())                       // Delete
       case (None, None)                               => EitherT.rightT[Future, ServiceError](())                       // Do nothing

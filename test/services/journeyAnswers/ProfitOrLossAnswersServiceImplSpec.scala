@@ -17,12 +17,7 @@
 package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
-import models.connector.api_1802.request.{
-  AnnualAdjustments,
-  AnnualAllowances,
-  CreateAmendSEAnnualSubmissionRequestBody,
-  CreateAmendSEAnnualSubmissionRequestData
-}
+import models.connector.api_1802.request._
 import models.connector.api_1500.LossType
 import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
 import models.connector.api_1870
