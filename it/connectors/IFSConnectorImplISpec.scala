@@ -18,7 +18,7 @@ package connectors
 
 import base.IntegrationBaseSpec
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
-import connectors.data.{Api1786Test, Api1803Test}
+import connectors.data.{Api1505Test, Api1786Test, Api1803Test}
 import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import models.common.TaxYear.{asTys, endDate, startDate}
@@ -200,6 +200,18 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
       )
       val result = connector.deleteDisclosuresSubmission(ctx).value.futureValue
       assert(result === Right(()))
+    }
+  }
+
+  "createClaimLoss" must {
+    "return the transaction reference" in new Api1505Test {
+      stubPostWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = successResponseRaw,
+        expectedStatus = CREATED)
+
+      connector.createLossClaim(ctx, requestBody).value.futureValue shouldBe successResponse.asRight
     }
   }
 
