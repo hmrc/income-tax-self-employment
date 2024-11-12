@@ -25,7 +25,7 @@ import models.common.{BusinessId, JourneyContextWithNino}
 import models.connector._
 import models.connector.api_1171.{BusinessDataDetails, BusinessDataDetailsTestData}
 import models.connector.api_1500.LossType
-import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimResponseBody}
+import models.connector.api_1505.{RequestSchemaAPI1505, SuccessResponseAPI1505}
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
@@ -60,7 +60,7 @@ case class StubIFSConnector(
     getAnnualSummariesResultTest2: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
     getAnnualSummariesResultTest3: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
     getAnnualSummariesResultTest4: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
-    createLossClaimResult: Either[DownstreamError, CreateLossClaimResponseBody] = Right(CreateLossClaimResponseBody("REPLACE-ME"))
+    createLossClaimResult: Either[DownstreamError, SuccessResponseAPI1505] = Right(SuccessResponseAPI1505("REPLACE-ME"))
 ) extends IFSConnector {
   var amendSEPeriodSummaryResultData: Option[AmendSEPeriodSummaryRequestData]                    = None
   var upsertDisclosuresSubmissionData: Option[RequestSchemaAPI1638]                              = None
@@ -138,9 +138,9 @@ case class StubIFSConnector(
     EitherT.fromEither[Future](deleteDisclosuresSubmissionResult)
   }
 
-  def createLossClaim(ctx: JourneyContextWithNino, requestBody: CreateLossClaimRequestBody)(implicit
+  def createLossClaim(ctx: JourneyContextWithNino, requestBody: RequestSchemaAPI1505)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): ApiResultT[CreateLossClaimResponseBody] = EitherT.fromEither[Future](createLossClaimResult)
+      ec: ExecutionContext): ApiResultT[SuccessResponseAPI1505] = EitherT.fromEither[Future](createLossClaimResult)
 
 }
 

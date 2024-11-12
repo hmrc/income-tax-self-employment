@@ -25,9 +25,11 @@ import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
+import models.error.ServiceError
 import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhichYearIsLossReported}
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import play.api.libs.json.Json
@@ -41,10 +43,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrivenPropertyChecks {
 
-  val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
-  val notFoundError   = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
+  val downstreamError: SingleDownstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
+  val notFoundError: SingleDownstreamError   = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
 
-  def expectedAnnualSummariesData(adjustments: Option[AnnualAdjustments], allowances: Option[AnnualAllowances]) =
+  def expectedAnnualSummariesData(adjustments: Option[AnnualAdjustments], allowances: Option[AnnualAllowances]): CreateAmendSEAnnualSubmissionRequestData =
     CreateAmendSEAnnualSubmissionRequestData(
       journeyCtxWithNino.taxYear,
       journeyCtxWithNino.nino,
@@ -344,7 +346,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
     }
   }
 
-  val listWithNoMatchingIds = List(
+  val listWithNoMatchingIds: List[LossData] = List(
     LossData("11111", "wwwwwww", LossType.SelfEmployment, 400, "2022-23", LocalDateTime.now),
     LossData("22222", "xxxxxxx", LossType.SelfEmployment, 400, "2022-23", LocalDateTime.now),
     LossData("33333", "zzzzzzz", LossType.SelfEmployment, 500, "2021-22", LocalDateTime.now)
@@ -363,20 +365,20 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
   "getLossByBusinessId" should {
     forAll(getLossByBusinessIdTestCases) { (testDescription, connectorResponse, expectedResult) =>
       s"return $testDescription" in new StubbedService {
-        override val ifsBusinessDetailsConnector = StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = connectorResponse)
-        val result                               = service.getBroughtForwardLossByBusinessId(journeyCtxWithNino).value.futureValue
+        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = connectorResponse)
+        val result: Either[ServiceError, Option[LossData]]                        = service.getBroughtForwardLossByBusinessId(journeyCtxWithNino).value.futureValue
 
         assert(result == expectedResult)
       }
     }
   }
 }
-
 trait StubbedService {
-  val ifsConnector                = new StubIFSConnector()
-  val ifsBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
-  val repository                  = StubJourneyAnswersRepository()
+  val ifsConnector: StubIFSConnector                               = new StubIFSConnector()
+  val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
+  val repository: StubJourneyAnswersRepository                     = StubJourneyAnswersRepository()
+  val mockCreateClaimLossService:CreateLossClaimService            = mock[CreateLossClaimService]
 
   def service: ProfitOrLossAnswersServiceImpl =
-    new ProfitOrLossAnswersServiceImpl(ifsConnector, ifsBusinessDetailsConnector, repository)
+    new ProfitOrLossAnswersServiceImpl(ifsConnector, ifsBusinessDetailsConnector, mockCreateClaimLossService, repository)
 }

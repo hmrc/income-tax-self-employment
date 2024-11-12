@@ -19,13 +19,13 @@ package services.journeyAnswers
 import cats.data.EitherT
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common.{JourneyContextWithNino, JourneyName}
-import models.connector.api_1505.{RequestSchemaAPI1505, SuccessResponseAPI1505}
+import models.connector.api_1505.RequestSchemaAPI1505
 import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
 import models.domain.ApiResultT
-import models.error.{DownstreamError, ServiceError}
+import models.error.ServiceError
 import models.frontend.adjustments.ProfitOrLossJourneyAnswers
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND}
+import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -42,6 +42,7 @@ trait ProfitOrLossAnswersService {
 @Singleton
 class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
                                                 ifsBusinessDetailsConnector: IFSBusinessDetailsConnector,
+                                                createLossClaimService: CreateLossClaimService,
                                                 repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends ProfitOrLossAnswersService {
 
@@ -87,44 +88,12 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 //    }
     EitherT.rightT[Future, ServiceError](None)
 
-  def mapDownstreamErrors(serviceError: ServiceError): DownstreamError = {
-    serviceError.status match {
-      case "INVALID_TAXABLE_ENTITY_ID"  => DownstreamError.GenericDownstreamError(BAD_REQUEST, "The provided NINO is invalid.")
-      case "DUPLICATE"                  => DownstreamError.GenericDownstreamError(BAD_REQUEST, "This claim matches a previous submission.")
-      case "ACCOUNTING_PERIOD_NOT_ENDED"=> DownstreamError.GenericDownstreamError(BAD_REQUEST, "The accounting period has not yet ended.")
-      case "INVALID_CLAIM_TYPE"         => DownstreamError.GenericDownstreamError(BAD_REQUEST, "The claim type supplied is not available for this type of loss.")
-      case "NO_ACCOUNTING_PERIOD"       => DownstreamError.GenericDownstreamError(BAD_REQUEST, "For the year of the claim there is no accounting period.")
-      case "TAX_YEAR_NOT_SUPPORTED"     => DownstreamError.GenericDownstreamError(BAD_REQUEST, "Tax year not supported, because it precedes the earliest allowable tax year.")
-      case "INCOME_SOURCE_NOT_FOUND"    => DownstreamError.GenericDownstreamError(NOT_FOUND, "Matching resource not found.")
-      case "INVALID_CORRELATIONID"      => DownstreamError.GenericDownstreamError(INTERNAL_SERVER_ERROR, "Internal server error.")
-      case "INVALID_PAYLOAD"            => DownstreamError.GenericDownstreamError(INTERNAL_SERVER_ERROR, "Internal server error.")
-      case "SERVER_ERROR"               => DownstreamError.GenericDownstreamError(INTERNAL_SERVER_ERROR, "Internal server error.")
-      case "SERVICE_UNAVAILABLE"        => DownstreamError.GenericDownstreamError(INTERNAL_SERVER_ERROR, "Internal server error.")
-      case _ => DownstreamError.GenericDownstreamError(INTERNAL_SERVER_ERROR, "An unexpected error occurred.")
-    }
-  }
-
-  def createLossClaimType(ctx: JourneyContextWithNino, request: RequestSchemaAPI1505)(implicit
-                                                         hc: HeaderCarrier,
-                                                         ec: ExecutionContext): ApiResultT[Option[SuccessResponseAPI1505]] = {
-
-    EitherT {
-      ifsConnector
-        .createLossClaim(ctx, request)
-        .value
-        .map {
-          case Right(successResponse) => Right(Some(successResponse))
-          case Left(error) => Left(mapDownstreamErrors(error))
-        }
-    }
-  }
-
   private def handleLossClaim(ctx: JourneyContextWithNino, maybeExistingData: Option[Unit], maybeSubmissionData: Option[RequestSchemaAPI1505])(
       implicit hc: HeaderCarrier): ApiResultT[Unit] =
     (maybeExistingData, maybeSubmissionData) match {
       // TODO SASS-10335 update endpoints below -- not just this ticket anymore, it was split into CRUD
-      case (None, Some(submissionData))               => createLossClaimType(ctx, submissionData).map(_ => ())      // Create
-      case (Some(existingData), Some(submissionData)) => EitherT.rightT[Future, ServiceError](())                       // Update
+      case (None, Some(submissionData))               => createLossClaimService.createLossClaimType(ctx, submissionData).map(_ => ()) // Create
+      case (Some(_), Some(_))                         => EitherT.rightT[Future, ServiceError](())                       // Update
       case (Some(_), None)                            => EitherT.rightT[Future, ServiceError](())                       // Delete
       case (None, None)                               => EitherT.rightT[Future, ServiceError](())                       // Do nothing
     }
