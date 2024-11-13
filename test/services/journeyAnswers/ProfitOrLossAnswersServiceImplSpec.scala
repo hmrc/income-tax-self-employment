@@ -46,7 +46,8 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
   val downstreamError: SingleDownstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
   val notFoundError: SingleDownstreamError   = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
 
-  def expectedAnnualSummariesData(adjustments: Option[AnnualAdjustments], allowances: Option[AnnualAllowances]): CreateAmendSEAnnualSubmissionRequestData =
+  def expectedAnnualSummariesData(adjustments: Option[AnnualAdjustments],
+                                  allowances: Option[AnnualAllowances]): CreateAmendSEAnnualSubmissionRequestData =
     CreateAmendSEAnnualSubmissionRequestData(
       journeyCtxWithNino.taxYear,
       journeyCtxWithNino.nino,
@@ -365,8 +366,9 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
   "getLossByBusinessId" should {
     forAll(getLossByBusinessIdTestCases) { (testDescription, connectorResponse, expectedResult) =>
       s"return $testDescription" in new StubbedService {
-        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = connectorResponse)
-        val result: Either[ServiceError, Option[LossData]]                        = service.getBroughtForwardLossByBusinessId(journeyCtxWithNino).value.futureValue
+        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = connectorResponse)
+        val result: Either[ServiceError, Option[LossData]] = service.getBroughtForwardLossByBusinessId(journeyCtxWithNino).value.futureValue
 
         assert(result == expectedResult)
       }
@@ -377,7 +379,7 @@ trait StubbedService {
   val ifsConnector: StubIFSConnector                               = new StubIFSConnector()
   val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
   val repository: StubJourneyAnswersRepository                     = StubJourneyAnswersRepository()
-  val mockCreateClaimLossService:CreateLossClaimService            = mock[CreateLossClaimService]
+  val mockCreateClaimLossService: CreateLossClaimService           = mock[CreateLossClaimService]
 
   def service: ProfitOrLossAnswersServiceImpl =
     new ProfitOrLossAnswersServiceImpl(ifsConnector, ifsBusinessDetailsConnector, mockCreateClaimLossService, repository)

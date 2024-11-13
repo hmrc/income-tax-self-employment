@@ -29,6 +29,7 @@ import models.connector.api_1803.SuccessResponseSchema
 import models.connector.api_1894.request._
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
+import models.error.ServiceError
 import org.scalatest.EitherValues._
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.{CREATED, NOT_FOUND, OK}
@@ -36,8 +37,8 @@ import play.api.libs.json.Json
 
 class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
-  val connector = new IFSConnectorImpl(httpClient, appConfig)
-  val ctx       = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
+  val connector: IFSConnectorImpl = new IFSConnectorImpl(httpClient, appConfig)
+  val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
 
   "getPeriodicSummaryDetail" must {
     "return successful response" in new Api1786Test {
@@ -172,7 +173,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedStatus = OK,
         expectedResponse = responseJson
       )
-      val result = connector.getDisclosuresSubmission(ctx).value.futureValue.value
+      val result: Option[SuccessResponseAPI1639] = connector.getDisclosuresSubmission(ctx).value.futureValue.value
       assert(result === Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))))
     }
   }
@@ -186,7 +187,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedResponse = "",
         expectedStatus = CREATED
       )
-      val result = connector.upsertDisclosuresSubmission(ctx, request).value.futureValue
+      val result: Either[ServiceError, Unit] = connector.upsertDisclosuresSubmission(ctx, request).value.futureValue
       assert(result === Right(()))
     }
   }
@@ -198,7 +199,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedResponse = "",
         expectedStatus = OK
       )
-      val result = connector.deleteDisclosuresSubmission(ctx).value.futureValue
+      val result: Either[ServiceError, Unit] = connector.deleteDisclosuresSubmission(ctx).value.futureValue
       assert(result === Right(()))
     }
   }

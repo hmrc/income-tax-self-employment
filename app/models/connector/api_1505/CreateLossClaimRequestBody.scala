@@ -18,8 +18,8 @@ package models.connector.api_1505
 
 import play.api.libs.json.{Format, Json}
 
-case class RequestSchemaAPI1505(incomeSourceId: String, reliefClaimed: String, taxYear: Int)
+case class CreateLossClaimRequestBody(incomeSourceId: String, reliefClaimed: String, taxYear: Int)
 
-object RequestSchemaAPI1505 {
-  implicit lazy val format: Format[RequestSchemaAPI1505] = Json.format[RequestSchemaAPI1505]
+object CreateLossClaimRequestBody {
+  implicit lazy val format: Format[CreateLossClaimRequestBody] = Json.format[CreateLossClaimRequestBody]
 }

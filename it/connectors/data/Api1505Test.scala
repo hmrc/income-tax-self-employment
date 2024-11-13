@@ -16,7 +16,7 @@
 
 package connectors.data
 
-import models.connector.api_1505.{RequestSchemaAPI1505, SuccessResponseAPI1505}
+import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import play.api.libs.json.Json
 import utils.BaseSpec.nino
 
@@ -30,11 +30,11 @@ trait Api1505Test {
        |}
        |""".stripMargin
 
-  val requestBody: RequestSchemaAPI1505 = RequestSchemaAPI1505(
+  val requestBody: CreateLossClaimRequestBody = CreateLossClaimRequestBody(
     incomeSourceId = "012345678912345",
-    reliefClaimed =  "CF",
+    reliefClaimed = "CF",
     taxYear = 2020
   )
 
-  val successResponse: SuccessResponseAPI1505 = Json.parse(successResponseRaw).as[SuccessResponseAPI1505]
+  val successResponse: CreateLossClaimSuccessResponse = Json.parse(successResponseRaw).as[CreateLossClaimSuccessResponse]
 }
