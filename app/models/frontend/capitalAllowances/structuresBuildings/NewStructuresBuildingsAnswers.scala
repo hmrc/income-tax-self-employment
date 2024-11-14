@@ -61,6 +61,7 @@ object NewStructuresBuildingsAnswers {
     val buildings = structuredBuildingAllowance.map(_.map { allowance =>
       NewStructureBuilding(
         allowance.firstYear.map(_.qualifyingDate).map(date => LocalDate.parse(date, dateFormatter)),
+        allowance.firstYear.map(_.qualifyingAmountExpenditure),
         Some(StructuresBuildingsLocation.apply(allowance.building)),
         Some(allowance.amount)
       )
