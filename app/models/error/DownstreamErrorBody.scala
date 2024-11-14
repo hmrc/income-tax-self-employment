@@ -58,10 +58,34 @@ object DownstreamErrorBody {
 
     val parsingError: SingleDownstreamErrorBody = SingleDownstreamErrorBody("PARSING_ERROR", "Error parsing response from API")
 
-    val invalidNino: SingleDownstreamErrorBody =
-      SingleDownstreamErrorBody("INVALID_NINO", "Submission has not passed validation. Invalid parameter NINO.")
+    val invalidTaxableEntityId: SingleDownstreamErrorBody =
+      SingleDownstreamErrorBody("INVALID_TAXABLE_ENTITY_ID", "Submission has not passed validation. Invalid parameter taxableEntityId.")
+
+    val invalidPayload: SingleDownstreamErrorBody =
+      SingleDownstreamErrorBody("INVALID_PAYLOAD", "Submission has not passed validation. Invalid payload.")
+
+    val invalidCorrelationId: SingleDownstreamErrorBody =
+      SingleDownstreamErrorBody("INVALID_CORRELATIONID", "Submission has not passed validation. Invalid Header parameter CorrelationId.")
+
+    val accountingPeriodNotEnded: SingleDownstreamErrorBody =
+      SingleDownstreamErrorBody("ACCOUNTING_PERIOD_NOT_ENDED", "The remote endpoint has indicated that <Message received from backend ITSD>.")
+
+    val invalidClaimType: SingleDownstreamErrorBody =
+      SingleDownstreamErrorBody("INVALID_CLAIM_TYPE", "The remote endpoint has indicated that the claim type not valid for income source.")
+
+    val noAccountingPeriod: SingleDownstreamErrorBody =
+      SingleDownstreamErrorBody("NO_ACCOUNTING_PERIOD", "The remote endpoint has indicated that no accounting period for the year of the claim.")
+
+    val taxYearNotSupported: SingleDownstreamErrorBody =
+      SingleDownstreamErrorBody("TAX_YEAR_NOT_SUPPORTED", "The remote endpoint has indicated that the brought forward losses and loss claims are not supported for the specified tax year.")
 
     val notFound: SingleDownstreamErrorBody = SingleDownstreamErrorBody("NOT_FOUND", "The remote endpoint has indicated that no data can be found.")
+
+    val incomeSourceNotFound: SingleDownstreamErrorBody =
+      SingleDownstreamErrorBody("INCOME_SOURCE_NOT_FOUND", "The remote endpoint has indicated that the income source cannot be found.")
+
+    val duplicate: SingleDownstreamErrorBody =
+      SingleDownstreamErrorBody("DUPLICATE", "The remote endpoint has indicated that the claim for relief already exists.")
 
     val serverError: SingleDownstreamErrorBody =
       SingleDownstreamErrorBody("SERVER_ERROR", "IFS is currently experiencing problems that require live service intervention.")

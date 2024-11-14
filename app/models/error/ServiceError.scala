@@ -61,7 +61,7 @@ object ServiceError {
   }
 
   case object FormatNinoError extends ServiceError {
-    override val errorMessage: String = "The NINO format is invalid."
+    override val errorMessage: String = "The provided NINO is invalid."
     override val status: Int          = BAD_REQUEST
   }
 
@@ -76,12 +76,12 @@ object ServiceError {
   }
 
   case object MatchingResourceNotFoundError extends ServiceError {
-    override val errorMessage: String = "The resource could not be found."
+    override val errorMessage: String = "Matching resource not found."
     override val status: Int          = NOT_FOUND
   }
 
   case object RuleDuplicateSubmissionError extends ServiceError {
-    override val errorMessage: String = "Duplicate submission."
+    override val errorMessage: String = "This claim matches a previous submission."
     override val status: Int          = BAD_REQUEST
   }
 
@@ -91,17 +91,17 @@ object ServiceError {
   }
 
   case object RuleTypeOfClaimInvalidError extends ServiceError {
-    override val errorMessage: String = "The type of claim is invalid."
+    override val errorMessage: String = "The claim type supplied is not available for this type of loss."
     override val status: Int          = BAD_REQUEST
   }
 
   case object RuleNoAccountingPeriodError extends ServiceError {
-    override val errorMessage: String = "No accounting period."
+    override val errorMessage: String = "For the year of the claim there is no accounting period."
     override val status: Int          = BAD_REQUEST
   }
 
   case object RuleTaxYearNotSupportedError extends ServiceError {
-    override val errorMessage: String = "The tax year is not supported."
+    override val errorMessage: String = "Tax year not supported, because it precedes the earliest allowable tax year."
     override val status: Int          = BAD_REQUEST
   }
 

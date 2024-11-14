@@ -78,6 +78,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         StubIFSConnector(
           getAnnualSummariesResult = api1803SuccessResponse.asRight
         )
+
       val answers        = yesBroughtForwardLossAnswers
       val allowancesData = AnnualAllowances(None, None, None, Some(5000), None, None, None, None, None, None, Some(5000), None)
       val expectedAnnualSummariesAnswers =

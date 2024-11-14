@@ -28,6 +28,7 @@ import connectors.IFSConnector
 import models.common.JourneyContextWithNino
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.domain.ApiResultT
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.{DownstreamError, ServiceError}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec.journeyCtxWithNino
@@ -48,26 +49,220 @@ class CreateLossClaimServiceSpec extends AnyWordSpec with Matchers with MockitoS
   )
 
   val mockServiceError: ServiceError = mock[ServiceError]
+  val mockSingleDownstreamErrorBody: SingleDownstreamErrorBody = mock[SingleDownstreamErrorBody]
 
   trait Setup {
     val mockIFSConnector: IFSConnector = mock[IFSConnector]
-    val service                        = new CreateLossClaimService(mockIFSConnector)
-    implicit val hc: HeaderCarrier     = HeaderCarrier()
+    val service = new CreateLossClaimService(mockIFSConnector)
+    implicit val hc: HeaderCarrier = HeaderCarrier()
   }
 
   "CreateLossClaimService" should {
+    "return success response" when {
+      "IFSConnector successfully creates a loss claim" in new Setup {
+        val apiResult: ApiResultT[CreateLossClaimSuccessResponse] =
+          EitherT(Future.successful(Right(successResponse): Either[DownstreamError, CreateLossClaimSuccessResponse]))
 
-    "return success response when IFSConnector returns success " in new Setup {
-      val apiResult: ApiResultT[CreateLossClaimSuccessResponse] =
-        EitherT(Future.successful(Right(successResponse): Either[DownstreamError, CreateLossClaimSuccessResponse]))
+        when(mockIFSConnector.createLossClaim(any[JourneyContextWithNino], any[CreateLossClaimRequestBody])(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(apiResult)
 
-      when(mockIFSConnector.createLossClaim(any[JourneyContextWithNino], any[CreateLossClaimRequestBody])(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(apiResult)
+        val result: Either[ServiceError, Option[CreateLossClaimSuccessResponse]] =
+          service.createLossClaimType(journeyCtxWithNino, requestBody).value.futureValue
 
-      val result: Either[ServiceError, Option[CreateLossClaimSuccessResponse]] =
-        service.createLossClaimType(journeyCtxWithNino, requestBody).value.futureValue
+        result shouldBe Right(Some(successResponse))
+      }
+    }
 
-      result shouldBe Right(Some(successResponse))
+    "handle DownstreamError and return ServiceError" when {
+        "INVALID_TAXABLE_ENTITY_ID error is returned by IFSConnector" in new Setup {
+
+          when(mockSingleDownstreamErrorBody.status).thenReturn(SingleDownstreamErrorBody.invalidTaxableEntityId.status)
+          when(mockSingleDownstreamErrorBody.errorMessage).thenReturn(SingleDownstreamErrorBody.invalidTaxableEntityId.errorMessage)
+
+          when(mockIFSConnector.createLossClaim(any(), any())(any(), any()))
+            .thenReturn(EitherT.leftT(mockSingleDownstreamErrorBody))
+
+          val result: Future[Either[ServiceError, Option[CreateLossClaimSuccessResponse]]] = service.createLossClaimType(mock[JourneyContextWithNino], requestBody).value
+
+          result.map {
+            case Left(error) => error shouldBe ServiceError.FormatNinoError
+            case Right(_) => fail("Expected a ServiceError but got a success response")
+          }
+        }
+
+      "INVALID_PAYLOAD error is returned by IFSConnector" in new Setup {
+
+        when(mockSingleDownstreamErrorBody.status).thenReturn(SingleDownstreamErrorBody.invalidPayload.status)
+        when(mockSingleDownstreamErrorBody.errorMessage).thenReturn(SingleDownstreamErrorBody.invalidPayload.errorMessage)
+
+        when(mockIFSConnector.createLossClaim(any(), any())(any(), any()))
+          .thenReturn(EitherT.leftT(mockSingleDownstreamErrorBody))
+
+        val result: Future[Either[ServiceError, Option[CreateLossClaimSuccessResponse]]] = service.createLossClaimType(mock[JourneyContextWithNino], requestBody).value
+
+        result.map {
+          case Left(error) => error shouldBe ServiceError.InternalServerError
+          case Right(_) => fail("Expected a ServiceError but got a success response")
+        }
+      }
+
+      "INVALID_CORRELATIONID error is returned by IFSConnector" in new Setup {
+
+        when(mockSingleDownstreamErrorBody.status).thenReturn(SingleDownstreamErrorBody.invalidCorrelationId.status)
+        when(mockSingleDownstreamErrorBody.errorMessage).thenReturn(SingleDownstreamErrorBody.invalidCorrelationId.errorMessage)
+
+        when(mockIFSConnector.createLossClaim(any(), any())(any(), any()))
+          .thenReturn(EitherT.leftT(mockSingleDownstreamErrorBody))
+
+        val result: Future[Either[ServiceError, Option[CreateLossClaimSuccessResponse]]] = service.createLossClaimType(mock[JourneyContextWithNino], requestBody).value
+
+        result.map {
+          case Left(error) => error shouldBe ServiceError.InternalServerError
+          case Right(_) => fail("Expected a ServiceError but got a success response")
+        }
+      }
+
+      "DUPLICATE error is returned by IFSConnector" in new Setup {
+
+        when(mockSingleDownstreamErrorBody.status).thenReturn(SingleDownstreamErrorBody.duplicate.status)
+        when(mockSingleDownstreamErrorBody.errorMessage).thenReturn(SingleDownstreamErrorBody.duplicate.errorMessage)
+
+        when(mockIFSConnector.createLossClaim(any(), any())(any(), any()))
+          .thenReturn(EitherT.leftT(mockSingleDownstreamErrorBody))
+
+        val result: Future[Either[ServiceError, Option[CreateLossClaimSuccessResponse]]] = service.createLossClaimType(mock[JourneyContextWithNino], requestBody).value
+
+        result.map {
+          case Left(error) => error shouldBe ServiceError.RuleDuplicateSubmissionError
+          case Right(_) => fail("Expected a ServiceError but got a success response")
+        }
+      }
+
+      "ACCOUNTING_PERIOD_NOT_ENDED error is returned by IFSConnector" in new Setup {
+
+        when(mockSingleDownstreamErrorBody.status).thenReturn(SingleDownstreamErrorBody.accountingPeriodNotEnded.status)
+        when(mockSingleDownstreamErrorBody.errorMessage).thenReturn(SingleDownstreamErrorBody.accountingPeriodNotEnded.errorMessage)
+
+        when(mockIFSConnector.createLossClaim(any(), any())(any(), any()))
+          .thenReturn(EitherT.leftT(mockSingleDownstreamErrorBody))
+
+        val result: Future[Either[ServiceError, Option[CreateLossClaimSuccessResponse]]] = service.createLossClaimType(mock[JourneyContextWithNino], requestBody).value
+
+        result.map {
+          case Left(error) => error shouldBe ServiceError.RuleAccountingPeriodNotEndedError
+          case Right(_) => fail("Expected a ServiceError but got a success response")
+        }
+      }
+
+      "INVALID_CLAIM_TYPE error is returned by IFSConnector" in new Setup {
+
+        when(mockSingleDownstreamErrorBody.status).thenReturn(SingleDownstreamErrorBody.invalidClaimType.status)
+        when(mockSingleDownstreamErrorBody.errorMessage).thenReturn(SingleDownstreamErrorBody.invalidClaimType.errorMessage)
+
+        when(mockIFSConnector.createLossClaim(any(), any())(any(), any()))
+          .thenReturn(EitherT.leftT(mockSingleDownstreamErrorBody))
+
+        val result: Future[Either[ServiceError, Option[CreateLossClaimSuccessResponse]]] = service.createLossClaimType(mock[JourneyContextWithNino], requestBody).value
+
+        result.map {
+          case Left(error) => error shouldBe ServiceError.RuleTypeOfClaimInvalidError
+          case Right(_) => fail("Expected a ServiceError but got a success response")
+        }
+      }
+
+      "NO_ACCOUNTING_PERIOD error is returned by IFSConnector" in new Setup {
+
+        when(mockSingleDownstreamErrorBody.status).thenReturn(SingleDownstreamErrorBody.noAccountingPeriod.status)
+        when(mockSingleDownstreamErrorBody.errorMessage).thenReturn(SingleDownstreamErrorBody.noAccountingPeriod.errorMessage)
+
+        when(mockIFSConnector.createLossClaim(any(), any())(any(), any()))
+          .thenReturn(EitherT.leftT(mockSingleDownstreamErrorBody))
+
+        val result: Future[Either[ServiceError, Option[CreateLossClaimSuccessResponse]]] = service.createLossClaimType(mock[JourneyContextWithNino], requestBody).value
+
+        result.map {
+          case Left(error) => error shouldBe ServiceError.RuleNoAccountingPeriodError
+          case Right(_) => fail("Expected a ServiceError but got a success response")
+        }
+      }
+
+      "TAX_YEAR_NOT_SUPPORTED error is returned by IFSConnector" in new Setup {
+
+        when(mockSingleDownstreamErrorBody.status).thenReturn(SingleDownstreamErrorBody.taxYearNotSupported.status)
+        when(mockSingleDownstreamErrorBody.errorMessage).thenReturn(SingleDownstreamErrorBody.taxYearNotSupported.errorMessage)
+
+        when(mockIFSConnector.createLossClaim(any(), any())(any(), any()))
+          .thenReturn(EitherT.leftT(mockSingleDownstreamErrorBody))
+
+        val result: Future[Either[ServiceError, Option[CreateLossClaimSuccessResponse]]] = service.createLossClaimType(mock[JourneyContextWithNino], requestBody).value
+
+        result.map {
+          case Left(error) => error shouldBe ServiceError.RuleTaxYearNotSupportedError
+          case Right(_) => fail("Expected a ServiceError but got a success response")
+        }
+      }
+
+      "INCOME_SOURCE_NOT_FOUND error is returned by IFSConnector" in new Setup {
+
+        when(mockSingleDownstreamErrorBody.status).thenReturn(SingleDownstreamErrorBody.incomeSourceNotFound.status)
+        when(mockSingleDownstreamErrorBody.errorMessage).thenReturn(SingleDownstreamErrorBody.incomeSourceNotFound.errorMessage)
+
+        when(mockIFSConnector.createLossClaim(any(), any())(any(), any()))
+          .thenReturn(EitherT.leftT(mockSingleDownstreamErrorBody))
+
+        val result: Future[Either[ServiceError, Option[CreateLossClaimSuccessResponse]]] = service.createLossClaimType(mock[JourneyContextWithNino], requestBody).value
+
+        result.map {
+          case Left(error) => error shouldBe ServiceError.MatchingResourceNotFoundError
+          case Right(_) => fail("Expected a ServiceError but got a success response")
+        }
+      }
+
+      "SERVER_ERROR error is returned by IFSConnector" in new Setup {
+
+        when(mockSingleDownstreamErrorBody.status).thenReturn(SingleDownstreamErrorBody.serverError.status)
+        when(mockSingleDownstreamErrorBody.errorMessage).thenReturn(SingleDownstreamErrorBody.serverError.errorMessage)
+
+        when(mockIFSConnector.createLossClaim(any(), any())(any(), any()))
+          .thenReturn(EitherT.leftT(mockSingleDownstreamErrorBody))
+
+        val result: Future[Either[ServiceError, Option[CreateLossClaimSuccessResponse]]] = service.createLossClaimType(mock[JourneyContextWithNino], requestBody).value
+
+        result.map {
+          case Left(error) => error shouldBe ServiceError.InternalServerError
+          case Right(_) => fail("Expected a ServiceError but got a success response")
+        }
+      }
+
+      "SERVICE_UNAVAILABLE error is returned by IFSConnector" in new Setup {
+
+        when(mockSingleDownstreamErrorBody.status).thenReturn(SingleDownstreamErrorBody.serviceUnavailable.status)
+        when(mockSingleDownstreamErrorBody.errorMessage).thenReturn(SingleDownstreamErrorBody.serviceUnavailable.errorMessage)
+
+        when(mockIFSConnector.createLossClaim(any(), any())(any(), any()))
+          .thenReturn(EitherT.leftT(mockSingleDownstreamErrorBody))
+
+        val result: Future[Either[ServiceError, Option[CreateLossClaimSuccessResponse]]] = service.createLossClaimType(mock[JourneyContextWithNino], requestBody).value
+
+        result.map {
+          case Left(error) => error shouldBe ServiceError.InternalServerError
+          case Right(_) => fail("Expected a ServiceError but got a success response")
+        }
+      }
+    }
+
+    "return ServiceUnavailableError for an unexpected error" in new Setup {
+      val unexpectedError: SingleDownstreamErrorBody = SingleDownstreamErrorBody("UNEXPECTED_ERROR", "500")
+
+      when(mockIFSConnector.createLossClaim(any(), any())(any(), any()))
+        .thenReturn(EitherT.leftT(unexpectedError))
+
+      val result: Future[Either[ServiceError, Option[CreateLossClaimSuccessResponse]]] = service.createLossClaimType(mock[JourneyContextWithNino], requestBody).value
+
+      result.map {
+        case Left(error) => error shouldBe ServiceError.ServiceUnavailableError("Unexpected error occurred.")
+        case Right(_) => fail("Expected a ServiceError but got a success response")
+      }
     }
   }
 
