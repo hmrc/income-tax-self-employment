@@ -77,7 +77,10 @@ object DownstreamErrorBody {
       SingleDownstreamErrorBody("NO_ACCOUNTING_PERIOD", "The remote endpoint has indicated that no accounting period for the year of the claim.")
 
     val taxYearNotSupported: SingleDownstreamErrorBody =
-      SingleDownstreamErrorBody("TAX_YEAR_NOT_SUPPORTED", "The remote endpoint has indicated that the brought forward losses and loss claims are not supported for the specified tax year.")
+      SingleDownstreamErrorBody(
+        "TAX_YEAR_NOT_SUPPORTED",
+        "The remote endpoint has indicated that the brought forward losses and loss claims are not supported for the specified tax year."
+      )
 
     val notFound: SingleDownstreamErrorBody = SingleDownstreamErrorBody("NOT_FOUND", "The remote endpoint has indicated that no data can be found.")
 

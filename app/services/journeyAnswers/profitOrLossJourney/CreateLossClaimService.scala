@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package services.journeyAnswers
+package services.journeyAnswers.profitOrLossJourney
 
 import cats.data.EitherT
 import connectors.IFSConnector
@@ -32,15 +32,16 @@ import scala.concurrent.ExecutionContext
 class CreateLossClaimService @Inject() (ifsConnector: IFSConnector) {
 
   def createLossClaimType(ctx: JourneyContextWithNino, request: CreateLossClaimRequestBody)(implicit
-                                                                                            hc: HeaderCarrier,
-                                                                                            ec: ExecutionContext): ApiResultT[Option[CreateLossClaimSuccessResponse]] =
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[Option[CreateLossClaimSuccessResponse]] =
     EitherT {
       ifsConnector
         .createLossClaim(ctx, request)
         .value
         .map {
-          case Right(successResponse) => Right(Some(successResponse))
+          case Right(successResponse)                 => Right(Some(successResponse))
           case Left(error: SingleDownstreamErrorBody) => Left(mapDownstreamErrors(error))
+          case Left(_)                                => Left(ServiceError.ServiceUnavailableError("Unexpected error occurred."))
         }
     }
 
@@ -58,8 +59,7 @@ class CreateLossClaimService @Inject() (ifsConnector: IFSConnector) {
     SingleDownstreamErrorBody.serviceUnavailable       -> ServiceError.InternalServerError
   )
 
-  private def mapDownstreamErrors(downstreamError: SingleDownstreamErrorBody): ServiceError = {
+  private def mapDownstreamErrors(downstreamError: SingleDownstreamErrorBody): ServiceError =
     errorMap.getOrElse(downstreamError, ServiceError.ServiceUnavailableError("Unexpected error occurred."))
-  }
 
 }

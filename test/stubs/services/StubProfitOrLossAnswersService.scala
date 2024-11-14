@@ -21,7 +21,7 @@ import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.adjustments.ProfitOrLossJourneyAnswers
-import services.journeyAnswers.ProfitOrLossAnswersService
+import services.journeyAnswers.profitOrLossJourney.ProfitOrLossAnswersService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global

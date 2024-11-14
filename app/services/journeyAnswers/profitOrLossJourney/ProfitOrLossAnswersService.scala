@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package services.journeyAnswers
+package services.journeyAnswers.profitOrLossJourney
 
 import cats.data.EitherT
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
@@ -28,6 +28,7 @@ import models.frontend.adjustments.ProfitOrLossJourneyAnswers
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
+import services.journeyAnswers.handleAnnualSummariesForResubmission
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}

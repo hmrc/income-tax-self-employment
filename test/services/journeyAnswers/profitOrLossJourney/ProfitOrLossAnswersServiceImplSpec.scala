@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package services.journeyAnswers
+package services.journeyAnswers.profitOrLossJourney
 
 import cats.implicits.catsSyntaxEitherId
-import models.connector.api_1802.request._
 import models.connector.api_1500.LossType
 import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
+import models.connector.api_1802.request._
 import models.connector.api_1870
 import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
@@ -31,9 +31,9 @@ import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
-import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import play.api.libs.json.Json
 import stubs.connectors.StubIFSConnector._
+import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec.{businessId, hc, journeyCtxWithNino}
 import utils.EitherTTestOps.convertScalaFuture
