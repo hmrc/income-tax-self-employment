@@ -27,12 +27,12 @@ class CreateLossClaimRequestBodySpec extends AnyWordSpec with Matchers {
     "handling valid JSON" should {
 
       "write to JSON" in {
-        val request       = CreateLossClaimRequestBody("sourceId123", "reliefType", 2023)
+        val request       = CreateLossClaimRequestBody("sourceId123", "reliefType", "2023")
         val json: JsValue = Json.toJson(request)
 
         (json \ "incomeSourceId").as[String] shouldBe "sourceId123"
         (json \ "reliefClaimed").as[String] shouldBe "reliefType"
-        (json \ "taxYear").as[Int] shouldBe 2023
+        (json \ "taxYear").as[String] shouldBe "2023"
       }
 
       "read from JSON" in {
@@ -40,7 +40,7 @@ class CreateLossClaimRequestBodySpec extends AnyWordSpec with Matchers {
             |{
             |  "incomeSourceId": "sourceId123",
             |  "reliefClaimed": "reliefType",
-            |  "taxYear": 2023
+            |  "taxYear": "2023"
             |}
             |""".stripMargin)
 
@@ -48,7 +48,7 @@ class CreateLossClaimRequestBodySpec extends AnyWordSpec with Matchers {
 
         request.incomeSourceId shouldBe "sourceId123"
         request.reliefClaimed shouldBe "reliefType"
-        request.taxYear shouldBe 2023
+        request.taxYear shouldBe "2023"
       }
     }
 
@@ -68,7 +68,7 @@ class CreateLossClaimRequestBodySpec extends AnyWordSpec with Matchers {
       }
 
       "throw an exception when accessing a non-existent field" in {
-        val request       = CreateLossClaimRequestBody("sourceId123", "reliefType", 2023)
+        val request       = CreateLossClaimRequestBody("sourceId123", "reliefType", "2023")
         val json: JsValue = Json.toJson(request)
 
         intercept[JsResultException] {
@@ -81,7 +81,7 @@ class CreateLossClaimRequestBodySpec extends AnyWordSpec with Matchers {
             |{
             |  "incomeSourceId": "sourceId123",
             |  "reliefClaimed": "reliefType",
-            |  "taxYear": "notAnInt"
+            |  "taxYear": 2023
             |}
             |""".stripMargin)
 
@@ -95,7 +95,7 @@ class CreateLossClaimRequestBodySpec extends AnyWordSpec with Matchers {
             |{
             |  "incomeSourceId": "sourceId123",
             |  "reliefClaimed": "reliefType",
-            |  "taxYear": 2023,
+            |  "taxYear": "2023",
             |  "unexpectedField": "unexpectedValue"
             |}
             |""".stripMargin)
@@ -104,7 +104,7 @@ class CreateLossClaimRequestBodySpec extends AnyWordSpec with Matchers {
 
         request.incomeSourceId shouldBe "sourceId123"
         request.reliefClaimed shouldBe "reliefType"
-        request.taxYear shouldBe 2023
+        request.taxYear shouldBe "2023"
       }
     }
   }

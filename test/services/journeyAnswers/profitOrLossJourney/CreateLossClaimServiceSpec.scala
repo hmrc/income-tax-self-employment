@@ -40,7 +40,7 @@ class CreateLossClaimServiceSpec extends AnyWordSpec with Matchers with MockitoS
   val requestBody: CreateLossClaimRequestBody = CreateLossClaimRequestBody(
     incomeSourceId = "012345678912345",
     reliefClaimed = "CF",
-    taxYear = 2020
+    taxYear = "2020"
   )
 
   val successResponse: CreateLossClaimSuccessResponse = CreateLossClaimSuccessResponse(

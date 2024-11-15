@@ -33,7 +33,7 @@ trait Api1505Test {
   val requestBody: CreateLossClaimRequestBody = CreateLossClaimRequestBody(
     incomeSourceId = "012345678912345",
     reliefClaimed = "CF",
-    taxYear = 2020
+    taxYear = "2020"
   )
 
   val successResponse: CreateLossClaimSuccessResponse = Json.parse(successResponseRaw).as[CreateLossClaimSuccessResponse]
