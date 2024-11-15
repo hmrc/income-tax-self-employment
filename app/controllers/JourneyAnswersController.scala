@@ -55,7 +55,6 @@ import models.frontend.income.IncomeJourneyAnswers
 import models.frontend.nics.NICsAnswers
 import play.api.libs.json.Format.GenericFormat
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import services.journeyAnswers.profitOrLossJourney.ProfitOrLossAnswersService
 import services.journeyAnswers._
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.Logging

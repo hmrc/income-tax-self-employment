@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package services.journeyAnswers.profitOrLossJourney
+package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
 import models.connector.api_1500.LossType
@@ -29,7 +29,6 @@ import models.error.ServiceError
 import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhichYearIsLossReported}
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.libs.json.Json
 import stubs.connectors.StubIFSConnector._
@@ -380,8 +379,7 @@ trait StubbedService {
   val ifsConnector: StubIFSConnector                               = new StubIFSConnector()
   val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
   val repository: StubJourneyAnswersRepository                     = StubJourneyAnswersRepository()
-  val mockCreateClaimLossService: CreateLossClaimService           = mock[CreateLossClaimService]
 
   def service: ProfitOrLossAnswersServiceImpl =
-    new ProfitOrLossAnswersServiceImpl(ifsConnector, ifsBusinessDetailsConnector, mockCreateClaimLossService, repository)
+    new ProfitOrLossAnswersServiceImpl(ifsConnector, ifsBusinessDetailsConnector, repository)
 }

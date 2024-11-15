@@ -190,10 +190,9 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
   def createLossClaim(ctx: JourneyContextWithNino, requestBody: CreateLossClaimRequestBody)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[CreateLossClaimSuccessResponse] = {
-
     val url                                                                    = createLossClaimUrl(ctx.nino)
     val context                                                                = appConfig.mkMetadata(IFSApiName.Api1505, url)
-    implicit val reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]] = commonReads[CreateLossClaimSuccessResponse]
+    implicit val reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]] = lossClaimReads[CreateLossClaimSuccessResponse]
 
     EitherT(post[CreateLossClaimRequestBody, Api1505Response](http, context, requestBody))
   }

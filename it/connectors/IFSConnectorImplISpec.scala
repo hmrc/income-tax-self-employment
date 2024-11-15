@@ -22,6 +22,7 @@ import connectors.data.{Api1505Test, Api1786Test, Api1803Test}
 import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import models.common.TaxYear.{asTys, endDate, startDate}
+import models.connector.api_1505.CreateLossClaimSuccessResponse
 import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics}
 import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics}
 import models.connector.api_1802.request.{AnnualAdjustments, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
@@ -29,10 +30,13 @@ import models.connector.api_1803.SuccessResponseSchema
 import models.connector.api_1894.request._
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
+import models.error.DownstreamError.{GenericDownstreamError, SingleDownstreamError}
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
+import models.error.ErrorType.DownstreamErrorCode
 import models.error.ServiceError
 import org.scalatest.EitherValues._
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import play.api.http.Status.{CREATED, NOT_FOUND, OK}
+import play.api.http.Status.{BAD_REQUEST, CREATED, NOT_FOUND, OK}
 import play.api.libs.json.Json
 
 class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
@@ -205,14 +209,60 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
   }
 
   "createClaimLoss" must {
-    "return the transaction reference" in new Api1505Test {
+    "return a success" in new Api1505Test {
+      stubPostWithRequestAndResponseBody(url = downstreamUrl, requestBody = requestBody, expectedResponse = successResponseRaw, expectedStatus = OK)
+
+      connector.createLossClaim(ctx, requestBody).value.futureValue shouldBe successResponse.asRight
+    }
+
+    "return a ParsingError when expectedResponse is incorrect" in new Api1505Test {
+      stubPostWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = badRequestResponseRaw,
+        expectedStatus = OK)
+
+      connector.createLossClaim(ctx, requestBody).value.futureValue shouldBe
+        Left(SingleDownstreamError(500, SingleDownstreamErrorBody("PARSING_ERROR", "Error parsing response from API", DownstreamErrorCode)))
+    }
+
+    "returns BAD_REQUEST GenericDownstreamError when expectedStatus is BAD_REQUEST" in new Api1505Test {
       stubPostWithRequestAndResponseBody(
         url = downstreamUrl,
         requestBody = requestBody,
         expectedResponse = successResponseRaw,
-        expectedStatus = CREATED)
+        expectedStatus = BAD_REQUEST
+      )
 
-      connector.createLossClaim(ctx, requestBody).value.futureValue shouldBe successResponse.asRight
+      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      result match {
+        case Left(GenericDownstreamError(status, message)) =>
+          status shouldBe 400
+          message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
+          message should include(s"status=$BAD_REQUEST")
+          message should include(s"body:\n$successResponseRaw")
+        case _ => fail("Expected a GenericDownstreamError")
+      }
+    }
+
+    "returns downstream error when unknown status" in new Api1505Test {
+      stubPostWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = successResponse.claimId,
+        expectedStatus = CREATED
+      )
+
+      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+
+      result match {
+        case Left(GenericDownstreamError(status, message)) =>
+          status shouldBe 201
+          message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
+          message should include(s"status=$CREATED")
+          message should include(s"body:\n${successResponse.claimId}")
+        case _ => fail("Expected a GenericDownstreamError")
+      }
     }
   }
 

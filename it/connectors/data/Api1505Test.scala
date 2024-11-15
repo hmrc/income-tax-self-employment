@@ -30,11 +30,21 @@ trait Api1505Test {
        |}
        |""".stripMargin
 
+  val claimId = "1234568790ABCDE"
+
   val requestBody: CreateLossClaimRequestBody = CreateLossClaimRequestBody(
     incomeSourceId = "012345678912345",
     reliefClaimed = "CF",
     taxYear = "2020"
   )
+
+  val badRequestResponseRaw: String =
+    """
+  {
+    "code": "BAD_REQUEST",
+    "message": "The request was invalid."
+  }
+  """
 
   val successResponse: CreateLossClaimSuccessResponse = Json.parse(successResponseRaw).as[CreateLossClaimSuccessResponse]
 }

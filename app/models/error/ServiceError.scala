@@ -60,56 +60,6 @@ object ServiceError {
     val errorMessage: String = s"Unavailable Service exception occurred. Exception: $error"
   }
 
-  case object FormatNinoError extends ServiceError {
-    override val errorMessage: String = "The provided NINO is invalid."
-    override val status: Int          = BAD_REQUEST
-  }
-
-  case object RuleIncorrectGovTestScenarioError extends ServiceError {
-    override val errorMessage: String = "Incorrect government test scenario."
-    override val status: Int          = BAD_REQUEST
-  }
-
-  case object InternalServerError extends ServiceError {
-    override val errorMessage: String = "Internal server error."
-    override val status: Int          = INTERNAL_SERVER_ERROR
-  }
-
-  case object MatchingResourceNotFoundError extends ServiceError {
-    override val errorMessage: String = "Matching resource not found."
-    override val status: Int          = NOT_FOUND
-  }
-
-  case object RuleDuplicateSubmissionError extends ServiceError {
-    override val errorMessage: String = "This claim matches a previous submission."
-    override val status: Int          = BAD_REQUEST
-  }
-
-  case object RuleAccountingPeriodNotEndedError extends ServiceError {
-    override val errorMessage: String = "The accounting period has not ended."
-    override val status: Int          = BAD_REQUEST
-  }
-
-  case object RuleTypeOfClaimInvalidError extends ServiceError {
-    override val errorMessage: String = "The claim type supplied is not available for this type of loss."
-    override val status: Int          = BAD_REQUEST
-  }
-
-  case object RuleNoAccountingPeriodError extends ServiceError {
-    override val errorMessage: String = "For the year of the claim there is no accounting period."
-    override val status: Int          = BAD_REQUEST
-  }
-
-  case object RuleTaxYearNotSupportedError extends ServiceError {
-    override val errorMessage: String = "Tax year not supported, because it precedes the earliest allowable tax year."
-    override val status: Int          = BAD_REQUEST
-  }
-
-  case object RuleCSFHLClaimNotSupportedError extends ServiceError {
-    override val errorMessage: String = "CSFHL claim not supported."
-    override val status: Int          = BAD_REQUEST
-  }
-
   object ServiceUnavailableError {
     implicit val formats: OFormat[ServiceUnavailableError] = Json.format[ServiceUnavailableError]
   }

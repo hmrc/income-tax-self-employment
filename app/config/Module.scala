@@ -19,7 +19,6 @@ package config
 import com.google.inject.AbstractModule
 import connectors._
 import repositories.{JourneyAnswersRepository, MongoJourneyAnswersRepository}
-import services.journeyAnswers.profitOrLossJourney.{ProfitOrLossAnswersService, ProfitOrLossAnswersServiceImpl}
 import services.journeyAnswers._
 import services.{BusinessService, BusinessServiceImpl}
 

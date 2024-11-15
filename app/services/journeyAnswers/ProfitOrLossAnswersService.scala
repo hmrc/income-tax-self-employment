@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package services.journeyAnswers.profitOrLossJourney
+package services.journeyAnswers
 
 import cats.data.EitherT
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
@@ -28,7 +28,6 @@ import models.frontend.adjustments.ProfitOrLossJourneyAnswers
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
-import services.journeyAnswers.handleAnnualSummariesForResubmission
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -43,7 +42,6 @@ trait ProfitOrLossAnswersService {
 @Singleton
 class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
                                                 ifsBusinessDetailsConnector: IFSBusinessDetailsConnector,
-                                                createLossClaimService: CreateLossClaimService,
                                                 repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends ProfitOrLossAnswersService {
 
@@ -92,10 +90,10 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       implicit hc: HeaderCarrier): ApiResultT[Unit] =
     (maybeExistingData, maybeSubmissionData) match {
       // TODO SASS-10335 update endpoints below -- not just this ticket anymore, it was split into CRUD
-      case (None, Some(submissionData)) => createLossClaimService.createLossClaimType(ctx, submissionData).map(_ => ()) // Create
-      case (Some(_), Some(_))           => EitherT.rightT[Future, ServiceError](())                                     // Update
-      case (Some(_), None)              => EitherT.rightT[Future, ServiceError](())                                     // Delete
-      case (None, None)                 => EitherT.rightT[Future, ServiceError](())                                     // Do nothing
+      case (None, Some(submissionData)) => ifsConnector.createLossClaim(ctx, submissionData).map(_ => ()) // Create
+      case (Some(_), Some(_))           => EitherT.rightT[Future, ServiceError](())                       // Update
+      case (Some(_), None)              => EitherT.rightT[Future, ServiceError](())                       // Delete
+      case (None, None)                 => EitherT.rightT[Future, ServiceError](())                       // Do nothing
     }
 
   def getBroughtForwardLossByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[LossData]] = {
