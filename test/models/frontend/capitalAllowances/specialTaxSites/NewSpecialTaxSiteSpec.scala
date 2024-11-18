@@ -59,5 +59,17 @@ class NewSpecialTaxSiteSpec extends AnyWordSpecLike {
           ))
       )
     }
+
+    "create building allowance when firstYear is None" in {
+      val buildingAllowance = site.copy(qualifyingExpenditure = None).toBuildingAllowance
+      assert(
+        buildingAllowance === Some(
+          BuildingAllowance(
+            BigDecimal(10000),
+            None,
+            Building(Some("name"), Some("number"), "AA11AA")
+          ))
+      )
+    }
   }
 }
