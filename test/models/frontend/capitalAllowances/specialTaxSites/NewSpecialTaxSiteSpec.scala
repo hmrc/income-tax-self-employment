@@ -25,11 +25,12 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import java.time.LocalDate
 
 class NewSpecialTaxSiteSpec extends AnyWordSpecLike {
-  val site = NewSpecialTaxSite(
+  val site: NewSpecialTaxSite = NewSpecialTaxSite(
     Some(true),
     Some(LocalDate.parse("2023-03-01", dateFormatter)),
     Some(LocalDate.parse("2023-03-02", dateFormatter)),
     Some(LocalDate.parse("2023-03-03", dateFormatter)),
+    Some(BigDecimal(20000)),
     Some(SpecialTaxSiteLocation(Some("name"), Some("number"), "AA11AA")),
     Some(BigDecimal(10000))
   )
@@ -53,7 +54,7 @@ class NewSpecialTaxSiteSpec extends AnyWordSpecLike {
         buildingAllowance === Some(
           BuildingAllowance(
             BigDecimal(10000),
-            Some(models.connector.api_1802.request.FirstYear("2023-03-03", BigDecimal(0.0))),
+            Some(models.connector.api_1802.request.FirstYear("2023-03-03", BigDecimal(20000))),
             Building(Some("name"), Some("number"), "AA11AA")
           ))
       )

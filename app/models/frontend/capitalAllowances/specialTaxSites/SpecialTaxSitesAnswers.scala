@@ -70,8 +70,9 @@ object SpecialTaxSitesAnswers extends Logging {
         contractStartDate = site.contractStartDate,
         constructionStartDate = site.constructionStartDate,
         qualifyingUseStartDate = buildingAllowance.firstYear.map(_.qualifyingDate).map(date => LocalDate.parse(date, dateFormatter)),
+        qualifyingExpenditure = buildingAllowance.firstYear.map(_.qualifyingAmountExpenditure),
         specialTaxSiteLocation = Some(SpecialTaxSiteLocation.apply(buildingAllowance.building)),
-        newSiteClaimingAmount = buildingAllowance.firstYear.map(_.qualifyingAmountExpenditure)
+        newSiteClaimingAmount = Some(buildingAllowance.amount)
       )
     }
 
