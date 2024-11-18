@@ -67,7 +67,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       maybeExistingLossClaim <- getLossClaimByBusinessId(ctx)
-      result                 <- handleLossClaim(ctx, maybeExistingLossClaim, answers.toLossClaimSubmission)
+      result                 <- handleLossClaim(ctx, maybeExistingLossClaim, answers.toLossClaimSubmission(ctx))
     } yield result
 
   private def getLossClaimByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[Unit]] =
