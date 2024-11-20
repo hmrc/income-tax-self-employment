@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,11 +67,11 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       maybeExistingLossClaim <- getLossClaimByBusinessId(ctx)
-      result                 <- handleLossClaim(ctx, maybeExistingLossClaim, answers.toLossClaimSubmission)
+      result                 <- handleLossClaim(ctx, maybeExistingLossClaim, answers.toLossClaimSubmission(ctx))
     } yield result
 
   private def getLossClaimByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[Unit]] =
-    // TODO SASS-10335:
+    // TODO SASS-10335: -- this is now the List logic not 10335 connectivity ticket
     // 1. Call list of claims (individual claims are called/edited/deleted by claimId. We have businessId, not claimId)
     // 2. If returns Left(Error(Not_Found)), return Right(None)
     // 3. Filter Option{ single lossClaim } from the list by its businessId if it exists, else None
@@ -89,11 +89,11 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
   private def handleLossClaim(ctx: JourneyContextWithNino, maybeExistingData: Option[Unit], maybeSubmissionData: Option[CreateLossClaimRequestBody])(
       implicit hc: HeaderCarrier): ApiResultT[Unit] =
     (maybeExistingData, maybeSubmissionData) match {
-      // TODO SASS-10335 update endpoints below
-      case (None, Some(submissionData))               => ifsConnector.createLossClaim(ctx, submissionData).map(_ => ()) // Create
-      case (Some(existingData), Some(submissionData)) => EitherT.rightT[Future, ServiceError](())                       // Update
-      case (Some(_), None)                            => EitherT.rightT[Future, ServiceError](())                       // Delete
-      case (None, None)                               => EitherT.rightT[Future, ServiceError](())                       // Do nothing
+      // TODO SASS-10335 update endpoints below -- not just this ticket anymore, it was split into CRUD
+      case (None, Some(submissionData)) => ifsConnector.createLossClaim(ctx, submissionData).map(_ => ()) // Create
+      case (Some(_), Some(_))           => EitherT.rightT[Future, ServiceError](())                       // Update
+      case (Some(_), None)              => EitherT.rightT[Future, ServiceError](())                       // Delete
+      case (None, None)                 => EitherT.rightT[Future, ServiceError](())                       // Do nothing
     }
 
   def getBroughtForwardLossByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[LossData]] = {

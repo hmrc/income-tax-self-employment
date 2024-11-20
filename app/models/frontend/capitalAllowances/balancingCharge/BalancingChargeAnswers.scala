@@ -17,7 +17,6 @@
 package models.frontend.capitalAllowances.balancingCharge
 
 import models.connector.api_1802.request.AnnualAdjustments
-import models.connector.api_1803
 import models.database.capitalAllowances.BalancingChargeDb
 import models.frontend.FrontendAnswers
 import play.api.libs.json.{Json, OFormat}

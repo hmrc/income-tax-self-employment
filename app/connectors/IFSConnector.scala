@@ -22,14 +22,13 @@ import connectors.IFSConnector._
 import models.common.TaxYear.{asTys, endDate, startDate}
 import models.common._
 import models.connector._
-import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimResponseBody}
+import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
 import models.domain.ApiResultT
-import models.error.ServiceError
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import utils.Logging
 
@@ -58,13 +57,13 @@ trait IFSConnector {
       ec: ExecutionContext): ApiResultT[Unit]
   def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
 
-  def createLossClaim(ctx: JourneyContextWithNino, requestBody: CreateLossClaimRequestBody)(implicit
+  def createLossClaim(ctx: JourneyContextWithNino, request: CreateLossClaimRequestBody)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): ApiResultT[CreateLossClaimResponseBody]
+      ec: ExecutionContext): ApiResultT[CreateLossClaimSuccessResponse]
 }
 
 object IFSConnector {
-  type Api1505Response = ApiResponse[api_1505.CreateLossClaimResponseBody]
+  type Api1505Response = ApiResponse[api_1505.CreateLossClaimSuccessResponse]
   type Api1638Response = ApiResponse[Unit]
   type Api1639Response = ApiResponseOption[SuccessResponseAPI1639]
   type Api1786Response = ApiResponse[api_1786.SuccessResponseSchema]
@@ -73,6 +72,7 @@ object IFSConnector {
   type Api1894Response = ApiResponse[Unit]
   type Api1895Response = ApiResponse[Unit]
   type Api1965Response = ApiResponse[api_1965.ListSEPeriodSummariesResponse]
+
 }
 
 @Singleton
@@ -92,6 +92,9 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
 
   private def disclosuresSubmissionUrl(nino: Nino, taxYear: TaxYear) =
     s"${appConfig.ifsBaseUrl}/income-tax/disclosures/$nino/${taxYear.toYYYY_YY}"
+
+  private def createLossClaimUrl(nino: Nino) =
+    s"${appConfig.ifsBaseUrl}/income-tax/claims-for-relief/$nino"
 
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {
     val url                                          = periodicSummaries(data.nino, data.businessId, data.taxYear)
@@ -186,13 +189,12 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
 
   def createLossClaim(ctx: JourneyContextWithNino, requestBody: CreateLossClaimRequestBody)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): ApiResultT[CreateLossClaimResponseBody] =
-    // TODO SASS-10335 use below and update in Spec
-//    val url                                                                 = createLossClaimUrl(ctx.nino)
-//    val context                                                             = appConfig.mkMetadata(IFSApiName.Api1505, url)
-//    implicit val reads: HttpReads[ApiResponse[CreateLossClaimResponseBody]] = commonReads[CreateLossClaimResponseBody]
-//
-//    EitherT(post[CreateLossClaimRequestBody, Api1505Response](http, context, requestBody))
-    EitherT.rightT[Future, ServiceError](CreateLossClaimResponseBody("REPLACE-ME"))
+      ec: ExecutionContext): ApiResultT[CreateLossClaimSuccessResponse] = {
+    val url                                                                    = createLossClaimUrl(ctx.nino)
+    val context                                                                = appConfig.mkMetadata(IFSApiName.Api1505, url)
+    implicit val reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]] = lossClaimReads[CreateLossClaimSuccessResponse]
+
+    EitherT(post[CreateLossClaimRequestBody, Api1505Response](http, context, requestBody))
+  }
 
 }

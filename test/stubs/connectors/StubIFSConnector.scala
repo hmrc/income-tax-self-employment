@@ -25,7 +25,7 @@ import models.common.{BusinessId, JourneyContextWithNino}
 import models.connector._
 import models.connector.api_1171.{BusinessDataDetails, BusinessDataDetailsTestData}
 import models.connector.api_1500.LossType
-import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimResponseBody}
+import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
@@ -60,7 +60,7 @@ case class StubIFSConnector(
     getAnnualSummariesResultTest2: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
     getAnnualSummariesResultTest3: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
     getAnnualSummariesResultTest4: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
-    createLossClaimResult: Either[DownstreamError, CreateLossClaimResponseBody] = Right(CreateLossClaimResponseBody("REPLACE-ME"))
+    createLossClaimResult: Either[DownstreamError, CreateLossClaimSuccessResponse] = Right(api1505SuccessResponse)
 ) extends IFSConnector {
   var amendSEPeriodSummaryResultData: Option[AmendSEPeriodSummaryRequestData]                    = None
   var upsertDisclosuresSubmissionData: Option[RequestSchemaAPI1638]                              = None
@@ -140,8 +140,7 @@ case class StubIFSConnector(
 
   def createLossClaim(ctx: JourneyContextWithNino, requestBody: CreateLossClaimRequestBody)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): ApiResultT[CreateLossClaimResponseBody] = EitherT.fromEither[Future](createLossClaimResult)
-
+      ec: ExecutionContext): ApiResultT[CreateLossClaimSuccessResponse] = EitherT.fromEither[Future](createLossClaimResult)
 }
 
 object StubIFSConnector {
@@ -232,6 +231,8 @@ object StubIFSConnector {
             "GET"
           )))
     )
+  val api1505SuccessResponse: api_1505.CreateLossClaimSuccessResponse =
+    api_1505.CreateLossClaimSuccessResponse("1234568790ABCDE")
   val api1870EmptyResponse: api_1870.SuccessResponseSchema = api_1870.SuccessResponseSchema(List.empty)
   val api1870SuccessResponse: api_1870.SuccessResponseSchema = api_1870.SuccessResponseSchema(
     List(
