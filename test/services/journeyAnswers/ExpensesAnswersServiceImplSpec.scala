@@ -332,6 +332,26 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     }
   }
 
+  "clearOfficeSuppliesExpensesData" must {
+    "delete all office supplies expenses API answer" in new Test {
+
+      val existingPeriodData = buildPeriodData(Some(DeductionsTestData.sample))
+
+      override val connector = StubIFSConnector()
+      connector.amendSEPeriodSummaryResultData = Some(existingPeriodData)
+      override val repo = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers.some)
+      repo.lastUpsertedAnswer = Some(Json.toJson(ExpensesCategoriesDb(IndividualCategories)))
+
+      val result = underTest.clearOfficeSuppliesExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe ().asRight
+      val apiResult = connector.amendSEPeriodSummaryResultData.flatMap(_.body.returnNoneIfEmpty)
+      apiResult shouldBe None
+      repo.lastUpsertedAnswer shouldBe None
+
+    }
+  }
+
   trait Test {
     val connector: StubIFSConnector = new StubIFSConnector()
 
@@ -351,6 +371,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     def prepareDatabase() = for {
       _ <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(expensesTailoringCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(officeSuppliesCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(goodsToSellOrUseCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(capitalAllowancesTailoringCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(zeroEmissionCarsCtx, Json.obj("field" -> "value"))
@@ -381,13 +402,14 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
 
     lazy val periodicApiResult = connector.amendSEPeriodSummaryResultData.flatMap(_.body.deductions)
     lazy val annualApiResult   = connector.upsertAnnualSummariesSubmissionData.flatMap(_.body.annualAllowances)
-    lazy val (incomeResult, expensesTailoringResult, goodsToSellOrUseResult, capitalAllowancesResult, zeroEmissionCarsResult) = (for {
+    lazy val (incomeResult, expensesTailoringResult, officeSuppliesResult, goodsToSellOrUseResult, capitalAllowancesResult, zeroEmissionCarsResult) = (for {
       income                     <- repository.get(incomeCtx)
       expensesTailoring          <- repository.get(expensesTailoringCtx)
+      officeSupplies             <- repository.get(officeSuppliesCtx)
       goodsToSellOrUse           <- repository.get(goodsToSellOrUseCtx)
       capitalAllowancesTailoring <- repository.get(capitalAllowancesTailoringCtx)
       zeroEmissionCars           <- repository.get(zeroEmissionCarsCtx)
-    } yield (income, expensesTailoring, goodsToSellOrUse, capitalAllowancesTailoring, zeroEmissionCars)).rightValue
+    } yield (income, expensesTailoring, officeSupplies, goodsToSellOrUse, capitalAllowancesTailoring, zeroEmissionCars)).rightValue
   }
 }
 
