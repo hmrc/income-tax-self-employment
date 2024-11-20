@@ -22,6 +22,7 @@ import connectors.IFSConnector._
 import models.common.TaxYear.{asTys, endDate, startDate}
 import models.common._
 import models.connector._
+import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
@@ -55,17 +56,23 @@ trait IFSConnector {
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[Unit]
   def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
+
+  def createLossClaim(ctx: JourneyContextWithNino, request: CreateLossClaimRequestBody)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[CreateLossClaimSuccessResponse]
 }
 
 object IFSConnector {
+  type Api1505Response = ApiResponse[api_1505.CreateLossClaimSuccessResponse]
+  type Api1638Response = ApiResponse[Unit]
+  type Api1639Response = ApiResponseOption[SuccessResponseAPI1639]
   type Api1786Response = ApiResponse[api_1786.SuccessResponseSchema]
   type Api1802Response = ApiResponse[Unit]
   type Api1803Response = ApiResponse[api_1803.SuccessResponseSchema]
   type Api1894Response = ApiResponse[Unit]
   type Api1895Response = ApiResponse[Unit]
   type Api1965Response = ApiResponse[api_1965.ListSEPeriodSummariesResponse]
-  type Api1638Response = ApiResponse[Unit]
-  type Api1639Response = ApiResponseOption[SuccessResponseAPI1639]
+
 }
 
 @Singleton
@@ -85,6 +92,9 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
 
   private def disclosuresSubmissionUrl(nino: Nino, taxYear: TaxYear) =
     s"${appConfig.ifsBaseUrl}/income-tax/disclosures/$nino/${taxYear.toYYYY_YY}"
+
+  private def createLossClaimUrl(nino: Nino) =
+    s"${appConfig.ifsBaseUrl}/income-tax/claims-for-relief/$nino"
 
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {
     val url                                          = periodicSummaries(data.nino, data.businessId, data.taxYear)
@@ -175,6 +185,16 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
 
     EitherT(delete(http, context))
+  }
+
+  def createLossClaim(ctx: JourneyContextWithNino, requestBody: CreateLossClaimRequestBody)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[CreateLossClaimSuccessResponse] = {
+    val url                                                                    = createLossClaimUrl(ctx.nino)
+    val context                                                                = appConfig.mkMetadata(IFSApiName.Api1505, url)
+    implicit val reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]] = lossClaimReads[CreateLossClaimSuccessResponse]
+
+    EitherT(post[CreateLossClaimRequestBody, Api1505Response](http, context, requestBody))
   }
 
 }

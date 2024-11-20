@@ -27,13 +27,14 @@ sealed abstract class IFSApiName(override val entryName: String) extends EnumEnt
 /** When you add a new API here, don't forget to add it in the application.conf and config for QA, Staging and Prod
   */
 object IFSApiName extends Enum[IFSApiName] {
-  val values = IndexedSeq[IFSApiName]()
+  val values: IndexedSeq[IFSApiName] = IndexedSeq[IFSApiName]()
 
   case object Api1171 extends IFSApiName("1171")
   case object Api1500 extends IFSApiName("1500")
   case object Api1501 extends IFSApiName("1501")
   case object Api1502 extends IFSApiName("1502")
   case object Api1504 extends IFSApiName("1504")
+  case object Api1505 extends IFSApiName("1505")
   case object Api1870 extends IFSApiName("1870")
   case object Api1638 extends IFSApiName("1638")
   case object Api1639 extends IFSApiName("1639")
@@ -51,7 +52,7 @@ object IFSApiName extends Enum[IFSApiName] {
 sealed abstract class MDTPApiName(override val entryName: String) extends EnumEntry with ApiName
 
 object MDTPApiName extends Enum[MDTPApiName] {
-  val values = IndexedSeq[MDTPApiName]()
+  val values: IndexedSeq[MDTPApiName] = IndexedSeq[MDTPApiName]()
 
   case object CitizenDetails extends MDTPApiName("citizen-details")
 }

@@ -17,7 +17,6 @@
 package models.frontend.capitalAllowances.balancingCharge
 
 import models.connector.api_1802.request.AnnualAdjustments
-import models.connector.api_1803
 import models.database.capitalAllowances.BalancingChargeDb
 import models.frontend.FrontendAnswers
 import play.api.libs.json.{Json, OFormat}
@@ -33,10 +32,4 @@ final case class BalancingChargeAnswers(balancingCharge: Boolean, balancingCharg
 
 object BalancingChargeAnswers {
   implicit val formats: OFormat[BalancingChargeAnswers] = Json.format[BalancingChargeAnswers]
-
-  def apply(dbAnswers: BalancingChargeDb, annualAdjustments: api_1803.SuccessResponseSchema): BalancingChargeAnswers =
-    new BalancingChargeAnswers(
-      annualAdjustments.annualAdjustments.flatMap(_.balancingChargeOther).isDefined,
-      balancingChargeAmount = annualAdjustments.annualAdjustments.flatMap(_.balancingChargeOther)
-    )
 }

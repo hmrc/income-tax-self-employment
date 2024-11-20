@@ -79,6 +79,16 @@ package object connector {
     }
   }
 
+  def lossClaimReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[A]] = (method: String, url: String, response: HttpResponse) => {
+    ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
+
+    response.status match {
+      case OK                                                        => toA(response, method, url)
+      case BAD_REQUEST | NOT_FOUND | CONFLICT | UNPROCESSABLE_ENTITY => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+      case _                                                         => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+    }
+  }
+
   private def toA[A: Reads](response: HttpResponse, method: String, url: String): Either[DownstreamError, A] =
     response.json
       .validate[A]

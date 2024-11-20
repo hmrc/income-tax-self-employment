@@ -18,6 +18,7 @@ package models.frontend.adjustments
 
 import models.common.JourneyContextWithNino
 import models.connector.api_1500.LossType
+import models.connector.api_1505.{CreateLossClaimRequestBody, ReliefClaimType}
 import models.connector.api_1802.request.AnnualAdjustments
 import models.connector.{api_1500, api_1501}
 import models.database.adjustments.ProfitOrLossDb
@@ -36,6 +37,18 @@ case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,   
 
   def toDbModel: Option[ProfitOrLossDb] = Some(ProfitOrLossDb(goodsAndServicesForYourOwnUse, claimLossRelief, previousUnusedLosses))
   def toDbAnswers: ProfitOrLossDb       = ProfitOrLossDb(goodsAndServicesForYourOwnUse, claimLossRelief, previousUnusedLosses)
+
+  def toLossClaimSubmission(ctx: JourneyContextWithNino): Option[CreateLossClaimRequestBody] =
+    (whatDoYouWantToDoWithLoss, carryLossForward) match {
+      case (Some(lossActions), Some(true)) if lossActions.contains(WhatDoYouWantToDoWithLoss.CarryItForward) =>
+        Some(
+          CreateLossClaimRequestBody(
+            incomeSourceId = ctx.businessId.value,
+            reliefClaimed = ReliefClaimType.CF.toString,
+            taxYear = ctx.taxYear.toString
+          ))
+      case _ => None
+    }
 
   override def toDownStreamAnnualAdjustments(current: Option[AnnualAdjustments]): AnnualAdjustments =
     current.getOrElse(AnnualAdjustments.empty).copy(goodsAndServicesOwnUse = goodsAndServicesAmount)

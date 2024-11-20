@@ -16,40 +16,44 @@
 
 package services.journeyAnswers
 
+import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
-import models.connector.api_1802.request.{
-  AnnualAdjustments,
-  AnnualAllowances,
-  CreateAmendSEAnnualSubmissionRequestBody,
-  CreateAmendSEAnnualSubmissionRequestData
-}
+import models.common.JourneyContextWithNino
 import models.connector.api_1500.LossType
 import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
+import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
+import models.connector.api_1802.request._
 import models.connector.api_1870
 import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
+import models.error.ServiceError
 import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhichYearIsLossReported}
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
-import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import play.api.libs.json.Json
 import stubs.connectors.StubIFSConnector._
+import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.repositories.StubJourneyAnswersRepository
-import utils.BaseSpec.{businessId, hc, journeyCtxWithNino}
+import uk.gov.hmrc.http.HeaderCarrier
+import utils.BaseSpec.{businessId, currTaxYear, hc, journeyCtxWithNino}
 import utils.EitherTTestOps.convertScalaFuture
 
+import java.lang.reflect.Method
 import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrivenPropertyChecks {
+class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrivenPropertyChecks with Matchers {
 
-  val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
-  val notFoundError   = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
+  val downstreamError: SingleDownstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
+  val notFoundError: SingleDownstreamError   = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
 
-  def expectedAnnualSummariesData(adjustments: Option[AnnualAdjustments], allowances: Option[AnnualAllowances]) =
+  def expectedAnnualSummariesData(adjustments: Option[AnnualAdjustments],
+                                  allowances: Option[AnnualAllowances]): CreateAmendSEAnnualSubmissionRequestData =
     CreateAmendSEAnnualSubmissionRequestData(
       journeyCtxWithNino.taxYear,
       journeyCtxWithNino.nino,
@@ -65,21 +69,26 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
     val unusedLossAmount: BigDecimal = 400
     val yesBroughtForwardLossAnswers =
       ProfitOrLossJourneyAnswers(
-        true,
+        goodsAndServicesForYourOwnUse = true,
         Some(200),
         Some(true),
         None,
         Some(true),
-        true,
+        previousUnusedLosses = true,
         Some(unusedLossAmount),
-        Some(WhichYearIsLossReported.Year2018to2019))
-    val noBroughtForwardLossAnswers    = ProfitOrLossJourneyAnswers(false, None, Some(false), None, None, false, None, None)
-    val emptyBroughtForwardLossAnswers = ProfitOrLossJourneyAnswers(false, None, None, None, None, false, None, None)
+        Some(WhichYearIsLossReported.Year2018to2019)
+      )
+    val noBroughtForwardLossAnswers =
+      ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse = false, None, Some(false), None, None, previousUnusedLosses = false, None, None)
+    val emptyBroughtForwardLossAnswers =
+      ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse = false, None, None, None, None, previousUnusedLosses = false, None, None)
+
     "successfully save data when answers are true" in new StubbedService {
       override val ifsConnector: StubIFSConnector =
         StubIFSConnector(
           getAnnualSummariesResult = api1803SuccessResponse.asRight
         )
+
       val answers        = yesBroughtForwardLossAnswers
       val allowancesData = AnnualAllowances(None, None, None, Some(5000), None, None, None, None, None, None, Some(5000), None)
       val expectedAnnualSummariesAnswers =
@@ -251,6 +260,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         Some(unusedLossAmount),
         Some(WhichYearIsLossReported.Year2018to2019))
     val noBroughtForwardLossAnswers = ProfitOrLossJourneyAnswers(true, Some(200), Some(false), None, None, false, None, None)
+
     "return an empty success response" when {
       "given a valid submissions to create a new BroughtForwardLoss data" in new StubbedService {
         val result = service.createUpdateOrDeleteBroughtForwardLoss(journeyCtxWithNino, yesBroughtForwardLossAnswers).value.futureValue
@@ -349,7 +359,61 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
     }
   }
 
-  val listWithNoMatchingIds = List(
+  "handling loss claims" should {
+    "create a new loss claim when there is no existing data and submission data is provided" in new StubbedService {
+      override val ifsConnector: StubIFSConnector =
+        StubIFSConnector(
+          createLossClaimResult = api1505SuccessResponse.asRight
+        )
+
+      val submissionData: CreateLossClaimRequestBody = CreateLossClaimRequestBody("SJPR05893938418", "CF", currTaxYear.toString)
+
+      val method: Method = service.getClass.getDeclaredMethod(
+        "handleLossClaim",
+        classOf[JourneyContextWithNino],
+        classOf[Option[Unit]],
+        classOf[Option[CreateLossClaimRequestBody]],
+        classOf[HeaderCarrier])
+      method.setAccessible(true)
+
+      val result: Either[ServiceError, Unit] = method
+        .invoke(service, journeyCtxWithNino, None, Some(submissionData), hc)
+        .asInstanceOf[EitherT[Future, ServiceError, Unit]]
+        .value
+        .futureValue
+
+      assert(result == Right(()))
+
+      val createLossClaimResult: Either[ServiceError, CreateLossClaimSuccessResponse] =
+        ifsConnector.createLossClaim(journeyCtxWithNino, submissionData).value.futureValue
+      assert(createLossClaimResult == Right(api1505SuccessResponse))
+    }
+
+    "do nothing when there is no existing data and no submission data" in new StubbedService {
+      override val ifsConnector: StubIFSConnector =
+        StubIFSConnector(
+          createLossClaimResult = api1505SuccessResponse.asRight
+        )
+
+      val method: Method = service.getClass.getDeclaredMethod(
+        "handleLossClaim",
+        classOf[JourneyContextWithNino],
+        classOf[Option[Unit]],
+        classOf[Option[CreateLossClaimRequestBody]],
+        classOf[HeaderCarrier])
+      method.setAccessible(true)
+
+      val result: Either[ServiceError, Unit] = method
+        .invoke(service, journeyCtxWithNino, None, None, hc)
+        .asInstanceOf[EitherT[Future, ServiceError, Unit]]
+        .value
+        .futureValue
+
+      assert(result == Right(()))
+    }
+  }
+
+  val listWithNoMatchingIds: List[LossData] = List(
     LossData("11111", "wwwwwww", LossType.SelfEmployment, 400, "2022-23", LocalDateTime.now),
     LossData("22222", "xxxxxxx", LossType.SelfEmployment, 400, "2022-23", LocalDateTime.now),
     LossData("33333", "zzzzzzz", LossType.SelfEmployment, 500, "2021-22", LocalDateTime.now)
@@ -368,19 +432,19 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
   "getLossByBusinessId" should {
     forAll(getLossByBusinessIdTestCases) { (testDescription, connectorResponse, expectedResult) =>
       s"return $testDescription" in new StubbedService {
-        override val ifsBusinessDetailsConnector = StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = connectorResponse)
-        val result                               = service.getLossByBusinessId(journeyCtxWithNino).value.futureValue
+        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = connectorResponse)
+        val result: Either[ServiceError, Option[LossData]] = service.getBroughtForwardLossByBusinessId(journeyCtxWithNino).value.futureValue
 
         assert(result == expectedResult)
       }
     }
   }
 }
-
 trait StubbedService {
-  val ifsConnector                = new StubIFSConnector()
-  val ifsBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
-  val repository                  = StubJourneyAnswersRepository()
+  val ifsConnector: StubIFSConnector                               = new StubIFSConnector()
+  val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
+  val repository: StubJourneyAnswersRepository                     = StubJourneyAnswersRepository()
 
   def service: ProfitOrLossAnswersServiceImpl =
     new ProfitOrLossAnswersServiceImpl(ifsConnector, ifsBusinessDetailsConnector, repository)
