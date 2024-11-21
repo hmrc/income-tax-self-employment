@@ -402,14 +402,15 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
 
     lazy val periodicApiResult = connector.amendSEPeriodSummaryResultData.flatMap(_.body.deductions)
     lazy val annualApiResult   = connector.upsertAnnualSummariesSubmissionData.flatMap(_.body.annualAllowances)
-    lazy val (incomeResult, expensesTailoringResult, officeSuppliesResult, goodsToSellOrUseResult, capitalAllowancesResult, zeroEmissionCarsResult) = (for {
-      income                     <- repository.get(incomeCtx)
-      expensesTailoring          <- repository.get(expensesTailoringCtx)
-      officeSupplies             <- repository.get(officeSuppliesCtx)
-      goodsToSellOrUse           <- repository.get(goodsToSellOrUseCtx)
-      capitalAllowancesTailoring <- repository.get(capitalAllowancesTailoringCtx)
-      zeroEmissionCars           <- repository.get(zeroEmissionCarsCtx)
-    } yield (income, expensesTailoring, officeSupplies, goodsToSellOrUse, capitalAllowancesTailoring, zeroEmissionCars)).rightValue
+    lazy val (incomeResult, expensesTailoringResult, officeSuppliesResult, goodsToSellOrUseResult, capitalAllowancesResult, zeroEmissionCarsResult) =
+      (for {
+        income                     <- repository.get(incomeCtx)
+        expensesTailoring          <- repository.get(expensesTailoringCtx)
+        officeSupplies             <- repository.get(officeSuppliesCtx)
+        goodsToSellOrUse           <- repository.get(goodsToSellOrUseCtx)
+        capitalAllowancesTailoring <- repository.get(capitalAllowancesTailoringCtx)
+        zeroEmissionCars           <- repository.get(zeroEmissionCarsCtx)
+      } yield (income, expensesTailoring, officeSupplies, goodsToSellOrUse, capitalAllowancesTailoring, zeroEmissionCars)).rightValue
   }
 }
 

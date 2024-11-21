@@ -313,15 +313,14 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
     } yield result
   }
 
-  def clearOfficeSuppliesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+  def clearOfficeSuppliesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
-      deductionsWithoutAdminCosts = existingPeriodicSummary.financials.toApi1894.deductions.map(_.copy(adminCosts = None))
-      financialsWithoutAdminCosts = existingPeriodicSummary.financials.toApi1894.copy(deductions = deductionsWithoutAdminCosts)
-      existingTaxTakenOffTradingIncome    = existingPeriodicSummary.financials.incomes.flatMap(_.taxTakenOffTradingIncome)
+      deductionsWithoutAdminCosts      = existingPeriodicSummary.financials.toApi1894.deductions.map(_.copy(adminCosts = None))
+      financialsWithoutAdminCosts      = existingPeriodicSummary.financials.toApi1894.copy(deductions = deductionsWithoutAdminCosts)
+      existingTaxTakenOffTradingIncome = existingPeriodicSummary.financials.incomes.flatMap(_.taxTakenOffTradingIncome)
       _ <- submitTailoringAnswers(ctx, financialsWithoutAdminCosts, existingTaxTakenOffTradingIncome)
       _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(OfficeSupplies))
     } yield ()
-  }
 
 }
