@@ -14,12 +14,23 @@
  * limitations under the License.
  */
 
-package models.connector.api_1505
+package models.connector.api_1508
 
-import play.api.libs.json.{Format, Json}
+import models.common.{Enumerable, WithName}
 
-case class CreateLossClaimRequestBody(incomeSourceId: String, reliefClaimed: ReliefClaimType, taxYear: String)
+sealed trait ReliefClaimed
 
-object CreateLossClaimRequestBody {
-  implicit lazy val format: Format[CreateLossClaimRequestBody] = Json.format[CreateLossClaimRequestBody]
+object ReliefClaimed extends Enumerable.Implicits {
+
+  final case object CSGI extends WithName("CSGI") with ReliefClaimed
+  final case object CFCSGI   extends WithName("CFCSGI") with ReliefClaimed
+  final case object CSFHL extends WithName("CSFHL") with ReliefClaimed
+
+  val values: Seq[ReliefClaimed] = Seq(
+    CSGI,
+    CFCSGI,
+    CSFHL
+  )
+
+  implicit val enumerable: Enumerable[ReliefClaimed] = Enumerable(values.map(v => v.toString -> v): _*)
 }

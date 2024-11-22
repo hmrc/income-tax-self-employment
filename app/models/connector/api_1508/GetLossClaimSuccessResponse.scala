@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package models.connector.api_1505
+package models.connector.api_1508
 
 import play.api.libs.json.{Format, Json}
 
-case class CreateLossClaimRequestBody(incomeSourceId: String, reliefClaimed: ReliefClaimType, taxYear: String)
+import java.time.LocalDateTime
 
-object CreateLossClaimRequestBody {
-  implicit lazy val format: Format[CreateLossClaimRequestBody] = Json.format[CreateLossClaimRequestBody]
+case class GetLossClaimSuccessResponse(incomeSourceId: String,
+                                       reliefClaimed: ReliefClaimed,
+                                       claimId: String,
+                                       sequence: Option[Int],
+                                       submissionDate: LocalDateTime)
+
+object GetLossClaimSuccessResponse {
+  implicit lazy val format: Format[GetLossClaimSuccessResponse] = Json.format[GetLossClaimSuccessResponse]
 }

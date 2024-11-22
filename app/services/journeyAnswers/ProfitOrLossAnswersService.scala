@@ -18,13 +18,17 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
+import models.common.JourneyName.{Income, StructuresBuildings}
 import models.common.{JourneyContextWithNino, JourneyName}
 import models.connector.api_1505.CreateLossClaimRequestBody
 import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
+import models.database.capitalAllowances.NewStructuresBuildingsDb
+import models.database.income.IncomeStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.adjustments.ProfitOrLossJourneyAnswers
+import models.frontend.capitalAllowances.structuresBuildings.NewStructuresBuildingsAnswers
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
@@ -52,6 +56,14 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       _      <- createUpdateOrDeleteBroughtForwardLoss(ctx, answers)
       result <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(answers.toDbAnswers))
     } yield result
+
+
+  def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
+    for {
+      maybeData   <- getDbAnswers(ctx)
+      dbAnswers   <- getPersistedAnswers[NewStructuresBuildingsDb](maybeData)
+      fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
+    } yield fullAnswers.asInstanceOf[Option[NewStructuresBuildingsAnswers]]
 
   private def createUpdateOrDeleteAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
@@ -152,4 +164,11 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       // No previous data, no data to submit -> do nothing
       case _ => EitherT.rightT[Future, ServiceError](())
     }
+
+  private def getDbAnswers(ctx: JourneyContextWithNino): EitherT[Future, ServiceError, Option[ProfitOrLossJourneyAnswers]] =
+    for {
+      row            <- repository.get(ctx.toJourneyContext(Income))
+      maybeDbAnswers <- getPersistedAnswers[ProfitOrLossJourneyAnswers](row)
+    } yield maybeDbAnswers
+
 }

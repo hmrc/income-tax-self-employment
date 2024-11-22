@@ -421,6 +421,10 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     }
   }
 
+  def getProfitOrLoss(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleOptionalApiResult(profitOrLossAnswersService.getStructuresBuildings(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
   def saveNationalInsuranceContributions(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[NICsAnswers](taxYear, businessId, nino) { (ctx, answers) =>
       val result: ApiResultT[Unit] = (answers.class2Answers, answers.class4Answers) match {

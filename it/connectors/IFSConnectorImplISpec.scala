@@ -323,6 +323,121 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
     }
   }
 
+  "getClaimLoss" must {
+    "return a success" in new Api1505Test {
+      stubPostWithRequestAndResponseBody(url = downstreamUrl, requestBody = requestBody, expectedResponse = successResponseRaw, expectedStatus = OK)
+
+      connector.createLossClaim(ctx, requestBody).value.futureValue shouldBe successResponse.asRight
+    }
+
+    "return a ParsingError when expectedResponse is incorrect" in new Api1505Test {
+      stubPostWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = badRequestResponseRaw,
+        expectedStatus = OK)
+
+      connector.createLossClaim(ctx, requestBody).value.futureValue shouldBe
+        Left(SingleDownstreamError(500, SingleDownstreamErrorBody("PARSING_ERROR", "Error parsing response from API", DownstreamErrorCode)))
+    }
+
+    "returns BAD_REQUEST GenericDownstreamError when expected status is BAD_REQUEST" in new Api1505Test {
+      stubPostWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = successResponseRaw,
+        expectedStatus = BAD_REQUEST
+      )
+
+      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      result match {
+        case Left(GenericDownstreamError(status, message)) =>
+          status shouldBe 400
+          message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
+          message should include(s"status=$BAD_REQUEST")
+          message should include(s"body:\n$successResponseRaw")
+        case _ => fail("Expected a GenericDownstreamError")
+      }
+    }
+
+    "returns NOT_FOUND GenericDownstreamError when expected status is NOT_FOUND" in new Api1505Test {
+      stubPostWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = successResponseRaw,
+        expectedStatus = NOT_FOUND
+      )
+
+      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      result match {
+        case Left(GenericDownstreamError(status, message)) =>
+          status shouldBe 404
+          message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
+          message should include(s"status=$NOT_FOUND")
+          message should include(s"body:\n$successResponseRaw")
+        case _ => fail("Expected a GenericDownstreamError")
+      }
+    }
+
+    "returns CONFLICT GenericDownstreamError when expected status is CONFLICT" in new Api1505Test {
+      stubPostWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = successResponseRaw,
+        expectedStatus = CONFLICT
+      )
+
+      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      result match {
+        case Left(GenericDownstreamError(status, message)) =>
+          status shouldBe 409
+          message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
+          message should include(s"status=$CONFLICT")
+          message should include(s"body:\n$successResponseRaw")
+        case _ => fail("Expected a GenericDownstreamError")
+      }
+    }
+
+    "returns UNPROCESSABLE_ENTITY GenericDownstreamError when expected status is UNPROCESSABLE_ENTITY" in new Api1505Test {
+      stubPostWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = successResponseRaw,
+        expectedStatus = UNPROCESSABLE_ENTITY
+      )
+
+      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      result match {
+        case Left(GenericDownstreamError(status, message)) =>
+          status shouldBe 422
+          message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
+          message should include(s"status=$UNPROCESSABLE_ENTITY")
+          message should include(s"body:\n$successResponseRaw")
+        case _ => fail("Expected a GenericDownstreamError")
+      }
+    }
+
+    "returns downstream error when unknown status" in new Api1505Test {
+      stubPostWithRequestAndResponseBody(
+        url = downstreamUrl,
+        requestBody = requestBody,
+        expectedResponse = successResponse.claimId,
+        expectedStatus = CREATED
+      )
+
+      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+
+      result match {
+        case Left(GenericDownstreamError(status, message)) =>
+          status shouldBe 201
+          message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
+          message should include(s"status=$CREATED")
+          message should include(s"body:\n${successResponse.claimId}")
+        case _ => fail("Expected a GenericDownstreamError")
+      }
+    }
+  }
+
   trait Api1802Test {
     val downstreamSuccessResponse: String = Json.stringify(Json.obj("transactionReference" -> "someId"))
     val requestBody: CreateAmendSEAnnualSubmissionRequestBody =
