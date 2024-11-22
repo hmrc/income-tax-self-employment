@@ -22,8 +22,8 @@ import models.database.capitalAllowances.{NewSpecialTaxSiteDb, SpecialTaxSitesDb
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class SpecialTaxSitesAnswersSpec extends AnyWordSpecLike {
-  val answers = SpecialTaxSitesAnswers(
-    true,
+  val answers: SpecialTaxSitesAnswers = SpecialTaxSitesAnswers(
+    specialTaxSites = true,
     Some(Nil),
     Some(false),
     Some(false),
@@ -64,7 +64,7 @@ class SpecialTaxSitesAnswersSpec extends AnyWordSpecLike {
       assert(
         result === SpecialTaxSitesAnswers(
           true,
-          Some(List(NewSpecialTaxSite(None, None, None, None, Some(SpecialTaxSiteLocation(Some("name"), None, "postCode")), None))),
+          Some(List(NewSpecialTaxSite(None, None, None, None, None, Some(SpecialTaxSiteLocation(Some("name"), None, "postCode")), Some(1.0)))),
           None,
           None,
           None

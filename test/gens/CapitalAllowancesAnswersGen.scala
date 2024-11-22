@@ -168,6 +168,7 @@ object CapitalAllowancesAnswersGen {
         contractStartDate = Some(LocalDate.now()),
         constructionStartDate = Some(LocalDate.now()),
         qualifyingUseStartDate = Some(LocalDate.now()),
+        qualifyingExpenditure = claimingAmount,
         specialTaxSiteLocation = Some(SpecialTaxSiteLocation(Some("name"), Some("number"), "AA11AA")),
         newSiteClaimingAmount = claimingAmount
       )

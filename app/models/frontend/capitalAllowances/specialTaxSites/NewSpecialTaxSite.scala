@@ -27,6 +27,7 @@ final case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boole
                                    contractStartDate: Option[LocalDate],
                                    constructionStartDate: Option[LocalDate],
                                    qualifyingUseStartDate: Option[LocalDate],
+                                   qualifyingExpenditure: Option[BigDecimal],
                                    specialTaxSiteLocation: Option[SpecialTaxSiteLocation],
                                    newSiteClaimingAmount: Option[BigDecimal]) {
 
@@ -38,11 +39,10 @@ final case class NewSpecialTaxSite(contractForBuildingConstruction: Option[Boole
     ))
 
   private def toFirstYear: Option[FirstYear] =
-    qualifyingUseStartDate.map(startDate =>
-      FirstYear(
-        qualifyingDate = startDate.format(dateFormatter),
-        qualifyingAmountExpenditure = BigDecimal(0.0)
-      )) // TODO Once the missing page is added remove 0.0
+    for {
+      startDate                   <- qualifyingUseStartDate
+      qualifyingAmountExpenditure <- qualifyingExpenditure
+    } yield FirstYear(startDate.format(dateFormatter), qualifyingAmountExpenditure)
 
   def toBuildingAllowance: Option[BuildingAllowance] =
     for {
