@@ -23,14 +23,14 @@ import play.api.libs.json.{Format, Json}
 import java.time.LocalDate
 
 final case class NewStructureBuilding(qualifyingUse: Option[LocalDate] = None,
+                                      newStructureBuildingQualifyingExpenditureAmount: Option[BigDecimal] = None,
                                       newStructureBuildingLocation: Option[StructuresBuildingsLocation] = None,
                                       newStructureBuildingClaimingAmount: Option[BigDecimal] = None) {
   private def toFirstYear: Option[FirstYear] =
-    qualifyingUse.map(startDate =>
-      FirstYear(
-        qualifyingDate = startDate.format(dateFormatter),
-        qualifyingAmountExpenditure = BigDecimal(0.0)
-      )) // TODO Once the missing page is added remove 0.0
+    for {
+      startDate         <- qualifyingUse
+      expenditureAmount <- newStructureBuildingQualifyingExpenditureAmount
+    } yield FirstYear(startDate.format(dateFormatter), expenditureAmount)
 
   def toBuildingAllowance: Option[BuildingAllowance] =
     for {
