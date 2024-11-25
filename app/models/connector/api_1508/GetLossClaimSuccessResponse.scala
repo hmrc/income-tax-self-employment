@@ -16,12 +16,13 @@
 
 package models.connector.api_1508
 
+import models.connector.api_1505.ReliefClaimType
 import play.api.libs.json.{Format, Json}
 
 import java.time.LocalDateTime
 
 case class GetLossClaimSuccessResponse(incomeSourceId: String,
-                                       reliefClaimed: ReliefClaimed,
+                                       reliefClaimed: ReliefClaimType,
                                        claimId: String,
                                        sequence: Option[Int],
                                        submissionDate: LocalDateTime)

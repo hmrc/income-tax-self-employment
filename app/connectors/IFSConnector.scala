@@ -69,6 +69,7 @@ trait IFSConnector {
 
 object IFSConnector {
   type Api1505Response = ApiResponse[api_1505.CreateLossClaimSuccessResponse]
+  type Api1508Response = ApiResponse[api_1508.GetLossClaimSuccessResponse]
   type Api1638Response = ApiResponse[Unit]
   type Api1639Response = ApiResponseOption[SuccessResponseAPI1639]
   type Api1786Response = ApiResponse[api_1786.SuccessResponseSchema]
@@ -209,9 +210,10 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[GetLossClaimSuccessResponse] = {
     val url     = getLossClaimUrl(requestBody.taxableEntityId, requestBody.claimId)
-    val context = appConfig.mkMetadata(IFSApiName.Api1505, url)
+    val context = appConfig.mkMetadata(IFSApiName.Api1508, url)
+    implicit val reads: HttpReads[ApiResponse[Option[GetLossClaimSuccessResponse]]] = commonGetReads[GetLossClaimSuccessResponse]
 
-    EitherT(post[GetLossClaimRequestBody, Api1505Response](http, context, requestBody))
+    EitherT(get[Api1508Response](http, context))
   }
 
 }

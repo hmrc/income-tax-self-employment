@@ -18,17 +18,14 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
-import models.common.JourneyName.{Income, StructuresBuildings}
+import models.common.JourneyName.Income
 import models.common.{JourneyContextWithNino, JourneyName}
 import models.connector.api_1505.CreateLossClaimRequestBody
 import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
-import models.database.capitalAllowances.NewStructuresBuildingsDb
-import models.database.income.IncomeStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.adjustments.ProfitOrLossJourneyAnswers
-import models.frontend.capitalAllowances.structuresBuildings.NewStructuresBuildingsAnswers
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
@@ -40,6 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait ProfitOrLossAnswersService {
 
   def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]]
 
 }
 
@@ -59,11 +57,12 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 
 
   def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
-    for {
+    /*for {
       maybeData   <- getDbAnswers(ctx)
       dbAnswers   <- getPersistedAnswers[NewStructuresBuildingsDb](maybeData)
       fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
-    } yield fullAnswers.asInstanceOf[Option[NewStructuresBuildingsAnswers]]
+    } yield fullAnswers.asInstanceOf[Option[ProfitOrLossJourneyAnswers]]*/
+    EitherT.rightT[Future, ServiceError](None)
 
   private def createUpdateOrDeleteAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {

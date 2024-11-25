@@ -16,8 +16,7 @@
 
 package connectors.data
 
-import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
-import models.connector.api_1508.GetLossClaimRequestBody
+import models.connector.api_1508.{GetLossClaimRequestBody, GetLossClaimSuccessResponse}
 import play.api.libs.json.Json
 import utils.BaseSpec.nino
 
@@ -25,7 +24,7 @@ trait Api1508Test {
 
   val claimId = "1234568790ABCDE"
 
-val downstreamUrl: String = s"/income-tax/claims-for-relief/$nino/$claimId"
+  val downstreamUrl: String = s"/income-tax/claims-for-relief/$nino/$claimId"
 
   val successResponseRaw: String =
     s"""{
@@ -33,16 +32,14 @@ val downstreamUrl: String = s"/income-tax/claims-for-relief/$nino/$claimId"
        |"reliefClaimed": "CF",
        |"taxYearClaimedFor": "2020",
        |"claimId": "AAZZ1234567890A",
-       |"sequence": "2",
+       |"sequence": 2,
        |"submissionDate": "2020-07-13T12:13:48.763Z"
        |}
        |""".stripMargin
 
-
-
   val requestBody: GetLossClaimRequestBody = GetLossClaimRequestBody(
     taxableEntityId = nino.value,
-      claimId = "CF"
+    claimId = claimId
   )
 
   val badRequestResponseRaw: String =
@@ -53,5 +50,5 @@ val downstreamUrl: String = s"/income-tax/claims-for-relief/$nino/$claimId"
   }
   """
 
-  val successResponse: CreateLossClaimSuccessResponse = Json.parse(successResponseRaw).as[CreateLossClaimSuccessResponse]
+  val successResponse: GetLossClaimSuccessResponse = Json.parse(successResponseRaw).as[GetLossClaimSuccessResponse]
 }
