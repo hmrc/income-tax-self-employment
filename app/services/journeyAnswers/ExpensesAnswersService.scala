@@ -19,7 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
-import models.common.JourneyName.{CapitalAllowancesTailoring, ExpensesTailoring, GoodsToSellOrUse, WorkplaceRunningCosts}
+import models.common.JourneyName.{CapitalAllowancesTailoring, ExpensesTailoring, GoodsToSellOrUse, OfficeSupplies, WorkplaceRunningCosts}
 import models.common._
 import models.connector.api_1894.request.FinancialsType
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
@@ -86,6 +86,7 @@ trait ExpensesAnswersService {
   def getWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WorkplaceRunningCostsAnswers]]
 
   def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearOfficeSuppliesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
@@ -311,5 +312,15 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       result <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(CapitalAllowancesTailoring), Some("capital-allowances-"))
     } yield result
   }
+
+  def clearOfficeSuppliesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    for {
+      existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
+      deductionsWithoutAdminCosts      = existingPeriodicSummary.financials.toApi1894.deductions.map(_.copy(adminCosts = None))
+      financialsWithoutAdminCosts      = existingPeriodicSummary.financials.toApi1894.copy(deductions = deductionsWithoutAdminCosts)
+      existingTaxTakenOffTradingIncome = existingPeriodicSummary.financials.incomes.flatMap(_.taxTakenOffTradingIncome)
+      _ <- submitTailoringAnswers(ctx, financialsWithoutAdminCosts, existingTaxTakenOffTradingIncome)
+      _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(OfficeSupplies))
+    } yield ()
 
 }

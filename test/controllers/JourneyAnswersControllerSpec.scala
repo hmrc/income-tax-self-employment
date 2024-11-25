@@ -359,6 +359,26 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     )
   }
 
+  s"clearOfficeSuppliesExpensesData" in {
+    val controller: JourneyAnswersController = new JourneyAnswersController(
+      auth = mockAuthorisedAction,
+      cc = stubControllerComponents,
+      abroadAnswersService = StubAbroadAnswersService(),
+      incomeService = StubIncomeAnswersService(),
+      expensesService = StubExpensesAnswersService(),
+      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+      prepopAnswersService = StubPrepopAnswersService(),
+      nicsAnswersService = StubNICsAnswersService(),
+      profitOrLossAnswersService = StubProfitOrLossAnswersService()
+    )
+    behave like testRoute(
+      request = buildRequestNoContent,
+      expectedStatus = NO_CONTENT,
+      expectedBody = "",
+      methodBlock = () => controller.clearOfficeSuppliesExpensesData(currTaxYear, businessId, nino)
+    )
+  }
+
   "GoodsToSellOrUse" should {
     s"Get return $NO_CONTENT if there is no answers" in {
       checkNoContent(underTest.getGoodsToSellOrUse(currTaxYear, businessId, nino))
