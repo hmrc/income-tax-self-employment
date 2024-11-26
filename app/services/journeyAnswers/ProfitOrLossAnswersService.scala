@@ -18,7 +18,6 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
-import models.common.JourneyName.Income
 import models.common.{JourneyContextWithNino, JourneyName}
 import models.connector.api_1505.CreateLossClaimRequestBody
 import models.connector.api_1870.LossData
@@ -55,14 +54,14 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       result <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(answers.toDbAnswers))
     } yield result
 
-
   def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
-    /*for {
-      maybeData   <- getDbAnswers(ctx)
-      dbAnswers   <- getPersistedAnswers[NewStructuresBuildingsDb](maybeData)
-      fullAnswers <- createFullJourneyAnswersWithApiData(ctx, dbAnswers)
-    } yield fullAnswers.asInstanceOf[Option[ProfitOrLossJourneyAnswers]]*/
-    EitherT.rightT[Future, ServiceError](None)
+    for {
+      maybeData <- getDbAnswers(ctx)
+      apiResponse   <- ifsConnector.getLossClaim(ctx, "claimId") //TODO Need to check how claimId be passed
+    } yield maybeData match {
+      case Some(journeyAnswer) => Option(ProfitOrLossJourneyAnswers(apiResponse, journeyAnswer))
+      case _          => None
+    }
 
   private def createUpdateOrDeleteAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
@@ -166,7 +165,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 
   private def getDbAnswers(ctx: JourneyContextWithNino): EitherT[Future, ServiceError, Option[ProfitOrLossJourneyAnswers]] =
     for {
-      row            <- repository.get(ctx.toJourneyContext(Income))
+      row            <- repository.get(ctx.toJourneyContext(JourneyName.ProfitOrLoss))
       maybeDbAnswers <- getPersistedAnswers[ProfitOrLossJourneyAnswers](row)
     } yield maybeDbAnswers
 

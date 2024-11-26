@@ -16,7 +16,7 @@
 
 package connectors.data
 
-import models.connector.api_1508.{GetLossClaimRequestBody, GetLossClaimSuccessResponse}
+import models.connector.api_1508.GetLossClaimSuccessResponse
 import play.api.libs.json.Json
 import utils.BaseSpec.nino
 
@@ -36,11 +36,6 @@ trait Api1508Test {
        |"submissionDate": "2020-07-13T12:13:48.763Z"
        |}
        |""".stripMargin
-
-  val requestBody: GetLossClaimRequestBody = GetLossClaimRequestBody(
-    taxableEntityId = nino.value,
-    claimId = claimId
-  )
 
   val badRequestResponseRaw: String =
     """

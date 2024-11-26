@@ -22,12 +22,12 @@ import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.IFSConnector
 import connectors.IFSConnector._
 import models.common.{BusinessId, JourneyContextWithNino}
+import models.connector.ReliefClaimType.CF
 import models.connector._
 import models.connector.api_1171.{BusinessDataDetails, BusinessDataDetailsTestData}
 import models.connector.api_1500.LossType
-import models.connector.api_1505.ReliefClaimType.CF
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
-import models.connector.api_1508.{GetLossClaimRequestBody, GetLossClaimSuccessResponse}
+import models.connector.api_1508.GetLossClaimSuccessResponse
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
@@ -145,9 +145,10 @@ case class StubIFSConnector(
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[CreateLossClaimSuccessResponse] = EitherT.fromEither[Future](createLossClaimResult)
 
-  def getLossClaim(ctx: JourneyContextWithNino, request: GetLossClaimRequestBody)(implicit
+  def getLossClaim(ctx: JourneyContextWithNino, claimId: String)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): ApiResultT[GetLossClaimSuccessResponse] = ???
+      ec: ExecutionContext): ApiResultT[GetLossClaimSuccessResponse] = EitherT.fromEither[Future](getLossClaimResult)
+
 }
 
 object StubIFSConnector {

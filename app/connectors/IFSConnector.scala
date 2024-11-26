@@ -23,7 +23,7 @@ import models.common.TaxYear.{asTys, endDate, startDate}
 import models.common._
 import models.connector._
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
-import models.connector.api_1508.{GetLossClaimRequestBody, GetLossClaimSuccessResponse}
+import models.connector.api_1508.GetLossClaimSuccessResponse
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
@@ -62,7 +62,7 @@ trait IFSConnector {
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[CreateLossClaimSuccessResponse]
 
-  def getLossClaim(ctx: JourneyContextWithNino, request: GetLossClaimRequestBody)(implicit
+  def getLossClaim(ctx: JourneyContextWithNino, claimId: String)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[GetLossClaimSuccessResponse]
 }
@@ -102,8 +102,8 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
   private def createLossClaimUrl(nino: Nino) =
     s"${appConfig.ifsBaseUrl}/income-tax/claims-for-relief/$nino"
 
-  private def getLossClaimUrl(taxableEntityId: String, claimId: String) =
-    s"${appConfig.ifsBaseUrl}/income-tax/claims-for-relief/$taxableEntityId/$claimId"
+  private def getLossClaimUrl(nino: Nino, claimId: String) =
+    s"${appConfig.ifsBaseUrl}/income-tax/claims-for-relief/$nino/$claimId"
 
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {
     val url                                          = periodicSummaries(data.nino, data.businessId, data.taxYear)
@@ -206,12 +206,11 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     EitherT(post[CreateLossClaimRequestBody, Api1505Response](http, context, requestBody))
   }
 
-  def getLossClaim(ctx: JourneyContextWithNino, requestBody: GetLossClaimRequestBody)(implicit
+  def getLossClaim(ctx: JourneyContextWithNino, claimId: String)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[GetLossClaimSuccessResponse] = {
-    val url     = getLossClaimUrl(requestBody.taxableEntityId, requestBody.claimId)
+    val url     = getLossClaimUrl(ctx.nino, claimId)
     val context = appConfig.mkMetadata(IFSApiName.Api1508, url)
-    implicit val reads: HttpReads[ApiResponse[Option[GetLossClaimSuccessResponse]]] = commonGetReads[GetLossClaimSuccessResponse]
 
     EitherT(get[Api1508Response](http, context))
   }

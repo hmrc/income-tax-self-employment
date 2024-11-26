@@ -328,7 +328,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
     "return a success" in new Api1508Test {
       stubGetWithResponseBody(url = downstreamUrl, expectedResponse = successResponseRaw, expectedStatus = OK)
 
-      connector.getLossClaim(ctx, requestBody).value.futureValue shouldBe successResponse.asRight
+      connector.getLossClaim(ctx, claimId).value.futureValue shouldBe successResponse.asRight
     }
 
     "return a ParsingError when expectedResponse is incorrect" in new Api1508Test {
@@ -337,7 +337,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedResponse = badRequestResponseRaw,
         expectedStatus = OK)
 
-      connector.getLossClaim(ctx, requestBody).value.futureValue shouldBe
+      connector.getLossClaim(ctx, claimId).value.futureValue shouldBe
         Left(SingleDownstreamError(500, SingleDownstreamErrorBody("PARSING_ERROR", "Error parsing response from API", DownstreamErrorCode)))
     }
 
@@ -349,7 +349,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
           expectedStatus = errorStatus
         )
 
-        val result: Either[ServiceError, GetLossClaimSuccessResponse] = connector.getLossClaim(ctx, requestBody).value.futureValue
+        val result: Either[ServiceError, GetLossClaimSuccessResponse] = connector.getLossClaim(ctx, claimId).value.futureValue
         result match {
           case Left(GenericDownstreamError(status, message)) =>
             status shouldBe errorStatus

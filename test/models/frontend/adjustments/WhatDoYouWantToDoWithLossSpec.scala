@@ -14,21 +14,14 @@
  * limitations under the License.
  */
 
-package models.connector.api_1505
+package models.frontend.adjustments
 
-import models.common.{Enumerable, WithName}
+import org.scalatest.wordspec.AnyWordSpecLike
 
-sealed trait ReliefClaimType
+class WhatDoYouWantToDoWithLossSpec extends AnyWordSpecLike {
+  "WhatDoYouWantToDoWithLoss" must {
+    "" in {
 
-object ReliefClaimType extends Enumerable.Implicits {
-
-  case object CF   extends WithName("CF") with ReliefClaimType
-  case object CSGI extends WithName("CSGI") with ReliefClaimType
-
-  val values: Seq[ReliefClaimType] = Seq(
-    CF,
-    CSGI
-  )
-
-  implicit val enumerable: Enumerable[ReliefClaimType] = Enumerable(values.map(v => v.toString -> v): _*)
+    }
+  }
 }

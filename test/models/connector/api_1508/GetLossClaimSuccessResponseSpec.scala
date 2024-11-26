@@ -16,7 +16,7 @@
 
 package models.connector.api_1508
 
-import models.connector.api_1505.ReliefClaimType.CF
+import models.connector.ReliefClaimType.CF
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsResultException, JsValue, Json}
