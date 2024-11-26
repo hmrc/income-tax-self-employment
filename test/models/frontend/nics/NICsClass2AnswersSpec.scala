@@ -26,7 +26,7 @@ class NICsClass2AnswersSpec extends AnyWordSpec with Matchers {
 
     "write to JSON correctly" in {
       val answers = NICsClass2Answers(class2NICs = true)
-      val json = Json.toJson(answers)
+      val json    = Json.toJson(answers)
       json.toString() shouldBe """{"class2NICs":true}"""
     }
 
@@ -37,7 +37,7 @@ class NICsClass2AnswersSpec extends AnyWordSpec with Matchers {
 
     "handle false value correctly" in {
       val answers = NICsClass2Answers(class2NICs = false)
-      val json = Json.toJson(answers)
+      val json    = Json.toJson(answers)
       json.toString() shouldBe """{"class2NICs":false}"""
 
       val parsedJson = Json.parse("""{"class2NICs":false}""")
