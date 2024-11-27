@@ -36,6 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait ProfitOrLossAnswersService {
 
   def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]]
 
 }
 
@@ -52,6 +53,15 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       _      <- createUpdateOrDeleteBroughtForwardLoss(ctx, answers)
       result <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(answers.toDbAnswers))
     } yield result
+
+  def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
+    for {
+      maybeData   <- getDbAnswers(ctx)
+      apiResponse <- ifsConnector.getLossClaim(ctx, "claimId") // TODO Need to check how claimId be passed
+    } yield maybeData match {
+      case Some(journeyAnswer) => Option(ProfitOrLossJourneyAnswers(apiResponse, journeyAnswer))
+      case _                   => None
+    }
 
   private def createUpdateOrDeleteAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
@@ -152,4 +162,11 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       // No previous data, no data to submit -> do nothing
       case _ => EitherT.rightT[Future, ServiceError](())
     }
+
+  private def getDbAnswers(ctx: JourneyContextWithNino): EitherT[Future, ServiceError, Option[ProfitOrLossJourneyAnswers]] =
+    for {
+      row            <- repository.get(ctx.toJourneyContext(JourneyName.ProfitOrLoss))
+      maybeDbAnswers <- getPersistedAnswers[ProfitOrLossJourneyAnswers](row)
+    } yield maybeDbAnswers
+
 }

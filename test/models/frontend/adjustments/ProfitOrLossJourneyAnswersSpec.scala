@@ -17,10 +17,15 @@
 package models.frontend.adjustments
 
 import models.common.JourneyContextWithNino
+import models.connector.ReliefClaimType.{CF, CSGI}
+import models.connector.api_1505.CreateLossClaimRequestBody
+import models.connector.{ClaimId, ReliefClaimType, api_1508}
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.{CarryItForward, DeductFromOtherTypes}
 import org.scalatest.matchers.should.Matchers
-import models.connector.api_1505.{CreateLossClaimRequestBody, ReliefClaimType}
 import org.scalatest.wordspec.AnyWordSpecLike
 import utils.BaseSpec.{businessId, currTaxYear, mtditid, nino}
+
+import java.time.LocalDateTime
 
 class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers {
 
@@ -102,6 +107,62 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers {
 
         result shouldBe None
       }
+    }
+
+    "calling ProfitOrLossJourneyAnswers apply method" should {
+
+      "return ProfitOrLossJourneyAnswers with updated data from GetLossClaimSuccessResponse" in {
+        val answers = ProfitOrLossJourneyAnswers(
+          goodsAndServicesForYourOwnUse = true,
+          goodsAndServicesAmount = Option(BigDecimal(1000)),
+          claimLossRelief = Option(true),
+          whatDoYouWantToDoWithLoss = Option(Seq(WhatDoYouWantToDoWithLoss.DeductFromOtherTypes, WhatDoYouWantToDoWithLoss.CarryItForward)),
+          carryLossForward = None,
+          previousUnusedLosses = true,
+          unusedLossAmount = Option(BigDecimal(500)),
+          whichYearIsLossReported = Option(WhichYearIsLossReported.Year2022to2023)
+        )
+
+        val apiResponse: api_1508.GetLossClaimSuccessResponse =
+          api_1508.GetLossClaimSuccessResponse(
+            incomeSourceId = "012345678912345",
+            reliefClaimed = CF,
+            claimId = ClaimId("AAZZ1234567890A"),
+            sequence = Option(2),
+            submissionDate = LocalDateTime.now())
+
+        val result = ProfitOrLossJourneyAnswers.apply(apiResponse = apiResponse, journeyAnswers = answers)
+
+        result shouldBe answers.copy(whatDoYouWantToDoWithLoss = Option(List(CarryItForward)), carryLossForward = Option(true))
+
+      }
+
+      "return ProfitOrLossJourneyAnswers with updated data from GetLossClaimSuccessResponse when reliefClaimed is CSGI" in {
+        val answers = ProfitOrLossJourneyAnswers(
+          goodsAndServicesForYourOwnUse = true,
+          goodsAndServicesAmount = Option(BigDecimal(1000)),
+          claimLossRelief = Option(true),
+          whatDoYouWantToDoWithLoss = Option(Seq(WhatDoYouWantToDoWithLoss.DeductFromOtherTypes, WhatDoYouWantToDoWithLoss.CarryItForward)),
+          carryLossForward = None,
+          previousUnusedLosses = true,
+          unusedLossAmount = Option(BigDecimal(500)),
+          whichYearIsLossReported = Option(WhichYearIsLossReported.Year2022to2023)
+        )
+
+        val apiResponse: api_1508.GetLossClaimSuccessResponse =
+          api_1508.GetLossClaimSuccessResponse(
+            incomeSourceId = "012345678912345",
+            reliefClaimed = CSGI,
+            claimId = ClaimId("AAZZ1234567890A"),
+            sequence = Option(2),
+            submissionDate = LocalDateTime.now())
+
+        val result = ProfitOrLossJourneyAnswers.apply(apiResponse = apiResponse, journeyAnswers = answers)
+
+        result shouldBe answers.copy(whatDoYouWantToDoWithLoss = Option(List(DeductFromOtherTypes)), carryLossForward = Option(false))
+
+      }
+
     }
   }
 }

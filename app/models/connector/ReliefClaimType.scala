@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.connector.api_1505
+package models.connector
 
 import models.common.{Enumerable, WithName}
 
@@ -22,8 +22,8 @@ sealed trait ReliefClaimType
 
 object ReliefClaimType extends Enumerable.Implicits {
 
-  case object CF   extends WithName("CF") with ReliefClaimType
-  case object CSGI extends WithName("CSGI") with ReliefClaimType
+  final case object CF   extends WithName("CF") with ReliefClaimType
+  final case object CSGI extends WithName("CSGI") with ReliefClaimType
 
   val values: Seq[ReliefClaimType] = Seq(
     CF,

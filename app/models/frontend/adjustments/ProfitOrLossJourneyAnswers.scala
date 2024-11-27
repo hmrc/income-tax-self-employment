@@ -18,11 +18,13 @@ package models.frontend.adjustments
 
 import models.common.JourneyContextWithNino
 import models.connector.api_1500.LossType
-import models.connector.api_1505.{CreateLossClaimRequestBody, ReliefClaimType}
+import models.connector.api_1505.CreateLossClaimRequestBody
+import models.connector.api_1508.GetLossClaimSuccessResponse
 import models.connector.api_1802.request.AnnualAdjustments
-import models.connector.{api_1500, api_1501}
+import models.connector.{ReliefClaimType, api_1500, api_1501}
 import models.database.adjustments.ProfitOrLossDb
 import models.frontend.FrontendAnswers
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.CarryItForward
 import play.api.libs.json._
 
 case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,     // db
@@ -56,6 +58,14 @@ case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,   
 
 object ProfitOrLossJourneyAnswers {
   implicit val formats: OFormat[ProfitOrLossJourneyAnswers] = Json.format[ProfitOrLossJourneyAnswers]
+
+  def apply(apiResponse: GetLossClaimSuccessResponse, journeyAnswers: ProfitOrLossJourneyAnswers): ProfitOrLossJourneyAnswers = {
+    val whatDoYouWantToDoWithLoss: Option[Seq[WhatDoYouWantToDoWithLoss]] = Option(Seq(WhatDoYouWantToDoWithLoss(apiResponse.reliefClaimed)))
+
+    val carryLossForward: Option[Boolean] = whatDoYouWantToDoWithLoss.map(_.contains(CarryItForward))
+
+    journeyAnswers.copy(whatDoYouWantToDoWithLoss = whatDoYouWantToDoWithLoss, carryLossForward = carryLossForward)
+  }
 
   def toCreateBroughtForwardLossData(ctx: JourneyContextWithNino,
                                      unusedLossAmount: BigDecimal,

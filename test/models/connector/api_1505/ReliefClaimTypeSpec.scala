@@ -16,6 +16,7 @@
 
 package models.connector.api_1505
 
+import models.connector.ReliefClaimType
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json._

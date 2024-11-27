@@ -21,13 +21,17 @@ import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.adjustments.ProfitOrLossJourneyAnswers
+import models.frontend.income.IncomeJourneyAnswers
 import services.journeyAnswers.ProfitOrLossAnswersService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class StubProfitOrLossAnswersService() extends ProfitOrLossAnswersService {
+case class StubProfitOrLossAnswersService(getProfitOrLossRes: Option[ProfitOrLossJourneyAnswers] = None) extends ProfitOrLossAnswersService {
   override def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     EitherT.rightT[Future, ServiceError](())
+
+  override def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
+    EitherT.rightT[Future, ServiceError](getProfitOrLossRes)
 }

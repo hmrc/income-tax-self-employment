@@ -17,13 +17,14 @@
 package models.frontend.adjustments
 
 import models.common.{Enumerable, WithName}
+import models.connector.ReliefClaimType
 
 sealed trait WhatDoYouWantToDoWithLoss
 
 object WhatDoYouWantToDoWithLoss extends Enumerable.Implicits {
 
-  case object DeductFromOtherTypes extends WithName("deductFromOtherTypes") with WhatDoYouWantToDoWithLoss
-  case object CarryItForward       extends WithName("carryItForward") with WhatDoYouWantToDoWithLoss
+  final case object DeductFromOtherTypes extends WithName("deductFromOtherTypes") with WhatDoYouWantToDoWithLoss
+  final case object CarryItForward       extends WithName("carryItForward") with WhatDoYouWantToDoWithLoss
 
   val values: List[WhatDoYouWantToDoWithLoss] = List(
     DeductFromOtherTypes,
@@ -31,5 +32,11 @@ object WhatDoYouWantToDoWithLoss extends Enumerable.Implicits {
   )
 
   implicit val enumerable: Enumerable[WhatDoYouWantToDoWithLoss] = Enumerable(values.map(v => v.toString -> v): _*)
+
+  def apply(reliefClaimType: ReliefClaimType): WhatDoYouWantToDoWithLoss =
+    reliefClaimType match {
+      case ReliefClaimType.CF   => CarryItForward
+      case ReliefClaimType.CSGI => DeductFromOtherTypes
+    }
 
 }
