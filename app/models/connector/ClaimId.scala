@@ -16,7 +16,7 @@
 
 package models.connector
 
-import play.api.libs.json.{JsError, JsString, JsSuccess, Json, OFormat, Reads, Writes}
+import play.api.libs.json._
 
 final case class ClaimId(value: String) {
   override def toString: String = value
