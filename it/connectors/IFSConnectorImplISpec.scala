@@ -332,16 +332,13 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
     }
 
     "return a ParsingError when expectedResponse is incorrect" in new Api1508Test {
-      stubGetWithResponseBody(
-        url = downstreamUrl,
-        expectedResponse = badRequestResponseRaw,
-        expectedStatus = OK)
+      stubGetWithResponseBody(url = downstreamUrl, expectedResponse = badRequestResponseRaw, expectedStatus = OK)
 
       connector.getLossClaim(ctx, claimId).value.futureValue shouldBe
         Left(SingleDownstreamError(500, SingleDownstreamErrorBody("PARSING_ERROR", "Error parsing response from API", DownstreamErrorCode)))
     }
 
-    for (errorStatus <- Seq(BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, INTERNAL_SERVER_ERROR)) {
+    for (errorStatus <- Seq(BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, INTERNAL_SERVER_ERROR))
       s"returns $errorStatus GenericDownstreamError when expected status is $errorStatus" in new Api1508Test {
         stubGetWithResponseBody(
           url = downstreamUrl,
@@ -359,7 +356,6 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
           case _ => fail("Expected a GenericDownstreamError")
         }
       }
-    }
   }
 
   trait Api1802Test {

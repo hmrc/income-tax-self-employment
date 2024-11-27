@@ -20,8 +20,6 @@ import org.scalatest.wordspec.AnyWordSpecLike
 
 class WhatDoYouWantToDoWithLossSpec extends AnyWordSpecLike {
   "WhatDoYouWantToDoWithLoss" must {
-    "" in {
-
-    }
+    "" in {}
   }
 }

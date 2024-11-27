@@ -28,8 +28,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class StubProfitOrLossAnswersService(getProfitOrLossRes: Option[ProfitOrLossJourneyAnswers] = None)
-    extends ProfitOrLossAnswersService {
+case class StubProfitOrLossAnswersService(getProfitOrLossRes: Option[ProfitOrLossJourneyAnswers] = None) extends ProfitOrLossAnswersService {
   override def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     EitherT.rightT[Future, ServiceError](())
 

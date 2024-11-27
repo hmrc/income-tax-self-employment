@@ -29,7 +29,7 @@ class ClaimIdSpec extends AnyWordSpecLike {
 
     "de-serialise to ClaimId" in {
       val json = JsString("12345678900")
-      json.as[ClaimId] shouldBe  ClaimId("12345678900")
+      json.as[ClaimId] shouldBe ClaimId("12345678900")
     }
   }
 }
