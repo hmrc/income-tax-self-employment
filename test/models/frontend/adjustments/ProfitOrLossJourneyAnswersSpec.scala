@@ -19,7 +19,7 @@ package models.frontend.adjustments
 import models.common.JourneyContextWithNino
 import models.connector.ReliefClaimType.{CF, CSGI}
 import models.connector.api_1505.CreateLossClaimRequestBody
-import models.connector.{ReliefClaimType, api_1508}
+import models.connector.{ClaimId, ReliefClaimType, api_1508}
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.{CarryItForward, DeductFromOtherTypes}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -127,7 +127,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers {
           api_1508.GetLossClaimSuccessResponse(
             incomeSourceId = "012345678912345",
             reliefClaimed = CF,
-            claimId = "AAZZ1234567890A",
+            claimId = ClaimId("AAZZ1234567890A"),
             sequence = Option(2),
             submissionDate = LocalDateTime.now())
 
@@ -153,7 +153,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers {
           api_1508.GetLossClaimSuccessResponse(
             incomeSourceId = "012345678912345",
             reliefClaimed = CSGI,
-            claimId = "AAZZ1234567890A",
+            claimId = ClaimId("AAZZ1234567890A"),
             sequence = Option(2),
             submissionDate = LocalDateTime.now())
 

@@ -16,6 +16,7 @@
 
 package models.connector.api_1508
 
+import models.connector.ClaimId
 import models.connector.ReliefClaimType.CF
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -30,7 +31,7 @@ class GetLossClaimSuccessResponseSpec extends AnyWordSpec with Matchers {
     val lossClaimSuccessResponse = GetLossClaimSuccessResponse(
       incomeSourceId = "012345678912345",
       reliefClaimed = CF,
-      claimId = "AAZZ1234567890A",
+      claimId = ClaimId("AAZZ1234567890A"),
       sequence = Option(2),
       submissionDate = submissionDate)
 

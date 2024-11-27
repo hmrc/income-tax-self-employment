@@ -246,7 +246,7 @@ object StubIFSConnector {
     api_1508.GetLossClaimSuccessResponse(
       incomeSourceId = "012345678912345",
       reliefClaimed = CF,
-      claimId = "AAZZ1234567890A",
+      claimId = ClaimId("AAZZ1234567890A"),
       sequence = Option(2),
       submissionDate = LocalDateTime.now())
   val api1870EmptyResponse: api_1870.SuccessResponseSchema = api_1870.SuccessResponseSchema(List.empty)
