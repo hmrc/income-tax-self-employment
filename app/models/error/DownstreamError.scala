@@ -29,10 +29,10 @@ object DownstreamError {
 
   implicit val formats: Format[DownstreamError] =
     Format(
-      Reads(jsValue => SingleDownstreamError.format.reads(jsValue) orElse MultipleDownstreamErrors.formatt.reads(jsValue)),
+      Reads(jsValue => SingleDownstreamError.format.reads(jsValue) orElse MultipleDownstreamErrors.format.reads(jsValue)),
       Writes {
         case statusError: SingleDownstreamError    => SingleDownstreamError.format.writes(statusError)
-        case statusError: MultipleDownstreamErrors => MultipleDownstreamErrors.formatt.writes(statusError)
+        case statusError: MultipleDownstreamErrors => MultipleDownstreamErrors.format.writes(statusError)
         case statusError: GenericDownstreamError   => GenericDownstreamError.format.writes(statusError)
       }
     )
@@ -67,7 +67,7 @@ object DownstreamError {
   }
 
   object MultipleDownstreamErrors {
-    implicit val formatt: OFormat[MultipleDownstreamErrors] = Json.format[MultipleDownstreamErrors]
+    implicit val format: OFormat[MultipleDownstreamErrors] = Json.format[MultipleDownstreamErrors]
   }
 
 }

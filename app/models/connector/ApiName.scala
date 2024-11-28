@@ -44,6 +44,7 @@ object IFSApiName extends Enum[IFSApiName] {
   final case object Api1787 extends IFSApiName("1787")
   final case object Api1802 extends IFSApiName("1802")
   final case object Api1803 extends IFSApiName("1803")
+  final case object Api1867 extends IFSApiName("1867")
   final case object Api1871 extends IFSApiName("1871")
   final case object Api1894 extends IFSApiName("1894")
   final case object Api1895 extends IFSApiName("1895")
