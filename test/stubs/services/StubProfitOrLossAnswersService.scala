@@ -21,7 +21,6 @@ import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.adjustments.ProfitOrLossJourneyAnswers
-import models.frontend.income.IncomeJourneyAnswers
 import services.journeyAnswers.ProfitOrLossAnswersService
 import uk.gov.hmrc.http.HeaderCarrier
 

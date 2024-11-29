@@ -71,13 +71,13 @@ class ReliefClaimSpec extends PlaySpec {
 
     "fail to read invalid JSON" in {
       val json = Json.obj(
-        "incomeSourceId" -> "12345",
-        "incomeSourceType" -> "InvalidType",
-        "reliefClaimed" -> "CF",
+        "incomeSourceId"    -> "12345",
+        "incomeSourceType"  -> "InvalidType",
+        "reliefClaimed"     -> "CF",
         "taxYearClaimedFor" -> "2023-24",
-        "claimId" -> "claim123",
-        "sequence" -> 1,
-        "submissionDate" -> "2024-11-29"
+        "claimId"           -> "claim123",
+        "sequence"          -> 1,
+        "submissionDate"    -> "2024-11-29"
       )
 
       json.validate[ReliefClaim] mustBe a[JsError]
@@ -85,13 +85,13 @@ class ReliefClaimSpec extends PlaySpec {
 
     "fail to read invalid IncomeSourceType" in {
       val json = Json.obj(
-        "incomeSourceId" -> "12345",
-        "incomeSourceType" -> JsString("InvalidType"),
-        "reliefClaimed" -> "CF",
+        "incomeSourceId"    -> "12345",
+        "incomeSourceType"  -> JsString("InvalidType"),
+        "reliefClaimed"     -> "CF",
         "taxYearClaimedFor" -> "2023-24",
-        "claimId" -> "claim123",
-        "sequence" -> 1,
-        "submissionDate" -> "2024-11-29"
+        "claimId"           -> "claim123",
+        "sequence"          -> 1,
+        "submissionDate"    -> "2024-11-29"
       )
 
       json.validate[ReliefClaim] mustBe a[JsError]

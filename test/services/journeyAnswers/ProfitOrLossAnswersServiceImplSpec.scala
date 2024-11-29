@@ -598,7 +598,7 @@ trait StubbedService {
     new ProfitOrLossAnswersServiceImpl(
       ifsConnector = ifsConnector,
       ifsBusinessDetailsConnector = ifsBusinessDetailsConnector,
-      reliefClaimsConnector = reliefClaimConnector,
+      reliefClaimConnector = reliefClaimConnector,
       hipConnector = mockHipConnector,
       repository = repository,
       appConfig = mockAppConfig

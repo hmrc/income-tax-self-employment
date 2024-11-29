@@ -103,8 +103,9 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     EitherT(result)
   }
 
-  private def handleLossClaim(ctx: JourneyContextWithNino, maybeExistingData: Option[ReliefClaim], maybeSubmissionData: Option[CreateLossClaimRequestBody])(
-      implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  private def handleLossClaim(ctx: JourneyContextWithNino,
+                              maybeExistingData: Option[ReliefClaim],
+                              maybeSubmissionData: Option[CreateLossClaimRequestBody])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     (maybeExistingData, maybeSubmissionData) match {
       case (None, Some(submissionData)) => ifsConnector.createLossClaim(ctx, submissionData).map(_ => ()) // Create
       case (Some(_), Some(_))           => EitherT.rightT[Future, ServiceError](())                       // Update

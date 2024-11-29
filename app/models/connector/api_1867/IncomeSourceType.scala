@@ -34,9 +34,9 @@ object IncomeSourceType {
 
   implicit val format: Format[IncomeSourceType] = Format(
     {
-      case JsString(UkProperty.value) => JsSuccess(UkProperty)
+      case JsString(UkProperty.value)      => JsSuccess(UkProperty)
       case JsString(ForeignProperty.value) => JsSuccess(ForeignProperty)
-      case invalid => JsError(s"Invalid income source type: $invalid")
+      case invalid                         => JsError(s"Invalid income source type: $invalid")
     },
     incomeSourceType => JsString(incomeSourceType.value)
   )
