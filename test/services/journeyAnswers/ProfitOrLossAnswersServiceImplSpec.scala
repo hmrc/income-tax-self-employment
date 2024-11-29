@@ -19,13 +19,15 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
+import connectors.ReliefClaimsConnector
 import connectors.HipConnector
 import models.common.{JourneyContextWithNino, Nino, TaxYear}
 import models.connector.api_1500.LossType
 import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.api_1802.request._
-import models.connector.api_1870
+import models.connector.api_1867.{CarryForward, UkProperty}
+import models.connector.{api_1867, api_1870}
 import models.connector.api_1870.{LossData, SuccessResponseSchema}
 import models.database.adjustments.ProfitOrLossDb
 import models.error.DownstreamError.SingleDownstreamError
@@ -50,7 +52,7 @@ import utils.BaseSpec.{businessId, currTaxYear, hc, journeyCtxWithNino}
 import utils.EitherTTestOps.convertScalaFuture
 
 import java.lang.reflect.Method
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -58,6 +60,9 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 
   val downstreamError: SingleDownstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
   val notFoundError: SingleDownstreamError   = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
+
+  val mockAppConfig: AppConfig   = mock[AppConfig]
+  val mockHttpClient: HttpClient = mock[HttpClient]
 
   def expectedAnnualSummariesData(adjustments: Option[AnnualAdjustments],
                                   allowances: Option[AnnualAllowances]): CreateAmendSEAnnualSubmissionRequestData =
@@ -516,12 +521,62 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
     ("an error from downstream", downstreamError.asLeft, downstreamError.asLeft)
   )
 
+  val getLossClaimsByBusinessIdTestCases: TableFor3[String, StubReliefClaimsConnector.Api1867Response, Either[ServiceError, Option[api_1867.ReliefClaim]]] = Table(
+    ("testDescription", "connectorResponse", "expectedResult"),
+    ("None when connector returns an empty list", Right(List.empty), Right(None)),
+    ("None when business ID does not match any relief claim items",
+      Right(List(api_1867.ReliefClaim(
+        "business456",
+        None,
+        CarryForward,
+        "2023-24",
+        "claim123",
+        Some(1),
+        LocalDate.of(2024, 11, 29)))),
+      Right(None)
+    ),
+    ("None when connector returns a NotFound error", notFoundError.asLeft, None.asRight),
+    ("Some(ReliefClaim) business ID matches a relief claim",
+      Right(List(api_1867.ReliefClaim(
+        journeyCtxWithNino.businessId.value,
+        Some(UkProperty),
+        CarryForward,
+        "2023-24",
+        "claim123",
+        Some(1),
+        LocalDate.of(2024, 11, 29)
+      ))),
+      Right(Some(api_1867.ReliefClaim(
+        journeyCtxWithNino.businessId.value,
+        Some(UkProperty),
+        CarryForward,
+        "2023-24",
+        "claim123",
+        Some(1),
+        LocalDate.of(2024, 11, 29)
+      )))
+    ),
+    ("an error from downstream", downstreamError.asLeft, downstreamError.asLeft)
+  )
+
   "getLossByBusinessId" should {
     forAll(getLossByBusinessIdTestCases) { (testDescription, connectorResponse, expectedResult) =>
       s"return $testDescription" in new StubbedService {
         override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
           StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = connectorResponse)
         val result: Either[ServiceError, Option[LossData]] = service.getBroughtForwardLossByBusinessId(journeyCtxWithNino).value.futureValue
+
+        assert(result == expectedResult)
+      }
+    }
+  }
+
+  "getLossClaimByBusinessId" should {
+    forAll(getLossClaimsByBusinessIdTestCases) { (testDescription, connectorResponse, expectedResult) =>
+      s"return $testDescription" in new StubbedService {
+        override val reliefClaimConnector: StubReliefClaimsConnector =
+          StubReliefClaimsConnector(mockHttpClient, mockAppConfig, getReliefClaimsRes = connectorResponse)
+        val result: Either[ServiceError, Option[api_1867.ReliefClaim]] = service.getLossClaimByBusinessId(journeyCtxWithNino).value.futureValue
 
         assert(result == expectedResult)
       }
@@ -537,15 +592,16 @@ trait StubbedService {
   val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
   val mockHipConnector: HipConnector                               = mock[HipConnector]
   val repository: StubJourneyAnswersRepository                     = StubJourneyAnswersRepository()
-  val reliefClaim: ReliefClaimsConnector                           = StubReliefClaimsConnector(mockHttpClient, mockAppConfig)
+  val reliefClaimConnector: ReliefClaimsConnector                  = StubReliefClaimsConnector(mockHttpClient, mockAppConfig)
 
   def service: ProfitOrLossAnswersServiceImpl =
     new ProfitOrLossAnswersServiceImpl(
       ifsConnector = ifsConnector,
       ifsBusinessDetailsConnector = ifsBusinessDetailsConnector,
-      reliefClaimsConnector = reliefClaim,
+      reliefClaimsConnector = reliefClaimConnector,
       hipConnector = mockHipConnector,
       repository = repository,
       appConfig = mockAppConfig
     )
+
 }

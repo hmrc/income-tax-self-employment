@@ -89,7 +89,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       result                 <- handleLossClaim(ctx, maybeExistingLossClaim, answers.toLossClaimSubmission(ctx))
     } yield result
 
-  private def getLossClaimByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[ReliefClaim]] = {
+  def getLossClaimByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[ReliefClaim]] = {
     val lossClaims = reliefClaimsConnector.getReliefClaims(ctx.taxYear.toString, ctx.nino.toString)
     val result = lossClaims.map {
       case Right(list) =>
