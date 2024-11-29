@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,10 @@ import connectors.{HipConnector, IFSBusinessDetailsConnector, IFSConnector}
 import models.common.{JourneyContextWithNino, JourneyName, Nino, TaxYear}
 import models.connector.api_1500.CreateBroughtForwardLossRequestData
 import models.connector.api_1501.UpdateBroughtForwardLossYear
+import connectors.{IFSBusinessDetailsConnector, IFSConnector, ReliefClaimsConnector}
+import models.common.{JourneyContextWithNino, JourneyName}
 import models.connector.api_1505.CreateLossClaimRequestBody
+import models.connector.api_1867.ReliefClaim
 import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
 import models.domain.ApiResultT
@@ -47,6 +50,7 @@ trait ProfitOrLossAnswersService {
 class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
                                                 ifsBusinessDetailsConnector: IFSBusinessDetailsConnector,
                                                 hipConnector: HipConnector,
+                                                reliefClaimsConnector: ReliefClaimsConnector,
                                                 repository: JourneyAnswersRepository,
                                                 appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends ProfitOrLossAnswersService {
@@ -61,8 +65,12 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 
   def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
     for {
-      maybeData <- getDbAnswers(ctx)
-    } yield maybeData
+      maybeData   <- getDbAnswers(ctx)
+      apiResponse <- ifsConnector.getLossClaim(ctx, "claimId") // TODO Need to check how claimId be passed
+    } yield maybeData match {
+      case Some(journeyAnswer) => Option(ProfitOrLossJourneyAnswers(apiResponse, journeyAnswer))
+      case _                   => None
+    }
 
   private def createUpdateOrDeleteAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
@@ -81,26 +89,23 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       result                 <- handleLossClaim(ctx, maybeExistingLossClaim, answers.toLossClaimSubmission(ctx))
     } yield result
 
-  private def getLossClaimByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[Unit]] =
-    // TODO SASS-10335: -- this is now the List logic not 10335 connectivity ticket
-    // 1. Call list of claims (individual claims are called/edited/deleted by claimId. We have businessId, not claimId)
-    // 2. If returns Left(Error(Not_Found)), return Right(None)
-    // 3. Filter Option{ single lossClaim } from the list by its businessId if it exists, else None
-//    val lossClaims = ifsBusinessDetailsConnector.listLossClaims(ctx.nino, ctx.taxYear)
-//    lossClaims.transform {
-//      case Right(list) =>
-//        Right(list.find(_.businessId == ctx.businessId.value))
-//      case Left(error) if error.status == NOT_FOUND =>
-//        Right(None)
-//      case Left(otherError) =>
-//        Left(otherError)
-//    }
-    EitherT.rightT[Future, ServiceError](None)
+  private def getLossClaimByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[ReliefClaim]] = {
+    val lossClaims = reliefClaimsConnector.getReliefClaims(ctx.taxYear.toString, ctx.nino.toString)
+    val result = lossClaims.map {
+      case Right(list) =>
+        Right(list.find(_.incomeSourceId == ctx.businessId.value))
+      case Left(error) if error.status == NOT_FOUND =>
+        Right(None)
+      case Left(otherError) =>
+        Left(otherError)
+    }
 
-  private def handleLossClaim(ctx: JourneyContextWithNino, maybeExistingData: Option[Unit], maybeSubmissionData: Option[CreateLossClaimRequestBody])(
+    EitherT(result)
+  }
+
+  private def handleLossClaim(ctx: JourneyContextWithNino, maybeExistingData: Option[ReliefClaim], maybeSubmissionData: Option[CreateLossClaimRequestBody])(
       implicit hc: HeaderCarrier): ApiResultT[Unit] =
     (maybeExistingData, maybeSubmissionData) match {
-      // TODO SASS-10335 update endpoints below -- not just this ticket anymore, it was split into CRUD
       case (None, Some(submissionData)) => ifsConnector.createLossClaim(ctx, submissionData).map(_ => ()) // Create
       case (Some(_), Some(_))           => EitherT.rightT[Future, ServiceError](())                       // Update
       case (Some(_), None)              => EitherT.rightT[Future, ServiceError](())                       // Delete
@@ -142,11 +147,14 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
             .updateBroughtForwardLoss(ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossData(ctx, lossData.lossId, amount))
             .map(_ => ())
         } else {
-          updateBroughtForwardLossYear(
-            ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossYearData(ctx, lossData.lossId, amount, whichYear.apiTaxYear))
+          ifsBusinessDetailsConnector
+            .updateBroughtForwardLossYear(
+              ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossYearData(ctx, lossData.lossId, amount, whichYear.apiTaxYear))
             .map(_ => ())
         }
-      case _ => deleteBroughtForwardLoss(ctx.nino, TaxYear.asTy(lossData.taxYearBroughtForwardFrom), lossData.lossId)
+      //case _ => deleteBroughtForwardLoss(ctx.nino, TaxYear.asTy(lossData.taxYearBroughtForwardFrom), lossData.lossId)
+
+      case _ => ifsBusinessDetailsConnector.deleteBroughtForwardLoss(ctx.nino, lossData.lossId)
     }
 
   private def deleteBroughtForwardLoss(nino: Nino, taxYear: TaxYear, lossId: String)(implicit

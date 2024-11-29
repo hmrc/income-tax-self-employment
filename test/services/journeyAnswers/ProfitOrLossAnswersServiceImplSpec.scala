@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,9 +43,9 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.libs.json.Json
 import stubs.connectors.StubIFSConnector._
-import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
+import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector, StubReliefClaimsConnector}
 import stubs.repositories.StubJourneyAnswersRepository
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.BaseSpec.{businessId, currTaxYear, hc, journeyCtxWithNino}
 import utils.EitherTTestOps.convertScalaFuture
 
@@ -217,14 +217,17 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
     "successfully delete brought forward loss answers when none provided by user and some from API" in new StubbedService {
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
         StubIFSBusinessDetailsConnector(
-          getBroughtForwardLossResult = api1502SuccessResponse.asRight
+          getBroughtForwardLossResult = api1502SuccessResponse.asRight,
+          deleteBroughtForwardLossResult = Right(())
         )
+
 
       when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(EitherT.rightT(Right(())))
       val answers: ProfitOrLossJourneyAnswers = emptyBroughtForwardLossAnswers
       val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
+      assert(ifsBusinessDetailsConnector.deleteBroughtForwardLossResult === Right(()))
       assert(
         repository.lastUpsertedAnswer === Option(
           Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = false, claimLossRelief = None, previousUnusedLosses = false))))
@@ -405,8 +408,9 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       }
 
       "the BusinessDetailsConnector .updateBroughtForwardLossYear returns an error from downstream" in new StubbedService {
-        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
+        override val ifsBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+          listBroughtForwardLossesResult = api1870SuccessResponse.asRight,
+          updateBroughtForwardLossYearResult = downstreamError.asLeft)
 
         when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(EitherT.leftT(downstreamError))
@@ -423,8 +427,9 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       }
 
       "the BusinessDetailsConnector .deleteBroughtForwardLoss returns an error from downstream" in new StubbedService {
-        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
+        override val ifsBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+          listBroughtForwardLossesResult = api1870SuccessResponse.asRight,
+          deleteBroughtForwardLossResult = downstreamError.asLeft)
 
         when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(EitherT.leftT(downstreamError))
@@ -434,25 +439,8 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 
         assert(result === downstreamError.asLeft)
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-      }
 
-      "the BusinessDetailsConnector .deleteBroughtForwardLoss returns an error from downstream" when {
-        "hip integration feature switch is enabled" in new StubbedService {
-
-          when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-            .thenReturn(EitherT.leftT(downstreamError))
-
-          override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-            StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-
-          val result: Either[ServiceError, Unit] =
-            service.createUpdateOrDeleteBroughtForwardLoss(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
-
-          assert(result === downstreamError.asLeft)
-          assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-
-          verify(mockHipConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext])
-        }
+        verify(mockHipConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext])
       }
     }
   }
@@ -542,16 +530,20 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 }
 
 trait StubbedService {
+  val mockAppConfig: AppConfig   = mock[AppConfig]
+  val mockHttpClient: HttpClient = mock[HttpClient]
+
   val ifsConnector: StubIFSConnector                               = new StubIFSConnector()
   val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
   val mockHipConnector: HipConnector                               = mock[HipConnector]
   val repository: StubJourneyAnswersRepository                     = StubJourneyAnswersRepository()
-  val mockAppConfig: AppConfig                                     = mock[AppConfig]
+  val reliefClaim: ReliefClaimsConnector                           = StubReliefClaimsConnector(mockHttpClient, mockAppConfig)
 
   def service: ProfitOrLossAnswersServiceImpl =
     new ProfitOrLossAnswersServiceImpl(
       ifsConnector = ifsConnector,
       ifsBusinessDetailsConnector = ifsBusinessDetailsConnector,
+      reliefClaimsConnector = reliefClaim,
       hipConnector = mockHipConnector,
       repository = repository,
       appConfig = mockAppConfig
