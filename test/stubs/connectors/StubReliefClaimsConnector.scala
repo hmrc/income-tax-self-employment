@@ -26,11 +26,10 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject
 
-final case class StubReliefClaimsConnector @Inject() (
-                                                       httpClient: HttpClient,
-                                                       appConfig: AppConfig,
-                                                       getReliefClaimsRes: StubReliefClaimsConnector.Api1867Response = Right(List.empty))
-  extends ReliefClaimsConnector(httpClient, appConfig) {
+final case class StubReliefClaimsConnector @Inject() (httpClient: HttpClient,
+                                                      appConfig: AppConfig,
+                                                      getReliefClaimsRes: StubReliefClaimsConnector.Api1867Response = Right(List.empty))
+    extends ReliefClaimsConnector(httpClient, appConfig) {
 
   override def getReliefClaims(taxYear: String, mtditid: String)(implicit hc: HeaderCarrier): Future[StubReliefClaimsConnector.Api1867Response] =
     Future.successful(getReliefClaimsRes)
@@ -39,4 +38,3 @@ final case class StubReliefClaimsConnector @Inject() (
 object StubReliefClaimsConnector {
   type Api1867Response = ApiResponse[List[api_1867.ReliefClaim]]
 }
-

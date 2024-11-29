@@ -73,9 +73,9 @@ package object connector {
       ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
 
       response.status match {
-        case OK => toA[List[A]](response, method, url)
+        case OK                     => toA[List[A]](response, method, url)
         case NOT_FOUND | NO_CONTENT => Right(Nil)
-        case _     => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+        case _                      => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
       }
     }
 

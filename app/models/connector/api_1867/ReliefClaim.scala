@@ -32,7 +32,7 @@ case class ReliefClaim(incomeSourceId: String,
   def isSelfEmploymentClaim: Boolean = incomeSourceType.isEmpty
 
   def isPropertyClaim: Boolean = incomeSourceType.isDefined
-  
+
 }
 
 object ReliefClaim {

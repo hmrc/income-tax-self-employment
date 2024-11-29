@@ -25,30 +25,30 @@ class IncomeSourceTypeSpec extends PlaySpec {
 
     "write UkProperty to JSON" in {
       val ukProperty: IncomeSourceType = UkProperty
-      val json = Json.toJson(ukProperty)
+      val json                         = Json.toJson(ukProperty)
       json mustBe JsString("02")
     }
 
     "write ForeignProperty to JSON" in {
       val foreignProperty: IncomeSourceType = ForeignProperty
-      val json = Json.toJson(foreignProperty)
+      val json                              = Json.toJson(foreignProperty)
       json mustBe JsString("15")
     }
 
     "read JSON to UkProperty" in {
-      val json = JsString("02")
+      val json   = JsString("02")
       val result = json.validate[IncomeSourceType]
       result mustBe JsSuccess(UkProperty)
     }
 
     "read JSON to ForeignProperty" in {
-      val json = JsString("15")
+      val json   = JsString("15")
       val result = json.validate[IncomeSourceType]
       result mustBe JsSuccess(ForeignProperty)
     }
 
     "fail to read invalid JSON" in {
-      val json = JsString("invalid")
+      val json   = JsString("invalid")
       val result = json.validate[IncomeSourceType]
       result mustBe a[JsError]
     }

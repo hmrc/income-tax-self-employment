@@ -1,4 +1,3 @@
-
 package connectors
 
 import base.IntegrationBaseSpec
@@ -20,12 +19,12 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
   val url: String = s"/income-tax/$taxYear/claims-for-relief/$testMtditid"
 
   val selfEmploymentClaim: JsObject = Json.obj(
-    "incomeSourceId" -> "XAIS12345678901",
-    "reliefClaimed" -> "02",
-    "reliefClaimed" -> "CF",
+    "incomeSourceId"    -> "XAIS12345678901",
+    "reliefClaimed"     -> "02",
+    "reliefClaimed"     -> "CF",
     "taxYearClaimedFor" -> "2024",
-    "claimId" -> "1234567890",
-    "submissionDate" -> "2024-01-01"
+    "claimId"           -> "1234567890",
+    "submissionDate"    -> "2024-01-01"
   )
 
   val propertyClaim: JsObject = selfEmploymentClaim + ("incomeSourceType" -> JsString("02"))
@@ -82,10 +81,11 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
 
         val result = connector.getReliefClaims(testTaxYear, testMtditid).futureValue
 
-        result mustBe Right(List(
-          testBaseReliefClaim,
-          testBaseReliefClaim.copy(incomeSourceType = Some(UkProperty))
-        ))
+        result mustBe Right(
+          List(
+            testBaseReliefClaim,
+            testBaseReliefClaim.copy(incomeSourceType = Some(UkProperty))
+          ))
         result.map(_.head.isSelfEmploymentClaim) mustBe Right(true)
         result.map(_.last.isPropertyClaim) mustBe Right(true)
       }
@@ -118,7 +118,7 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
           val response: JsObject = Json.obj(
             "failures" -> Json.arr(
               Json.obj(
-                "code" -> code,
+                "code"   -> code,
                 "reason" -> reason
               )
             )

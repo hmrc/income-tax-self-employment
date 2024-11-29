@@ -24,9 +24,7 @@ import utils.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ReliefClaimsConnector @Inject()(httpClient: HttpClient,
-                                      appConfig: AppConfig)
-                                     (implicit ec: ExecutionContext) extends Logging {
+class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) extends Logging {
 
   type Api1867Response = ApiResponse[List[api_1867.ReliefClaim]]
 

@@ -29,21 +29,22 @@ import java.time.LocalDate
 
 class CommonReadsSpec extends AnyWordSpec with Matchers {
 
-  val testIncomeSourceId = "XAIS12345678901"
-  val testTaxYear = "2024"
-  val testClaimId = "1234567890"
+  val testIncomeSourceId      = "XAIS12345678901"
+  val testTaxYear             = "2024"
+  val testClaimId             = "1234567890"
   implicit val logger: Logger = Logger.apply("test")
 
   "commonGetListReads" when {
     "the response is 200 OK" must {
       "return a valid list" in {
-        val reliefClaimList = List(ReliefClaim(
-          incomeSourceId = testIncomeSourceId,
-          reliefClaimed = CarryForward,
-          taxYearClaimedFor = testTaxYear,
-          claimId = testClaimId,
-          submissionDate = LocalDate.of(2024, 1, 1)
-        ))
+        val reliefClaimList = List(
+          ReliefClaim(
+            incomeSourceId = testIncomeSourceId,
+            reliefClaimed = CarryForward,
+            taxYearClaimedFor = testTaxYear,
+            claimId = testClaimId,
+            submissionDate = LocalDate.of(2024, 1, 1)
+          ))
         val response = HttpResponse(OK, Json.stringify(Json.toJson(reliefClaimList)))
 
         val result = commonGetListReads[ReliefClaim].read("GET", "http://localhost:1234", response)

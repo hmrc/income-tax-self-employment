@@ -97,7 +97,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         )
 
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val allowancesData: AnnualAllowances = AnnualAllowances(None, None, None, Some(5000), None, None, None, None, None, None, Some(5000), None)
+      val allowancesData: AnnualAllowances    = AnnualAllowances(None, None, None, Some(5000), None, None, None, None, None, None, Some(5000), None)
       val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
         expectedAnnualSummariesData(Some(answers.toDownStreamAnnualAdjustments(Some(AnnualAdjustments.empty))), Some(allowancesData))
       val result: Either[ServiceError, Unit] = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
@@ -427,7 +427,8 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
   )
   val singleLossData      = LossData("99999", businessId.value, LossType.SelfEmployment, 999, "2022-23", LocalDateTime.now)
   val listWithAMatchingId = listWithNoMatchingIds.appended(singleLossData)
-  val getLossByBusinessIdTestCases: TableFor3[String, Either[SingleDownstreamError, SuccessResponseSchema], Either[SingleDownstreamError, Option[LossData]]] = Table(
+  val getLossByBusinessIdTestCases
+      : TableFor3[String, Either[SingleDownstreamError, SuccessResponseSchema], Either[SingleDownstreamError, Option[LossData]]] = Table(
     ("testDescription", "connectorResponse", "expectedResult"),
     ("None when connector returns an empty list", api1870EmptyResponse.asRight, None.asRight),
     ("None when business ID does not match any loss data items", api_1870.SuccessResponseSchema(listWithNoMatchingIds).asRight, None.asRight),
@@ -436,41 +437,39 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
     ("an error from downstream", downstreamError.asLeft, downstreamError.asLeft)
   )
 
-  val getLossClaimsByBusinessIdTestCases: TableFor3[String, StubReliefClaimsConnector.Api1867Response, Either[ServiceError, Option[api_1867.ReliefClaim]]] = Table(
+  val getLossClaimsByBusinessIdTestCases
+      : TableFor3[String, StubReliefClaimsConnector.Api1867Response, Either[ServiceError, Option[api_1867.ReliefClaim]]] = Table(
     ("testDescription", "connectorResponse", "expectedResult"),
     ("None when connector returns an empty list", Right(List.empty), Right(None)),
-    ("None when business ID does not match any relief claim items",
-      Right(List(api_1867.ReliefClaim(
-        "business456",
-        None,
-        CarryForward,
-        "2023-24",
-        "claim123",
-        Some(1),
-        LocalDate.of(2024, 11, 29)))),
-      Right(None)
-    ),
+    (
+      "None when business ID does not match any relief claim items",
+      Right(List(api_1867.ReliefClaim("business456", None, CarryForward, "2023-24", "claim123", Some(1), LocalDate.of(2024, 11, 29)))),
+      Right(None)),
     ("None when connector returns a NotFound error", notFoundError.asLeft, None.asRight),
-    ("Some(ReliefClaim) business ID matches a relief claim",
-      Right(List(api_1867.ReliefClaim(
-        journeyCtxWithNino.businessId.value,
-        Some(UkProperty),
-        CarryForward,
-        "2023-24",
-        "claim123",
-        Some(1),
-        LocalDate.of(2024, 11, 29)
-      ))),
-      Right(Some(api_1867.ReliefClaim(
-        journeyCtxWithNino.businessId.value,
-        Some(UkProperty),
-        CarryForward,
-        "2023-24",
-        "claim123",
-        Some(1),
-        LocalDate.of(2024, 11, 29)
-      )))
-    ),
+    (
+      "Some(ReliefClaim) business ID matches a relief claim",
+      Right(
+        List(
+          api_1867.ReliefClaim(
+            journeyCtxWithNino.businessId.value,
+            Some(UkProperty),
+            CarryForward,
+            "2023-24",
+            "claim123",
+            Some(1),
+            LocalDate.of(2024, 11, 29)
+          ))),
+      Right(
+        Some(
+          api_1867.ReliefClaim(
+            journeyCtxWithNino.businessId.value,
+            Some(UkProperty),
+            CarryForward,
+            "2023-24",
+            "claim123",
+            Some(1),
+            LocalDate.of(2024, 11, 29)
+          )))),
     ("an error from downstream", downstreamError.asLeft, downstreamError.asLeft)
   )
 
@@ -509,5 +508,5 @@ trait StubbedService {
   val reliefClaimConnector: ReliefClaimsConnector                  = StubReliefClaimsConnector(mockHttpClient, mockAppConfig)
 
   def service: ProfitOrLossAnswersServiceImpl =
-    new ProfitOrLossAnswersServiceImpl(ifsConnector, ifsBusinessDetailsConnector, reliefClaimConnector,  repository)
+    new ProfitOrLossAnswersServiceImpl(ifsConnector, ifsBusinessDetailsConnector, reliefClaimConnector, repository)
 }

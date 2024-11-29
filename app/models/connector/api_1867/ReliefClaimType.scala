@@ -44,11 +44,11 @@ case object CarrySidewaysFHL extends ReliefClaimType with PropertyClaim {
 object ReliefClaimType {
   implicit val format: Format[ReliefClaimType] = Format(
     {
-      case JsString(CarryForward.value) => JsSuccess(CarryForward)
-      case JsString(CarrySideways.value) => JsSuccess(CarrySideways)
+      case JsString(CarryForward.value)                 => JsSuccess(CarryForward)
+      case JsString(CarrySideways.value)                => JsSuccess(CarrySideways)
       case JsString(CarryForwardsToCarrySideways.value) => JsSuccess(CarryForwardsToCarrySideways)
-      case JsString(CarrySidewaysFHL.value) => JsSuccess(CarrySidewaysFHL)
-      case invalid => JsError(s"Invalid relief claim type: $invalid")
+      case JsString(CarrySidewaysFHL.value)             => JsSuccess(CarrySidewaysFHL)
+      case invalid                                      => JsError(s"Invalid relief claim type: $invalid")
     },
     reliefClaimType => JsString(reliefClaimType.value)
   )
