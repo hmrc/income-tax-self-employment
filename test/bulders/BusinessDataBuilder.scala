@@ -18,6 +18,7 @@ package bulders
 
 import models.common._
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
+import models.connector.api_2085.{IncomeSource, ListOfIncomeSources}
 import models.connector.citizen_details.SuccessResponseSchema
 import models.connector.{api_1171, citizen_details}
 import models.domain.Business.mkBusiness
@@ -79,6 +80,13 @@ object BusinessDataBuilder {
       )
     )
   )
+
+  lazy val listOfIncomeSources: ListOfIncomeSources =
+    ListOfIncomeSources(
+      List(
+        IncomeSource(BusinessId("FHL000000000100"), LocalDate.parse("2024-04-06"), LocalDate.parse("2025-04-05"), AccountingType("CASH")),
+        IncomeSource(BusinessId("FHL000000000101"), LocalDate.parse("2024-04-10"), LocalDate.parse("2025-04-14"), AccountingType("CASH"))
+      ))
 
   // Note our models use a subset of all the data pulled back by the API which is included here
   lazy val aGetBusinessDataResponseStr: String =

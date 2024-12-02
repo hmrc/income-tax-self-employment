@@ -18,11 +18,14 @@ package connectors
 
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
-import connectors.data.{Api1171Test, Api1500Test, Api1501Test, Api1501UpdateYearTest, Api1502Test, Api1504Test, Api1870Test, Api1871Test}
+import connectors.data._
 import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
+import models.connector.api_2085.ListOfIncomeSources
+import models.error.DownstreamError.GenericDownstreamError
+import models.error.ServiceError
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import play.api.http.Status.{NO_CONTENT, OK}
+import play.api.http.Status._
 
 class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
@@ -123,5 +126,36 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
       )
       connector.listBroughtForwardLosses(nino, taxYear).value.futureValue shouldBe successResponse.asRight
     }
+  }
+
+  "listOfIncomeSources" must {
+    "return successful response" in new Api2085Test {
+      stubGetWithResponseBody(
+        url = downstreamUrl,
+        expectedResponse = successResponseRaw,
+        expectedStatus = OK
+      )
+
+      connector.getListOfIncomeSources(nino).value.futureValue shouldBe successResponse.asRight
+    }
+
+    for (errorStatus <- Seq(BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, INTERNAL_SERVER_ERROR))
+      s"returns $errorStatus GenericDownstreamError when expected status is $errorStatus" in new Api2085Test {
+        stubGetWithResponseBody(
+          url = downstreamUrl,
+          expectedResponse = failedResponse,
+          expectedStatus = errorStatus
+        )
+
+        val result: Either[ServiceError, ListOfIncomeSources] = connector.getListOfIncomeSources(nino).value.futureValue
+        result match {
+          case Left(GenericDownstreamError(status, message)) =>
+            status shouldBe errorStatus
+            message should include(s"Downstream error when calling GET http://localhost:11111$downstreamUrl")
+            message should include(s"status=$errorStatus")
+            message should include(s"body:\n$failedResponse")
+          case _ => fail("Expected a GenericDownstreamError")
+        }
+      }
   }
 }

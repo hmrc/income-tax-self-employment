@@ -53,7 +53,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val mongoTTL: Int = Duration(servicesConfig.getString("mongodb.timeToLive")).toDays.toInt
 
-  val headerCarrierConfig = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
+  val headerCarrierConfig: HeaderCarrier.Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 
   def mkMetadata(apiName: ApiName, url: String): IntegrationHeaderCarrier =
     IntegrationHeaderCarrier(headerCarrierConfig, this, apiName, url)

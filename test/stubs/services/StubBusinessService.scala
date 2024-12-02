@@ -40,7 +40,8 @@ final case class StubBusinessService(
     getAllBusinessIncomeSourcesSummariesRes: Either[DownstreamError, List[BusinessIncomeSourcesSummaryResponse]] =
       List.empty[BusinessIncomeSourcesSummaryResponse].asRight[DownstreamError],
     getBusinessIncomeSourcesSummaryRes: Either[DownstreamError, BusinessIncomeSourcesSummaryResponse] = Right(aBusinessIncomeSourcesSummaryResponse),
-    getNetBusinessProfitOrLossValuesRes: Either[ServiceError, NetBusinessProfitOrLossValues] = Right(aNetBusinessProfitValues)
+    getNetBusinessProfitOrLossValuesRes: Either[ServiceError, NetBusinessProfitOrLossValues] = Right(aNetBusinessProfitValues),
+    hasOtherIncomeSources: Either[ServiceError, Boolean] = Right(true)
 ) extends BusinessService {
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
@@ -66,4 +67,7 @@ final case class StubBusinessService(
   def getNetBusinessProfitOrLossValues(journeyContextWithNino: JourneyContextWithNino)(implicit
       hc: HeaderCarrier): ApiResultT[NetBusinessProfitOrLossValues] =
     EitherT.fromEither[Future](getNetBusinessProfitOrLossValuesRes)
+
+  def hasOtherIncomeSources(taxYear: TaxYear, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[Boolean] =
+    EitherT.fromEither[Future](hasOtherIncomeSources)
 }

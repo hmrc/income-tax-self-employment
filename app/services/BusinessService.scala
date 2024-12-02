@@ -50,6 +50,8 @@ trait BusinessService {
 
   def getNetBusinessProfitOrLossValues(journeyContextWithNino: JourneyContextWithNino)(implicit
       hc: HeaderCarrier): ApiResultT[NetBusinessProfitOrLossValues]
+
+  def hasOtherIncomeSources(taxYear: TaxYear, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[Boolean]
 }
 
 @Singleton
@@ -101,4 +103,7 @@ class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnec
       annualSubmission <- EitherT[Future, ServiceError, api_1803.SuccessResponseSchema](ifsConnector.getAnnualSummaries(ctx))
       result           <- EitherT.fromEither[Future](NetBusinessProfitOrLossValues.fromApiAnswers(incomeSummary, periodSummary, annualSubmission))
     } yield result
+
+  def hasOtherIncomeSources(taxYear: TaxYear, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[Boolean] =
+    businessConnector.getListOfIncomeSources(nino).map(_.selfEmployments.sizeIs > 1)
 }
