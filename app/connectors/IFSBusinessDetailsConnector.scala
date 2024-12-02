@@ -85,7 +85,7 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
   private def listBroughtForwardLossesUrl(nino: Nino, taxYear: TaxYear) =
     s"${appConfig.ifsBaseUrl}/individuals/losses/$nino/brought-forward-losses/tax-year/${taxYear.toYYYY_YY}"
 
-  private def listOfIncomeSources(taxYear: TaxYear,nino: Nino) =
+  private def listOfIncomeSources(taxYear: TaxYear, nino: Nino) =
     s"${appConfig.ifsBaseUrl}/income-tax/income-sources/$nino?taxYear=${taxYear.toYYYY_YY}"
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] = {
@@ -157,7 +157,9 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
     EitherT(get[Api1870Response](http, context))
   }
 
-  def getListOfIncomeSources(taxYear: TaxYear, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_2085.ListOfIncomeSources] = {
+  def getListOfIncomeSources(taxYear: TaxYear, nino: Nino)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[api_2085.ListOfIncomeSources] = {
     val url     = listOfIncomeSources(taxYear, nino)
     val context = appConfig.mkMetadata(IFSApiName.Api2085, url)
     implicit val reads: HttpReads[ApiResponse[api_2085.ListOfIncomeSources]] =

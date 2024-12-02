@@ -84,7 +84,9 @@ case class StubIFSBusinessDetailsConnector(
       ec: ExecutionContext): ApiResultT[api_1870.SuccessResponseSchema] =
     EitherT.fromEither[Future](listBroughtForwardLossesResult)
 
-  def getListOfIncomeSources(taxYear: TaxYear, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_2085.ListOfIncomeSources] =
+  def getListOfIncomeSources(taxYear: TaxYear, nino: Nino)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[api_2085.ListOfIncomeSources] =
     EitherT.fromEither[Future](listOfIncomeSources)
 
 }

@@ -151,7 +151,8 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         result match {
           case Left(GenericDownstreamError(status, message)) =>
             status shouldBe errorStatus
-            message should include(s"Downstream error when calling GET http://localhost:11111/income-tax/income-sources/$nino?taxYear=${taxYear.toYYYY_YY}")
+            message should include(
+              s"Downstream error when calling GET http://localhost:11111/income-tax/income-sources/$nino?taxYear=${taxYear.toYYYY_YY}")
             message should include(s"status=$errorStatus")
             message should include(s"body:\n$failedResponse")
           case _ => fail("Expected a GenericDownstreamError")
