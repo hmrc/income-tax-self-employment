@@ -12,6 +12,7 @@ GET         /user-date-of-birth/:nino                                           
 GET         /:taxYear/business-income-sources-summaries/:nino                                            controllers.BusinessDetailsController.getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)
 GET         /:taxYear/business-income-sources-summary/:nino/:businessId                                  controllers.BusinessDetailsController.getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)
 GET         /:taxYear/net-business-profit-or-loss-values/:nino/:businessId                               controllers.BusinessDetailsController.getNetBusinessProfitOrLossValues(taxYear: TaxYear, nino: Nino, businessId: BusinessId)
+GET         /:taxYear/check-for-other-income-source/:nino/                                               controllers.BusinessDetailsController.hasOtherIncomeSource(taxYear: TaxYear, nino: Nino)
 
 # Journey Statuses
 GET         /:taxYear/:nino/task-list                                                                    controllers.JourneyStatusController.getTaskList(taxYear: TaxYear, nino: Nino)

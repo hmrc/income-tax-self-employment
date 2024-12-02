@@ -17,11 +17,11 @@
 package connectors.data
 
 import models.connector.api_2085.ListOfIncomeSources
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
 import utils.BaseSpec._
 
 trait Api2085Test {
-  val downstreamUrl = s"/income-tax/income-sources/$nino"
+  val downstreamUrl = s"/income-tax/income-sources/$nino\\?taxYear=${taxYear.toYYYY_YY}"
 
   val successResponseRaw: String =
     s"""{

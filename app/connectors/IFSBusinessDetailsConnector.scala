@@ -48,7 +48,7 @@ trait IFSBusinessDetailsConnector {
   def listBroughtForwardLosses(nino: Nino, taxYear: TaxYear)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1870.SuccessResponseSchema]
-  def getListOfIncomeSources(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_2085.ListOfIncomeSources]
+  def getListOfIncomeSources(taxYear: TaxYear, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_2085.ListOfIncomeSources]
 
 }
 
@@ -85,8 +85,8 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
   private def listBroughtForwardLossesUrl(nino: Nino, taxYear: TaxYear) =
     s"${appConfig.ifsBaseUrl}/individuals/losses/$nino/brought-forward-losses/tax-year/${taxYear.toYYYY_YY}"
 
-  private def listOfIncomeSources(nino: Nino) =
-    s"${appConfig.ifsBaseUrl}/income-tax/income-sources/$nino"
+  private def listOfIncomeSources(taxYear: TaxYear,nino: Nino) =
+    s"${appConfig.ifsBaseUrl}/income-tax/income-sources/$nino?taxYear=${taxYear.toYYYY_YY}"
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] = {
     val url                                                                    = api1171BusinessDetailsUrl(IdType.Nino, nino.value)
@@ -157,8 +157,8 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
     EitherT(get[Api1870Response](http, context))
   }
 
-  def getListOfIncomeSources(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_2085.ListOfIncomeSources] = {
-    val url     = listOfIncomeSources(nino)
+  def getListOfIncomeSources(taxYear: TaxYear, nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_2085.ListOfIncomeSources] = {
+    val url     = listOfIncomeSources(taxYear, nino)
     val context = appConfig.mkMetadata(IFSApiName.Api2085, url)
     implicit val reads: HttpReads[ApiResponse[api_2085.ListOfIncomeSources]] =
       commonReads[api_2085.ListOfIncomeSources]

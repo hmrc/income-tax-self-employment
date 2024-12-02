@@ -136,7 +136,7 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         expectedStatus = OK
       )
 
-      connector.getListOfIncomeSources(nino).value.futureValue shouldBe successResponse.asRight
+      connector.getListOfIncomeSources(taxYear, nino).value.futureValue shouldBe successResponse.asRight
     }
 
     for (errorStatus <- Seq(BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, INTERNAL_SERVER_ERROR))
@@ -147,11 +147,11 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
           expectedStatus = errorStatus
         )
 
-        val result: Either[ServiceError, ListOfIncomeSources] = connector.getListOfIncomeSources(nino).value.futureValue
+        val result: Either[ServiceError, ListOfIncomeSources] = connector.getListOfIncomeSources(taxYear, nino).value.futureValue
         result match {
           case Left(GenericDownstreamError(status, message)) =>
             status shouldBe errorStatus
-            message should include(s"Downstream error when calling GET http://localhost:11111$downstreamUrl")
+            message should include(s"Downstream error when calling GET http://localhost:11111/income-tax/income-sources/$nino?taxYear=${taxYear.toYYYY_YY}")
             message should include(s"status=$errorStatus")
             message should include(s"body:\n$failedResponse")
           case _ => fail("Expected a GenericDownstreamError")

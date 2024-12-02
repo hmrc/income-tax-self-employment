@@ -105,5 +105,5 @@ class BusinessServiceImpl @Inject() (businessConnector: IFSBusinessDetailsConnec
     } yield result
 
   def hasOtherIncomeSources(taxYear: TaxYear, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[Boolean] =
-    businessConnector.getListOfIncomeSources(nino).map(_.selfEmployments.sizeIs > 1)
+    businessConnector.getListOfIncomeSources(taxYear, nino).map(_.selfEmployments.sizeIs > 1)
 }
