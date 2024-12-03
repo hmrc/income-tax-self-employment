@@ -97,7 +97,7 @@ class BusinessDetailsControllerSpec extends AnyWordSpecLike {
     val underTest = mkUnderTest(StubBusinessService(hasOtherIncomeSources = Right(true)))
 
     "return has more then one income flag" in {
-      val result = underTest.hasOtherIncomeSource(taxYear, nino)(TestUtils.fakeRequest)
+      val result = underTest.hasOtherIncomeSources(taxYear, nino)(TestUtils.fakeRequest)
       assert(status(result) == OK)
       assert(bodyOf(result) == "true")
     }

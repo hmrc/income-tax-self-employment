@@ -56,7 +56,7 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
     handleApiResultT(businessService.getNetBusinessProfitOrLossValues(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
   }
 
-  def hasOtherIncomeSource(taxYear: TaxYear, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+  def hasOtherIncomeSources(taxYear: TaxYear, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     handleApiResultT(businessService.hasOtherIncomeSources(taxYear, nino))
   }
 }
