@@ -16,12 +16,15 @@
 
 package controllers.actions
 
-import controllers.actions.AuthorisedAction.{EnrolmentIdentifiers, EnrolmentKeys, User}
+import common.{DelegatedAuthRules, EnrolmentIdentifiers, EnrolmentKeys}
+import config.AppConfig
+import controllers.actions.AuthorisedAction.User
 import models.common.Mtditid
 import play.api.Logger
 import play.api.mvc.Results.Unauthorized
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{affinityGroup, allEnrolments, confidenceLevel}
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
@@ -33,7 +36,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthorisedAction @Inject() ()(implicit
     val authConnector: AuthConnector,
     defaultActionBuilder: DefaultActionBuilder,
-    val cc: ControllerComponents)
+    val cc: ControllerComponents,
+    appConfig: AppConfig)
     extends AuthorisedFunctions {
 
   lazy val logger: Logger                         = Logger.apply(this.getClass)
@@ -63,13 +67,11 @@ class AuthorisedAction @Inject() ()(implicit
         })
   }
 
-  val minimumConfidenceLevel: Int = ConfidenceLevel.L250.level
-
   private[actions] def individualAuthentication[A](block: User[A] => Future[Result], requestMtdItId: String)(implicit
       request: Request[A],
       hc: HeaderCarrier): Future[Result] =
     authorised().retrieve(allEnrolments and confidenceLevel) {
-      case enrolments ~ userConfidence if userConfidence.level >= minimumConfidenceLevel =>
+      case enrolments ~ userConfidence if userConfidence.level >= ConfidenceLevel.L250.level =>
         val optionalMtdItId: Option[String] = enrolmentGetIdentifierValue(EnrolmentKeys.Individual, EnrolmentIdentifiers.individualId, enrolments)
         val optionalNino: Option[String]    = enrolmentGetIdentifierValue(EnrolmentKeys.nino, EnrolmentIdentifiers.nino, enrolments)
 
@@ -98,35 +100,53 @@ class AuthorisedAction @Inject() ()(implicit
         unauthorized
     }
 
+  private def agentAuthPredicate(mtdId: String): Predicate =
+    Enrolment(EnrolmentKeys.Individual)
+      .withIdentifier(EnrolmentIdentifiers.individualId, mtdId)
+      .withDelegatedAuthRule(DelegatedAuthRules.agentDelegatedAuthRule)
+
+  private def secondaryAgentPredicate(mtdId: String): Predicate =
+    Enrolment(EnrolmentKeys.SupportingAgent)
+      .withIdentifier(EnrolmentIdentifiers.individualId, mtdId)
+      .withDelegatedAuthRule(DelegatedAuthRules.supportingAgentDelegatedAuthRule)
+
   private[actions] def agentAuthentication[A](block: User[A] => Future[Result], mtdItId: String)(implicit
       request: Request[A],
-      hc: HeaderCarrier): Future[Result] = {
-
-    lazy val agentDelegatedAuthRuleKey = "mtd-it-auth"
-
-    lazy val agentAuthPredicate: String => Enrolment = identifierId =>
-      Enrolment(EnrolmentKeys.Individual)
-        .withIdentifier(EnrolmentIdentifiers.individualId, identifierId)
-        .withDelegatedAuthRule(agentDelegatedAuthRuleKey)
-
+      hc: HeaderCarrier): Future[Result] =
     authorised(agentAuthPredicate(mtdItId))
-      .retrieve(allEnrolments) { enrolments =>
-        enrolmentGetIdentifierValue(EnrolmentKeys.Agent, EnrolmentIdentifiers.agentReference, enrolments) match {
-          case Some(arn) =>
-            block(User(mtdItId, Some(arn)))
-          case None =>
-            logger.info("[AuthorisedAction][agentAuthentication] Agent with no HMRC-AS-AGENT enrolment.")
-            unauthorized
+      .retrieve(allEnrolments) {
+        populateAgent(block, mtdItId, _)
+      }
+      .recoverWith(agentRecovery(block, mtdItId))
+
+  private def agentRecovery[A](block: User[A] => Future[Result], mtdItId: String)(implicit
+      request: Request[A],
+      hc: HeaderCarrier): PartialFunction[Throwable, Future[Result]] = {
+    case _: NoActiveSession =>
+      logger.info(s"[AuthorisedAction][agentAuthentication] - No active session.")
+      unauthorized
+    case _: AuthorisationException if appConfig.emaSupportingAgentsEnabled =>
+      authorised(secondaryAgentPredicate(mtdItId))
+        .retrieve(allEnrolments) {
+          populateAgent(block, mtdItId, _)
         }
-      } recover {
-      case _: NoActiveSession =>
-        logger.info(s"[AuthorisedAction][agentAuthentication] - No active session.")
-        Unauthorized
-      case _: AuthorisationException =>
-        logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client.")
-        Unauthorized
-    }
+        .recover { case _ =>
+          logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have secondary delegated authority for Client.")
+          Unauthorized
+        }
+    case _ =>
+      logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client.")
+      unauthorized
   }
+
+  private def populateAgent[A](block: User[A] => Future[Result], mtdItId: String, enrolments: Enrolments)(implicit request: Request[A]) =
+    enrolmentGetIdentifierValue(EnrolmentKeys.Agent, EnrolmentIdentifiers.agentReference, enrolments) match {
+      case Some(arn) =>
+        block(User(mtdItId, Some(arn)))
+      case None =>
+        logger.info("[AuthorisedAction][agentAuthentication] Agent with no HMRC-AS-AGENT enrolment.")
+        unauthorized
+    }
 
   private[actions] def enrolmentGetIdentifierValue(checkedKey: String, checkedIdentifier: String, enrolments: Enrolments): Option[String] =
     enrolments.enrolments.collectFirst { case Enrolment(`checkedKey`, enrolmentIdentifiers, _, _) =>
@@ -141,17 +161,5 @@ object AuthorisedAction {
   case class User[T](mtditid: String, arn: Option[String])(implicit val request: Request[T]) extends WrappedRequest[T](request) {
     def isAgent: Boolean    = arn.nonEmpty
     def getMtditid: Mtditid = Mtditid(mtditid)
-  }
-
-  object EnrolmentKeys {
-    val Individual = "HMRC-MTD-IT"
-    val Agent      = "HMRC-AS-AGENT"
-    val nino       = "HMRC-NI"
-  }
-
-  object EnrolmentIdentifiers {
-    val individualId   = "MTDITID"
-    val agentReference = "AgentReferenceNumber"
-    val nino           = "NINO"
   }
 }
