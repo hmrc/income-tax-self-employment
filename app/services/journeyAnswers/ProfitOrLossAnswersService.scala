@@ -17,9 +17,10 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
-import connectors.{IFSBusinessDetailsConnector, IFSConnector}
+import connectors.{IFSBusinessDetailsConnector, IFSConnector, ReliefClaimsConnector}
 import models.common.{JourneyContextWithNino, JourneyName}
 import models.connector.api_1505.CreateLossClaimRequestBody
+import models.connector.api_1867.ReliefClaim
 import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
 import models.domain.ApiResultT
@@ -43,6 +44,7 @@ trait ProfitOrLossAnswersService {
 @Singleton
 class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
                                                 ifsBusinessDetailsConnector: IFSBusinessDetailsConnector,
+                                                reliefClaimsConnector: ReliefClaimsConnector,
                                                 repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends ProfitOrLossAnswersService {
 
@@ -80,26 +82,24 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       result                 <- handleLossClaim(ctx, maybeExistingLossClaim, answers.toLossClaimSubmission(ctx))
     } yield result
 
-  private def getLossClaimByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[Unit]] =
-    // TODO SASS-10335: -- this is now the List logic not 10335 connectivity ticket
-    // 1. Call list of claims (individual claims are called/edited/deleted by claimId. We have businessId, not claimId)
-    // 2. If returns Left(Error(Not_Found)), return Right(None)
-    // 3. Filter Option{ single lossClaim } from the list by its businessId if it exists, else None
-//    val lossClaims = ifsBusinessDetailsConnector.listLossClaims(ctx.nino, ctx.taxYear)
-//    lossClaims.transform {
-//      case Right(list) =>
-//        Right(list.find(_.businessId == ctx.businessId.value))
-//      case Left(error) if error.status == NOT_FOUND =>
-//        Right(None)
-//      case Left(otherError) =>
-//        Left(otherError)
-//    }
-    EitherT.rightT[Future, ServiceError](None)
+  def getLossClaimByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[ReliefClaim]] = {
+    val lossClaims = reliefClaimsConnector.getReliefClaims(ctx.taxYear.toString, ctx.nino.toString)
+    val result = lossClaims.map {
+      case Right(list) =>
+        Right(list.find(_.incomeSourceId == ctx.businessId.value))
+      case Left(error) if error.status == NOT_FOUND =>
+        Right(None)
+      case Left(otherError) =>
+        Left(otherError)
+    }
 
-  private def handleLossClaim(ctx: JourneyContextWithNino, maybeExistingData: Option[Unit], maybeSubmissionData: Option[CreateLossClaimRequestBody])(
-      implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    EitherT(result)
+  }
+
+  private def handleLossClaim(ctx: JourneyContextWithNino,
+                              maybeExistingData: Option[ReliefClaim],
+                              maybeSubmissionData: Option[CreateLossClaimRequestBody])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     (maybeExistingData, maybeSubmissionData) match {
-      // TODO SASS-10335 update endpoints below -- not just this ticket anymore, it was split into CRUD
       case (None, Some(submissionData)) => ifsConnector.createLossClaim(ctx, submissionData).map(_ => ()) // Create
       case (Some(_), Some(_))           => EitherT.rightT[Future, ServiceError](())                       // Update
       case (Some(_), None)              => EitherT.rightT[Future, ServiceError](())                       // Delete
