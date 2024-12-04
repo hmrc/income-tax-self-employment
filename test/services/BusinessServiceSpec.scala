@@ -238,9 +238,36 @@ class BusinessServiceSpec extends AnyWordSpecLike {
     }
   }
 
+  "hasOtherIncomeSources" should {
+    "return true if have more then one income sources" in new Test {
+      override def stubIFSBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+        listOfIncomeSources = listOfIncomeSources.asRight
+      )
+      override def stubIFSConnector: StubIFSConnector = StubIFSConnector(
+        getPeriodicSummaryDetailResult =
+          Future.successful(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Option(IncomeTypeTestData.sample))).asRight),
+        getAnnualSummariesResult = Right(api_1803.SuccessResponseSchema(None, None, None))
+      )
+      val result: Either[ServiceError, Boolean] = service.hasOtherIncomeSources(taxYear, nino).value.futureValue
+
+      assert(result === Right(true))
+    }
+
+    "return an error from downstream" when {
+      "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in new Test {
+        override def stubIFSBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+          StubIFSBusinessDetailsConnector(listOfIncomeSources = error.asLeft)
+
+        val result: Either[ServiceError, Boolean] = service.hasOtherIncomeSources(taxYear, nino).value.futureValue
+
+        assert(result === error.asLeft)
+      }
+    }
+  }
+
   trait Test {
 
-    val expectedSuccessResult = NetBusinessProfitOrLossValues(
+    val expectedSuccessResult: NetBusinessProfitOrLossValues = NetBusinessProfitOrLossValues(
       IncomeTypeTestData.sample.turnover.getOrElse(0),
       IncomeTypeTestData.sample.other.getOrElse(0),
       aBusinessIncomeSourcesSummaryResponse.totalExpenses,
@@ -256,9 +283,9 @@ class BusinessServiceSpec extends AnyWordSpecLike {
       0
     )
 
-    def stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
-    def stubIFSConnector                = StubIFSConnector()
+    def stubIFSBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
+    def stubIFSConnector: StubIFSConnector                               = StubIFSConnector()
 
-    def service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), stubIFSConnector)
+    def service: BusinessServiceImpl = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), stubIFSConnector)
   }
 }

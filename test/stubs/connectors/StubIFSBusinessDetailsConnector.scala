@@ -23,7 +23,7 @@ import connectors.IFSBusinessDetailsConnector._
 import models.common.{BusinessId, Nino, TaxYear}
 import models.connector.api_1500.CreateBroughtForwardLossRequestData
 import models.connector.api_1501.{UpdateBroughtForwardLossRequestBody, UpdateBroughtForwardLossRequestData, UpdateBroughtForwardLossYear}
-import models.connector.{api_1171, api_1500, api_1501, api_1502, api_1870, api_1871}
+import models.connector.{api_1171, api_1500, api_1501, api_1502, api_1870, api_1871, api_2085}
 import models.domain.ApiResultT
 import models.error.ServiceError
 import stubs.connectors.StubIFSConnector._
@@ -39,7 +39,8 @@ case class StubIFSBusinessDetailsConnector(
     updateBroughtForwardLossYearResult: Either[ServiceError, Unit] = Right(()),
     getBroughtForwardLossResult: Api1502Response = api1502EmptyResponse.asRight,
     deleteBroughtForwardLossResult: Either[ServiceError, Unit] = Right(()),
-    listBroughtForwardLossesResult: Api1870Response = api1870EmptyResponse.asRight
+    listBroughtForwardLossesResult: Api1870Response = api1870EmptyResponse.asRight,
+    listOfIncomeSources: Api2085Response = api2085EmptyResponse.asRight
 ) extends IFSBusinessDetailsConnector {
   var updatedBroughtForwardLossData: Option[UpdateBroughtForwardLossRequestBody] = None
 
@@ -82,4 +83,10 @@ case class StubIFSBusinessDetailsConnector(
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1870.SuccessResponseSchema] =
     EitherT.fromEither[Future](listBroughtForwardLossesResult)
+
+  def getListOfIncomeSources(taxYear: TaxYear, nino: Nino)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[api_2085.ListOfIncomeSources] =
+    EitherT.fromEither[Future](listOfIncomeSources)
+
 }
