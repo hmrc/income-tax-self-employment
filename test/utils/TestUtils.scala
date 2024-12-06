@@ -17,9 +17,9 @@
 package utils
 
 import com.codahale.metrics.SharedMetricRegistries
+import common._
 import config.AppConfig
 import controllers.actions.AuthorisedAction
-import controllers.actions.AuthorisedAction.{EnrolmentIdentifiers, EnrolmentKeys}
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.SystemMaterializer
 import org.scalamock.handlers.CallHandler4
@@ -65,7 +65,7 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
   implicit val mockAuthConnector: AuthConnector               = mock[AuthConnector]
   implicit val mockAuthService: AuthService                   = new AuthService(mockAuthConnector)
   val defaultActionBuilder: DefaultActionBuilder              = DefaultActionBuilder(stubControllerComponents.parsers.default)
-  val mockAuthorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents)
+  val mockAuthorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents, mockAppConfig)
 
   def status(awaitable: Future[Result]): Int = await(awaitable).header.status
 
@@ -74,10 +74,14 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
     await(awaited.body.consumeData.map(_.utf8String))
   }
 
+  val testMtditid = "1234567890"
+  val testNino    = "AA123456C"
+  val testArn     = "0987654321"
+
   val individualEnrolments: Enrolments = Enrolments(
     Set(
-      Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, "1234567890")), "Activated"),
-      Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, "1234567890")), "Activated")
+      Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, testMtditid)), "Activated"),
+      Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, testNino)), "Activated")
     ))
 
   def mockAuth(enrolments: Enrolments = individualEnrolments): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] = {
@@ -95,8 +99,8 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
 
   val agentEnrolments: Enrolments = Enrolments(
     Set(
-      Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, "1234567890")), "Activated"),
-      Enrolment(EnrolmentKeys.Agent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, "0987654321")), "Activated")
+      Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, testMtditid)), "Activated"),
+      Enrolment(EnrolmentKeys.Agent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, testArn)), "Activated")
     ))
 
   def mockAuthAsAgent(

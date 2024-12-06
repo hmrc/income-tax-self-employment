@@ -16,7 +16,9 @@
 
 package controllers.actions
 
-import controllers.actions.AuthorisedAction.{EnrolmentIdentifiers, EnrolmentKeys, User}
+import controllers.actions.AuthorisedAction.User
+import common._
+import mocks.MockAppConfig
 import play.api.http.Status._
 import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Result}
@@ -31,9 +33,14 @@ import utils.TestUtils
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthorisedActionSpec extends TestUtils {
+class AuthorisedActionSpec extends TestUtils with MockAppConfig {
 
-  val auth: AuthorisedAction = mockAuthorisedAction
+  override val mockAuthorisedAction: AuthorisedAction =
+    new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents, mockedAppConfig)
+  lazy val auth: AuthorisedAction = mockAuthorisedAction
+
+  lazy val block: User[AnyContent] => Future[Result] =
+    user => Future.successful(Ok(s"mtditid: ${user.mtditid}${user.arn.fold("")(arn => " arn: " + arn)}"))
 
   ".enrolmentGetIdentifierValue" should {
 
@@ -72,12 +79,11 @@ class AuthorisedActionSpec extends TestUtils {
       "perform the block action" when {
 
         "the correct enrolment exist and nino exist" which {
-          val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(user.mtditid))
-          val mtditid                                   = "AAAAAA"
+
           val enrolments = Enrolments(
             Set(
-              Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, mtditid)), "Activated"),
-              Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, mtditid)), "Activated")
+              Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, testMtditid)), "Activated"),
+              Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, testNino)), "Activated")
             )
           )
 
@@ -86,7 +92,7 @@ class AuthorisedActionSpec extends TestUtils {
               .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
               .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
               .returning(Future.successful(enrolments and ConfidenceLevel.L250))
-            auth.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
+            auth.individualAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
           }
 
           "returns an OK status" in {
@@ -94,17 +100,16 @@ class AuthorisedActionSpec extends TestUtils {
           }
 
           "returns a body of the mtditid" in {
-            bodyOf(result) mustBe mtditid
+            bodyOf(result) mustBe s"mtditid: $testMtditid"
           }
         }
 
         "the correct enrolment and nino exist but the request is for a different id" which {
-          val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(user.mtditid))
-          val mtditid                                   = "AAAAAA"
+
           val enrolments = Enrolments(
             Set(
               Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, "123456")), "Activated"),
-              Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, mtditid)), "Activated")
+              Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, testNino)), "Activated")
             ))
 
           lazy val result: Future[Result] = {
@@ -112,7 +117,7 @@ class AuthorisedActionSpec extends TestUtils {
               .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
               .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
               .returning(Future.successful(enrolments and ConfidenceLevel.L250))
-            auth.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
+            auth.individualAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
           }
 
           "returns an UNAUTHORIZED status" in {
@@ -120,12 +125,11 @@ class AuthorisedActionSpec extends TestUtils {
           }
         }
         "the correct enrolment and nino exist but low CL" which {
-          val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(user.mtditid))
-          val mtditid                                   = "AAAAAA"
+
           val enrolments = Enrolments(
             Set(
-              Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, mtditid)), "Activated"),
-              Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, mtditid)), "Activated")
+              Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, testMtditid)), "Activated"),
+              Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, testNino)), "Activated")
             ))
 
           lazy val result: Future[Result] = {
@@ -133,7 +137,7 @@ class AuthorisedActionSpec extends TestUtils {
               .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
               .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
               .returning(Future.successful(enrolments and ConfidenceLevel.L50))
-            auth.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
+            auth.individualAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
           }
 
           "returns an UNAUTHORIZED status" in {
@@ -142,17 +146,17 @@ class AuthorisedActionSpec extends TestUtils {
         }
 
         "the correct enrolment exist but no nino" which {
-          val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(user.mtditid))
-          val mtditid                                   = "AAAAAA"
+
           val enrolments =
-            Enrolments(Set(Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, mtditid)), "Activated")))
+            Enrolments(
+              Set(Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, testMtditid)), "Activated")))
 
           lazy val result: Future[Result] = {
             (mockAuthConnector
               .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
               .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
               .returning(Future.successful(enrolments and ConfidenceLevel.L250))
-            auth.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
+            auth.individualAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
           }
 
           "returns an 401 status" in {
@@ -160,16 +164,15 @@ class AuthorisedActionSpec extends TestUtils {
           }
         }
         "the correct nino exist but no enrolment" which {
-          val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(user.mtditid))
-          val id                                        = "AAAAAA"
-          val enrolments = Enrolments(Set(Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, id)), "Activated")))
+
+          val enrolments = Enrolments(Set(Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, testNino)), "Activated")))
 
           lazy val result: Future[Result] = {
             (mockAuthConnector
               .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
               .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
               .returning(Future.successful(enrolments and ConfidenceLevel.L250))
-            auth.individualAuthentication(block, id)(fakeRequest, emptyHeaderCarrier)
+            auth.individualAuthentication(block, testNino)(fakeRequest, emptyHeaderCarrier)
           }
 
           "returns an 401 status" in {
@@ -181,17 +184,16 @@ class AuthorisedActionSpec extends TestUtils {
       "return a UNAUTHORIZED" when {
 
         "the correct enrolment is missing" which {
-          val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(user.mtditid))
-          val mtditid                                   = "AAAAAA"
+
           val enrolments =
-            Enrolments(Set(Enrolment("notAnIndividualOops", Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, mtditid)), "Activated")))
+            Enrolments(Set(Enrolment("notAnIndividualOops", Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, testMtditid)), "Activated")))
 
           lazy val result: Future[Result] = {
             (mockAuthConnector
               .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
               .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
               .returning(Future.successful(enrolments and ConfidenceLevel.L250))
-            auth.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
+            auth.individualAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
           }
 
           "returns a forbidden" in {
@@ -201,12 +203,11 @@ class AuthorisedActionSpec extends TestUtils {
       }
 
       "the correct enrolment and nino exist but the request is for a different id" which {
-        val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(user.mtditid))
-        val mtditid                                   = "AAAAAA"
+
         val enrolments = Enrolments(
           Set(
             Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, "123456")), "Activated"),
-            Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, mtditid)), "Activated")
+            Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, testNino)), "Activated")
           ))
 
         lazy val result: Future[Result] = {
@@ -214,7 +215,7 @@ class AuthorisedActionSpec extends TestUtils {
             .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
             .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
             .returning(Future.successful(enrolments and ConfidenceLevel.L250))
-          auth.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
+          auth.individualAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
         }
 
         "returns an UNAUTHORIZED status" in {
@@ -222,12 +223,11 @@ class AuthorisedActionSpec extends TestUtils {
         }
       }
       "the correct enrolment and nino exist but low CL" which {
-        val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(user.mtditid))
-        val mtditid                                   = "AAAAAA"
+
         val enrolments = Enrolments(
           Set(
-            Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, mtditid)), "Activated"),
-            Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, mtditid)), "Activated")
+            Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, testMtditid)), "Activated"),
+            Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, testNino)), "Activated")
           ))
 
         lazy val result: Future[Result] = {
@@ -235,7 +235,7 @@ class AuthorisedActionSpec extends TestUtils {
             .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
             .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
             .returning(Future.successful(enrolments and ConfidenceLevel.L50))
-          auth.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
+          auth.individualAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
         }
 
         "returns an UNAUTHORIZED status" in {
@@ -244,17 +244,16 @@ class AuthorisedActionSpec extends TestUtils {
       }
 
       "the correct enrolment exist but no nino" which {
-        val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(user.mtditid))
-        val mtditid                                   = "AAAAAA"
+
         val enrolments =
-          Enrolments(Set(Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, mtditid)), "Activated")))
+          Enrolments(Set(Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, testMtditid)), "Activated")))
 
         lazy val result: Future[Result] = {
           (mockAuthConnector
             .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
             .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
             .returning(Future.successful(enrolments and ConfidenceLevel.L250))
-          auth.individualAuthentication(block, mtditid)(fakeRequest, emptyHeaderCarrier)
+          auth.individualAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
         }
 
         "returns an 401 status" in {
@@ -262,16 +261,15 @@ class AuthorisedActionSpec extends TestUtils {
         }
       }
       "the correct nino exist but no enrolment" which {
-        val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(user.mtditid))
-        val id                                        = "AAAAAA"
-        val enrolments = Enrolments(Set(Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, id)), "Activated")))
+
+        val enrolments = Enrolments(Set(Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, testNino)), "Activated")))
 
         lazy val result: Future[Result] = {
           (mockAuthConnector
             .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
             .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
             .returning(Future.successful(enrolments and ConfidenceLevel.L250))
-          auth.individualAuthentication(block, id)(fakeRequest, emptyHeaderCarrier)
+          auth.individualAuthentication(block, testNino)(fakeRequest, emptyHeaderCarrier)
         }
 
         "returns an 401 status" in {
@@ -279,18 +277,17 @@ class AuthorisedActionSpec extends TestUtils {
         }
       }
     }
-    ".agentAuthenticated" should {
 
-      val block: User[AnyContent] => Future[Result] = user => Future.successful(Ok(s"${user.mtditid} ${user.arn.get}"))
+    ".agentAuthenticated" should {
 
       "perform the block action" when {
 
-        "the agent is authorised for the given user" which {
+        "the agent is authorised for the given user (Primary Agent)" which {
 
           val enrolments = Enrolments(
             Set(
-              Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, "1234567890")), "Activated"),
-              Enrolment(EnrolmentKeys.Agent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, "0987654321")), "Activated")
+              Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, testMtditid)), "Activated"),
+              Enrolment(EnrolmentKeys.Agent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, testArn)), "Activated")
             ))
 
           lazy val result = {
@@ -299,7 +296,7 @@ class AuthorisedActionSpec extends TestUtils {
               .expects(*, Retrievals.allEnrolments, *, *)
               .returning(Future.successful(enrolments))
 
-            auth.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
+            auth.agentAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
           }
 
           "has a status of OK" in {
@@ -307,43 +304,88 @@ class AuthorisedActionSpec extends TestUtils {
           }
 
           "has the correct body" in {
-            bodyOf(result) mustBe "1234567890 0987654321"
+            bodyOf(result) mustBe s"mtditid: $testMtditid arn: $testArn"
+          }
+        }
+
+        "the agent is authorised for the given user (Secondary Agent - EMA enabled)" which {
+
+          val enrolments = Enrolments(
+            Set(
+              Enrolment(EnrolmentKeys.SupportingAgent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, testMtditid)), "Activated"),
+              Enrolment(EnrolmentKeys.Agent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, testArn)), "Activated")
+            ))
+
+          lazy val result = {
+
+            // Enabled EMA Supporting/Secondary Agent feature
+            mockEmaSupportingAgentEnabled(true)
+
+            // Simulate first call failing for Primary Agent check
+            mockAuthReturnException(InsufficientEnrolments())
+
+            // Simulate second call for Secondary Agent check being successful
+            (mockAuthConnector
+              .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
+              .expects(*, Retrievals.allEnrolments, *, *)
+              .returning(Future.successful(enrolments))
+              .once()
+
+            auth.agentAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
+          }
+
+          "has a status of OK" in {
+            status(result) mustBe OK
+          }
+
+          "has the correct body" in {
+            bodyOf(result) mustBe s"mtditid: $testMtditid arn: $testArn"
           }
         }
       }
       "return an Unauthorised" when {
 
-        "the authorisation service returns an AuthorisationException exception" in {
-          object AuthException extends AuthorisationException("Some reason")
+        "the authorisation service returns an AuthorisationException exception (EMA Secondary Agent Disabled)" in {
 
           lazy val result = {
-            mockAuthReturnException(AuthException)
-            auth.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
+            // Disable EMA Supporting/Secondary Agent feature
+            mockEmaSupportingAgentEnabled(false)
+            mockAuthReturnException(InsufficientEnrolments())
+
+            auth.agentAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
           }
           status(result) mustBe UNAUTHORIZED
         }
 
-      }
+        "the authorisation service returns an AuthorisationException exception on the second call (EMA Secondary Enabled)" in {
 
-      "return an Unauthorised" when {
+          lazy val result = {
+            // Enabled EMA Supporting/Secondary Agent feature
+            mockEmaSupportingAgentEnabled(true)
+
+            // Simulate first & second call failing for Primary Agent check
+            mockAuthReturnException(InsufficientEnrolments()).twice()
+
+            auth.agentAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
+          }
+          status(result) mustBe UNAUTHORIZED
+        }
 
         "the authorisation service returns a NoActiveSession exception" in {
           object NoActiveSession extends NoActiveSession("Some reason")
 
           lazy val result = {
             mockAuthReturnException(NoActiveSession)
-            auth.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
+            auth.agentAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
           }
 
           status(result) mustBe UNAUTHORIZED
         }
-      }
-      "return a UNAUTHORIZED" when {
 
         "the user does not have an enrolment for the agent" in {
           val enrolments = Enrolments(
             Set(
-              Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, "1234567890")), "Activated")
+              Enrolment(EnrolmentKeys.Individual, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, testMtditid)), "Activated")
             ))
 
           lazy val result = {
@@ -351,16 +393,14 @@ class AuthorisedActionSpec extends TestUtils {
               .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
               .expects(*, Retrievals.allEnrolments, *, *)
               .returning(Future.successful(enrolments))
-            auth.agentAuthentication(block, "1234567890")(fakeRequest, emptyHeaderCarrier)
+            auth.agentAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
           }
           status(result) mustBe UNAUTHORIZED
         }
       }
     }
-    ".async" should {
 
-      lazy val block: User[AnyContent] => Future[Result] =
-        user => Future.successful(Ok(s"mtditid: ${user.mtditid}${user.arn.fold("")(arn => " arn: " + arn)}"))
+    ".async" should {
 
       "perform the block action" when {
 
@@ -374,7 +414,7 @@ class AuthorisedActionSpec extends TestUtils {
           "should return an OK(200) status" in {
 
             status(result) mustBe OK
-            bodyOf(result) mustBe "mtditid: 1234567890 arn: 0987654321"
+            bodyOf(result) mustBe s"mtditid: $testMtditid arn: $testArn"
           }
         }
 
@@ -386,7 +426,7 @@ class AuthorisedActionSpec extends TestUtils {
           }
 
           status(result) mustBe OK
-          bodyOf(result) mustBe "mtditid: 1234567890"
+          bodyOf(result) mustBe s"mtditid: $testMtditid"
         }
       }
 
