@@ -115,7 +115,7 @@ class AuthorisedAction @Inject() ()(implicit
       hc: HeaderCarrier): Future[Result] =
     authorised(agentAuthPredicate(mtdItId))
       .retrieve(allEnrolments) {
-        populateAgent(block, mtdItId, _)
+        populateAgent(block, mtdItId, _, isSupportingAgent = false)
       }
       .recoverWith(agentRecovery(block, mtdItId))
 
@@ -128,7 +128,7 @@ class AuthorisedAction @Inject() ()(implicit
     case _: AuthorisationException if appConfig.emaSupportingAgentsEnabled =>
       authorised(secondaryAgentPredicate(mtdItId))
         .retrieve(allEnrolments) {
-          populateAgent(block, mtdItId, _)
+          populateAgent(block, mtdItId, _, isSupportingAgent = true)
         }
         .recover { case _ =>
           logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have secondary delegated authority for Client.")
@@ -139,10 +139,11 @@ class AuthorisedAction @Inject() ()(implicit
       unauthorized
   }
 
-  private def populateAgent[A](block: User[A] => Future[Result], mtdItId: String, enrolments: Enrolments)(implicit request: Request[A]) =
+  private def populateAgent[A](block: User[A] => Future[Result], mtdItId: String, enrolments: Enrolments, isSupportingAgent: Boolean)(implicit
+      request: Request[A]) =
     enrolmentGetIdentifierValue(EnrolmentKeys.Agent, EnrolmentIdentifiers.agentReference, enrolments) match {
       case Some(arn) =>
-        block(User(mtdItId, Some(arn)))
+        block(User(mtdItId, Some(arn), isSupportingAgent))
       case None =>
         logger.info("[AuthorisedAction][agentAuthentication] Agent with no HMRC-AS-AGENT enrolment.")
         unauthorized
@@ -158,7 +159,8 @@ class AuthorisedAction @Inject() ()(implicit
 }
 
 object AuthorisedAction {
-  case class User[T](mtditid: String, arn: Option[String])(implicit val request: Request[T]) extends WrappedRequest[T](request) {
+  case class User[T](mtditid: String, arn: Option[String], isSupportingAgent: Boolean = false)(implicit val request: Request[T])
+      extends WrappedRequest[T](request) {
     def isAgent: Boolean    = arn.nonEmpty
     def getMtditid: Mtditid = Mtditid(mtditid)
   }
