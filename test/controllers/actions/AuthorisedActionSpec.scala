@@ -402,7 +402,7 @@ class AuthorisedActionSpec extends TestUtils with MockAppConfig {
 
       "[EMA enabled] an unexpected error occurs during secondary agent auth call" in {
         object RandomError extends IndexOutOfBoundsException("Some reason")
-        object AuthError extends AuthorisationException("Some reason")
+        object AuthError   extends AuthorisationException("Some reason")
 
         mockEmaSupportingAgentEnabled(true)
         mockAuthReturnException(AuthError)
