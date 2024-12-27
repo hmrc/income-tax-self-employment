@@ -21,7 +21,7 @@ import config.AppConfig
 import controllers.actions.AuthorisedAction.User
 import models.common.Mtditid
 import play.api.Logger
-import play.api.mvc.Results.Unauthorized
+import play.api.mvc.Results.{InternalServerError, Unauthorized}
 import play.api.mvc._
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -43,7 +43,7 @@ class AuthorisedAction @Inject() ()(implicit
   lazy val logger: Logger                         = Logger.apply(this.getClass)
   implicit val executionContext: ExecutionContext = cc.executionContext
 
-  val unauthorized: Future[Result] = Future(Unauthorized)
+  private val unauthorized: Future[Result] = Future(Unauthorized)
 
   def async(block: User[AnyContent] => Future[Result]): Action[AnyContent] = defaultActionBuilder.async { implicit request =>
     implicit lazy val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequest(request)
@@ -64,6 +64,9 @@ class AuthorisedAction @Inject() ()(implicit
           case _: AuthorisationException =>
             logger.info(s"[AuthorisedAction][async] - User failed to authenticate")
             Unauthorized
+          case e =>
+            logger.error(s"[AuthorisedAction][async] - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+            InternalServerError
         })
   }
 
@@ -119,24 +122,33 @@ class AuthorisedAction @Inject() ()(implicit
       }
       .recoverWith(agentRecovery(block, mtdItId))
 
+  private val agentAuthLogString: String = "[AuthorisedAction][agentAuthentication]"
+
   private def agentRecovery[A](block: User[A] => Future[Result], mtdItId: String)(implicit
       request: Request[A],
       hc: HeaderCarrier): PartialFunction[Throwable, Future[Result]] = {
     case _: NoActiveSession =>
-      logger.info(s"[AuthorisedAction][agentAuthentication] - No active session.")
+      logger.info(s"$agentAuthLogString - No active session.")
       unauthorized
     case _: AuthorisationException if appConfig.emaSupportingAgentsEnabled =>
       authorised(secondaryAgentPredicate(mtdItId))
         .retrieve(allEnrolments) {
           populateAgent(block, mtdItId, _, isSupportingAgent = true)
         }
-        .recover { case _ =>
-          logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have secondary delegated authority for Client.")
-          Unauthorized
+        .recover {
+          case _: AuthorisationException =>
+            logger.info(s"$agentAuthLogString - Agent does not have secondary delegated authority for Client.")
+            Unauthorized
+          case e =>
+            logger.error(s"$agentAuthLogString - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+            InternalServerError
         }
-    case _ =>
-      logger.info(s"[AuthorisedAction][agentAuthentication] - Agent does not have delegated authority for Client.")
+    case _: AuthorisationException =>
+      logger.info(s"$agentAuthLogString - Agent does not have delegated authority for Client.")
       unauthorized
+    case e =>
+      logger.error(s"$agentAuthLogString - Unexpected exception of type '${e.getClass.getSimpleName}' was caught.")
+      Future.successful(InternalServerError)
   }
 
   private def populateAgent[A](block: User[A] => Future[Result], mtdItId: String, enrolments: Enrolments, isSupportingAgent: Boolean)(implicit
