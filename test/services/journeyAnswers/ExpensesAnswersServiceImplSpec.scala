@@ -32,6 +32,7 @@ import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
+import models.error.ServiceError
 import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers}
 import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategories, NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
@@ -346,6 +347,26 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
 
       result shouldBe ().asRight
       val apiResult = connector.amendSEPeriodSummaryResultData.flatMap(_.body.returnNoneIfEmpty)
+      apiResult shouldBe None
+      repo.lastUpsertedAnswer shouldBe None
+
+    }
+  }
+
+  "clearGoodsToSellOrUseExpensesData" must {
+    "delete all goods to sell/use expenses API answer" in new Test {
+
+      val existingPeriodData: AmendSEPeriodSummaryRequestData = buildPeriodData(Some(DeductionsTestData.sample))
+
+      override val connector: StubIFSConnector = StubIFSConnector()
+      connector.amendSEPeriodSummaryResultData = Some(existingPeriodData)
+      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers.some)
+      repo.lastUpsertedAnswer = Option(Json.toJson(ExpensesCategoriesDb(IndividualCategories)))
+
+      val result: Either[ServiceError, Unit] = underTest.clearGoodsToSellOrUseExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe ().asRight
+      val apiResult: Option[AmendSEPeriodSummaryRequestBody] = connector.amendSEPeriodSummaryResultData.flatMap(_.body.returnNoneIfEmpty)
       apiResult shouldBe None
       repo.lastUpsertedAnswer shouldBe None
 

@@ -87,6 +87,7 @@ trait ExpensesAnswersService {
 
   def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearOfficeSuppliesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearGoodsToSellOrUseExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
@@ -320,6 +321,16 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       financialsWithoutAdminCosts      = existingPeriodicSummary.financials.toApi1894.copy(deductions = deductionsWithoutAdminCosts)
       existingTaxTakenOffTradingIncome = existingPeriodicSummary.financials.incomes.flatMap(_.taxTakenOffTradingIncome)
       _ <- submitTailoringAnswers(ctx, financialsWithoutAdminCosts, existingTaxTakenOffTradingIncome)
+      _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(OfficeSupplies))
+    } yield ()
+
+  def clearGoodsToSellOrUseExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    for {
+      existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
+      deductionsWithoutCostOfGoods      = existingPeriodicSummary.financials.toApi1894.deductions.map(_.copy(costOfGoods = None))
+      financialsWithoutCostOfGoods      = existingPeriodicSummary.financials.toApi1894.copy(deductions = deductionsWithoutCostOfGoods)
+      existingTaxTakenOffTradingIncome = existingPeriodicSummary.financials.incomes.flatMap(_.taxTakenOffTradingIncome)
+      _ <- submitTailoringAnswers(ctx, financialsWithoutCostOfGoods, existingTaxTakenOffTradingIncome)
       _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(OfficeSupplies))
     } yield ()
 
