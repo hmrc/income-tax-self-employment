@@ -26,6 +26,7 @@ import models.connector.api_1803
 import models.connector.api_1803.AnnualNonFinancialsType.Class4NicsExemptionReason
 import models.connector.api_1803.{AnnualNonFinancialsType, SuccessResponseSchema}
 import models.database.nics.NICsStorageAnswers
+import models.error.ServiceError
 import models.frontend.nics.ExemptionReason.{DiverDivingInstructor, TrusteeExecutorAdmin}
 import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
 import models.frontend.nics.{ExemptionReason, NICsAnswers, NICsClass2Answers, NICsClass4Answers}
@@ -37,7 +38,7 @@ import stubs.connectors.StubIFSConnector.{api1171MultipleBusinessResponse, api11
 import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.repositories.StubJourneyAnswersRepository
 import stubs.services.StubBusinessService
-import utils.BaseSpec.{businessId, currTaxYearEnd, hc, journeyCtxWithNino, nino, taxYear}
+import utils.BaseSpec.{businessId, currTaxYear, currTaxYearEnd, hc, journeyCtxWithNino, nino, taxYear}
 import utils.EitherTTestOps.convertScalaFuture
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -120,9 +121,9 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
           override val connector: StubIFSConnector =
             StubIFSConnector(getAnnualSummariesResult = Right(api_1803.SuccessResponseSchema(None, None, None)))
 
-          val expectedResult = buildExpectedRequestResult(expectedApiData)
+          val expectedResult: Option[CreateAmendSEAnnualSubmissionRequestData] = buildExpectedRequestResult(expectedApiData)
 
-          val result = service.saveClass4BusinessData(journeyCtxWithNino, answer).value.futureValue
+          val result: Either[ServiceError, Unit] = service.saveClass4BusinessData(journeyCtxWithNino, answer).value.futureValue
 
           assert(result.isRight)
           assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
@@ -264,7 +265,7 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
     def buildExpectedRequestResult(annualNonFinancials: AnnualNonFinancials,
                                    id: BusinessId = businessId): Option[CreateAmendSEAnnualSubmissionRequestData] =
       Some(
-        CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, id, CreateAmendSEAnnualSubmissionRequestBody(None, None, Some(annualNonFinancials))))
+        CreateAmendSEAnnualSubmissionRequestData(currTaxYear, nino, id, CreateAmendSEAnnualSubmissionRequestBody(None, None, Some(annualNonFinancials))))
 
   }
 }
