@@ -265,7 +265,11 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
     def buildExpectedRequestResult(annualNonFinancials: AnnualNonFinancials,
                                    id: BusinessId = businessId): Option[CreateAmendSEAnnualSubmissionRequestData] =
       Some(
-        CreateAmendSEAnnualSubmissionRequestData(currTaxYear, nino, id, CreateAmendSEAnnualSubmissionRequestBody(None, None, Some(annualNonFinancials))))
+        CreateAmendSEAnnualSubmissionRequestData(
+          currTaxYear,
+          nino,
+          id,
+          CreateAmendSEAnnualSubmissionRequestBody(None, None, Some(annualNonFinancials))))
 
   }
 }

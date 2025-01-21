@@ -23,7 +23,7 @@ import utils.BaseSpec._
 
 trait Api1500Test {
   val taxYearStr: String = TaxYear(2024).toYYYY_YY
-  val downstreamUrl = s"/individuals/losses/$nino/brought-forward-losses/$taxYearStr"
+  val downstreamUrl      = s"/individuals/losses/$nino/brought-forward-losses/$taxYearStr"
   val requestBody: CreateBroughtForwardLossRequestBody = CreateBroughtForwardLossRequestBody(
     businessId = "SJPR05893938418",
     typeOfLoss = LossType.SelfEmployment,
