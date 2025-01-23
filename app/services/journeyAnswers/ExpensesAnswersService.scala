@@ -19,9 +19,17 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
-import models.common.JourneyName.{CapitalAllowancesTailoring, ExpensesTailoring, GoodsToSellOrUse, OfficeSupplies, WorkplaceRunningCosts}
+import models.common.JourneyName.{
+  CapitalAllowancesTailoring,
+  ExpensesTailoring,
+  GoodsToSellOrUse,
+  OfficeSupplies,
+  RepairsAndMaintenanceCosts,
+  WorkplaceRunningCosts
+}
 import models.common._
-import models.connector.api_1894.request.FinancialsType
+import models.connector.api_1502.SuccessResponseSchema
+import models.connector.api_1894.request.{Deductions, FinancialsType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
 import models.connector.{Api1786ExpensesResponseParser, api_1786, api_1894}
 import models.database.JourneyAnswers
@@ -87,6 +95,7 @@ trait ExpensesAnswersService {
 
   def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearOfficeSuppliesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearRepairsAndMaintenanceExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
@@ -314,13 +323,26 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   }
 
   def clearOfficeSuppliesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesData(ctx, OfficeSupplies)
+
+  def clearRepairsAndMaintenanceExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesData(ctx, RepairsAndMaintenanceCosts)
+
+  private def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
-      deductionsWithoutAdminCosts      = existingPeriodicSummary.financials.toApi1894.deductions.map(_.copy(adminCosts = None))
-      financialsWithoutAdminCosts      = existingPeriodicSummary.financials.toApi1894.copy(deductions = deductionsWithoutAdminCosts)
-      existingTaxTakenOffTradingIncome = existingPeriodicSummary.financials.incomes.flatMap(_.taxTakenOffTradingIncome)
-      _ <- submitTailoringAnswers(ctx, financialsWithoutAdminCosts, existingTaxTakenOffTradingIncome)
-      _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(OfficeSupplies))
+      deductionsWithoutMaintenanceCosts = existingPeriodicSummary.financials.toApi1894.deductions.map(d => clearSpecificExpensesDate(d, journeyName))
+      financialsWithoutMaintenanceCosts = existingPeriodicSummary.financials.toApi1894.copy(deductions = deductionsWithoutMaintenanceCosts)
+      existingTaxTakenOffTradingIncome  = existingPeriodicSummary.financials.incomes.flatMap(_.taxTakenOffTradingIncome)
+      _ <- submitTailoringAnswers(ctx, financialsWithoutMaintenanceCosts, existingTaxTakenOffTradingIncome)
+      _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(journeyName))
     } yield ()
+
+  private def clearSpecificExpensesDate(deductions: Deductions, journeyName: JourneyName): Deductions =
+    journeyName match {
+      case OfficeSupplies             => deductions.copy(adminCosts = None)
+      case RepairsAndMaintenanceCosts => deductions.copy(maintenanceCosts = None)
+      case _                          => deductions
+    }
 
 }
