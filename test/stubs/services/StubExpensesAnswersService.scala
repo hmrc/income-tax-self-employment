@@ -53,6 +53,7 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
                                       deleteSimplifiedExpensesAnswersRes: ApiResultT[Unit] = serviceUnitT,
                                       clearExpensesAndCapitalAllowancesDataRes: ApiResultT[Unit] = serviceUnitT,
                                       clearOfficeSuppliesExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
+                                      clearGoodsToSellOrUseExpensesData: ApiResultT[Unit] = serviceUnitT,
                                       clearRepairsAndMaintenanceExpensesDataRes: ApiResultT[Unit] = serviceUnitT)
     extends ExpensesAnswersService {
 
@@ -128,6 +129,9 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
 
   def clearOfficeSuppliesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearOfficeSuppliesExpensesDataRes
+
+  override def clearGoodsToSellOrUseExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearGoodsToSellOrUseExpensesData
 
   def clearRepairsAndMaintenanceExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearRepairsAndMaintenanceExpensesDataRes
