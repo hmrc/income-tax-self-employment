@@ -16,6 +16,7 @@
 
 package services.journeyAnswers
 
+import cats.data.EitherT
 import cats.implicits._
 import config.AppConfig
 import data.api1802.AnnualAllowancesData
@@ -26,7 +27,12 @@ import gens.genOne
 import models.common.JourneyName.ExpensesTailoring
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
-import models.connector.api_1802.request.{AnnualNonFinancials, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1802.request.{
+  AnnualAllowances,
+  AnnualNonFinancials,
+  CreateAmendSEAnnualSubmissionRequestBody,
+  CreateAmendSEAnnualSubmissionRequestData
+}
 import models.connector.api_1895.request._
 import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
@@ -51,6 +57,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.test.MongoSupport
 import utils.BaseSpec._
 import utils.EitherTTestOps.EitherTExtensions
+import utils.TestClock
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -354,30 +361,32 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
   }
 
   "clearGoodsToSellOrUseExpensesData" must {
-    "delete all goods to sell/use expenses API answer" in new Test {
-
-      val existingPeriodData: AmendSEPeriodSummaryRequestData = buildPeriodData(Some(DeductionsTestData.sample))
-
-      override val connector: StubIFSConnector = StubIFSConnector()
-      connector.amendSEPeriodSummaryResultData = Some(existingPeriodData)
-      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers.some)
-      repo.lastUpsertedAnswer = Option(Json.toJson(ExpensesCategoriesDb(IndividualCategories)))
+    "delete all goods to sell/use expenses API answer" in new Test2 {
+      prepareData()
 
       val result: Either[ServiceError, Unit] = underTest.clearGoodsToSellOrUseExpensesData(journeyCtxWithNino).value.futureValue
 
       result shouldBe ().asRight
-      val apiResult: Option[AmendSEPeriodSummaryRequestBody] = connector.amendSEPeriodSummaryResultData.flatMap(_.body.returnNoneIfEmpty)
-      apiResult shouldBe None
-      repo.lastUpsertedAnswer shouldBe None
 
+      incomeResult should not be None
+      goodsToSellOrUseResult shouldBe None
+    }
+
+    "connector fails to update the repository database" in new Test {
+      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
+
+      val result: Either[ServiceError, Unit] = underTest.clearGoodsToSellOrUseExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe downstreamError
+      repo.lastUpsertedAnswer shouldBe None
     }
   }
 
   trait Test {
     val connector: StubIFSConnector = new StubIFSConnector()
 
-    val repo           = StubJourneyAnswersRepository()
-    lazy val underTest = new ExpensesAnswersServiceImpl(connector, repo)
+    val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository()
+    lazy val underTest                     = new ExpensesAnswersServiceImpl(connector, repo)
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
   }
@@ -389,7 +398,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
-    def prepareDatabase() = for {
+    def prepareDatabase(): EitherT[Future, ServiceError, Unit] = for {
       _ <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(expensesTailoringCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(officeSuppliesCtx, Json.obj("field" -> "value"))
@@ -398,12 +407,12 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       _ <- repository.upsertAnswers(zeroEmissionCarsCtx, Json.obj("field" -> "value"))
     } yield ()
 
-    def preparePeriodData() = {
+    def preparePeriodData(): Unit = {
       def existingPeriodData = buildPeriodData(Some(DeductionsTestData.sample))
       connector.amendSEPeriodSummaryResultData = Some(existingPeriodData)
     }
 
-    def prepareAnnualSummariesData() = {
+    def prepareAnnualSummariesData(): Unit = {
       val adjustments   = genOne(annualAdjustmentsTypeGen).toApi1802AnnualAdjustments
       val allowances    = AnnualAllowancesData.example
       val nonFinancials = AnnualNonFinancials(true, Some("002"))
@@ -415,14 +424,14 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       connector.upsertAnnualSummariesSubmissionData = Some(existingAnnualSummariesData)
     }
 
-    def prepareData() = {
+    def prepareData(): Either[ServiceError, Unit] = {
       preparePeriodData()
       prepareAnnualSummariesData()
       prepareDatabase().value.futureValue
     }
 
-    lazy val periodicApiResult = connector.amendSEPeriodSummaryResultData.flatMap(_.body.deductions)
-    lazy val annualApiResult   = connector.upsertAnnualSummariesSubmissionData.flatMap(_.body.annualAllowances)
+    lazy val periodicApiResult: Option[Deductions]     = connector.amendSEPeriodSummaryResultData.flatMap(_.body.deductions)
+    lazy val annualApiResult: Option[AnnualAllowances] = connector.upsertAnnualSummariesSubmissionData.flatMap(_.body.annualAllowances)
     lazy val (incomeResult, expensesTailoringResult, officeSuppliesResult, goodsToSellOrUseResult, capitalAllowancesResult, zeroEmissionCarsResult) =
       (for {
         income                     <- repository.get(incomeCtx)
@@ -436,8 +445,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
 }
 
 object ExpensesAnswersServiceImplSpec {
-  val clock         = mkClock(mkNow())
-  val mockAppConfig = mock[AppConfig]
+  val clock: TestClock         = mkClock(mkNow())
+  val mockAppConfig: AppConfig = mock[AppConfig]
 
   val tailoringJourneyAnswers: JourneyAnswers = JourneyAnswers(
     mtditid,
@@ -489,7 +498,8 @@ object ExpensesAnswersServiceImplSpec {
     None
   )
 
-  val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serverError).asLeft
+  val downstreamError: Either[SingleDownstreamError, Nothing] =
+    SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serverError).asLeft
 
   def buildPeriodData(deductions: Option[Deductions]): AmendSEPeriodSummaryRequestData =
     AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), deductions))

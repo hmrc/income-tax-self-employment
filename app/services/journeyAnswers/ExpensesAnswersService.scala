@@ -331,7 +331,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       financialsWithoutCostOfGoods     = existingPeriodicSummary.financials.toApi1894.copy(deductions = deductionsWithoutCostOfGoods)
       existingTaxTakenOffTradingIncome = existingPeriodicSummary.financials.incomes.flatMap(_.taxTakenOffTradingIncome)
       _ <- submitTailoringAnswers(ctx, financialsWithoutCostOfGoods, existingTaxTakenOffTradingIncome)
-      _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(OfficeSupplies))
+      _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(GoodsToSellOrUse))
     } yield ()
 
 }

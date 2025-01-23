@@ -169,9 +169,12 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
 
     "save journey answers - creating, replacing or clearing Class 4 exemptions data of any user business IDs" in new StubbedService {
       val existingDataId1: AnnualNonFinancialsType = AnnualNonFinancialsType(None, None, None)
-      val existingDataId2: AnnualNonFinancialsType = AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._003), None)
-      val existingDataId3: AnnualNonFinancialsType = AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)
-      val existingDataId4: AnnualNonFinancialsType = AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)
+      val existingDataId2: AnnualNonFinancialsType =
+        AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._003), None)
+      val existingDataId3: AnnualNonFinancialsType =
+        AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)
+      val existingDataId4: AnnualNonFinancialsType =
+        AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)
 
       override val businessConnector =
         StubIFSBusinessDetailsConnector(getBusinessesResult = api1171MultipleBusinessResponse(
