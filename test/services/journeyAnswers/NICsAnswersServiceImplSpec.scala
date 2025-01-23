@@ -168,31 +168,34 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       Right(api_1803.SuccessResponseSchema(None, None, Some(annualNonFinancialsData)))
 
     "save journey answers - creating, replacing or clearing Class 4 exemptions data of any user business IDs" in new StubbedService {
-      val existingDataId1 = AnnualNonFinancialsType(None, None, None)
-      val existingDataId2 = AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._003), None)
-      val existingDataId3 = AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)
-      val existingDataId4 = AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)
+      val existingDataId1: AnnualNonFinancialsType = AnnualNonFinancialsType(None, None, None)
+      val existingDataId2: AnnualNonFinancialsType =
+        AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._003), None)
+      val existingDataId3: AnnualNonFinancialsType =
+        AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)
+      val existingDataId4: AnnualNonFinancialsType =
+        AnnualNonFinancialsType(Some(true), Some(AnnualNonFinancialsType.Class4NicsExemptionReason._006), None)
 
       override val businessConnector =
         StubIFSBusinessDetailsConnector(getBusinessesResult = api1171MultipleBusinessResponse(
           List(BusinessId("BusinessId1"), BusinessId("BusinessId2"), BusinessId("BusinessId3"), BusinessId("BusinessId4"))).asRight)
-      override val connector = StubIFSConnector(
+      override val connector: StubIFSConnector = StubIFSConnector(
         getAnnualSummariesResultTest1 = buildDataResponse(existingDataId1),
         getAnnualSummariesResultTest2 = buildDataResponse(existingDataId2),
         getAnnualSummariesResultTest3 = buildDataResponse(existingDataId3),
         getAnnualSummariesResultTest4 = buildDataResponse(existingDataId4)
       )
 
-      val expectedResultId1 = // Replace empty answers
+      val expectedResultId1: Option[CreateAmendSEAnnualSubmissionRequestData] = // Replace empty answers
         buildExpectedRequestResult(AnnualNonFinancials(true, Some(DiverDivingInstructor.exemptionCode)), BusinessId("BusinessId1"))
-      val expectedResultId2 = // Persist original answers
+      val expectedResultId2: Option[CreateAmendSEAnnualSubmissionRequestData] = // Persist original answers
         buildExpectedRequestResult(AnnualNonFinancials(true, Some(DiverDivingInstructor.exemptionCode)), BusinessId("BusinessId2"))
-      val expectedResultId3 = // Replace existing answers
+      val expectedResultId3: Option[CreateAmendSEAnnualSubmissionRequestData] = // Replace existing answers
         buildExpectedRequestResult(AnnualNonFinancials(true, Some(TrusteeExecutorAdmin.exemptionCode)), BusinessId("BusinessId3"))
-      val expectedResultId4 = // Clear existing answers
+      val expectedResultId4: Option[CreateAmendSEAnnualSubmissionRequestData] = // Clear existing answers
         buildExpectedRequestResult(AnnualNonFinancials(false, None), BusinessId("BusinessId4"))
 
-      val result =
+      val result: Either[ServiceError, Unit] =
         service.saveClass4MultipleBusinessOrNoExemptionJourneys(journeyCtxWithNino, class4DiverAndTrusteeMultipleBusinessesAnswers).value.futureValue
       assert(result.isRight)
       assert(connector.upsertAnnualSummariesSubmissionDataTest1 === expectedResultId1)
