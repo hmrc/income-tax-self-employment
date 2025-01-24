@@ -54,6 +54,9 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val ifsApi1171: String = servicesConfig.baseUrl("integration-framework-api1171")
 
+  val api1507Url: (String, String) => String =
+    (taxYear, taxableEntityId) => s"$ifsBaseUrl/income-tax/claims-for-relief/$taxableEntityId"
+
   val api1867Url: (String, String) => String =
     (taxYear, taxableEntityId) => s"$ifsBaseUrl/income-tax/$taxYear/claims-for-relief/$taxableEntityId"
 

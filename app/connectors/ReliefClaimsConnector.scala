@@ -18,7 +18,8 @@ package connectors
 
 import config.AppConfig
 import jakarta.inject.Inject
-import models.connector.{ApiResponse, IFSApiName, api_1867, commonGetListReads}
+import models.connector.api_1867.ReliefClaim
+import models.connector.{ApiResponse, IFSApiName, api_1507, api_1867, commonGetListReads}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import utils.Logging
 
@@ -26,12 +27,19 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) extends Logging {
 
-  type Api1867Response = ApiResponse[List[api_1867.ReliefClaim]]
+  type Api1867Response = ApiResponse[List[ReliefClaim]]
+  type Api1507Response = ApiResponse[List[ReliefClaim]]
 
-  def getReliefClaims(taxYear: String, mtditid: String)(implicit hc: HeaderCarrier): Future[Api1867Response] = {
+  def getReliefClaims1867(taxYear: String, mtditid: String)(implicit hc: HeaderCarrier): Future[Api1867Response] = {
     implicit val reads: HttpReads[ApiResponse[List[api_1867.ReliefClaim]]] = commonGetListReads[api_1867.ReliefClaim]
 
     get[Api1867Response](httpClient, appConfig.mkMetadata(IFSApiName.Api1867, appConfig.api1867Url(taxYear, mtditid)))
+  }
+
+  def getReliefClaims1507(taxYear: String, mtditid: String)(implicit hc: HeaderCarrier): Future[Api1507Response] = {
+    implicit val reads: HttpReads[ApiResponse[List[api_1507.ReliefClaim]]] = commonGetListReads[api_1507.ReliefClaim]
+
+    get[Api1507Response](httpClient, appConfig.mkMetadata(IFSApiName.Api1507, appConfig.api1507Url(taxYear, mtditid)))
   }
 
 }

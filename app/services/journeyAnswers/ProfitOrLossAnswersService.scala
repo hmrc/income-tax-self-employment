@@ -51,6 +51,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
                                                 ifsBusinessDetailsConnector: IFSBusinessDetailsConnector,
                                                 hipConnector: HipConnector,
                                                 reliefClaimsConnector: ReliefClaimsConnector,
+                                                reliefClaimsService: ReliefClaimsService,
                                                 repository: JourneyAnswersRepository,
                                                 appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends ProfitOrLossAnswersService {
@@ -60,13 +61,16 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       _      <- createUpdateOrDeleteAnnualSummaries(ctx, answers)
       _      <- createUpdateOrDeleteLossClaim(ctx, answers) // TODO SASS-10335 update Spec to include the change
       _      <- createUpdateOrDeleteBroughtForwardLoss(ctx, answers)
+      _      <- reliefClaimsService.cacheClaimIds(ctx, ctx.taxYear.toString)
       result <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(answers.toDbAnswers))
     } yield result
 
   def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
     for {
-      maybeData   <- getDbAnswers(ctx)
-      apiResponse <- ifsConnector.getLossClaim(ctx, "claimId") // TODO Need to check how claimId be passed
+      //maybeData   <- getDbAnswers(ctx) // This getDBAnswers method won't work for what we're doing. Not sure why it even exists given how little it does
+      claimIds <- getPersistedAnswers[List[String]](repository.get(ClaimIds /* TODO create this */))
+      // We'll have to carry on tomorrow cause I've gotta go, but there's light at the end of the tunnel!
+      apiResponse <- ifsConnector.getLossClaim(ctx, "claimId") // This to be exact
     } yield maybeData match {
       case Some(journeyAnswer) => Option(ProfitOrLossJourneyAnswers(apiResponse, journeyAnswer))
       case _                   => None
@@ -90,7 +94,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     } yield result
 
   def getLossClaimByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[ReliefClaim]] = {
-    val lossClaims = reliefClaimsConnector.getReliefClaims(ctx.taxYear.toString, ctx.nino.toString)
+    val lossClaims = reliefClaimsConnector.getReliefClaims1867(ctx.taxYear.toString, ctx.nino.toString)
     val result = lossClaims.map {
       case Right(list) =>
         Right(list.find(_.incomeSourceId == ctx.businessId.value))
