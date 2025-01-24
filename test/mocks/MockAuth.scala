@@ -16,8 +16,8 @@
 
 package mocks
 
+import common._
 import controllers.actions.AuthorisedAction
-import controllers.actions.AuthorisedAction.{EnrolmentIdentifiers, EnrolmentKeys}
 import org.mockito.IdiomaticMockito.StubbingOps
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
@@ -26,7 +26,7 @@ import utils.BaseSpec
 
 import scala.concurrent.Future
 
-trait MockAuth extends BaseSpec {
+trait MockAuth extends BaseSpec with MockAppConfig {
 
   private val mockAuthConnector = mock[AuthConnector]
 
@@ -44,6 +44,6 @@ trait MockAuth extends BaseSpec {
     .authorise(*, eqTo(Retrievals.affinityGroup))(*, *) returns Future
     .successful(Some(AffinityGroup.Individual))
 
-  protected val mockAuthorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents)
+  protected val mockAuthorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents, mockedAppConfig)
 
 }

@@ -25,7 +25,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import utils.BaseSpec.{businessId, currTaxYear, mtditid, nino}
 
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 
 class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers {
 
@@ -53,7 +53,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers {
           CreateLossClaimRequestBody(
             incomeSourceId = "SJPR05893938418",
             reliefClaimed = ReliefClaimType.CF.toString,
-            taxYear = "2024"
+            taxYear = LocalDate.now().getYear.toString
           ))
       }
 

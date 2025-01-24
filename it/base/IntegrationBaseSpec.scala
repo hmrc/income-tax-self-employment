@@ -23,6 +23,7 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.ws.{WSClient, WSRequest}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionId}
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext
 
 trait IntegrationBaseSpec extends PlaySpec with GuiceOneServerPerSuite with ScalaFutures {

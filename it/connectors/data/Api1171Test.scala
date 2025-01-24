@@ -102,5 +102,5 @@ trait Api1171Test extends IntegrationBaseSpec {
       |}
       |""".stripMargin
 
-  val successResponse = Json.parse(successResponseRaw).as[SuccessResponseSchema]
+  val successResponse: SuccessResponseSchema = Json.parse(successResponseRaw).as[SuccessResponseSchema]
 }
