@@ -20,14 +20,15 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
 import connectors.ReliefClaimsConnector
+import mocks.MockReliefClaimsService
 import models.common.JourneyContextWithNino
 import models.connector.api_1500.LossType
 import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.api_1802.request._
 import models.connector.api_1867.{CarryForward, UkProperty}
-import models.connector.{api_1867, api_1870}
 import models.connector.api_1870.{LossData, SuccessResponseSchema}
+import models.connector.{api_1867, api_1870}
 import models.database.adjustments.ProfitOrLossDb
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
@@ -508,5 +509,5 @@ trait StubbedService {
   val reliefClaimConnector: ReliefClaimsConnector                  = StubReliefClaimsConnector(mockHttpClient, mockAppConfig)
 
   def service: ProfitOrLossAnswersServiceImpl =
-    new ProfitOrLossAnswersServiceImpl(ifsConnector, ifsBusinessDetailsConnector, reliefClaimConnector, repository)
+    new ProfitOrLossAnswersServiceImpl(ifsConnector, ifsBusinessDetailsConnector, reliefClaimConnector, MockReliefClaimsService.mockInstance, repository)
 }
