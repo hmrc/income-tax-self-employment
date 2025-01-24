@@ -319,7 +319,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
-  "clearExpensesSimplifiedOrNoExpensesAnswers" in {
+  "Based on the selected expenses data option, it" should {
     val controller: JourneyAnswersController = new JourneyAnswersController(
       auth = mockAuthorisedAction,
       cc = stubControllerComponents,
@@ -331,92 +331,60 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       nicsAnswersService = StubNICsAnswersService(),
       profitOrLossAnswersService = StubProfitOrLossAnswersService()
     )
-    behave like testRoute(
-      request = buildRequestNoContent,
-      expectedStatus = NO_CONTENT,
-      expectedBody = "",
-      methodBlock = () => controller.clearExpensesSimplifiedOrNoExpensesAnswers(currTaxYear, businessId, nino)
-    )
-  }
 
-  s"clearExpensesAndCapitalAllowancesData" in {
-    val controller: JourneyAnswersController = new JourneyAnswersController(
-      auth = mockAuthorisedAction,
-      cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
-      incomeService = StubIncomeAnswersService(),
-      expensesService = StubExpensesAnswersService(),
-      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
-      prepopAnswersService = StubPrepopAnswersService(),
-      nicsAnswersService = StubNICsAnswersService(),
-      profitOrLossAnswersService = StubProfitOrLossAnswersService()
-    )
-    behave like testRoute(
-      request = buildRequestNoContent,
-      expectedStatus = NO_CONTENT,
-      expectedBody = "",
-      methodBlock = () => controller.clearExpensesAndCapitalAllowancesData(currTaxYear, businessId, nino)
-    )
-  }
+    "clearExpensesSimplifiedOrNoExpensesAnswers" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => controller.clearExpensesSimplifiedOrNoExpensesAnswers(currTaxYear, businessId, nino)
+      )
+    }
 
-  s"clearOfficeSuppliesExpensesData" in {
-    val controller: JourneyAnswersController = new JourneyAnswersController(
-      auth = mockAuthorisedAction,
-      cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
-      incomeService = StubIncomeAnswersService(),
-      expensesService = StubExpensesAnswersService(),
-      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
-      prepopAnswersService = StubPrepopAnswersService(),
-      nicsAnswersService = StubNICsAnswersService(),
-      profitOrLossAnswersService = StubProfitOrLossAnswersService()
-    )
-    behave like testRoute(
-      request = buildRequestNoContent,
-      expectedStatus = NO_CONTENT,
-      expectedBody = "",
-      methodBlock = () => controller.clearOfficeSuppliesExpensesData(currTaxYear, businessId, nino)
-    )
-  }
+    s"clearExpensesAndCapitalAllowancesData" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => controller.clearExpensesAndCapitalAllowancesData(currTaxYear, businessId, nino)
+      )
+    }
 
-  s"clearGoodsToSellOrUseExpensesData" in {
-    val controller: JourneyAnswersController = new JourneyAnswersController(
-      auth = mockAuthorisedAction,
-      cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
-      incomeService = StubIncomeAnswersService(),
-      expensesService = StubExpensesAnswersService(),
-      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
-      prepopAnswersService = StubPrepopAnswersService(),
-      nicsAnswersService = StubNICsAnswersService(),
-      profitOrLossAnswersService = StubProfitOrLossAnswersService()
-    )
-    behave like testRoute(
-      request = buildRequestNoContent,
-      expectedStatus = NO_CONTENT,
-      expectedBody = "",
-      methodBlock = () => controller.clearGoodsToSellOrUseExpensesData(currTaxYear, businessId, nino)
-    )
-  }
+    s"clearOfficeSuppliesExpensesData" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => controller.clearOfficeSuppliesExpensesData(currTaxYear, businessId, nino)
+      )
+    }
 
-  "clearRepairsAndMaintenanceExpensesData" in {
-    val controller: JourneyAnswersController = new JourneyAnswersController(
-      auth = mockAuthorisedAction,
-      cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
-      incomeService = StubIncomeAnswersService(),
-      expensesService = StubExpensesAnswersService(),
-      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
-      prepopAnswersService = StubPrepopAnswersService(),
-      nicsAnswersService = StubNICsAnswersService(),
-      profitOrLossAnswersService = StubProfitOrLossAnswersService()
-    )
-    behave like testRoute(
-      request = buildRequestNoContent,
-      expectedStatus = NO_CONTENT,
-      expectedBody = "",
-      methodBlock = () => controller.clearRepairsAndMaintenanceExpensesData(currTaxYear, businessId, nino)
-    )
+    s"clearGoodsToSellOrUseExpensesData" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => controller.clearGoodsToSellOrUseExpensesData(currTaxYear, businessId, nino)
+      )
+    }
+
+    "clearRepairsAndMaintenanceExpensesData" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => controller.clearRepairsAndMaintenanceExpensesData(currTaxYear, businessId, nino)
+      )
+    }
+
+    "clearWorkplaceRunningCostsExpensesData" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => controller.clearWorkplaceRunningCostsExpensesData(currTaxYear, businessId, nino)
+      )
+    }
   }
 
   "GoodsToSellOrUse" should {
