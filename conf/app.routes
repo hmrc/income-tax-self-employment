@@ -118,3 +118,5 @@ POST        /:taxYear/clear-office-supplies-expenses-answers/:nino/:businessId  
 POST        /:taxYear/clear-goods-to-sell-or-use-answers/:nino/:businessId                               controllers.JourneyAnswersController.clearGoodsToSellOrUseExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/clear-repairs-and-maintenance-expenses-answers/:nino/:businessId                   controllers.JourneyAnswersController.clearRepairsAndMaintenanceExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
+POST        /:taxYear/clear-workplace-running-cost-expenses-answers/:nino/:businessId                     controllers.JourneyAnswersController.clearWorkplaceRunningCostsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
