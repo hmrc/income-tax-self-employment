@@ -19,7 +19,15 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
-import models.common.JourneyName.{AdvertisingOrMarketing, CapitalAllowancesTailoring, ExpensesTailoring, GoodsToSellOrUse, OfficeSupplies, RepairsAndMaintenanceCosts, WorkplaceRunningCosts}
+import models.common.JourneyName.{
+  AdvertisingOrMarketing,
+  CapitalAllowancesTailoring,
+  ExpensesTailoring,
+  GoodsToSellOrUse,
+  OfficeSupplies,
+  RepairsAndMaintenanceCosts,
+  WorkplaceRunningCosts
+}
 import models.common._
 import models.connector.api_1894.request.{Deductions, FinancialsType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}

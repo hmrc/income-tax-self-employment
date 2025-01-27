@@ -161,10 +161,11 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     handleApiUnitResultT(result)
   }
 
-  def clearAdvertisingOrMarketingExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-    val result = expensesService.clearAdvertisingOrMarketingExpensesData(ctx)
-    handleApiUnitResultT(result)
+  def clearAdvertisingOrMarketingExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async {
+    implicit user =>
+      val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
+      val result = expensesService.clearAdvertisingOrMarketingExpensesData(ctx)
+      handleApiUnitResultT(result)
   }
 
   def clearWorkplaceRunningCostsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
