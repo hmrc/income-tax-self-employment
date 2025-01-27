@@ -84,7 +84,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       profitOrLossAnswersService = profitOrLossAnswersService
     )
 
-  val underTest = mkUnderTest()
+  val underTest: JourneyAnswersController = mkUnderTest()
 
   private def checkNoContent(action: Action[AnyContent]): Unit =
     behave like testRoute(
@@ -320,102 +320,56 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "clearExpensesSimplifiedOrNoExpensesAnswers" in {
-    val controller: JourneyAnswersController = new JourneyAnswersController(
-      auth = mockAuthorisedAction,
-      cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
-      incomeService = StubIncomeAnswersService(),
-      expensesService = StubExpensesAnswersService(),
-      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
-      prepopAnswersService = StubPrepopAnswersService(),
-      nicsAnswersService = StubNICsAnswersService(),
-      profitOrLossAnswersService = StubProfitOrLossAnswersService()
-    )
     behave like testRoute(
       request = buildRequestNoContent,
       expectedStatus = NO_CONTENT,
       expectedBody = "",
-      methodBlock = () => controller.clearExpensesSimplifiedOrNoExpensesAnswers(currTaxYear, businessId, nino)
+      methodBlock = () => underTest.clearExpensesSimplifiedOrNoExpensesAnswers(currTaxYear, businessId, nino)
     )
   }
 
   s"clearExpensesAndCapitalAllowancesData" in {
-    val controller: JourneyAnswersController = new JourneyAnswersController(
-      auth = mockAuthorisedAction,
-      cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
-      incomeService = StubIncomeAnswersService(),
-      expensesService = StubExpensesAnswersService(),
-      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
-      prepopAnswersService = StubPrepopAnswersService(),
-      nicsAnswersService = StubNICsAnswersService(),
-      profitOrLossAnswersService = StubProfitOrLossAnswersService()
-    )
     behave like testRoute(
       request = buildRequestNoContent,
       expectedStatus = NO_CONTENT,
       expectedBody = "",
-      methodBlock = () => controller.clearExpensesAndCapitalAllowancesData(currTaxYear, businessId, nino)
+      methodBlock = () => underTest.clearExpensesAndCapitalAllowancesData(currTaxYear, businessId, nino)
     )
   }
 
   s"clearOfficeSuppliesExpensesData" in {
-    val controller: JourneyAnswersController = new JourneyAnswersController(
-      auth = mockAuthorisedAction,
-      cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
-      incomeService = StubIncomeAnswersService(),
-      expensesService = StubExpensesAnswersService(),
-      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
-      prepopAnswersService = StubPrepopAnswersService(),
-      nicsAnswersService = StubNICsAnswersService(),
-      profitOrLossAnswersService = StubProfitOrLossAnswersService()
-    )
     behave like testRoute(
       request = buildRequestNoContent,
       expectedStatus = NO_CONTENT,
       expectedBody = "",
-      methodBlock = () => controller.clearOfficeSuppliesExpensesData(currTaxYear, businessId, nino)
+      methodBlock = () => underTest.clearOfficeSuppliesExpensesData(currTaxYear, businessId, nino)
     )
   }
 
   s"clearGoodsToSellOrUseExpensesData" in {
-    val controller: JourneyAnswersController = new JourneyAnswersController(
-      auth = mockAuthorisedAction,
-      cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
-      incomeService = StubIncomeAnswersService(),
-      expensesService = StubExpensesAnswersService(),
-      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
-      prepopAnswersService = StubPrepopAnswersService(),
-      nicsAnswersService = StubNICsAnswersService(),
-      profitOrLossAnswersService = StubProfitOrLossAnswersService()
-    )
     behave like testRoute(
       request = buildRequestNoContent,
       expectedStatus = NO_CONTENT,
       expectedBody = "",
-      methodBlock = () => controller.clearGoodsToSellOrUseExpensesData(currTaxYear, businessId, nino)
+      methodBlock = () => underTest.clearGoodsToSellOrUseExpensesData(currTaxYear, businessId, nino)
     )
   }
 
   "clearRepairsAndMaintenanceExpensesData" in {
-    val controller: JourneyAnswersController = new JourneyAnswersController(
-      auth = mockAuthorisedAction,
-      cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
-      incomeService = StubIncomeAnswersService(),
-      expensesService = StubExpensesAnswersService(),
-      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
-      prepopAnswersService = StubPrepopAnswersService(),
-      nicsAnswersService = StubNICsAnswersService(),
-      profitOrLossAnswersService = StubProfitOrLossAnswersService()
-    )
     behave like testRoute(
       request = buildRequestNoContent,
       expectedStatus = NO_CONTENT,
       expectedBody = "",
-      methodBlock = () => controller.clearRepairsAndMaintenanceExpensesData(currTaxYear, businessId, nino)
+      methodBlock = () => underTest.clearRepairsAndMaintenanceExpensesData(currTaxYear, businessId, nino)
+    )
+  }
+
+  "clearStaffCostsExpensesData" in {
+    behave like testRoute(
+      request = buildRequestNoContent,
+      expectedStatus = NO_CONTENT,
+      expectedBody = "",
+      methodBlock = () => underTest.clearStaffCostsExpensesData(currTaxYear, businessId, nino)
     )
   }
 

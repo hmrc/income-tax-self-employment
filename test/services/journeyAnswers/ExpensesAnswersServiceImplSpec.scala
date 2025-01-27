@@ -312,7 +312,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       "connector fails to update the PeriodicSummaries API" in new Test2 {
         override lazy val connector: StubIFSConnector = new StubIFSConnector(amendSEPeriodSummaryResult = downstreamError)
         prepareData()
-        val result = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
+        val result: Either[ServiceError, Unit] = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
 
         result shouldBe downstreamError
 
@@ -322,7 +322,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       "connector fails to update the AnnualSummaries API" in new Test2 {
         override lazy val connector: StubIFSConnector = new StubIFSConnector(getAnnualSummariesResult = downstreamError)
         prepareData()
-        val result = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
+        val result: Either[ServiceError, Unit] = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
 
         result shouldBe downstreamError
 
@@ -330,9 +330,9 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
         annualApiResult should not be None
       }
       "connector fails to update the repository database" in new Test {
-        override val repo = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
+        override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
 
-        val result = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
+        val result: Either[ServiceError, Unit] = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
 
         result shouldBe downstreamError
         repo.lastUpsertedAnswer shouldBe None
@@ -356,27 +356,35 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       val apiResult: Option[AmendSEPeriodSummaryRequestBody] = connector.amendSEPeriodSummaryResultData.flatMap(_.body.returnNoneIfEmpty)
       apiResult shouldBe None
       repo.lastUpsertedAnswer shouldBe None
-
     }
   }
 
   "clearRepairsAndMaintenanceExpensesData" must {
-    "delete all repairs and maintenance expenses API answer" in new Test {
-
-      val existingPeriodData: AmendSEPeriodSummaryRequestData = buildPeriodData(Option(DeductionsTestData.sample))
-
-      override val connector: StubIFSConnector = StubIFSConnector()
-      connector.amendSEPeriodSummaryResultData = Option(existingPeriodData)
-      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers.some)
-      repo.lastUpsertedAnswer = Option(Json.toJson(ExpensesCategoriesDb(IndividualCategories)))
+    "delete all repairs and maintenance expenses API answer" in new Test2 {
+      prepareData()
 
       val result: Either[ServiceError, Unit] = underTest.clearRepairsAndMaintenanceExpensesData(journeyCtxWithNino).value.futureValue
 
       result shouldBe ().asRight
-      val apiResult: Option[AmendSEPeriodSummaryRequestBody] = connector.amendSEPeriodSummaryResultData.flatMap(_.body.returnNoneIfEmpty)
-      apiResult shouldBe None
-      repo.lastUpsertedAnswer shouldBe None
 
+      incomeResult should not be None
+      repairsAndMaintenanceCosts shouldBe None
+    }
+
+    "connector fails to update the PeriodSummary API" in new Test2 {
+      override lazy val connector: StubIFSConnector = new StubIFSConnector(amendSEPeriodSummaryResult = downstreamError)
+      val result: Either[ServiceError, Unit]        = underTest.clearRepairsAndMaintenanceExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe downstreamError
+    }
+
+    "connector fails to update the repository database" in new Test {
+      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
+
+      val result: Either[ServiceError, Unit] = underTest.clearRepairsAndMaintenanceExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe downstreamError
+      repo.lastUpsertedAnswer shouldBe None
     }
   }
 
@@ -392,10 +400,48 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       goodsToSellOrUseResult shouldBe None
     }
 
+    "connector fails to update the PeriodSummary API" in new Test2 {
+      override lazy val connector: StubIFSConnector = new StubIFSConnector(amendSEPeriodSummaryResult = downstreamError)
+      val result: Either[ServiceError, Unit]        = underTest.clearGoodsToSellOrUseExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe downstreamError
+
+      periodicApiResult shouldBe None
+    }
+
     "connector fails to update the repository database" in new Test {
       override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
 
       val result: Either[ServiceError, Unit] = underTest.clearGoodsToSellOrUseExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe downstreamError
+      repo.lastUpsertedAnswer shouldBe None
+    }
+  }
+
+  "clearStaffCostsExpensesData" must {
+    "delete all staff costs expenses API answer" in new Test2 {
+      prepareData()
+
+      val result: Either[ServiceError, Unit] = underTest.clearStaffCostsExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe ().asRight
+
+      incomeResult should not be None
+      staffCosts shouldBe None
+    }
+
+    "connector fails to update the PeriodSummary API" in new Test2 {
+      override lazy val connector: StubIFSConnector = new StubIFSConnector(amendSEPeriodSummaryResult = downstreamError)
+      val result: Either[ServiceError, Unit]        = underTest.clearStaffCostsExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe downstreamError
+    }
+
+    "connector fails to update the repository database" in new Test {
+      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
+
+      val result: Either[ServiceError, Unit] = underTest.clearStaffCostsExpensesData(journeyCtxWithNino).value.futureValue
 
       result shouldBe downstreamError
       repo.lastUpsertedAnswer shouldBe None
@@ -423,6 +469,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       _ <- repository.upsertAnswers(expensesTailoringCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(officeSuppliesCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(goodsToSellOrUseCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(repairsAndMaintenanceCostsCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(staffCostsCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(capitalAllowancesTailoringCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(zeroEmissionCarsCtx, Json.obj("field" -> "value"))
     } yield ()
@@ -452,15 +500,33 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
 
     lazy val periodicApiResult: Option[Deductions]     = connector.amendSEPeriodSummaryResultData.flatMap(_.body.deductions)
     lazy val annualApiResult: Option[AnnualAllowances] = connector.upsertAnnualSummariesSubmissionData.flatMap(_.body.annualAllowances)
-    lazy val (incomeResult, expensesTailoringResult, officeSuppliesResult, goodsToSellOrUseResult, capitalAllowancesResult, zeroEmissionCarsResult) =
+    lazy val (
+      incomeResult,
+      expensesTailoringResult,
+      officeSuppliesResult,
+      goodsToSellOrUseResult,
+      repairsAndMaintenanceCosts,
+      staffCosts,
+      capitalAllowancesResult,
+      zeroEmissionCarsResult) =
       (for {
         income                     <- repository.get(incomeCtx)
         expensesTailoring          <- repository.get(expensesTailoringCtx)
         officeSupplies             <- repository.get(officeSuppliesCtx)
         goodsToSellOrUse           <- repository.get(goodsToSellOrUseCtx)
+        repairsAndMaintenanceCosts <- repository.get(repairsAndMaintenanceCostsCtx)
+        staffCosts                 <- repository.get(staffCostsCtx)
         capitalAllowancesTailoring <- repository.get(capitalAllowancesTailoringCtx)
         zeroEmissionCars           <- repository.get(zeroEmissionCarsCtx)
-      } yield (income, expensesTailoring, officeSupplies, goodsToSellOrUse, capitalAllowancesTailoring, zeroEmissionCars)).rightValue
+      } yield (
+        income,
+        expensesTailoring,
+        officeSupplies,
+        goodsToSellOrUse,
+        repairsAndMaintenanceCosts,
+        staffCosts,
+        capitalAllowancesTailoring,
+        zeroEmissionCars)).rightValue
   }
 }
 
