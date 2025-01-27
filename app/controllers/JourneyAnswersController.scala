@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -158,6 +158,12 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   def clearRepairsAndMaintenanceExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
     val result = expensesService.clearRepairsAndMaintenanceExpensesData(ctx)
+    handleApiUnitResultT(result)
+  }
+
+  def clearAdvertisingOrMarketingExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
+    val result = expensesService.clearAdvertisingOrMarketingExpensesData(ctx)
     handleApiUnitResultT(result)
   }
 
