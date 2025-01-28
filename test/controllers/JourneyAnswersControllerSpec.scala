@@ -373,6 +373,16 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     )
   }
 
+    "clearWorkplaceRunningCostsExpensesData" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.clearWorkplaceRunningCostsExpensesData(currTaxYear, businessId, nino)
+      )
+    }
+
+
   "GoodsToSellOrUse" should {
     s"Get return $NO_CONTENT if there is no answers" in {
       checkNoContent(underTest.getGoodsToSellOrUse(currTaxYear, businessId, nino))

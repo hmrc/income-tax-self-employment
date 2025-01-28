@@ -419,6 +419,28 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     }
   }
 
+  "clearWorkplaceRunningCostsExpensesData" must {
+    "delete workplace running costs expenses API answer" in new Test2 {
+      prepareData()
+
+      val result: Either[ServiceError, Unit] = underTest.clearWorkplaceRunningCostsExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe ().asRight
+
+      incomeResult should not be None
+      workplaceRunningCostsResult shouldBe None
+    }
+
+    "connector fails to update the repository database" in new Test {
+      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
+
+      val result: Either[ServiceError, Unit] = underTest.clearWorkplaceRunningCostsExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe downstreamError
+      repo.lastUpsertedAnswer shouldBe None
+    }
+  }
+
   "clearStaffCostsExpensesData" must {
     "delete all staff costs expenses API answer" in new Test2 {
       prepareData()
@@ -471,6 +493,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       _ <- repository.upsertAnswers(goodsToSellOrUseCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(repairsAndMaintenanceCostsCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(staffCostsCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(workplaceRunningCostsCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(capitalAllowancesTailoringCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(zeroEmissionCarsCtx, Json.obj("field" -> "value"))
     } yield ()
@@ -505,6 +528,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       expensesTailoringResult,
       officeSuppliesResult,
       goodsToSellOrUseResult,
+      workplaceRunningCostsResult,
       repairsAndMaintenanceCosts,
       staffCosts,
       capitalAllowancesResult,
@@ -514,6 +538,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
         expensesTailoring          <- repository.get(expensesTailoringCtx)
         officeSupplies             <- repository.get(officeSuppliesCtx)
         goodsToSellOrUse           <- repository.get(goodsToSellOrUseCtx)
+        workplaceRunningCosts      <- repository.get(workplaceRunningCostsCtx)
         repairsAndMaintenanceCosts <- repository.get(repairsAndMaintenanceCostsCtx)
         staffCosts                 <- repository.get(staffCostsCtx)
         capitalAllowancesTailoring <- repository.get(capitalAllowancesTailoringCtx)
@@ -523,6 +548,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
         expensesTailoring,
         officeSupplies,
         goodsToSellOrUse,
+        workplaceRunningCosts,
         repairsAndMaintenanceCosts,
         staffCosts,
         capitalAllowancesTailoring,
