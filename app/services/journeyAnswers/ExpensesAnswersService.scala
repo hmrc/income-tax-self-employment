@@ -356,6 +356,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       case GoodsToSellOrUse           => deductions.copy(costOfGoods = None)
       case RepairsAndMaintenanceCosts => deductions.copy(maintenanceCosts = None)
       case WorkplaceRunningCosts      => deductions.copy(premisesRunningCosts = None)
+      case AdvertisingOrMarketing     => deductions.copy(advertisingCosts = None)
       case _                          => deductions
     }
 }
