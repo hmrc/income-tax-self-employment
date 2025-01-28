@@ -34,46 +34,58 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import connectors.ReliefClaimsConnector
-import models.common.{JourneyContextWithNino, JourneyName}
-import models.connector.api_1867.ReliefClaim
+import models.common.JourneyName.ProfitOrLoss
+import models.common.{BusinessId, JourneyContextWithNino, JourneyName, Mtditid, TaxYear}
+import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
+import models.error.ServiceError
+import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhatDoYouWantToDoWithLoss}
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-trait ReliefClaimsService {
-  def cacheClaimIds(ctx: JourneyContextWithNino, taxYear: String)(implicit hc: HeaderCarrier): ApiResultT[Unit]
-}
 
 @Singleton
-class ReliefClaimsServiceImpl @Inject()(
-                                         reliefClaimsConnector: ReliefClaimsConnector,
-                                         repository: JourneyAnswersRepository
-                                       )(implicit ec: ExecutionContext) extends ReliefClaimsService {
+class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector,
+                                     repository: JourneyAnswersRepository)
+                                    (implicit ec: ExecutionContext) {
 
-  override def cacheClaimIds(ctx: JourneyContextWithNino, taxYear: String)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
-    val claimsFuture = if (taxYear >= "2025") {
-      reliefClaimsConnector.getReliefClaims1867(taxYear, ctx.mtditid.toString)
-    } else {
-      reliefClaimsConnector.getReliefClaims1507(taxYear, ctx.mtditid.toString)
-    }
+//  def cacheReliefClaims(ctx: JourneyContextWithNino,
+//                        optProfitOrLoss: Option[ProfitOrLossJourneyAnswers])
+//                       (implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
+//    optProfitOrLoss match {
+//      case Some(profitOrLoss) if profitOrLoss.whatDoYouWantToDoWithLoss.isEmpty =>
+//        for {
+//          claims <- reliefClaimsConnector.getAllReliefClaims(ctx.taxYear, ctx.businessId)
+//          doWithLossAnswers = filterReliefClaims(claims, ctx.taxYear, ctx.businessId).map(claim => WhatDoYouWantToDoWithLoss(claim.reliefClaimed))
+//          updatedProfitOrLoss = profitOrLoss.copy(whatDoYouWantToDoWithLoss = doWithLossAnswers)
+//          _ <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(updatedProfitOrLoss))
+//        } yield Some(updatedProfitOrLoss)
+//      case Some(profitOrLoss) =>
+//        EitherT.right(Future.successful(Some(profitOrLoss)))
+//      case None =>
+//        EitherT.right(Future.successful(None))
+//    }
 
+  def getAllReliefClaims(ctx: JourneyContextWithNino)
+                        (implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] =
     for {
-      claims <- EitherT(claimsFuture)
-      filteredIds = filterReliefClaims(claims, taxYear, ctx.businessId.value)
-      _ <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.obj("claimIds" -> filteredIds))
-    } yield ()
-  }
+      reliefClaims <- reliefClaimsConnector.getAllReliefClaims(ctx.taxYear, ctx.businessId)
+    } yield reliefClaims.filter(claim =>
+      claim.isSelfEmploymentClaim &&
+      claim.taxYearClaimedFor == ctx.taxYear.endYear.toString &&
+      claim.incomeSourceId == ctx.businessId.value
+    )
 
-  private def filterReliefClaims(claims: List[ReliefClaim], taxYear: String, businessId: String): List[String] = {
+  private def filterReliefClaims(claims: List[ReliefClaim], taxYear: TaxYear, businessId: BusinessId): List[ReliefClaim] =
     claims
       .filter(_.isSelfEmploymentClaim)
-      .filter(_.taxYearClaimedFor == taxYear)
-      .filter(_.incomeSourceId == businessId)
-      .map(_.claimId)
-  }
-}
+      .filter(_.taxYearClaimedFor == taxYear.endYear.toString)
+      .filter(_.incomeSourceId == businessId.value)
 
+
+
+}
