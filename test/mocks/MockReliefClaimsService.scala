@@ -35,7 +35,7 @@ object MockReliefClaimsService {
   val mockInstance: ReliefClaimsService = mock[ReliefClaimsService]
 
   def cacheClaimIds(ctx: JourneyContextWithNino, taxYear: String): ScalaOngoingStubbing[ApiResultT[Unit]] =
-    when(mockInstance.cacheClaimIds(ArgumentMatchers.eq(ctx), ArgumentMatchers.eq(taxYear))(ArgumentMatchers.any[HeaderCarrier]()))
+    when(mockInstance.cacheReliefClaims(ArgumentMatchers.eq(ctx), ArgumentMatchers.eq(taxYear))(ArgumentMatchers.any[HeaderCarrier]()))
       .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
 }

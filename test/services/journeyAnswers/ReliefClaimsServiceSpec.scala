@@ -39,12 +39,12 @@ import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ReliefClaimsServiceImplSpec extends PlaySpec with MockitoSugar with ScalaFutures {
+class ReliefClaimsServiceSpec extends PlaySpec with MockitoSugar with ScalaFutures {
 
   trait ReliefClaimsServiceTestSetup {
     val mockReliefClaimsConnector: ReliefClaimsConnector = mock[ReliefClaimsConnector]
     val mockJourneyAnswersRepository: JourneyAnswersRepository = mock[JourneyAnswersRepository]
-    val service: ReliefClaimsServiceImpl = new ReliefClaimsServiceImpl(mockReliefClaimsConnector, mockJourneyAnswersRepository)
+    val service: ReliefClaimsService = new ReliefClaimsService(mockReliefClaimsConnector, mockJourneyAnswersRepository)
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val taxYear2024: TaxYear = TaxYear(2024)
@@ -74,13 +74,13 @@ class ReliefClaimsServiceImplSpec extends PlaySpec with MockitoSugar with ScalaF
   "cache claim IDs for a tax year >= 2025" in new ReliefClaimsServiceTestSetup {
     val filteredClaimsJson = Json.obj("claimIds" -> Json.toJson(List("claimId1")))
 
-    when(mockReliefClaimsConnector.getReliefClaims1867(eqTo(taxYear2025.toString), eqTo(mtditid.value))(any()))
+    when(mockReliefClaimsConnector.getReliefClaimsPost2024(eqTo(taxYear2025.toString), eqTo(mtditid.value))(any()))
       .thenReturn(EitherT.right[DownstreamError](Future.successful(claims)).value)
 
     when(mockJourneyAnswersRepository.upsertAnswers(eqTo(ctxNoNino2025), eqTo(filteredClaimsJson)))
       .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
-    val result: Either[ServiceError, Unit] = await(service.cacheClaimIds(ctxWithNino2025, "2025").value)
+    val result: Either[ServiceError, Unit] = await(service.cacheReliefClaims(ctxWithNino2025, "2025").value)
 
     result mustBe Right(())
   }
@@ -88,13 +88,13 @@ class ReliefClaimsServiceImplSpec extends PlaySpec with MockitoSugar with ScalaF
   "cache claim IDs for a tax year < 2025" in new ReliefClaimsServiceTestSetup {
     val filteredClaimsJson = Json.obj("claimIds" -> Json.toJson(List("claimId3")))
 
-    when(mockReliefClaimsConnector.getReliefClaims1507(eqTo(taxYear2024.toString), eqTo(mtditid.value))(any()))
+    when(mockReliefClaimsConnector.getReliefClaims(eqTo(taxYear2024.toString), eqTo(mtditid.value))(any()))
       .thenReturn(EitherT.right[DownstreamError](Future.successful(claims)).value)
 
     when(mockJourneyAnswersRepository.upsertAnswers(eqTo(ctxNoNino2024), eqTo(filteredClaimsJson)))
       .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
-    val result: Either[ServiceError, Unit] = await(service.cacheClaimIds(ctxWithNino2024, "2024").value)
+    val result: Either[ServiceError, Unit] = await(service.cacheReliefClaims(ctxWithNino2024, "2024").value)
 
     result mustBe Right(())
   }

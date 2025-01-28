@@ -31,7 +31,7 @@ final case class StubReliefClaimsConnector @Inject() (httpClient: HttpClient,
                                                       getReliefClaimsRes: StubReliefClaimsConnector.Api1867Response = Right(List.empty))
     extends ReliefClaimsConnector(httpClient, appConfig) {
 
-  override def getReliefClaims1867(taxYear: String, mtditid: String)(implicit hc: HeaderCarrier): Future[StubReliefClaimsConnector.Api1867Response] =
+  override def getReliefClaimsPost2024(taxYear: String, mtditid: String)(implicit hc: HeaderCarrier): Future[StubReliefClaimsConnector.Api1867Response] =
     Future.successful(getReliefClaimsRes)
 }
 

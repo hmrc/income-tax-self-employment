@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package models.connector.api_1507
+package models.connector.common
 
 import models.connector.ReliefClaimType
-import models.connector.api_1867.IncomeSourceType
 import play.api.libs.json.{Format, Json}
 
 import java.time.LocalDate

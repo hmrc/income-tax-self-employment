@@ -16,10 +16,18 @@
 
 package connectors
 
+import cats.data.EitherT
+import cats.implicits._
 import config.AppConfig
 import jakarta.inject.Inject
-import models.connector.api_1867.ReliefClaim
-import models.connector.{ApiResponse, IFSApiName, api_1507, api_1867, commonGetListReads}
+import models.common.{BusinessId, JourneyContextWithNino, TaxYear}
+import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
+import models.connector.common.ReliefClaim
+import models.connector.{ApiResponse, IFSApiName, IntegrationContext, ReliefClaimType, commonGetListReads, commonGetReads, lossClaimReads}
+import models.domain.ApiResultT
+import models.error.ServiceError
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.toReliefClaimType
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import utils.Logging
 
@@ -27,19 +35,79 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) extends Logging {
 
-  type Api1867Response = ApiResponse[List[ReliefClaim]]
-  type Api1507Response = ApiResponse[List[ReliefClaim]]
+  private val fulcrumTaxYear = 2025
 
-  def getReliefClaims1867(taxYear: String, mtditid: String)(implicit hc: HeaderCarrier): Future[Api1867Response] = {
-    implicit val reads: HttpReads[ApiResponse[List[api_1867.ReliefClaim]]] = commonGetListReads[api_1867.ReliefClaim]
+  def createLossClaims(ctx: JourneyContextWithNino, answers: Seq[WhatDoYouWantToDoWithLoss])
+                      (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[List[CreateLossClaimSuccessResponse]] = {
 
-    get[Api1867Response](httpClient, appConfig.mkMetadata(IFSApiName.Api1867, appConfig.api1867Url(taxYear, mtditid)))
+    val context = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.businessId))
+    implicit val reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]] = lossClaimReads[CreateLossClaimSuccessResponse]
+
+    if (answers.isEmpty) {
+      EitherT.right[ServiceError](Future.successful(Nil))
+    } else {
+      val responses = Future.sequence {
+        answers.map { answer =>
+          val body = CreateLossClaimRequestBody(
+            incomeSourceId = ctx.businessId.value,
+            reliefClaimed = WhatDoYouWantToDoWithLoss.toReliefClaimType(answer).toString,
+            taxYear = ctx.taxYear.endYear.toString
+          )
+
+          post[CreateLossClaimRequestBody, ApiResponse[CreateLossClaimSuccessResponse]](httpClient, context, body)
+        }
+      }
+
+      EitherT(responses.map(_.sequence))
+    }
   }
 
-  def getReliefClaims1507(taxYear: String, mtditid: String)(implicit hc: HeaderCarrier): Future[Api1507Response] = {
-    implicit val reads: HttpReads[ApiResponse[List[api_1507.ReliefClaim]]] = commonGetListReads[api_1507.ReliefClaim]
+  def getAllReliefClaims(taxYear: TaxYear, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]]  = {
+    implicit val reads: HttpReads[ApiResponse[List[ReliefClaim]]] = commonGetListReads[ReliefClaim]
 
-    get[Api1507Response](httpClient, appConfig.mkMetadata(IFSApiName.Api1507, appConfig.api1507Url(taxYear, mtditid)))
+    val context =
+      if (taxYear.endYear >= fulcrumTaxYear) appConfig.mkMetadata(IFSApiName.Api1867, appConfig.api1867Url(taxYear, businessId))
+      else appConfig.mkMetadata(IFSApiName.Api1507, appConfig.api1507Url(businessId))
+
+    EitherT(get[ApiResponse[List[ReliefClaim]]](httpClient, context))
   }
+
+//  def getReliefClaim(businessId: BusinessId, claimId: String)
+//                    (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[ReliefClaim]] = {
+//    implicit val reads: HttpReads[ApiResponse[Option[ReliefClaim]]] = commonGetReads[ReliefClaim]
+//    val context = appConfig.mkMetadata(IFSApiName.Api1508, appConfig.api1508Url(businessId, claimId))
+//
+//    EitherT(get[ApiResponse[Option[ReliefClaim]]](httpClient, context))
+//  }
+
+  def updateReliefClaims(ctx: JourneyContextWithNino,
+                         oldAnswers: List[ReliefClaim],
+                         newAnswers: Seq[WhatDoYouWantToDoWithLoss])
+                        (implicit hc: HeaderCarrier): ApiResultT[List[WhatDoYouWantToDoWithLoss]] = {
+
+    val createCtx: IntegrationContext = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.businessId))
+    val deleteCtx: String => IntegrationContext = claimId => appConfig.mkMetadata(IFSApiName.Api1506, appConfig.api1506Url(ctx.businessId, claimId))
+
+    val newAnswersAsReliefClaimType = newAnswers.map(toReliefClaimType)
+    val answersToKeep = oldAnswers.filter(claim => newAnswersAsReliefClaimType.contains(claim.reliefClaimed))
+    val answersToCreate = newAnswersAsReliefClaimType.filter(claim => oldAnswers.exists(_.reliefClaimed == claim))
+    val answersToDelete = oldAnswers.diff(answersToKeep)
+
+    val deleteResponses = Future.sequence {
+      answersToDelete.map { answer =>
+        delete(httpClient, deleteCtx(answer.claimId))
+      }
+    }
+
+    for {
+      createSuccess <- createLossClaims(ctx, answersToCreate.map(WhatDoYouWantToDoWithLoss.fromReliefClaimType))
+      deleteSuccess <- deleteReliefClaims(ctx, answersToDelete.map(_.claimId))
+    } yield
+
+    EitherT(overallResponses)
+  }
+
+  def deleteReliefClaims(ctx: JourneyContextWithNino, claimIds: Seq[String]): ApiResultT[Unit] =
+    EitherT.right[ServiceError](Future.successful(())) // TODO: Implement as part of SASS-10370
 
 }

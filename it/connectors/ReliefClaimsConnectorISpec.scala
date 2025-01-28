@@ -17,22 +17,27 @@
 package connectors
 
 import base.IntegrationBaseSpec
+import com.github.tomakehurst.wiremock.client.WireMock.{postRequestedFor, urlEqualTo, verify}
 import helpers.WiremockSpec
-import models.connector.api_1867.{CarryForward, ReliefClaim, UkProperty}
+import models.common.JourneyContextWithNino
+import models.connector.ReliefClaimType
+import models.connector.api_1505.CreateLossClaimSuccessResponse
+import models.connector.common.ReliefClaim
 import models.error.DownstreamError.GenericDownstreamError
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, JsString, Json}
+import testdata.CommonTestData
 
 import java.time.LocalDate
 
-class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
+class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec with CommonTestData {
 
   val connector: ReliefClaimsConnector = app.injector.instanceOf[ReliefClaimsConnector]
 
-  val testTaxYear: String = "2024"
-  val testMtditid: String = "mtditid"
-
-  val url: String = s"/income-tax/$taxYear/claims-for-relief/$testMtditid"
+  val api1505Url: String = s"/income-tax/claims-for-relief/${testBusinessId.value}"
+  val api1507Url: String = api1505Url
+  val api1867Url: String = s"/income-tax/${testTaxYear2024.endYear}/claims-for-relief/${testBusinessId.value}"
 
   val selfEmploymentClaim: JsObject = Json.obj(
     "incomeSourceId"    -> "XAIS12345678901",
@@ -48,63 +53,73 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
   val testBaseReliefClaim: ReliefClaim = ReliefClaim(
     incomeSourceId = "XAIS12345678901",
     incomeSourceType = None,
-    reliefClaimed = CarryForward,
+    reliefClaimed = ReliefClaimType.CF,
     taxYearClaimedFor = "2024",
     claimId = "1234567890",
     submissionDate = LocalDate.of(2024, 1, 1)
   )
 
-  "getReliefClaims" when {
+  "getAllReliefClaims" when {
     "the API returns 200 OK" should {
       "successfully parse a Self Employment claim" in {
         val response = Json.arr(selfEmploymentClaim)
 
         stubGetWithResponseBody(
-          url = url,
+          url = api1507Url,
           expectedStatus = OK,
           expectedResponse = Json.stringify(response)
         )
 
-        val result = connector.getReliefClaims1867(testTaxYear, testMtditid).futureValue
+        val result = connector.getAllReliefClaims(testTaxYear2024, testBusinessId)
 
         result mustBe Right(List(testBaseReliefClaim))
         result.map(_.head.isSelfEmploymentClaim) mustBe Right(true)
       }
 
-      "successfully parse a Property claim" in {
+      "not parse a Property claim" in {
         val response = Json.arr(propertyClaim)
 
         stubGetWithResponseBody(
-          url = url,
+          url = api1507Url,
           expectedStatus = OK,
           expectedResponse = Json.stringify(response)
         )
 
-        val result = connector.getReliefClaims1867(testTaxYear, testMtditid).futureValue
+        val result = connector.getAllReliefClaims(testTaxYear2024, testBusinessId)
 
-        result mustBe Right(List(testBaseReliefClaim.copy(incomeSourceType = Some(UkProperty))))
-        result.map(_.head.isPropertyClaim) mustBe Right(true)
+        result mustBe Right(Nil)
       }
 
-      "successfully parse both a Self Employment and Property claim" in {
-        val response = Json.arr(selfEmploymentClaim, propertyClaim)
+      "call API1507 and filter only claims for the current tax year" in {
+        val selfEmploymentClaim2025 = selfEmploymentClaim - "taxYearClaimedFor" + Json.obj("taxYearClaimedFor" -> "2025")
+        val response = Json.arr(selfEmploymentClaim, selfEmploymentClaim2025)
 
         stubGetWithResponseBody(
-          url = url,
+          url = api1507Url,
           expectedStatus = OK,
           expectedResponse = Json.stringify(response)
         )
 
-        val result = connector.getReliefClaims1867(testTaxYear, testMtditid).futureValue
+        val result = connector.getAllReliefClaims(testTaxYear2024, testBusinessId)
 
-        result mustBe Right(
-          List(
-            testBaseReliefClaim,
-            testBaseReliefClaim.copy(incomeSourceType = Some(UkProperty))
-          ))
-        result.map(_.head.isSelfEmploymentClaim) mustBe Right(true)
-        result.map(_.last.isPropertyClaim) mustBe Right(true)
+        result mustBe Right(List(testBaseReliefClaim))
       }
+
+      "call API1867 and filter only claims for the current tax year" in {
+        val selfEmploymentClaim2025 = selfEmploymentClaim - "taxYearClaimedFor" + Json.obj("taxYearClaimedFor" -> "2025")
+        val response = Json.arr(selfEmploymentClaim, selfEmploymentClaim2025)
+
+        stubGetWithResponseBody(
+          url = api1867Url,
+          expectedStatus = OK,
+          expectedResponse = Json.stringify(response)
+        )
+
+        val result = connector.getAllReliefClaims(testTaxYear2025, testBusinessId)
+
+        result mustBe Right(List(testBaseReliefClaim.copy(taxYearClaimedFor = testTaxYear2025.endYear.toString)))
+      }
+
     }
 
     "the API returns 404 NOT_FOUND" should {
@@ -112,12 +127,12 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
         val response: JsObject = Json.obj("failures" -> Json.arr(Json.obj("code" -> "NOT_FOUND", "reason" -> "Resource not found")))
 
         stubGetWithResponseBody(
-          url = url,
+          url = api1867Url,
           expectedStatus = NOT_FOUND,
           expectedResponse = Json.stringify(response)
         )
 
-        val result = connector.getReliefClaims1867(testTaxYear, testMtditid).futureValue
+        val result = connector.getAllReliefClaims(testTaxYear2024, testBusinessId)
 
         result mustBe Right(Nil)
       }
@@ -141,16 +156,51 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
           )
 
           stubGetWithResponseBody(
-            url = url,
+            url = api1867Url,
             expectedStatus = status,
             expectedResponse = Json.stringify(response)
           )
 
-          val result = connector.getReliefClaims1867(testTaxYear, testMtditid).futureValue
+          val result = connector.getAllReliefClaims(testTaxYear2024, testBusinessId)
 
           result.isLeft mustBe true
           result.merge mustBe a[GenericDownstreamError]
         }
+      }
+    }
+  }
+
+  "createLossClaims" when {
+    "the user only selected 1 checkbox" should {
+      "call API 1505 once to create a relief claim" in {
+        val expectedResponse = CreateLossClaimSuccessResponse(claimId = testClaimId)
+
+        stubGetWithResponseBody(
+          url = api1505Url,
+          expectedStatus = OK,
+          expectedResponse = Json.stringify(Json.toJson(expectedResponse))
+        )
+
+        val result = await(connector.createLossClaims(testContextWithNino, Seq(WhatDoYouWantToDoWithLoss.CarryItForward)).value)
+
+        result mustBe Right(expectedResponse)
+        verify(1, postRequestedFor(urlEqualTo(api1505Url)))
+      }
+
+      "call API 1505 twice to create a relief claim for each selected check box" in {
+        val expectedResponse = CreateLossClaimSuccessResponse(claimId = testClaimId)
+
+        stubGetWithResponseBody(
+          url = api1505Url,
+          expectedStatus = OK,
+          expectedResponse = Json.stringify(Json.toJson(expectedResponse))
+        )
+
+        val answers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward, WhatDoYouWantToDoWithLoss.DeductFromOtherTypes)
+        val result = connector.createLossClaims(testContextWithNino, answers)
+
+        result mustBe Right(expectedResponse)
+        verify(2, postRequestedFor(urlEqualTo(api1505Url)))
       }
     }
   }

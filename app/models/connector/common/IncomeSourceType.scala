@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.connector.api_1867
+package models.connector.common
 
 import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Reads, Writes}
 
