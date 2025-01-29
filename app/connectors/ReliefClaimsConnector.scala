@@ -37,32 +37,13 @@ class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppCon
 
   private val fulcrumTaxYear = 2025
 
-  def createLossClaims(ctx: JourneyContextWithNino, answers: Seq[WhatDoYouWantToDoWithLoss])
-                      (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[List[CreateLossClaimSuccessResponse]] = {
+  def createReliefClaims(context: IntegrationContext, body: CreateLossClaimRequestBody)(implicit
+      reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]],
+      hc: HeaderCarrier,
+      ec: ExecutionContext): Future[ApiResponse[CreateLossClaimSuccessResponse]] =
+    post[CreateLossClaimRequestBody, ApiResponse[CreateLossClaimSuccessResponse]](httpClient, context, body)
 
-    val context = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.businessId))
-    implicit val reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]] = lossClaimReads[CreateLossClaimSuccessResponse]
-
-    if (answers.isEmpty) {
-      EitherT.right[ServiceError](Future.successful(Nil))
-    } else {
-      val responses = Future.sequence {
-        answers.map { answer =>
-          val body = CreateLossClaimRequestBody(
-            incomeSourceId = ctx.businessId.value,
-            reliefClaimed = WhatDoYouWantToDoWithLoss.toReliefClaimType(answer).toString,
-            taxYear = ctx.taxYear.endYear.toString
-          )
-
-          post[CreateLossClaimRequestBody, ApiResponse[CreateLossClaimSuccessResponse]](httpClient, context, body)
-        }
-      }
-
-      EitherT(responses.map(_.sequence))
-    }
-  }
-
-  def getAllReliefClaims(taxYear: TaxYear, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]]  = {
+  def getAllReliefClaims(taxYear: TaxYear, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] = {
     implicit val reads: HttpReads[ApiResponse[List[ReliefClaim]]] = commonGetListReads[ReliefClaim]
 
     val context =
@@ -80,18 +61,16 @@ class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppCon
 //    EitherT(get[ApiResponse[Option[ReliefClaim]]](httpClient, context))
 //  }
 
-  def updateReliefClaims(ctx: JourneyContextWithNino,
-                         oldAnswers: List[ReliefClaim],
-                         newAnswers: Seq[WhatDoYouWantToDoWithLoss])
-                        (implicit hc: HeaderCarrier): ApiResultT[List[WhatDoYouWantToDoWithLoss]] = {
+  def updateReliefClaims(ctx: JourneyContextWithNino, oldAnswers: List[ReliefClaim], newAnswers: Seq[WhatDoYouWantToDoWithLoss])(implicit
+      hc: HeaderCarrier): ApiResultT[List[WhatDoYouWantToDoWithLoss]] = {
 
-    val createCtx: IntegrationContext = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.businessId))
+    val createCtx: IntegrationContext           = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.businessId))
     val deleteCtx: String => IntegrationContext = claimId => appConfig.mkMetadata(IFSApiName.Api1506, appConfig.api1506Url(ctx.businessId, claimId))
 
     val newAnswersAsReliefClaimType = newAnswers.map(toReliefClaimType)
-    val answersToKeep = oldAnswers.filter(claim => newAnswersAsReliefClaimType.contains(claim.reliefClaimed))
-    val answersToCreate = newAnswersAsReliefClaimType.filter(claim => oldAnswers.exists(_.reliefClaimed == claim))
-    val answersToDelete = oldAnswers.diff(answersToKeep)
+    val answersToKeep               = oldAnswers.filter(claim => newAnswersAsReliefClaimType.contains(claim.reliefClaimed))
+    val answersToCreate             = newAnswersAsReliefClaimType.filter(claim => oldAnswers.exists(_.reliefClaimed == claim))
+    val answersToDelete             = oldAnswers.diff(answersToKeep)
 
     val deleteResponses = Future.sequence {
       answersToDelete.map { answer =>
@@ -102,9 +81,7 @@ class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppCon
     for {
       createSuccess <- createLossClaims(ctx, answersToCreate.map(WhatDoYouWantToDoWithLoss.fromReliefClaimType))
       deleteSuccess <- deleteReliefClaims(ctx, answersToDelete.map(_.claimId))
-    } yield
-
-    EitherT(overallResponses)
+    } yield EitherT(overallResponses)
   }
 
   def deleteReliefClaims(ctx: JourneyContextWithNino, claimIds: Seq[String]): ApiResultT[Unit] =

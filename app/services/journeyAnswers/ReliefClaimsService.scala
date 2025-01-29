@@ -33,16 +33,21 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
+import cats.implicits._
+import config.AppConfig
 import connectors.ReliefClaimsConnector
 import models.common.JourneyName.ProfitOrLoss
 import models.common.{BusinessId, JourneyContextWithNino, JourneyName, Mtditid, TaxYear}
+import models.connector.{ApiResponse, IFSApiName, lossClaimReads}
+import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhatDoYouWantToDoWithLoss}
+import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers.logger
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -50,7 +55,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector,
-                                     repository: JourneyAnswersRepository)
+                                     repository: JourneyAnswersRepository,
+                                     appConfig: AppConfig)
                                     (implicit ec: ExecutionContext) {
 
 //  def cacheReliefClaims(ctx: JourneyContextWithNino,
@@ -86,6 +92,29 @@ class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector
       .filter(_.taxYearClaimedFor == taxYear.endYear.toString)
       .filter(_.incomeSourceId == businessId.value)
 
+  def createReliefLossClaims(ctx: JourneyContextWithNino, answers: Seq[WhatDoYouWantToDoWithLoss])
+                      (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[List[CreateLossClaimSuccessResponse]] = {
 
+    val context = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.businessId))
+    implicit val reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]] = lossClaimReads[CreateLossClaimSuccessResponse]
+
+    if (answers.isEmpty) {
+      EitherT.right[ServiceError](Future.successful(Nil))
+    } else {
+      val responses = Future.sequence {
+        answers.map { answer =>
+          val body = CreateLossClaimRequestBody(
+            incomeSourceId = ctx.businessId.value,
+            reliefClaimed = WhatDoYouWantToDoWithLoss.toReliefClaimType(answer).toString,
+            taxYear = ctx.taxYear.endYear.toString
+          )
+
+          reliefClaimsConnector.createReliefClaims(context, body)
+        }
+      }
+
+      EitherT(responses.map(_.sequence))
+    }
+  }
 
 }
