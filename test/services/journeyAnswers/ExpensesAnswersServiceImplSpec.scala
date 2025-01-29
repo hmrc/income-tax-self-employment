@@ -424,6 +424,28 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     }
   }
 
+  "clearConstructionExpensesData" must {
+    "delete construction industry subcontractor expenses API answer" in new Test2 {
+      prepareData()
+
+      val result: Either[ServiceError, Unit] = underTest.clearConstructionExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe ().asRight
+
+      incomeResult should not be None
+      constructionCostsResult shouldBe None
+    }
+
+    "connector fails to update the repository database" in new Test {
+      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
+
+      val result: Either[ServiceError, Unit] = underTest.clearConstructionExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe downstreamError
+      repo.lastUpsertedAnswer shouldBe None
+    }
+  }
+
   trait Test {
     val connector: StubIFSConnector = new StubIFSConnector()
 
@@ -481,6 +503,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       officeSuppliesResult,
       goodsToSellOrUseResult,
       workplaceRunningCostsResult,
+      constructionCostsResult,
       capitalAllowancesResult,
       zeroEmissionCarsResult) =
       (for {
@@ -489,6 +512,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
         officeSupplies             <- repository.get(officeSuppliesCtx)
         goodsToSellOrUse           <- repository.get(goodsToSellOrUseCtx)
         workplaceRunningCosts      <- repository.get(workplaceRunningCostsCtx)
+        constructionCosts          <- repository.get(constructionCostsCtx)
         capitalAllowancesTailoring <- repository.get(capitalAllowancesTailoringCtx)
         zeroEmissionCars           <- repository.get(zeroEmissionCarsCtx)
       } yield (
@@ -497,6 +521,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
         officeSupplies,
         goodsToSellOrUse,
         workplaceRunningCosts,
+        constructionCosts,
         capitalAllowancesTailoring,
         zeroEmissionCars)).rightValue
   }

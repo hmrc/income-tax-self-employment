@@ -19,14 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
-import models.common.JourneyName.{
-  CapitalAllowancesTailoring,
-  ExpensesTailoring,
-  GoodsToSellOrUse,
-  OfficeSupplies,
-  RepairsAndMaintenanceCosts,
-  WorkplaceRunningCosts
-}
+import models.common.JourneyName.{CapitalAllowancesTailoring, Construction, ExpensesTailoring, GoodsToSellOrUse, OfficeSupplies, RepairsAndMaintenanceCosts, WorkplaceRunningCosts}
 import models.common._
 import models.connector.api_1894.request.{Deductions, FinancialsType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
@@ -98,6 +91,7 @@ trait ExpensesAnswersService {
   def clearRepairsAndMaintenanceExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearWorkplaceRunningCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
 @Singleton
@@ -335,6 +329,9 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   def clearWorkplaceRunningCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearExpensesData(ctx, WorkplaceRunningCosts)
 
+  def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesData(ctx, Construction)
+
   private def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
@@ -351,6 +348,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       case GoodsToSellOrUse           => deductions.copy(costOfGoods = None)
       case RepairsAndMaintenanceCosts => deductions.copy(maintenanceCosts = None)
       case WorkplaceRunningCosts      => deductions.copy(premisesRunningCosts = None)
+      case Construction               => deductions.copy(constructionIndustryScheme = None)
       case _                          => deductions
     }
 }

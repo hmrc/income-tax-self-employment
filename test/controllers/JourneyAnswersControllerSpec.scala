@@ -385,6 +385,15 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => controller.clearWorkplaceRunningCostsExpensesData(currTaxYear, businessId, nino)
       )
     }
+
+    "clearConstructionExpensesData" in {
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.clearConstructionExpensesData(currTaxYear, businessId, nino)
+      )
+    }
   }
 
   "GoodsToSellOrUse" should {
