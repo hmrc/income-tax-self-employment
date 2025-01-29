@@ -348,14 +348,14 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   private def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
-      deductionsWithoutMaintenanceCosts = existingPeriodicSummary.financials.toApi1894.deductions.map(d => clearSpecificExpensesDate(d, journeyName))
+      deductionsWithoutMaintenanceCosts = existingPeriodicSummary.financials.toApi1894.deductions.map(d => clearSpecificExpensesData(d, journeyName))
       financialsWithoutMaintenanceCosts = existingPeriodicSummary.financials.toApi1894.copy(deductions = deductionsWithoutMaintenanceCosts)
       existingTaxTakenOffTradingIncome  = existingPeriodicSummary.financials.incomes.flatMap(_.taxTakenOffTradingIncome)
       _ <- submitTailoringAnswers(ctx, financialsWithoutMaintenanceCosts, existingTaxTakenOffTradingIncome)
       _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(journeyName))
     } yield ()
 
-  private def clearSpecificExpensesDate(deductions: Deductions, journeyName: JourneyName): Deductions =
+  private[journeyAnswers] def clearSpecificExpensesData(deductions: Deductions, journeyName: JourneyName): Deductions =
     journeyName match {
       case OfficeSupplies             => deductions.copy(adminCosts = None)
       case GoodsToSellOrUse           => deductions.copy(costOfGoods = None)

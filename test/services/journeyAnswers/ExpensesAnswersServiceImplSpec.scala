@@ -24,7 +24,15 @@ import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne
-import models.common.JourneyName.ExpensesTailoring
+import models.common.JourneyName.{
+  AdvertisingOrMarketing,
+  ExpensesTailoring,
+  GoodsToSellOrUse,
+  OfficeSupplies,
+  RepairsAndMaintenanceCosts,
+  StaffCosts,
+  WorkplaceRunningCosts
+}
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
 import models.connector.api_1802.request.{
@@ -488,6 +496,21 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       result shouldBe downstreamError
       repo.lastUpsertedAnswer shouldBe None
     }
+  }
+
+  "clearSpecificExpensesData" in new Test {
+    underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, OfficeSupplies).adminCosts shouldBe None
+    underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, GoodsToSellOrUse).costOfGoods shouldBe None
+    underTest
+      .clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, RepairsAndMaintenanceCosts)
+      .maintenanceCosts shouldBe None
+    underTest
+      .clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, WorkplaceRunningCosts)
+      .premisesRunningCosts shouldBe None
+    underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, StaffCosts).staffCosts shouldBe None
+    underTest
+      .clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, AdvertisingOrMarketing)
+      .advertisingCosts shouldBe None
   }
 
   trait Test {
