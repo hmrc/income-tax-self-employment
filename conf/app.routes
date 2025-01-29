@@ -123,4 +123,6 @@ POST        /:taxYear/clear-workplace-running-cost-expenses-answers/:nino/:busin
 
 POST        /:taxYear/clear-advertising-or-marketing-expenses-answers/:nino/:businessId                   controllers.JourneyAnswersController.clearAdvertisingOrMarketingExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
+POST        /:taxYear/clear-staff-costs-expenses-answers/:nino/:businessId                               controllers.JourneyAnswersController.clearStaffCostsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
 POST        /:taxYear/clear-construction-expenses-answers/:nino/:businessId                                controllers.JourneyAnswersController.clearConstructionExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
