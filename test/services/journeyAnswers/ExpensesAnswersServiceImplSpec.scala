@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -371,6 +371,26 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       repo.lastUpsertedAnswer = Option(Json.toJson(ExpensesCategoriesDb(IndividualCategories)))
 
       val result: Either[ServiceError, Unit] = underTest.clearRepairsAndMaintenanceExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe ().asRight
+      val apiResult: Option[AmendSEPeriodSummaryRequestBody] = connector.amendSEPeriodSummaryResultData.flatMap(_.body.returnNoneIfEmpty)
+      apiResult shouldBe None
+      repo.lastUpsertedAnswer shouldBe None
+
+    }
+  }
+
+  "clearAdvertisingOrMarketingExpensesData" must {
+    "delete all advertising or marketing expenses API answer" in new Test {
+
+      val existingPeriodData: AmendSEPeriodSummaryRequestData = buildPeriodData(Option(DeductionsTestData.sample))
+
+      override val connector: StubIFSConnector = StubIFSConnector()
+      connector.amendSEPeriodSummaryResultData = Option(existingPeriodData)
+      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers.some)
+      repo.lastUpsertedAnswer = Option(Json.toJson(ExpensesCategoriesDb(IndividualCategories)))
+
+      val result: Either[ServiceError, Unit] = underTest.clearAdvertisingOrMarketingExpensesData(journeyCtxWithNino).value.futureValue
 
       result shouldBe ().asRight
       val apiResult: Option[AmendSEPeriodSummaryRequestBody] = connector.amendSEPeriodSummaryResultData.flatMap(_.body.returnNoneIfEmpty)
