@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -394,6 +394,26 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => underTest.clearConstructionExpensesData(currTaxYear, businessId, nino)
       )
     }
+  }
+
+  "clearAdvertisingOrMarketingExpensesData" in {
+    val controller: JourneyAnswersController = new JourneyAnswersController(
+      auth = mockAuthorisedAction,
+      cc = stubControllerComponents,
+      abroadAnswersService = StubAbroadAnswersService(),
+      incomeService = StubIncomeAnswersService(),
+      expensesService = StubExpensesAnswersService(),
+      capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+      prepopAnswersService = StubPrepopAnswersService(),
+      nicsAnswersService = StubNICsAnswersService(),
+      profitOrLossAnswersService = StubProfitOrLossAnswersService()
+    )
+    behave like testRoute(
+      request = buildRequestNoContent,
+      expectedStatus = NO_CONTENT,
+      expectedBody = "",
+      methodBlock = () => controller.clearAdvertisingOrMarketingExpensesData(currTaxYear, businessId, nino)
+    )
   }
 
   "GoodsToSellOrUse" should {

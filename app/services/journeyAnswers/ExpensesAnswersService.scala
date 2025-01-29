@@ -19,7 +19,16 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
-import models.common.JourneyName.{CapitalAllowancesTailoring, Construction, ExpensesTailoring, GoodsToSellOrUse, OfficeSupplies, RepairsAndMaintenanceCosts, WorkplaceRunningCosts}
+import models.common.JourneyName.{
+  AdvertisingOrMarketing,
+  Construction,
+  CapitalAllowancesTailoring,
+  ExpensesTailoring,
+  GoodsToSellOrUse,
+  OfficeSupplies,
+  RepairsAndMaintenanceCosts,
+  WorkplaceRunningCosts
+}
 import models.common._
 import models.connector.api_1894.request.{Deductions, FinancialsType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
@@ -91,6 +100,7 @@ trait ExpensesAnswersService {
   def clearRepairsAndMaintenanceExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearWorkplaceRunningCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearAdvertisingOrMarketingExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
@@ -323,6 +333,9 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   def clearRepairsAndMaintenanceExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearExpensesData(ctx, RepairsAndMaintenanceCosts)
 
+  def clearAdvertisingOrMarketingExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesData(ctx, AdvertisingOrMarketing)
+
   def clearGoodsToSellOrUseExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearExpensesData(ctx, GoodsToSellOrUse)
 
@@ -348,6 +361,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       case GoodsToSellOrUse           => deductions.copy(costOfGoods = None)
       case RepairsAndMaintenanceCosts => deductions.copy(maintenanceCosts = None)
       case WorkplaceRunningCosts      => deductions.copy(premisesRunningCosts = None)
+      case AdvertisingOrMarketing     => deductions.copy(advertisingCosts = None)
       case Construction               => deductions.copy(constructionIndustryScheme = None)
       case _                          => deductions
     }

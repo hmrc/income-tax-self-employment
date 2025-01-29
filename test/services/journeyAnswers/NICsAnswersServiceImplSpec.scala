@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ package services.journeyAnswers
 import bulders.NICsAnswersBuilder.{class4DiverAndTrusteeMultipleBusinessesAnswers, class4SingleBusinessAnswers}
 import cats.implicits.catsSyntaxEitherId
 import models.common.BusinessId
-import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics, RequestSchemaAPI1638TaxAvoidanceInner}
-import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics, SuccessResponseAPI1639TaxAvoidanceInner}
-import models.connector.api_1802.request.{AnnualNonFinancials, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1638._
+import models.connector.api_1639._
+import models.connector.api_1802.request._
 import models.connector.api_1803
 import models.connector.api_1803.AnnualNonFinancialsType.Class4NicsExemptionReason
 import models.connector.api_1803.{AnnualNonFinancialsType, SuccessResponseSchema}
@@ -38,7 +38,7 @@ import stubs.connectors.StubIFSConnector.{api1171MultipleBusinessResponse, api11
 import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.repositories.StubJourneyAnswersRepository
 import stubs.services.StubBusinessService
-import utils.BaseSpec.{businessId, currTaxYear, currTaxYearEnd, hc, journeyCtxWithNino, nino, taxYear}
+import utils.BaseSpec.{businessId, currTaxYear, currTaxYearEnd, hc, journeyCtxWithNino, nino}
 import utils.EitherTTestOps.convertScalaFuture
 
 import scala.concurrent.ExecutionContext.Implicits.global
