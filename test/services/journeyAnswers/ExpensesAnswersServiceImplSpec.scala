@@ -24,23 +24,10 @@ import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne
-import models.common.JourneyName.{
-  AdvertisingOrMarketing,
-  ExpensesTailoring,
-  GoodsToSellOrUse,
-  OfficeSupplies,
-  RepairsAndMaintenanceCosts,
-  StaffCosts,
-  WorkplaceRunningCosts
-}
+import models.common.JourneyName.{AdvertisingOrMarketing, ExpensesTailoring, GoodsToSellOrUse, OfficeSupplies, ProfessionalFees, RepairsAndMaintenanceCosts, StaffCosts, WorkplaceRunningCosts}
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
-import models.connector.api_1802.request.{
-  AnnualAllowances,
-  AnnualNonFinancials,
-  CreateAmendSEAnnualSubmissionRequestBody,
-  CreateAmendSEAnnualSubmissionRequestData
-}
+import models.connector.api_1802.request.{AnnualAllowances, AnnualNonFinancials, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1895.request._
 import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
@@ -498,6 +485,35 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     }
   }
 
+  "clearProfessionalFeesExpensesData" must {
+    "delete all Professional fees expenses API answer" in new Test2 {
+      prepareData()
+
+      val result: Either[ServiceError, Unit] = underTest.clearProfessionalFeesExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe ().asRight
+
+      incomeResult should not be None
+      professionalFees shouldBe None
+    }
+
+    "connector fails to update the PeriodSummary API" in new Test2 {
+      override lazy val connector: StubIFSConnector = new StubIFSConnector(amendSEPeriodSummaryResult = downstreamError)
+      val result: Either[ServiceError, Unit]        = underTest.clearProfessionalFeesExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe downstreamError
+    }
+
+    "connector fails to update the repository database" in new Test {
+      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
+
+      val result: Either[ServiceError, Unit] = underTest.clearProfessionalFeesExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe downstreamError
+      repo.lastUpsertedAnswer shouldBe None
+    }
+  }
+
   "clearSpecificExpensesData" in new Test {
     underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, OfficeSupplies).adminCosts shouldBe None
     underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, GoodsToSellOrUse).costOfGoods shouldBe None
@@ -511,6 +527,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     underTest
       .clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, AdvertisingOrMarketing)
       .advertisingCosts shouldBe None
+    underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, ProfessionalFees)
+      .professionalFees shouldBe None
   }
 
   "clearConstructionExpensesData" must {
@@ -597,6 +615,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       repairsAndMaintenanceCosts,
       staffCosts,
       constructionCostsResult,
+      professionalFees,
       capitalAllowancesResult,
       zeroEmissionCarsResult) =
       (for {
@@ -607,6 +626,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
         workplaceRunningCosts      <- repository.get(workplaceRunningCostsCtx)
         repairsAndMaintenanceCosts <- repository.get(repairsAndMaintenanceCostsCtx)
         staffCosts                 <- repository.get(staffCostsCtx)
+        professionalFees           <- repository.get(professionalFeesCtx)
         constructionCosts          <- repository.get(constructionCostsCtx)
         capitalAllowancesTailoring <- repository.get(capitalAllowancesTailoringCtx)
         zeroEmissionCars           <- repository.get(zeroEmissionCarsCtx)
@@ -618,6 +638,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
         workplaceRunningCosts,
         repairsAndMaintenanceCosts,
         staffCosts,
+        professionalFees,
         constructionCosts,
         capitalAllowancesTailoring,
         zeroEmissionCars)).rightValue
