@@ -180,6 +180,12 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
     handleApiUnitResultT(result)
   }
 
+  def clearConstructionExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
+    val result = expensesService.clearConstructionExpensesData(ctx)
+    handleApiUnitResultT(result)
+  }
+
   def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[GoodsToSellOrUseAnswers](taxYear, businessId, nino) { (ctx, value) =>
       for {

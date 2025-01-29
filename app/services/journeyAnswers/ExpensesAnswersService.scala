@@ -21,6 +21,7 @@ import cats.implicits._
 import connectors.IFSConnector
 import models.common.JourneyName.{
   AdvertisingOrMarketing,
+  Construction,
   CapitalAllowancesTailoring,
   ExpensesTailoring,
   GoodsToSellOrUse,
@@ -102,6 +103,7 @@ trait ExpensesAnswersService {
   def clearWorkplaceRunningCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearAdvertisingOrMarketingExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
 @Singleton
@@ -345,6 +347,9 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   def clearStaffCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearExpensesData(ctx, StaffCosts)
 
+  def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesData(ctx, Construction)
+
   private def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
@@ -363,6 +368,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       case WorkplaceRunningCosts      => deductions.copy(premisesRunningCosts = None)
       case AdvertisingOrMarketing     => deductions.copy(advertisingCosts = None)
       case StaffCosts                 => deductions.copy(staffCosts = None)
+      case Construction               => deductions.copy(constructionIndustryScheme = None)
       case _                          => deductions
     }
 }
