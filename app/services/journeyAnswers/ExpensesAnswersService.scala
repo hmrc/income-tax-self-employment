@@ -26,6 +26,7 @@ import models.common.JourneyName.{
   GoodsToSellOrUse,
   OfficeSupplies,
   RepairsAndMaintenanceCosts,
+  StaffCosts,
   WorkplaceRunningCosts
 }
 import models.common._
@@ -97,6 +98,7 @@ trait ExpensesAnswersService {
   def clearOfficeSuppliesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearGoodsToSellOrUseExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearRepairsAndMaintenanceExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearStaffCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearWorkplaceRunningCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearAdvertisingOrMarketingExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
@@ -340,23 +342,27 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   def clearWorkplaceRunningCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearExpensesData(ctx, WorkplaceRunningCosts)
 
+  def clearStaffCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesData(ctx, StaffCosts)
+
   private def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
-      deductionsWithoutMaintenanceCosts = existingPeriodicSummary.financials.toApi1894.deductions.map(d => clearSpecificExpensesDate(d, journeyName))
+      deductionsWithoutMaintenanceCosts = existingPeriodicSummary.financials.toApi1894.deductions.map(d => clearSpecificExpensesData(d, journeyName))
       financialsWithoutMaintenanceCosts = existingPeriodicSummary.financials.toApi1894.copy(deductions = deductionsWithoutMaintenanceCosts)
       existingTaxTakenOffTradingIncome  = existingPeriodicSummary.financials.incomes.flatMap(_.taxTakenOffTradingIncome)
       _ <- submitTailoringAnswers(ctx, financialsWithoutMaintenanceCosts, existingTaxTakenOffTradingIncome)
       _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(journeyName))
     } yield ()
 
-  private def clearSpecificExpensesDate(deductions: Deductions, journeyName: JourneyName): Deductions =
+  private[journeyAnswers] def clearSpecificExpensesData(deductions: Deductions, journeyName: JourneyName): Deductions =
     journeyName match {
       case OfficeSupplies             => deductions.copy(adminCosts = None)
       case GoodsToSellOrUse           => deductions.copy(costOfGoods = None)
       case RepairsAndMaintenanceCosts => deductions.copy(maintenanceCosts = None)
       case WorkplaceRunningCosts      => deductions.copy(premisesRunningCosts = None)
       case AdvertisingOrMarketing     => deductions.copy(advertisingCosts = None)
+      case StaffCosts                 => deductions.copy(staffCosts = None)
       case _                          => deductions
     }
 }
