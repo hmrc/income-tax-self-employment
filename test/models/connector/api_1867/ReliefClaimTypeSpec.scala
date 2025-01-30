@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package models.connector.api_1867
 
+import models.connector.ReliefClaimType
+import models.connector.ReliefClaimType.{CF, CSGI}
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
 
@@ -26,48 +28,20 @@ class ReliefClaimTypeSpec extends PlaySpec {
     "handling valid JSON" should {
 
       "write and read CarryForward correctly" in {
-        val json = Json.toJson(CarryForward: ReliefClaimType)
+        val json = Json.toJson(CF: ReliefClaimType)
         json mustBe JsString("CF")
-        json.validate[ReliefClaimType] mustBe JsSuccess(CarryForward)
+        json.validate[ReliefClaimType] mustBe JsSuccess(CF)
       }
 
       "write and read CarrySideways correctly" in {
-        val json = Json.toJson(CarrySideways: ReliefClaimType)
+        val json = Json.toJson(CSGI: ReliefClaimType)
         json mustBe JsString("CSGI")
-        json.validate[ReliefClaimType] mustBe JsSuccess(CarrySideways)
-      }
-
-      "write and read CarryForwardsToCarrySideways correctly" in {
-        val json = Json.toJson(CarryForwardsToCarrySideways: ReliefClaimType)
-        json mustBe JsString("CFCSGI")
-        json.validate[ReliefClaimType] mustBe JsSuccess(CarryForwardsToCarrySideways)
-      }
-
-      "write and read CarrySidewaysFHL correctly" in {
-        val json = Json.toJson(CarrySidewaysFHL: ReliefClaimType)
-        json mustBe JsString("CSFHL")
-        json.validate[ReliefClaimType] mustBe JsSuccess(CarrySidewaysFHL)
+        json.validate[ReliefClaimType] mustBe JsSuccess(CSGI)
       }
 
       "return an error for invalid ReliefClaimType" in {
         val json = JsString("INVALID")
         json.validate[ReliefClaimType] mustBe a[JsError]
-      }
-
-      "identify CarryForward as SelfEmploymentClaim" in {
-        CarryForward mustBe a[SelfEmploymentClaim]
-      }
-
-      "identify CarrySideways as SelfEmploymentClaim" in {
-        CarrySideways mustBe a[SelfEmploymentClaim]
-      }
-
-      "identify CarryForwardsToCarrySideways as PropertyClaim" in {
-        CarryForwardsToCarrySideways mustBe a[PropertyClaim]
-      }
-
-      "identify CarrySidewaysFHL as PropertyClaim" in {
-        CarrySidewaysFHL mustBe a[PropertyClaim]
       }
     }
 

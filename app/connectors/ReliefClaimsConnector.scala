@@ -23,7 +23,7 @@ import jakarta.inject.Inject
 import models.common._
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.common.ReliefClaim
-import models.connector.{ApiResponse, IFSApiName, IntegrationContext, commonGetListReads}
+import models.connector.{ApiResponse, IFSApiName, IntegrationContext, ReliefClaimType, commonGetListReads}
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
@@ -79,7 +79,13 @@ class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppCon
       createSuccess <- createResponses.sequence
     } yield deleteSuccess ++ createSuccess
 
-    EitherT.right(combinedAnswers)
+    val mappedResponses: Future[List[WhatDoYouWantToDoWithLoss]] = combinedAnswers.map { responses =>
+      responses.toList.collect {
+        case response if response.status == 200 => WhatDoYouWantToDoWithLoss.fromReliefClaimType(ReliefClaimType.CF)
+      }
+    }
+
+    EitherT.right(mappedResponses)
   }
 
   def deleteReliefClaims(ctx: JourneyContextWithNino, claimIds: Seq[String]): ApiResultT[Unit] =

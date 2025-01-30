@@ -20,14 +20,15 @@ import cats.data.EitherT
 import cats.implicits._
 import config.AppConfig
 import connectors.ReliefClaimsConnector
-import models.common.{BusinessId, JourneyContextWithNino, TaxYear}
-import models.connector.{ApiResponse, IFSApiName, lossClaimReads}
+import models.common._
+import models.connector._
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
 import models.error.ServiceError
-import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
+import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhatDoYouWantToDoWithLoss}
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers.logger
+import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 
@@ -77,9 +78,9 @@ class ReliefClaimsService @Inject() (reliefClaimsConnector: ReliefClaimsConnecto
     implicit val reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]] = lossClaimReads[CreateLossClaimSuccessResponse]
 
     if (answers.isEmpty) {
-      EitherT.right[ServiceError](Future.successful(Nil))
+      EitherT.right[ServiceError](Future.successful(Nil: List[CreateLossClaimSuccessResponse]))
     } else {
-      val responses = Future.sequence {
+      val responses: Future[Seq[Either[ServiceError, CreateLossClaimSuccessResponse]]] = Future.sequence {
         answers.map { answer =>
           val body = CreateLossClaimRequestBody(
             incomeSourceId = ctx.businessId.value,
@@ -91,7 +92,7 @@ class ReliefClaimsService @Inject() (reliefClaimsConnector: ReliefClaimsConnecto
         }
       }
 
-      EitherT(responses.map(_.sequence))
+      EitherT(responses.map(_.toList.sequence))
     }
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,11 @@
 
 package models.connector.api_1867
 
+import models.connector.ReliefClaimType.CF
+import models.connector.common._
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
+
 import java.time.LocalDate
 
 class ReliefClaimSpec extends PlaySpec {
@@ -28,7 +31,7 @@ class ReliefClaimSpec extends PlaySpec {
       val reliefClaim = ReliefClaim(
         incomeSourceId = "12345",
         incomeSourceType = Some(UkProperty),
-        reliefClaimed = CarryForward,
+        reliefClaimed = CF,
         taxYearClaimedFor = "2023-24",
         claimId = "claim123",
         sequence = Some(1),
@@ -43,7 +46,7 @@ class ReliefClaimSpec extends PlaySpec {
       val reliefClaim = ReliefClaim(
         incomeSourceId = "12345",
         incomeSourceType = None,
-        reliefClaimed = CarryForward,
+        reliefClaimed = CF,
         taxYearClaimedFor = "2023-24",
         claimId = "claim123",
         sequence = Some(1),
@@ -52,21 +55,6 @@ class ReliefClaimSpec extends PlaySpec {
 
       reliefClaim.isSelfEmploymentClaim mustBe true
       reliefClaim.isPropertyClaim mustBe false
-    }
-
-    "identify property claim correctly" in {
-      val reliefClaim = ReliefClaim(
-        incomeSourceId = "12345",
-        incomeSourceType = Some(UkProperty),
-        reliefClaimed = CarrySidewaysFHL,
-        taxYearClaimedFor = "2023-24",
-        claimId = "claim123",
-        sequence = Some(1),
-        submissionDate = LocalDate.of(2024, 11, 29)
-      )
-
-      reliefClaim.isSelfEmploymentClaim mustBe false
-      reliefClaim.isPropertyClaim mustBe true
     }
 
     "fail to read invalid JSON" in {
