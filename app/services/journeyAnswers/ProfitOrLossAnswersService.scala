@@ -24,9 +24,7 @@ import models.connector.api_1500.CreateBroughtForwardLossRequestData
 import models.connector.api_1501.UpdateBroughtForwardLossYear
 import connectors.{IFSBusinessDetailsConnector, IFSConnector, ReliefClaimsConnector}
 import models.common.{JourneyContextWithNino, JourneyName}
-import models.connector.api_1505.CreateLossClaimRequestBody
 import models.connector.api_1870.LossData
-import models.connector.common.ReliefClaim
 import models.database.adjustments.ProfitOrLossDb
 import models.domain.ApiResultT
 import models.error.ServiceError
@@ -96,29 +94,29 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     } yield result
 
 
-  def getLossClaimByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[ReliefClaim]] = {
-    val lossClaims = reliefClaimsConnector.getReliefClaimsPost2024(ctx.taxYear.toString, ctx.nino.toString)
-    val result = lossClaims.map {
-      case Right(list) =>
-        Right(list.find(_.incomeSourceId == ctx.businessId.value))
-      case Left(error) if error.status == NOT_FOUND =>
-        Right(None)
-      case Left(otherError) =>
-        Left(otherError)
-    }
-
-    EitherT(result)
-  }
-
-  private def handleLossClaim(ctx: JourneyContextWithNino,
-                              maybeExistingData: Option[ReliefClaim],
-                              maybeSubmissionData: Option[CreateLossClaimRequestBody])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    (maybeExistingData, maybeSubmissionData) match {
-      case (None, Some(submissionData)) => ifsConnector.createLossClaim(ctx, submissionData).map(_ => ()) // Create
-      case (Some(_), Some(_))           => EitherT.rightT[Future, ServiceError](())                       // Update
-      case (Some(_), None)              => EitherT.rightT[Future, ServiceError](())                       // Delete
-      case (None, None)                 => EitherT.rightT[Future, ServiceError](())                       // Do nothing
-    }
+//  def getLossClaimByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[ReliefClaim]] = {
+//    val lossClaims = reliefClaimsConnector.getReliefClaimsPost2024(ctx.taxYear.toString, ctx.nino.toString)
+//    val result = lossClaims.map {
+//      case Right(list) =>
+//        Right(list.find(_.incomeSourceId == ctx.businessId.value))
+//      case Left(error) if error.status == NOT_FOUND =>
+//        Right(None)
+//      case Left(otherError) =>
+//        Left(otherError)
+//    }
+//
+//    EitherT(result)
+//  }
+//
+//  private def handleLossClaim(ctx: JourneyContextWithNino,
+//                              maybeExistingData: Option[ReliefClaim],
+//                              maybeSubmissionData: Option[CreateLossClaimRequestBody])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+//    (maybeExistingData, maybeSubmissionData) match {
+//      case (None, Some(submissionData)) => ifsConnector.createLossClaim(ctx, submissionData).map(_ => ()) // Create
+//      case (Some(_), Some(_))           => EitherT.rightT[Future, ServiceError](())                       // Update
+//      case (Some(_), None)              => EitherT.rightT[Future, ServiceError](())                       // Delete
+//      case (None, None)                 => EitherT.rightT[Future, ServiceError](())                       // Do nothing
+//    }
 
   def getBroughtForwardLossByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[LossData]] = {
     val losses = ifsBusinessDetailsConnector.listBroughtForwardLosses(ctx.nino, ctx.taxYear)
