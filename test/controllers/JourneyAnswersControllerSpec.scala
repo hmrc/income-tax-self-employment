@@ -391,6 +391,15 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     )
   }
 
+  "clearProfessionalFeesExpensesData" in {
+    behave like testRoute(
+      request = buildRequestNoContent,
+      expectedStatus = NO_CONTENT,
+      expectedBody = "",
+      methodBlock = () => underTest.clearProfessionalFeesExpensesData(currTaxYear, businessId, nino)
+    )
+  }
+
   "clearAdvertisingOrMarketingExpensesData" in {
     val controller: JourneyAnswersController = new JourneyAnswersController(
       auth = mockAuthorisedAction,

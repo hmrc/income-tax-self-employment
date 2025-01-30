@@ -30,6 +30,17 @@ import models.common.JourneyName.{
   StaffCosts,
   WorkplaceRunningCosts
 }
+import models.common.JourneyName.{
+  AdvertisingOrMarketing,
+  CapitalAllowancesTailoring,
+  ExpensesTailoring,
+  GoodsToSellOrUse,
+  OfficeSupplies,
+  ProfessionalFees,
+  RepairsAndMaintenanceCosts,
+  StaffCosts,
+  WorkplaceRunningCosts
+}
 import models.common._
 import models.connector.api_1894.request.{Deductions, FinancialsType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
@@ -100,6 +111,7 @@ trait ExpensesAnswersService {
   def clearGoodsToSellOrUseExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearRepairsAndMaintenanceExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearStaffCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearProfessionalFeesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearWorkplaceRunningCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearAdvertisingOrMarketingExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
@@ -350,6 +362,9 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearExpensesData(ctx, Construction)
 
+  def clearProfessionalFeesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesData(ctx, ProfessionalFees)
+
   private def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
@@ -369,6 +384,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       case AdvertisingOrMarketing     => deductions.copy(advertisingCosts = None)
       case StaffCosts                 => deductions.copy(staffCosts = None)
       case Construction               => deductions.copy(constructionIndustryScheme = None)
+      case ProfessionalFees           => deductions.copy(professionalFees = None)
       case _                          => deductions
     }
 }
