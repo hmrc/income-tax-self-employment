@@ -18,8 +18,10 @@ package stubs.connectors
 
 import config.AppConfig
 import connectors.ReliefClaimsConnector
+import models.connector.common.ReliefClaim
+
 import scala.concurrent.ExecutionContext.Implicits.global
-import models.connector.{ApiResponse, api_1867}
+import models.connector.ApiResponse
 
 import scala.concurrent.Future
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
@@ -27,17 +29,15 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import javax.inject.Inject
 
 final case class StubReliefClaimsConnector @Inject() (httpClient: HttpClient,
-                                                      appConfig: AppConfig)
-                                                      //getReliefClaimsRes: StubReliefClaimsConnector.Api1867Response = Right(List.empty))
+                                                      appConfig: AppConfig,
+                                                      getReliefClaimsRes: StubReliefClaimsConnector.Api1867Response = Right(List.empty))
     extends ReliefClaimsConnector(httpClient, appConfig) {
 
-//  override def getReliefClaimsPost2024(taxYear: String, mtditid: String)(implicit hc: HeaderCarrier): Future[StubReliefClaimsConnector.Api1867Response] =
-//    Future.successful(getReliefClaimsRes)
+  def getReliefClaimsPost2024(taxYear: String, mtditid: String)(implicit hc: HeaderCarrier): Future[StubReliefClaimsConnector.Api1867Response] =
+    Future.successful(getReliefClaimsRes)
 
-//   def getReliefClaimsPost2024(taxYear: String, mtditid: String)(implicit hc: HeaderCarrier): Future[StubReliefClaimsConnector.Api1867Response] =
-//    Future.successful(getReliefClaimsRes)
 }
 
 object StubReliefClaimsConnector {
-  //type Api1867Response = ApiResponse[List[api_1867.ReliefClaim]]
+  type Api1867Response = ApiResponse[List[ReliefClaim]]
 }

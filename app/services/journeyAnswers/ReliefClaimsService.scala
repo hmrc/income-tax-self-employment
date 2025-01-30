@@ -39,22 +39,30 @@ import scala.concurrent.{ExecutionContext, Future}
 class ReliefClaimsService @Inject() (reliefClaimsConnector: ReliefClaimsConnector, repository: JourneyAnswersRepository, appConfig: AppConfig)(
     implicit ec: ExecutionContext) {
 
-//  def cacheReliefClaims(ctx: JourneyContextWithNino,
-//                        optProfitOrLoss: Option[ProfitOrLossJourneyAnswers])
-//                       (implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
-//    optProfitOrLoss match {
-//      case Some(profitOrLoss) if profitOrLoss.whatDoYouWantToDoWithLoss.isEmpty =>
-//        for {
-//          claims <- reliefClaimsConnector.getAllReliefClaims(ctx.taxYear, ctx.businessId)
-//          doWithLossAnswers = filterReliefClaims(claims, ctx.taxYear, ctx.businessId).map(claim => WhatDoYouWantToDoWithLoss(claim.reliefClaimed))
-//          updatedProfitOrLoss = profitOrLoss.copy(whatDoYouWantToDoWithLoss = doWithLossAnswers)
-//          _ <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(updatedProfitOrLoss))
-//        } yield Some(updatedProfitOrLoss)
-//      case Some(profitOrLoss) =>
-//        EitherT.right(Future.successful(Some(profitOrLoss)))
-//      case None =>
-//        EitherT.right(Future.successful(None))
-//    }
+  def cacheReliefClaims(ctx: JourneyContextWithNino,
+                        optProfitOrLoss: Option[ProfitOrLossJourneyAnswers])
+                       (implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
+    optProfitOrLoss match {
+      case Some(profitOrLoss) if profitOrLoss.whatDoYouWantToDoWithLoss.isEmpty =>
+        for {
+          claims <- reliefClaimsConnector.getAllReliefClaims(ctx.taxYear, ctx.businessId)
+          doWithLossAnswers =
+            Some(filterReliefClaims(claims, ctx.taxYear, ctx.businessId)
+              .map(claim => WhatDoYouWantToDoWithLoss.fromReliefClaimType(claim.reliefClaimed)))
+          updatedProfitOrLoss = profitOrLoss.copy(whatDoYouWantToDoWithLoss = doWithLossAnswers)
+          _ <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(updatedProfitOrLoss))
+        } yield Some(updatedProfitOrLoss)
+      case Some(profitOrLoss) =>
+        EitherT.right(Future.successful(Some(profitOrLoss)))
+      case None =>
+        EitherT.rightT(None: Option[ProfitOrLossJourneyAnswers])
+    }
+
+  private def filterReliefClaims(claims: List[ReliefClaim], taxYear: TaxYear, businessId: BusinessId): List[ReliefClaim] =
+    claims
+      .filter(_.isSelfEmploymentClaim)
+      .filter(_.taxYearClaimedFor == taxYear.endYear.toString)
+      .filter(_.incomeSourceId == businessId.value)
 
   def getAllReliefClaims(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] =
     for {
@@ -63,12 +71,6 @@ class ReliefClaimsService @Inject() (reliefClaimsConnector: ReliefClaimsConnecto
       claim.isSelfEmploymentClaim &&
         claim.taxYearClaimedFor == ctx.taxYear.endYear.toString &&
         claim.incomeSourceId == ctx.businessId.value)
-
-  private def filterReliefClaims(claims: List[ReliefClaim], taxYear: TaxYear, businessId: BusinessId): List[ReliefClaim] =
-    claims
-      .filter(_.isSelfEmploymentClaim)
-      .filter(_.taxYearClaimedFor == taxYear.endYear.toString)
-      .filter(_.incomeSourceId == businessId.value)
 
   def createReliefClaims(ctx: JourneyContextWithNino, answers: Seq[WhatDoYouWantToDoWithLoss])(implicit
       hc: HeaderCarrier,
