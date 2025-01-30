@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,15 +20,15 @@ import cats.data.EitherT
 import cats.implicits._
 import config.AppConfig
 import jakarta.inject.Inject
-import models.common.{BusinessId, JourneyContextWithNino, TaxYear}
+import models.common._
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.common.ReliefClaim
-import models.connector.{ApiResponse, IFSApiName, IntegrationContext, ReliefClaimType, commonGetListReads, commonGetReads, lossClaimReads}
+import models.connector.{ApiResponse, IFSApiName, IntegrationContext, commonGetListReads}
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.toReliefClaimType
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http._
 import utils.Logging
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -53,14 +53,6 @@ class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppCon
     EitherT(get[ApiResponse[List[ReliefClaim]]](httpClient, context))
   }
 
-//  def getReliefClaim(businessId: BusinessId, claimId: String)
-//                    (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[ReliefClaim]] = {
-//    implicit val reads: HttpReads[ApiResponse[Option[ReliefClaim]]] = commonGetReads[ReliefClaim]
-//    val context = appConfig.mkMetadata(IFSApiName.Api1508, appConfig.api1508Url(businessId, claimId))
-//
-//    EitherT(get[ApiResponse[Option[ReliefClaim]]](httpClient, context))
-//  }
-
   def updateReliefClaims(ctx: JourneyContextWithNino, oldAnswers: List[ReliefClaim], newAnswers: Seq[WhatDoYouWantToDoWithLoss])(implicit
       hc: HeaderCarrier): ApiResultT[List[WhatDoYouWantToDoWithLoss]] = {
 
@@ -72,16 +64,22 @@ class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppCon
     val answersToCreate             = newAnswersAsReliefClaimType.filter(claim => oldAnswers.exists(_.reliefClaimed == claim))
     val answersToDelete             = oldAnswers.diff(answersToKeep)
 
-    val deleteResponses = Future.sequence {
+    val deleteResponses: Seq[Future[HttpResponse]] =
       answersToDelete.map { answer =>
         delete(httpClient, deleteCtx(answer.claimId))
       }
-    }
 
-    for {
-      createSuccess <- createLossClaims(ctx, answersToCreate.map(WhatDoYouWantToDoWithLoss.fromReliefClaimType))
-      deleteSuccess <- deleteReliefClaims(ctx, answersToDelete.map(_.claimId))
-    } yield EitherT(overallResponses)
+    val createResponses: Seq[Future[HttpResponse]] =
+      answersToCreate.map { answer =>
+        post(httpClient, createCtx, answer)
+      }
+
+    val combinedAnswers: Future[Seq[HttpResponse]] = for {
+      deleteSuccess <- deleteResponses.sequence
+      createSuccess <- createResponses.sequence
+    } yield deleteSuccess ++ createSuccess
+
+    EitherT.right(combinedAnswers)
   }
 
   def deleteReliefClaims(ctx: JourneyContextWithNino, claimIds: Seq[String]): ApiResultT[Unit] =

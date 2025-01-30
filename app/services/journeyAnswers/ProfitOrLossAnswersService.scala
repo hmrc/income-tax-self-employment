@@ -88,8 +88,8 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       // if claims not empty, and answer not empty, update using claim id
       // if claims not empty, and answer empty, delete using claim id
       result                 <- (reliefClaims, optLossClaimAnswer) match {
-        case (Nil, Some(lossClaimAnswer)) => reliefClaimsService.createReliefLossClaims(ctx, lossClaimAnswer)
-        case (claims, Some(lossClaimAnswer)) => reliefClaimsConnector.updateReliefClaims(ctx.businessId, claims, lossClaimAnswer)
+        case (Nil, Some(lossClaimAnswer)) => reliefClaimsService.createReliefClaims(ctx, lossClaimAnswer)
+        case (claims, Some(lossClaimAnswer)) => reliefClaimsService.updateReliefClaims(ctx, claims, lossClaimAnswer)
       }
     } yield result
 
