@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
 
 package models.connector
 
-import models.connector.api_1867.{CarryForward, ReliefClaim}
+import models.connector.ReliefClaimType.CF
+import models.connector.common.ReliefClaim
 import models.error.DownstreamError.GenericDownstreamError
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -40,7 +41,7 @@ class CommonReadsSpec extends AnyWordSpec with Matchers {
         val reliefClaimList = List(
           ReliefClaim(
             incomeSourceId = testIncomeSourceId,
-            reliefClaimed = CarryForward,
+            reliefClaimed = CF,
             taxYearClaimedFor = testTaxYear,
             claimId = testClaimId,
             submissionDate = LocalDate.of(2024, 1, 1)

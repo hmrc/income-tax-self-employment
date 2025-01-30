@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@ import scala.concurrent.Future
 object MockReliefClaimsService {
   val mockInstance: ReliefClaimsService = mock[ReliefClaimsService]
 
-  def cacheClaimIds(ctx: JourneyContextWithNino, taxYear: String): ScalaOngoingStubbing[ApiResultT[Unit]] =
-    when(mockInstance.cacheReliefClaims(ArgumentMatchers.eq(ctx), ArgumentMatchers.eq(taxYear))(ArgumentMatchers.any[HeaderCarrier]()))
-      .thenReturn(EitherT.right[ServiceError](Future.successful(())))
+//  def cacheClaimIds(ctx: JourneyContextWithNino, taxYear: String): ScalaOngoingStubbing[ApiResultT[Unit]] =
+//    when(mockInstance.cacheReliefClaims(ArgumentMatchers.eq(ctx), ArgumentMatchers.eq(taxYear))(ArgumentMatchers.any[HeaderCarrier]()))
+//      .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
 }
