@@ -59,8 +59,7 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
                                       clearAdvertisingOrMarketingExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
                                       clearStaffCostsExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
                                       clearConstructionExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
-                                      clearProfessionalFeesExpensesDataRes: ApiResultT[Unit] = serviceUnitT
-                                     )
+                                      clearProfessionalFeesExpensesDataRes: ApiResultT[Unit] = serviceUnitT)
     extends ExpensesAnswersService {
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit

@@ -24,10 +24,24 @@ import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne
-import models.common.JourneyName.{AdvertisingOrMarketing, ExpensesTailoring, GoodsToSellOrUse, OfficeSupplies, ProfessionalFees, RepairsAndMaintenanceCosts, StaffCosts, WorkplaceRunningCosts}
+import models.common.JourneyName.{
+  AdvertisingOrMarketing,
+  ExpensesTailoring,
+  GoodsToSellOrUse,
+  OfficeSupplies,
+  ProfessionalFees,
+  RepairsAndMaintenanceCosts,
+  StaffCosts,
+  WorkplaceRunningCosts
+}
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
-import models.connector.api_1802.request.{AnnualAllowances, AnnualNonFinancials, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1802.request.{
+  AnnualAllowances,
+  AnnualNonFinancials,
+  CreateAmendSEAnnualSubmissionRequestBody,
+  CreateAmendSEAnnualSubmissionRequestData
+}
 import models.connector.api_1895.request._
 import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
@@ -82,84 +96,84 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
 
     "saveOfficeSuppliesAnswers" in new Test {
       val answers: OfficeSuppliesJourneyAnswers = genOne(officeSuppliesJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveOfficeSuppliesAnswers(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit]    = underTest.saveOfficeSuppliesAnswers(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveGoodsToSell" in new Test {
       val answers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveGoodsToSell(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit]      = underTest.saveGoodsToSell(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveRepairsAndMaintenance" in new Test {
       val answers: RepairsAndMaintenanceCostsJourneyAnswers = genOne(repairsAndMaintenanceCostsJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveRepairsAndMaintenance(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit]                = underTest.saveRepairsAndMaintenance(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveWorkplaceRunningCosts" in new Test {
       val answers: WorkplaceRunningCostsJourneyAnswers = genOne(workplaceRunningCostsJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveWorkplaceRunningCosts(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit]           = underTest.saveWorkplaceRunningCosts(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveAdvertisingOrMarketing" in new Test {
       val answers: AdvertisingOrMarketingJourneyAnswers = genOne(advertisingOrMarketingJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveAdvertisingOrMarketing(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit]            = underTest.saveAdvertisingOrMarketing(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveEntertainmentCosts" in new Test {
       val answers: EntertainmentJourneyAnswers = genOne(entertainmentJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveEntertainmentCosts(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit]   = underTest.saveEntertainmentCosts(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveStaffCosts" in new Test {
-      val answers: StaffCostsJourneyAnswers = genOne(staffCostsJourneyAnswersGen)
+      val answers: StaffCostsJourneyAnswers  = genOne(staffCostsJourneyAnswersGen)
       val result: Either[ServiceError, Unit] = underTest.saveStaffCosts(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveConstructionIndustrySubcontractors" in new Test {
       val answers: ConstructionJourneyAnswers = genOne(constructionJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveConstructionIndustrySubcontractors(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit]  = underTest.saveConstructionIndustrySubcontractors(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveProfessionalFees" in new Test {
       val answers: ProfessionalFeesJourneyAnswers = genOne(professionalFeesJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveProfessionalFees(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit]      = underTest.saveProfessionalFees(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveFinancialCharges" in new Test {
       val answers: FinancialChargesJourneyAnswers = genOne(financialChargesJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveFinancialCharges(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit]      = underTest.saveFinancialCharges(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveBadDebts" in new Test {
       val answers: IrrecoverableDebtsJourneyAnswers = genOne(irrecoverableDebtsJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveBadDebts(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit]        = underTest.saveBadDebts(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveDepreciationCosts" in new Test {
       val answers: DepreciationCostsJourneyAnswers = genOne(depreciationCostsJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveDepreciationCosts(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit]       = underTest.saveDepreciationCosts(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveOtherExpenses" in new Test {
       val answers: OtherExpensesJourneyAnswers = genOne(otherExpensesJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveOtherExpenses(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit]   = underTest.saveOtherExpenses(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
 
     "saveInterests" in new Test {
-      val answers: InterestJourneyAnswers = genOne(interestJourneyAnswersGen)
+      val answers: InterestJourneyAnswers    = genOne(interestJourneyAnswersGen)
       val result: Either[ServiceError, Unit] = underTest.saveInterests(journeyCtxWithNino, answers).value.futureValue
       result shouldBe ().asRight
     }
@@ -169,7 +183,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
   "save ExpensesTailoringNoExpensesAnswers" should {
     "store data successfully" in new Test {
       val answers: ExpensesTailoringAnswers = NoExpensesAnswers
-      val result: Either[ServiceError, Unit] = underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
+      val result: Either[ServiceError, Unit] =
+        underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
       result shouldBe ().asRight
     }
   }
@@ -177,7 +192,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
   "save ExpensesTailoringIndividualCategoriesAnswers" should {
     "store data successfully" in new Test {
       val answers: ExpensesTailoringAnswers.ExpensesTailoringIndividualCategoriesAnswers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
+      val result: Either[ServiceError, Unit] =
+        underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
       result shouldBe ().asRight
     }
   }
@@ -186,7 +202,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     "store data successfully" in new Test {
 
       val someExpensesAnswers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveGoodsToSell(journeyCtxWithNino, someExpensesAnswers).value.futureValue
+      val result: Either[ServiceError, Unit]                  = underTest.saveGoodsToSell(journeyCtxWithNino, someExpensesAnswers).value.futureValue
       result shouldBe ().asRight
     }
   }
@@ -195,7 +211,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     override val connector: StubIFSConnector =
       StubIFSConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
 
-    val result: Either[ServiceError, GoodsToSellOrUseJourneyAnswers] = underTest.getAnswers(journeyCtxWithNino)(goodsToSellOrUseParser, hc).value.futureValue
+    val result: Either[ServiceError, GoodsToSellOrUseJourneyAnswers] =
+      underTest.getAnswers(journeyCtxWithNino)(goodsToSellOrUseParser, hc).value.futureValue
 
     val expectedResult: GoodsToSellOrUseJourneyAnswers = GoodsToSellOrUseJourneyAnswers(100.0, Some(100.0))
 
@@ -205,7 +222,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
   "getExpensesTailoringAnswers" should {
     "return None when there are no answers" in new Test {
 
-      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
+      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] =
+        underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe None.asRight
     }
 
@@ -214,7 +232,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
         .copy(data = Json.toJson(ExpensesCategoriesDb(NoExpenses)).as[JsObject])
         .some)
-      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
+      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] =
+        underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe NoExpensesAnswers.some.asRight
     }
 
@@ -229,7 +248,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
         .copy(data = Json.toJson(ExpensesCategoriesDb(TotalAmount)).as[JsObject])
         .some)
-      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
+      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] =
+        underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe AsOneTotalAnswers(BigDecimal("10.5")).some.asRight
     }
 
@@ -239,7 +259,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
         .copy(data = Json.toJson(answers).as[JsObject])
         .some)
-      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] = underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
+      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] =
+        underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe answers.some.asRight
     }
 
@@ -248,7 +269,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
   "getGoodsToSellOrUseAnswers" should {
     "return None when there are no answers" in new Test {
 
-      val result: Either[ServiceError, Option[GoodsToSellOrUseAnswers]] = underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value.futureValue
+      val result: Either[ServiceError, Option[GoodsToSellOrUseAnswers]] =
+        underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe None.asRight
     }
 
@@ -258,7 +280,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = goodsToSellOrUseJourneyAnswers
         .copy(data = Json.toJson(TaxiMinicabOrRoadHaulageDb(true)).as[JsObject])
         .some)
-      val result: Either[ServiceError, Option[GoodsToSellOrUseAnswers]] = underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value.futureValue
+      val result: Either[ServiceError, Option[GoodsToSellOrUseAnswers]] =
+        underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe GoodsToSellOrUseAnswers(taxiMinicabOrRoadHaulage = true, BigDecimal("100.0"), Option(BigDecimal("100.0"))).some.asRight
     }
   }
@@ -266,7 +289,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
   "getWorkplaceRunningCostsAnswers" should {
     "return None when there are no answers" in new Test {
 
-      val result: Either[ServiceError, Option[WorkplaceRunningCostsAnswers]] = underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value.futureValue
+      val result: Either[ServiceError, Option[WorkplaceRunningCostsAnswers]] =
+        underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe None.asRight
     }
 
@@ -276,7 +300,8 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = workplaceRunningCostsJourneyAnswers
         .copy(data = Json.toJson(workplaceRunningCostsDb).as[JsObject])
         .some)
-      val result: Either[ServiceError, Option[WorkplaceRunningCostsAnswers]] = underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value.futureValue
+      val result: Either[ServiceError, Option[WorkplaceRunningCostsAnswers]] =
+        underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value.futureValue
       result shouldBe WorkplaceRunningCostsAnswers(workplaceRunningCostsDb, api1786DeductionsSuccessResponse).some.asRight
     }
   }
@@ -540,8 +565,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     underTest
       .clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, AdvertisingOrMarketing)
       .advertisingCosts shouldBe None
-    underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, ProfessionalFees)
-      .professionalFees shouldBe None
+    underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, ProfessionalFees).professionalFees shouldBe None
   }
 
   "clearConstructionExpensesData" must {

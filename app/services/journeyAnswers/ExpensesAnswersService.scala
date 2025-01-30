@@ -30,7 +30,17 @@ import models.common.JourneyName.{
   StaffCosts,
   WorkplaceRunningCosts
 }
-import models.common.JourneyName.{AdvertisingOrMarketing, CapitalAllowancesTailoring, ExpensesTailoring, GoodsToSellOrUse, OfficeSupplies, ProfessionalFees, RepairsAndMaintenanceCosts, StaffCosts, WorkplaceRunningCosts}
+import models.common.JourneyName.{
+  AdvertisingOrMarketing,
+  CapitalAllowancesTailoring,
+  ExpensesTailoring,
+  GoodsToSellOrUse,
+  OfficeSupplies,
+  ProfessionalFees,
+  RepairsAndMaintenanceCosts,
+  StaffCosts,
+  WorkplaceRunningCosts
+}
 import models.common._
 import models.connector.api_1894.request.{Deductions, FinancialsType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
