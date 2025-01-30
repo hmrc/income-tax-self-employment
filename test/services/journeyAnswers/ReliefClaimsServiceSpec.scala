@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,16 +17,16 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
+import config.AppConfig
 import connectors.ReliefClaimsConnector
-import mocks.MockReliefClaimsService
 import models.common.JourneyName.ProfitOrLoss
 import models.common._
-import models.connector.api_1867.{CarryForward, ReliefClaim, UkProperty}
+import models.connector.ReliefClaimType.CF
+import models.connector.common.{ReliefClaim, UkProperty}
 import models.error.{DownstreamError, ServiceError}
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers._
 import org.mockito.ArgumentMatchersSugar.eqTo
-import org.mockito.MockitoSugar.{verify, when}
+import org.mockito.MockitoSugar.when
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
@@ -34,6 +34,7 @@ import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
+import utils.BaseSpec
 
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -44,22 +45,27 @@ class ReliefClaimsServiceSpec extends PlaySpec with MockitoSugar with ScalaFutur
   trait ReliefClaimsServiceTestSetup {
     val mockReliefClaimsConnector: ReliefClaimsConnector = mock[ReliefClaimsConnector]
     val mockJourneyAnswersRepository: JourneyAnswersRepository = mock[JourneyAnswersRepository]
-    val service: ReliefClaimsService = new ReliefClaimsService(mockReliefClaimsConnector, mockJourneyAnswersRepository)
+    val mockAppConfig: AppConfig = mock[AppConfig]
+
+    val service: ReliefClaimsService = new ReliefClaimsService(mockReliefClaimsConnector, mockJourneyAnswersRepository, mockAppConfig)
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
     val taxYear2024: TaxYear = TaxYear(2024)
     val taxYear2025: TaxYear = TaxYear(2025)
+
     val businessId: BusinessId = BusinessId("XH1234567890")
     val mtditid: Mtditid = Mtditid("12345")
     val nino: Nino = Nino("AB123456C")
+
     val ctxWithNino2025: JourneyContextWithNino = JourneyContextWithNino(taxYear2025, businessId, mtditid, nino)
     val ctxWithNino2024: JourneyContextWithNino = JourneyContextWithNino(taxYear2024, businessId, mtditid, nino)
-    val ctxNoNino2025 = ctxWithNino2025.toJourneyContext(ProfitOrLoss)
-    val ctxNoNino2024 = ctxWithNino2024.toJourneyContext(ProfitOrLoss)
 
-    val claim1 = ReliefClaim("XH1234567890", None, CarryForward, "2025", "claimId1", None, LocalDate.now())
-    val claim2 = ReliefClaim("XH1234567891", Some(UkProperty), CarryForward, "2025", "claimId2", None, LocalDate.now())
-    val claim3 = ReliefClaim("XH1234567890", None, CarryForward, "2024", "claimId3", None, LocalDate.now())
+    val ctxNoNino2025: JourneyContext = ctxWithNino2025.toJourneyContext(ProfitOrLoss)
+    val ctxNoNino2024: JourneyContext = ctxWithNino2024.toJourneyContext(ProfitOrLoss)
+
+    val claim1: ReliefClaim = ReliefClaim("XH1234567890", None, CF, "2025", "claimId1", None, LocalDate.now())
+    val claim2: ReliefClaim = ReliefClaim("XH1234567891", Some(UkProperty), CF, "2025", "claimId2", None, LocalDate.now())
+    val claim3: ReliefClaim = ReliefClaim("XH1234567890", None, CF, "2024", "claimId3", None, LocalDate.now())
 
     val claims: List[ReliefClaim] = List(claim1,
       claim2,

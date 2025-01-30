@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package models.connector.common
 
-import play.api.libs.json.{Format, JsError, JsString, JsSuccess, Reads, Writes}
+import play.api.libs.json.{Format, JsError, JsString, JsSuccess}
 
 sealed trait IncomeSourceType {
   val value: String

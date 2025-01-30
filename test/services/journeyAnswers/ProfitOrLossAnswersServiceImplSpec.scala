@@ -21,13 +21,13 @@ import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
 import connectors.ReliefClaimsConnector
 import mocks.MockReliefClaimsService
+import models.connector.ReliefClaimType.CF
 import connectors.HipConnector
 import models.common.{JourneyContextWithNino, Nino, TaxYear}
 import models.connector.api_1500.LossType
 import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.api_1802.request._
-import models.connector.api_1867.{CarryForward, UkProperty}
 import models.connector.api_1870.{LossData, SuccessResponseSchema}
 import models.connector.{api_1867, api_1870}
 import models.database.adjustments.ProfitOrLossDb

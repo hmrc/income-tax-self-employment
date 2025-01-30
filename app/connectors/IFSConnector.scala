@@ -193,6 +193,9 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     EitherT(delete(http, context))
   }
 
+  private def createLossClaimUrl(nino: Nino) =
+    s"${appConfig.ifsBaseUrl}/income-tax/claims-for-relief/$nino"
+
   def createLossClaim(ctx: JourneyContextWithNino,
                       requestBody: CreateLossClaimRequestBody)
                      (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[CreateLossClaimSuccessResponse] = {
