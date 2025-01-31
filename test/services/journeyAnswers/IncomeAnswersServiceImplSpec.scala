@@ -25,12 +25,13 @@ import models.database.JourneyAnswers
 import models.database.income.IncomeStorageAnswers
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
+import models.error.ServiceError
 import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.IdiomaticMockito.StubbingOps
 import org.mockito.Mockito.times
 import org.mockito.MockitoSugar.{mock, never, verify}
-import org.mockito.matchers.MacroBasedMatchers
 import org.scalatest.EitherValues._
 import org.scalatest.OptionValues._
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
@@ -50,7 +51,7 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers {
+class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   "getAnswers" should {
@@ -61,16 +62,19 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
     "return error if cannot read IncomeJourneyAnswers" in new TestCase(
       repo = StubJourneyAnswersRepository(getAnswer = Some(brokenJourneyAnswers))
     ) {
-      val result = await(service.getAnswers(journeyCtxWithNino).value)
-      val error  = result.left.value
+      val result: Either[ServiceError, Option[IncomeJourneyAnswers]] =
+        await(service.getAnswers(journeyCtxWithNino).value)
+      val error: ServiceError = result.left.value
       error shouldBe a[InvalidJsonFormatError]
     }
 
     "return IncomeJourneyAnswers" in new TestCase(
       repo = StubJourneyAnswersRepository(getAnswer = Some(sampleIncomeJourneyAnswers))
     ) {
-      val incomeStorageAnswers = repo.getAnswer.value.data.as[IncomeStorageAnswers]
-      val result               = service.getAnswers(journeyCtxWithNino).value.futureValue
+      val incomeStorageAnswers: IncomeStorageAnswers =
+        repo.getAnswer.value.data.as[IncomeStorageAnswers]
+      val result: Either[ServiceError, Option[IncomeJourneyAnswers]] =
+        service.getAnswers(journeyCtxWithNino).value.futureValue
       result.value shouldBe Some(
         IncomeJourneyAnswers(
           incomeStorageAnswers.incomeNotCountedAsTurnover,
@@ -90,16 +94,16 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
   "saving income answers" when {
     "no period summary or annual submission data exists" must {
       "successfully store data and create the period summary" in new TestCase(connector = mock[IFSConnector]) {
-        connector.listSEPeriodSummary(*)(*, *) returns
+        connector.listSEPeriodSummary(any())(any(), any()) returns
           Future.successful(api1965EmptyResponse.asRight)
 
-        connector.createSEPeriodSummary(*)(*, *) returns
+        connector.createSEPeriodSummary(any())(any(), any()) returns
           Future.successful(().asRight)
 
-        connector.getAnnualSummaries(*)(*, *) returns
+        connector.getAnnualSummaries(any())(any(), any()) returns
           Future.successful(SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound).asLeft)
 
-        connector.createUpdateOrDeleteApiAnnualSummaries(*, *)(*, *) returns
+        connector.createUpdateOrDeleteApiAnnualSummaries(any(), any())(any(), any()) returns
           EitherT.rightT(())
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
@@ -107,24 +111,24 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
-        verify(connector, times(1)).createSEPeriodSummary(*)(*, *)
-        verify(connector, never).amendSEPeriodSummary(*)(*, *)
+        verify(connector, times(1)).createSEPeriodSummary(any())(any(), any())
+        verify(connector, never).amendSEPeriodSummary(any())(any(), any())
       }
     }
     "prior submission data exists" must {
       "successfully store data and amend the period summary" in new TestCase(connector = mock[IFSConnector]) {
-        connector.listSEPeriodSummary(*)(*, *) returns
+        connector.listSEPeriodSummary(any())(any(), any()) returns
           Future.successful(api1965MatchedResponse.asRight)
 
-        connector.getPeriodicSummaryDetail(*)(*, *) returns
+        connector.getPeriodicSummaryDetail(any())(any(), any()) returns
           Future.successful(api1786DeductionsSuccessResponse.asRight)
 
-        connector.amendSEPeriodSummary(*)(*, *) returns Future.successful(().asRight)
+        connector.amendSEPeriodSummary(any())(any(), any()) returns Future.successful(().asRight)
 
-        connector.getAnnualSummaries(*)(*, *) returns
+        connector.getAnnualSummaries(any())(any(), any()) returns
           Future.successful(api1803SuccessResponse.asRight)
 
-        connector.createUpdateOrDeleteApiAnnualSummaries(*, *)(*, *) returns
+        connector.createUpdateOrDeleteApiAnnualSummaries(any(), any())(any(), any()) returns
           EitherT.rightT(())
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
@@ -132,8 +136,8 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
-        verify(connector, times(1)).amendSEPeriodSummary(*)(*, *)
-        verify(connector, never).createSEPeriodSummary(*)(*, *)
+        verify(connector, times(1)).amendSEPeriodSummary(any())(any(), any())
+        verify(connector, never).createSEPeriodSummary(any())(any(), any())
       }
     }
   }

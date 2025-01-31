@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.{DownstreamError, ServiceError}
 import models.frontend.prepop.AdjustmentsPrepopAnswers.fromAnnualAdjustmentsType
 import models.frontend.prepop.{AdjustmentsPrepopAnswers, IncomePrepopAnswers}
-import org.mockito.matchers.MacroBasedMatchers
 import org.scalatest.EitherValues._
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
@@ -42,7 +41,8 @@ import utils.BaseSpec._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers {
+class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
+
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   private val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
@@ -82,8 +82,9 @@ class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 
     "return IncomePrepopAnswers" in new TestCase(connector =
       StubIFSConnector(getAnnualSummariesResult = api_1803.SuccessResponseSchema(annualAdjustmentsType.some, None, None).asRight)) {
-      val result         = service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue
-      val expectedAnswer = fromAnnualAdjustmentsType(annualAdjustmentsType)
+      val result: Either[ServiceError, AdjustmentsPrepopAnswers] =
+        service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue
+      val expectedAnswer: AdjustmentsPrepopAnswers = fromAnnualAdjustmentsType(annualAdjustmentsType)
       result.value shouldBe expectedAnswer
     }
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import play.core.PlayVersion.current
 import sbt._
 
@@ -45,13 +46,11 @@ object AppDependencies {
     "org.playframework"      %% "play-test"                % current,
     "org.scalatest"          %% "scalatest"                % "3.2.15",
     "org.scalatestplus"      %% "scalacheck-1-15"          % "3.2.10.0",
-    "org.scalatestplus"      %% "mockito-3-4"              % "3.2.10.0",
-    "org.mockito"            %% "mockito-scala"            % "1.16.42",
+    "org.mockito"            %% "mockito-scala-scalatest"  % "1.17.37",
     "org.typelevel"          %% "cats-core"                % "2.9.0",
     "com.vladsch.flexmark"    % "flexmark-all"             % "0.64.6",
     "org.scalatestplus.play" %% "scalatestplus-play"       % "7.0.1",
     "com.github.tomakehurst"  % "wiremock-jre8-standalone" % "2.35.1",
-    "org.mockito"            %% "mockito-scala"            % "1.17.31",
     "org.scalamock"          %% "scalamock"                % "5.2.0"
   ).map(_ % s"$Test, $IntegrationTest")
 
