@@ -17,29 +17,36 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
-import cats.implicits._
 import config.AppConfig
 import connectors.ReliefClaimsConnector
 import models.common.JourneyName.ProfitOrLoss
 import models.common._
+import models.connector.ApiResponse
 import models.connector.ReliefClaimType.CF
+import models.connector.api_1505._
 import models.connector.common.{ReliefClaim, UkProperty}
 import models.error.ServiceError
 import models.frontend.adjustments._
-import org.mockito.MockitoSugar.when
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatestplus.mockito.MockitoSugar
-import org.scalatestplus.play.PlaySpec
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchersSugar.eqTo
+import org.mockito.Mockito.times
+import org.mockito.MockitoSugar.{verify, when}
+import org.mockito.invocation.InvocationOnMock
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.BaseSpec
+import utils.EitherTTestOps.whenReady
 
 import java.time.LocalDate
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ReliefClaimsServiceSpec extends PlaySpec with MockitoSugar with ScalaFutures with BaseSpec {
+
+class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers {
 
   trait ReliefClaimsServiceTestSetup {
 
@@ -84,14 +91,9 @@ class ReliefClaimsServiceSpec extends PlaySpec with MockitoSugar with ScalaFutur
       unusedLossAmount = Some(BigDecimal(500)),
       whichYearIsLossReported = Some(WhichYearIsLossReported.Year2022to2023)
     )
-
   }
 
   "cacheReliefClaims" should {
-
-    // So those work now. I'd personally change the fact that the service returns unit so we can handle situations where something fails
-    // But for now it's fine. We can pretty it up later.
-    // The next bit to do then is fix the issues in ProfitOrLossAnswersService
 
     "cache claim IDs for a tax year >= 2025" in new ReliefClaimsServiceTestSetup {
       val filteredClaimsJson: JsObject = Json.obj("claimIds" -> Json.toJson(List("claimId1")))
@@ -105,7 +107,7 @@ class ReliefClaimsServiceSpec extends PlaySpec with MockitoSugar with ScalaFutur
       val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] =
         await(service.cacheReliefClaims(ctxWithNino2025, Some(answers)).value)
 
-      result mustBe Right(Some(answers))
+      result shouldBe Right(Some(answers))
     }
 
     "cache claim IDs for a tax year < 2025" in new ReliefClaimsServiceTestSetup {
@@ -120,14 +122,14 @@ class ReliefClaimsServiceSpec extends PlaySpec with MockitoSugar with ScalaFutur
       val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] =
         await(service.cacheReliefClaims(ctxWithNino2025, Some(answers)).value)
 
-      result mustBe Right(Some(answers))
+      result shouldBe Right(Some(answers))
     }
 
     "return None when optProfitOrLoss is None" in new ReliefClaimsServiceTestSetup {
       val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] =
         await(service.cacheReliefClaims(ctxWithNino2025, None).value)
 
-      result mustBe Right(None)
+      result shouldBe Right(None)
     }
 
     "return existing ProfitOrLossJourneyAnswers when whatDoYouWantToDoWithLoss is not empty" in new ReliefClaimsServiceTestSetup {
@@ -145,7 +147,7 @@ class ReliefClaimsServiceSpec extends PlaySpec with MockitoSugar with ScalaFutur
       val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] =
         await(service.cacheReliefClaims(ctxWithNino2025, Some(answersWithLoss)).value)
 
-      result mustBe Right(Some(answersWithLoss))
+      result shouldBe Right(Some(answersWithLoss))
     }
   }
 
@@ -158,23 +160,8 @@ class ReliefClaimsServiceSpec extends PlaySpec with MockitoSugar with ScalaFutur
       val result: Either[ServiceError, List[ReliefClaim]] =
         await(service.getAllReliefClaims(ctxWithNino2024).value)
 
-      result mustBe Right(List(claim3))
+      result shouldBe Right(List(claim3))
     }
-
-//    "return an empty list when no claims match the filter criteria" in new ReliefClaimsServiceTestSetup {
-//      val filteredClaimsJson: JsObject = Json.obj("claimIds3" -> Json.toJson(List("claimId10")))
-//
-//      when(mockJourneyAnswersRepository.upsertAnswers(eqTo(ctxNoNino2024), eqTo(filteredClaimsJson)))
-//        .thenReturn(EitherT.right[ServiceError](Future.successful(())))
-//
-//      when(mockReliefClaimsConnector.getAllReliefClaims(eqTo(taxYear2024), eqTo(businessId))(any[HeaderCarrier]))
-//        .thenReturn(EitherT.rightT[Future, ServiceError](List.empty))
-//
-//      val result: Either[ServiceError, List[ReliefClaim]] =
-//        await(service.getAllReliefClaims(ctxWithNino2025).value)
-//
-//      result mustBe Right(List.empty)
-//    }
 
     "return an error when the connector fails" in new ReliefClaimsServiceTestSetup {
       val error: ServiceError = new ServiceError {
@@ -187,7 +174,114 @@ class ReliefClaimsServiceSpec extends PlaySpec with MockitoSugar with ScalaFutur
       val result: Either[ServiceError, List[ReliefClaim]] =
         await(service.getAllReliefClaims(ctxWithNino2025).value)
 
-      result mustBe Left(error)
+      result shouldBe Left(error)
+    }
+  }
+
+  "createReliefClaims" should {
+
+    "return an empty list when answers are empty" in new ReliefClaimsServiceTestSetup  {
+
+      val emptyAnswers: List[WhatDoYouWantToDoWithLoss] = List.empty[WhatDoYouWantToDoWithLoss]
+
+      val result: Future[Either[ServiceError, List[CreateLossClaimSuccessResponse]]] =
+        service.createReliefClaims(ctxWithNino2024, emptyAnswers).value
+
+      whenReady(result) { res =>
+        res shouldBe Right(List.empty[CreateLossClaimSuccessResponse])
+      }
+      verify(mockReliefClaimsConnector, times(0)).createReliefClaims(any(), any())(any(), any(), any())
+    }
+
+    "return a list with multiple successful responses when there are multiple valid answers" in new ReliefClaimsServiceTestSetup {
+
+      val validAnswers: List[WhatDoYouWantToDoWithLoss] = List(
+        WhatDoYouWantToDoWithLoss.CarryItForward,
+        WhatDoYouWantToDoWithLoss.DeductFromOtherTypes
+      )
+      val expectedResponse1: CreateLossClaimSuccessResponse = CreateLossClaimSuccessResponse("claimId1")
+      val expectedResponse2: CreateLossClaimSuccessResponse = CreateLossClaimSuccessResponse("claimId2")
+
+      var callCount = 0
+
+      when(mockReliefClaimsConnector.createReliefClaims(any(), any())(any(), any(), any()))
+        .thenAnswer { _: InvocationOnMock =>
+          callCount += 1
+          if (callCount == 1) {
+            Future.successful(Right(expectedResponse1))
+          } else {
+            Future.successful(Right(expectedResponse2))
+          }
+        }
+
+      val result: Future[Either[ServiceError, List[CreateLossClaimSuccessResponse]]] =
+        service.createReliefClaims(ctxWithNino2024, validAnswers).value
+
+      whenReady(result) { res =>
+        res shouldBe Right(List(expectedResponse1, expectedResponse2))
+      }
+
+      verify(mockReliefClaimsConnector, times(2)).createReliefClaims(any(), any())(any(), any(), any())
+    }
+
+    "return a list with one successful response when there is one valid answer" in new ReliefClaimsServiceTestSetup {
+
+      val validAnswers: List[WhatDoYouWantToDoWithLoss] = List(
+        WhatDoYouWantToDoWithLoss.CarryItForward
+      )
+      val expectedResponse: CreateLossClaimSuccessResponse = CreateLossClaimSuccessResponse("claimId1")
+
+      when(mockReliefClaimsConnector.createReliefClaims(any(), any())(any(), any(), any()))
+        .thenReturn(Future.successful(Right(expectedResponse)))
+
+      val result: Future[Either[ServiceError, List[CreateLossClaimSuccessResponse]]] =
+        service.createReliefClaims(ctxWithNino2024, validAnswers).value
+
+      whenReady(result) { res =>
+        res shouldBe Right(List(expectedResponse))
+      }
+
+      verify(mockReliefClaimsConnector, times(1)).createReliefClaims(any(), any())(any(), any(), any())
+    }
+
+    "return an error when one of the answers results in a service error" in new ReliefClaimsServiceTestSetup {
+
+      val validAnswers: List[WhatDoYouWantToDoWithLoss] = List(
+        WhatDoYouWantToDoWithLoss.CarryItForward,
+        WhatDoYouWantToDoWithLoss.DeductFromOtherTypes
+      )
+      val expectedResponse: CreateLossClaimSuccessResponse = CreateLossClaimSuccessResponse("claimId1")
+
+      val error: ServiceError = new ServiceError {
+        val errorMessage: String = "Error fetching relief claims"
+      }
+
+      var callCount = 0
+
+      when(mockReliefClaimsConnector.createReliefClaims(any(), any())(any(), any(), any()))
+        .thenAnswer { _: InvocationOnMock =>
+          callCount += 1
+          if (callCount == 1) {
+            Future.successful(Right(expectedResponse).asInstanceOf[ApiResponse[CreateLossClaimSuccessResponse]])
+          } else {
+            Future.successful(Left(error).asInstanceOf[ApiResponse[CreateLossClaimSuccessResponse]])
+          }
+        }
+
+      val result: Future[Either[ServiceError, List[CreateLossClaimSuccessResponse]]] =
+        service.createReliefClaims(ctxWithNino2024, validAnswers).value
+
+      whenReady(result) { res =>
+        res shouldBe Left(error)
+      }
+
+      verify(mockReliefClaimsConnector, times(2)).createReliefClaims(any(), any())(any(), any(), any())
+    }
+
+    "createReliefClaims" should {
+      "updateReliefClaims" in {
+
+      }
     }
 
   }
