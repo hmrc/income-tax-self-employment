@@ -18,7 +18,7 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import connectors.{IFSBusinessDetailsConnector, IFSConnector}
-import models.common.{JourneyContextWithNino, JourneyName}
+import models.common.{JourneyContextWithNino, JourneyName, TaxYear}
 import models.connector.api_1505.CreateLossClaimRequestBody
 import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
@@ -142,7 +142,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
               ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossYearData(ctx, lossData.lossId, amount, whichYear.apiTaxYear))
             .map(_ => ())
         }
-      case _ => ifsBusinessDetailsConnector.deleteBroughtForwardLoss(ctx.nino, lossData.lossId)
+      case _ => ifsBusinessDetailsConnector.deleteBroughtForwardLoss(ctx.nino, TaxYear.asTy(lossData.taxYearBroughtForwardFrom),lossData.lossId)
     }
 
   private def handleBroughtForwardLossNoExistingLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit

@@ -49,6 +49,11 @@ object TaxYear {
     s"$start-$end"
   }
 
+  def asTy(taxYearYYYY_YY: String): TaxYear = {
+    val taxYear = taxYearYYYY_YY.take(4).toInt + 1
+    TaxYear(taxYear)
+  }
+
   implicit def pathBindable(implicit intBinder: PathBindable[Int]): PathBindable[TaxYear] = new PathBindable[TaxYear] {
 
     override def bind(key: String, value: String): Either[String, TaxYear] =

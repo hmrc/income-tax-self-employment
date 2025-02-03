@@ -74,7 +74,7 @@ case class StubIFSBusinessDetailsConnector(
       ec: ExecutionContext): ApiResultT[api_1502.SuccessResponseSchema] =
     EitherT.fromEither[Future](getBroughtForwardLossResult)
 
-  def deleteBroughtForwardLoss(nino: Nino, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
+  def deleteBroughtForwardLoss(nino: Nino, taxYear: TaxYear, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
     if (deleteBroughtForwardLossResult.isRight) updatedBroughtForwardLossData = None
     EitherT.fromEither[Future](deleteBroughtForwardLossResult)
   }

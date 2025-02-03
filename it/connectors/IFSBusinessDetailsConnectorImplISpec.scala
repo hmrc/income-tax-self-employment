@@ -113,7 +113,7 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         expectedResponse = "",
         expectedStatus = NO_CONTENT
       )
-      connector.deleteBroughtForwardLoss(nino, lossId).value.futureValue shouldBe Right(())
+      connector.deleteBroughtForwardLoss(nino, taxYear, lossId).value.futureValue shouldBe Right(())
     }
   }
 
