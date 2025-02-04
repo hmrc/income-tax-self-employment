@@ -54,7 +54,7 @@ object IFSApiName extends Enum[IFSApiName] {
 sealed abstract class HipApiName(override val entryName: String) extends EnumEntry with ApiName
 
 /** When you add a new API here, don't forget to add it in the application.conf and config for QA, Staging and Prod
- */
+  */
 object HipApiName extends Enum[HipApiName] {
   val values: IndexedSeq[HipApiName] = IndexedSeq[HipApiName]()
 

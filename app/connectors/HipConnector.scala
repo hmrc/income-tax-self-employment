@@ -39,7 +39,7 @@ class HipConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
 
   def deleteBroughtForwardLoss(nino: Nino, taxYear: TaxYear, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
 
-    val url = deleteBroughtForwardLossUrl(nino, taxYear, lossId)
+    val url                                          = deleteBroughtForwardLossUrl(nino, taxYear, lossId)
     val context                                      = appConfig.mkMetadata(HipApiName.Api1504, url)
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
 

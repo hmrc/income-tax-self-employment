@@ -93,7 +93,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         )
 
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val allowancesData: AnnualAllowances    = AnnualAllowances(None, None, None, Option(5000), None, None, None, None, None, None, Option(5000), None)
+      val allowancesData: AnnualAllowances = AnnualAllowances(None, None, None, Option(5000), None, None, None, None, None, None, Option(5000), None)
       val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
         expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(Option(AnnualAdjustments.empty))), Option(allowancesData))
       val result: Either[ServiceError, Unit] = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
