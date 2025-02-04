@@ -65,6 +65,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   // Feature switching
   def emaSupportingAgentsEnabled: Boolean = servicesConfig.getBoolean("feature-switch.ema-supporting-agents-enabled")
 
-  def hipMigration1504Enabled: Boolean = servicesConfig.getBoolean("feature-switch.hip-migration-1504-enabled")
+  def hipMigration1504Enabled: Boolean = servicesConfig.getBoolean("feature-switch.hip-migration-enabled")
 
 }

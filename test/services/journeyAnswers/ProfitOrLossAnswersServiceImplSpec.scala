@@ -20,7 +20,7 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
 import connectors.HipConnector
-import models.common.JourneyContextWithNino
+import models.common.{JourneyContextWithNino, Nino, TaxYear}
 import models.connector.api_1500.LossType
 import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
@@ -32,6 +32,10 @@ import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
 import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhichYearIsLossReported}
+import org.mockito.ArgumentMatchersSugar.any
+import org.mockito.Mockito.times
+import org.mockito.MockitoSugar.{reset, verify, when}
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor3}
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -48,9 +52,9 @@ import utils.EitherTTestOps.convertScalaFuture
 import java.lang.reflect.Method
 import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrivenPropertyChecks with Matchers {
+class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrivenPropertyChecks with Matchers with BeforeAndAfterEach {
 
   val downstreamError: SingleDownstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
   val notFoundError: SingleDownstreamError   = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
@@ -135,6 +139,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         repository.lastUpsertedAnswer === Option(
           Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
+
     "return left when getAnnualSummaries returns left" in new StubbedService {
       override val ifsConnector: StubIFSConnector =
         StubIFSConnector(
@@ -144,6 +149,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == downstreamError.asLeft)
     }
+
     "return left when createAmendSEAnnualSubmission returns left" in new StubbedService {
       override val ifsConnector: StubIFSConnector =
         StubIFSConnector(
@@ -153,12 +159,14 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == downstreamError.asLeft)
     }
+
     "return left when upsertAnswers returns left" in new StubbedService {
       override val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository(upsertDataField = downstreamError.asLeft)
       val answers: ProfitOrLossJourneyAnswers               = yesBroughtForwardLossAnswers
       val result: Either[ServiceError, Unit]                = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == downstreamError.asLeft)
     }
+
     "successfully update brought forward loss answers when provided by user and API" in new StubbedService {
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
         StubIFSBusinessDetailsConnector(
@@ -174,6 +182,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         repository.lastUpsertedAnswer === Option(
           Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
+
     "successfully create brought forward loss answers when provided by user and get returns NOT_FOUND from API" in new StubbedService {
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
         StubIFSBusinessDetailsConnector(
@@ -188,6 +197,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         repository.lastUpsertedAnswer === Option(
           Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
+
     "successfully create brought forward loss answers when provided by user and list returns NOT_FOUND from API" in new StubbedService {
       val downstreamError: SingleDownstreamError = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
@@ -203,6 +213,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         repository.lastUpsertedAnswer === Option(
           Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
+
     "successfully delete brought forward loss answers when none provided by user and some from API" in new StubbedService {
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
         StubIFSBusinessDetailsConnector(
@@ -217,6 +228,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         repository.lastUpsertedAnswer === Option(
           Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = false, claimLossRelief = None, previousUnusedLosses = false))))
     }
+
     "do nothing when none provided by user and get returns NOT_FOUND from API" in new StubbedService {
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
         StubIFSBusinessDetailsConnector(
@@ -229,6 +241,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         repository.lastUpsertedAnswer === Option(
           Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = false, claimLossRelief = None, previousUnusedLosses = false))))
     }
+
     "return error without updating AnnualSummaries, BFL or DB data when AnnualSummaries API returns a ServiceError" in new StubbedService {
       override val ifsConnector = new StubIFSConnector(getAnnualSummariesResult = downstreamError.asLeft)
 
@@ -240,6 +253,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
       assert(repository.lastUpsertedAnswer === None)
     }
+
     "return error without updating BFL or DB data when BroughtForwardLoss API returns a ServiceError" in new StubbedService {
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
         StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = downstreamError.asLeft)
@@ -294,6 +308,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         assert(result == ().asRight)
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === Option(UpdateBroughtForwardLossRequestBody(unusedLossAmount)))
       }
+
       "given a valid submissions to update existing BroughtForwardLoss data with a different year and amount" in new StubbedService {
         override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
           StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
@@ -308,6 +323,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         assert(result == ().asRight)
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === Option(UpdateBroughtForwardLossRequestBody(unusedLossAmount)))
       }
+
       "given a valid submissions to delete existing BroughtForwardLoss data when user submits 'No' answers" in new StubbedService {
         override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
           StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
@@ -318,6 +334,26 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         assert(result == ().asRight)
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
       }
+
+      "given a valid submissions to delete existing BroughtForwardLoss data when user submits 'No' answers" when {
+        "hip integration feature flag is enabled" in new StubbedService {
+
+          when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+            .thenReturn(EitherT.rightT())
+          when(mockAppConfig.hipMigration1504Enabled).thenReturn(true)
+
+          override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+            StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
+
+          val result: Either[ServiceError, Unit] =
+            service.createUpdateOrDeleteBroughtForwardLoss(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
+
+          assert(result == ().asRight)
+          assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
+          verify(mockHipConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext])
+        }
+      }
+
       "user submits 'No' answers and there is no existing BroughtForwardLoss data to delete" in new StubbedService {
         val result: Either[ServiceError, Unit] =
           service.createUpdateOrDeleteBroughtForwardLoss(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
@@ -326,6 +362,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
       }
     }
+
     "return a ServiceError" when {
       "the BusinessDetailsConnector .listBroughtForwardLosses returns an error from downstream" in new StubbedService {
         override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
@@ -337,6 +374,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         assert(result === downstreamError.asLeft)
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
       }
+
       "the BusinessDetailsConnector .createBroughtForwardLoss returns an error from downstream" in new StubbedService {
         override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
           StubIFSBusinessDetailsConnector(createBroughtForwardLossResult = downstreamError.asLeft)
@@ -347,6 +385,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         assert(result === downstreamError.asLeft)
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
       }
+
       "the BusinessDetailsConnector .updateBroughtForwardLoss returns an error from downstream" in new StubbedService {
         override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
           listBroughtForwardLossesResult = api1870SuccessResponse.asRight,
@@ -374,6 +413,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         assert(result === downstreamError.asLeft)
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
       }
+
       "the BusinessDetailsConnector .deleteBroughtForwardLoss returns an error from downstream" in new StubbedService {
         override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
           listBroughtForwardLossesResult = api1870SuccessResponse.asRight,
@@ -384,6 +424,26 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 
         assert(result === downstreamError.asLeft)
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
+      }
+
+      "the BusinessDetailsConnector .deleteBroughtForwardLoss returns an error from downstream" when {
+        "hip integration feature switch is enabled" in new StubbedService {
+
+          when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+            .thenReturn(EitherT.leftT(downstreamError))
+          when(mockAppConfig.hipMigration1504Enabled).thenReturn(true)
+
+          override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+            StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
+
+          val result: Either[ServiceError, Unit] =
+            service.createUpdateOrDeleteBroughtForwardLoss(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
+
+          assert(result === downstreamError.asLeft)
+          assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
+
+          verify(mockHipConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext])
+        }
       }
     }
   }
@@ -475,15 +535,18 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 trait StubbedService {
   val ifsConnector: StubIFSConnector                               = new StubIFSConnector()
   val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
-  val hipConnector: HipConnector                                   = mock[HipConnector]
+  val mockHipConnector: HipConnector                               = mock[HipConnector]
   val repository: StubJourneyAnswersRepository                     = StubJourneyAnswersRepository()
-  val appConfig: AppConfig                                         = mock[AppConfig]
+  val mockAppConfig: AppConfig                                     = mock[AppConfig]
+
+  when(mockAppConfig.hipMigration1504Enabled).thenReturn(false)
 
   def service: ProfitOrLossAnswersServiceImpl =
     new ProfitOrLossAnswersServiceImpl(
       ifsConnector = ifsConnector,
       ifsBusinessDetailsConnector = ifsBusinessDetailsConnector,
-      hipConnector = hipConnector,
+      hipConnector = mockHipConnector,
       repository = repository,
-      appConfig = appConfig)
+      appConfig = mockAppConfig
+    )
 }
