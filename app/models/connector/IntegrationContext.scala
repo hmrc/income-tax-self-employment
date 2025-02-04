@@ -34,8 +34,11 @@ object IntegrationContext {
     def enrichedHeaderCarrier(implicit headerCarrier: HeaderCarrier): HeaderCarrier = {
       val (hcWithAuth, headers) = api match {
         case _: IFSApiName =>
-          val updatedHeader = headerCarrier.copy(authorization = Some(Authorization(s"Bearer ${appConfig.ifsAuthorisationToken(api.entryName)}")))
+          val updatedHeader = headerCarrier.copy(authorization = Option(Authorization(s"Bearer ${appConfig.ifsAuthorisationToken(api.entryName)}")))
           (updatedHeader, List("Environment" -> appConfig.ifsEnvironment))
+        case _: HipApiName =>
+          val updatedHeader = headerCarrier.copy(authorization = Option(Authorization(s"Bearer ${appConfig.hipAuthorisationToken(api.entryName)}")))
+          (updatedHeader, List("Environment" -> appConfig.hipEnvironment))
         case _: MDTPApiName => // We don't need bearer for MDTP services
           (headerCarrier, Nil)
       }
