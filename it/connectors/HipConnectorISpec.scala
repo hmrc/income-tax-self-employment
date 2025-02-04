@@ -42,17 +42,23 @@ class HipConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
       connector.deleteBroughtForwardLoss(nino, taxYear, lossId).value.futureValue shouldBe Right(())
     }
 
-    Seq(("NotFound", NOT_FOUND), ("BadRequest", BAD_REQUEST), ("Conflict", CONFLICT), ("Server Error", INTERNAL_SERVER_ERROR)) foreach {
-      case (statusStr, status) =>
-        s"return failure when downstream fails with $statusStr" in new Api1504Test {
-          stubDelete(
-            url = hipDownstreamUrl,
-            expectedResponse = "",
-            expectedStatus = status
-          )
-          connector.deleteBroughtForwardLoss(nino, taxYear, lossId).value.futureValue shouldBe Left(
-            GenericDownstreamError(status, s"Downstream error when calling DELETE http://localhost:11111$hipDownstreamUrl: status=$status, body:\n"))
-        }
+    Seq(
+      ("NotFound", NOT_FOUND),
+      ("BadRequest", BAD_REQUEST),
+      ("Conflict", CONFLICT),
+      ("Server Error", INTERNAL_SERVER_ERROR),
+      ("Resource not found", UNPROCESSABLE_ENTITY),
+      ("Server unavailable", SERVICE_UNAVAILABLE)
+    ) foreach { case (statusStr, status) =>
+      s"return failure when downstream fails with $statusStr" in new Api1504Test {
+        stubDelete(
+          url = hipDownstreamUrl,
+          expectedResponse = "",
+          expectedStatus = status
+        )
+        connector.deleteBroughtForwardLoss(nino, taxYear, lossId).value.futureValue shouldBe Left(
+          GenericDownstreamError(status, s"Downstream error when calling DELETE http://localhost:11111$hipDownstreamUrl: status=$status, body:\n"))
+      }
     }
   }
 
