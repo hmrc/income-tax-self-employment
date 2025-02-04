@@ -47,6 +47,8 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
 
+  val hipBaseUrl: String = servicesConfig.baseUrl("hip-integration-framework")
+
   val ifsApi1171: String = servicesConfig.baseUrl("integration-framework-api1171")
 
   val citizenDetailsUrl: String = servicesConfig.baseUrl("citizen-details")
@@ -60,5 +62,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   // Feature switching
   def emaSupportingAgentsEnabled: Boolean = servicesConfig.getBoolean("feature-switch.ema-supporting-agents-enabled")
+
+  def hipMigration1504Enabled: Boolean = servicesConfig.getBoolean("feature-switch.hip-migration-1504-enabled")
 
 }

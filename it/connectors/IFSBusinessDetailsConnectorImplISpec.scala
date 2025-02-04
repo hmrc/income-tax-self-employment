@@ -78,23 +78,6 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
     }
   }
 
-  "updateBroughtForwardLossYear" must {
-    "return unit with NO_CONTENT status" in new Api1501UpdateYearTest {
-      stubDelete(
-        url = downstreamDeleteUrl,
-        expectedResponse = "",
-        expectedStatus = NO_CONTENT
-      )
-      stubPostWithRequestAndResponseBody(
-        url = downstreamCreateUrl,
-        requestBody = requestBody,
-        expectedResponse = successResponseRaw,
-        expectedStatus = OK
-      )
-      connector.updateBroughtForwardLossYear(data).value.futureValue shouldBe Right(())
-    }
-  }
-
   "getBroughtForwardLoss" must {
     "return successful response" in new Api1502Test {
       stubGetWithResponseBody(
@@ -113,7 +96,7 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         expectedResponse = "",
         expectedStatus = NO_CONTENT
       )
-      connector.deleteBroughtForwardLoss(nino, taxYear, lossId).value.futureValue shouldBe Right(())
+      connector.deleteBroughtForwardLoss(nino, lossId).value.futureValue shouldBe Right(())
     }
   }
 

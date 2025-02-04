@@ -23,7 +23,7 @@ import models.common.TaxYear.asTys
 import models.common._
 import models.connector._
 import models.connector.api_1500.{CreateBroughtForwardLossRequestBody, CreateBroughtForwardLossRequestData}
-import models.connector.api_1501.{UpdateBroughtForwardLossRequestBody, UpdateBroughtForwardLossRequestData, UpdateBroughtForwardLossYear}
+import models.connector.api_1501.{UpdateBroughtForwardLossRequestBody, UpdateBroughtForwardLossRequestData}
 import models.domain.ApiResultT
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import utils.Logging
@@ -42,9 +42,8 @@ trait IFSBusinessDetailsConnector {
   def updateBroughtForwardLoss(
       data: UpdateBroughtForwardLossRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1501.SuccessResponseSchema]
 
-  def updateBroughtForwardLossYear(data: UpdateBroughtForwardLossYear)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
   def getBroughtForwardLoss(nino: Nino, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1502.SuccessResponseSchema]
-  def deleteBroughtForwardLoss(nino: Nino, taxYear: TaxYear, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
+  def deleteBroughtForwardLoss(nino: Nino, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
   def listBroughtForwardLosses(nino: Nino, taxYear: TaxYear)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1870.SuccessResponseSchema]
@@ -79,8 +78,8 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
   private def getBroughtForwardLossUrl(nino: Nino, lossId: String) =
     s"${appConfig.ifsBaseUrl}/individuals/losses/$nino/brought-forward-losses/$lossId"
 
-  private def deleteBroughtForwardLossUrl(nino: Nino, taxYear: TaxYear, lossId: String) =
-    s"${appConfig.ifsBaseUrl}/income-tax/v1/brought-forward-losses/$nino/${TaxYear.asTys(taxYear)}/$lossId"
+  private def deleteBroughtForwardLossUrl(nino: Nino, lossId: String) =
+    s"${appConfig.ifsBaseUrl}/individuals/losses/$nino/brought-forward-losses/$lossId"
 
   private def listBroughtForwardLossesUrl(nino: Nino, taxYear: TaxYear) =
     s"${appConfig.ifsBaseUrl}/individuals/losses/$nino/brought-forward-losses/tax-year/${taxYear.toYYYY_YY}"
@@ -123,10 +122,6 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
     EitherT(post[UpdateBroughtForwardLossRequestBody, Api1501Response](http, context, data.body))
   }
 
-  def updateBroughtForwardLossYear(data: UpdateBroughtForwardLossYear)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] =
-    deleteBroughtForwardLoss(data.nino, data.taxYear, data.lossId).map(_ =>
-      createBroughtForwardLoss(CreateBroughtForwardLossRequestData(data.nino, data.taxYear, data.body)))
-
   def getBroughtForwardLoss(nino: Nino, lossId: String)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1502.SuccessResponseSchema] = {
@@ -138,9 +133,8 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
     EitherT(get[Api1502Response](http, context))
   }
 
-  def deleteBroughtForwardLoss(nino: Nino, taxYear: TaxYear, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
-
-    val url                                          = deleteBroughtForwardLossUrl(nino, taxYear, lossId)
+  def deleteBroughtForwardLoss(nino: Nino, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
+    val url                                          = deleteBroughtForwardLossUrl(nino, lossId)
     val context                                      = appConfig.mkMetadata(IFSApiName.Api1504, url)
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
 
