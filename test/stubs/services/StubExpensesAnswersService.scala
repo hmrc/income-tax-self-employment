@@ -59,7 +59,9 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
                                       clearAdvertisingOrMarketingExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
                                       clearStaffCostsExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
                                       clearConstructionExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
-                                      clearProfessionalFeesExpensesDataRes: ApiResultT[Unit] = serviceUnitT)
+                                      clearProfessionalFeesExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
+                                      clearIrrecoverableDebtsExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
+                                      clearFinancialChargesExpensesDataRes: ApiResultT[Unit] = serviceUnitT)
     extends ExpensesAnswersService {
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
@@ -155,4 +157,10 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
 
   override def clearProfessionalFeesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearProfessionalFeesExpensesDataRes
+
+  override def clearIrrecoverableDebtsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearIrrecoverableDebtsExpensesDataRes
+
+  override def clearFinancialChargesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearFinancialChargesExpensesDataRes
 }

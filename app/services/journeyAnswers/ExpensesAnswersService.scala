@@ -19,28 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
-import models.common.JourneyName.{
-  AdvertisingOrMarketing,
-  Construction,
-  CapitalAllowancesTailoring,
-  ExpensesTailoring,
-  GoodsToSellOrUse,
-  OfficeSupplies,
-  RepairsAndMaintenanceCosts,
-  StaffCosts,
-  WorkplaceRunningCosts
-}
-import models.common.JourneyName.{
-  AdvertisingOrMarketing,
-  CapitalAllowancesTailoring,
-  ExpensesTailoring,
-  GoodsToSellOrUse,
-  OfficeSupplies,
-  ProfessionalFees,
-  RepairsAndMaintenanceCosts,
-  StaffCosts,
-  WorkplaceRunningCosts
-}
+import models.common.JourneyName.{AdvertisingOrMarketing, CapitalAllowancesTailoring, Construction, ExpensesTailoring, FinancialCharges, GoodsToSellOrUse, IrrecoverableDebts, OfficeSupplies, ProfessionalFees, RepairsAndMaintenanceCosts, StaffCosts, WorkplaceRunningCosts}
 import models.common._
 import models.connector.api_1894.request.{Deductions, FinancialsType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
@@ -66,6 +45,7 @@ import models.frontend.expenses.tailoring
 import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategories, NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers._
+import models.frontend.expenses.tailoring.individualCategories.FinancialExpenses
 import models.frontend.expenses.workplaceRunningCosts.{WorkplaceRunningCostsAnswers, WorkplaceRunningCostsJourneyAnswers}
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.{Json, Writes}
@@ -116,6 +96,8 @@ trait ExpensesAnswersService {
   def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearAdvertisingOrMarketingExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearIrrecoverableDebtsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearFinancialChargesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
 @Singleton
@@ -365,6 +347,12 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   def clearProfessionalFeesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearExpensesData(ctx, ProfessionalFees)
 
+  def clearIrrecoverableDebtsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesData(ctx, IrrecoverableDebts)
+
+  def clearFinancialChargesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesData(ctx, FinancialCharges)
+
   private def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
@@ -385,6 +373,8 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       case StaffCosts                 => deductions.copy(staffCosts = None)
       case Construction               => deductions.copy(constructionIndustryScheme = None)
       case ProfessionalFees           => deductions.copy(professionalFees = None)
+      case FinancialCharges           => deductions.copy(financialCharges = None)
+      case IrrecoverableDebts         => deductions.copy(badDebt = None)
       case _                          => deductions
     }
 }
