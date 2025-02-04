@@ -42,25 +42,17 @@ class HipConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
       connector.deleteBroughtForwardLoss(nino, taxYear, lossId).value.futureValue shouldBe Right(())
     }
 
-    "return failure when downstream fails with BadRequest" in new Api1504Test {
-      stubDelete(
-        url = hipDownstreamUrl,
-        expectedResponse = "",
-        expectedStatus = BAD_REQUEST
-      )
-      connector.deleteBroughtForwardLoss(nino, taxYear, lossId).value.futureValue shouldBe Left(GenericDownstreamError(BAD_REQUEST,
-        s"Downstream error when calling DELETE http://localhost:11111$hipDownstreamUrl: status=$BAD_REQUEST, body:\n"))
-    }
-
-    "return failure when downstream fails with Server error" in new Api1504Test {
-      stubDelete(
-        url = hipDownstreamUrl,
-        expectedResponse = "",
-        expectedStatus = INTERNAL_SERVER_ERROR
-      )
-      connector.deleteBroughtForwardLoss(nino, taxYear, lossId).value.futureValue shouldBe Left(GenericDownstreamError(INTERNAL_SERVER_ERROR,
-        s"Downstream error when calling DELETE http://localhost:11111$hipDownstreamUrl: status=$INTERNAL_SERVER_ERROR, body:\n"))
-
+    Seq(("NotFound", NOT_FOUND), ("BadRequest", BAD_REQUEST), ("Conflict", CONFLICT), ("Server Error", INTERNAL_SERVER_ERROR)) foreach {
+      case (statusStr, status) =>
+        s"return failure when downstream fails with $statusStr" in new Api1504Test {
+          stubDelete(
+            url = hipDownstreamUrl,
+            expectedResponse = "",
+            expectedStatus = status
+          )
+          connector.deleteBroughtForwardLoss(nino, taxYear, lossId).value.futureValue shouldBe Left(
+            GenericDownstreamError(status, s"Downstream error when calling DELETE http://localhost:11111$hipDownstreamUrl: status=$status, body:\n"))
+        }
     }
   }
 

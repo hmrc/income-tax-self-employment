@@ -133,7 +133,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       assert(ifsConnector.upsertAnnualSummariesSubmissionData === Option(expectedAnnualSummariesAnswers))
       assert(
         repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))))
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
     "return left when getAnnualSummaries returns left" in new StubbedService {
       override val ifsConnector: StubIFSConnector =
@@ -172,7 +172,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       assert(ifsBusinessDetailsConnector.updateBroughtForwardLossResult === api1501SuccessResponse.asRight)
       assert(
         repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))))
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
     "successfully create brought forward loss answers when provided by user and get returns NOT_FOUND from API" in new StubbedService {
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
@@ -186,7 +186,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       assert(ifsBusinessDetailsConnector.createBroughtForwardLossResult === api1500SuccessResponse.asRight)
       assert(
         repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))))
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
     "successfully create brought forward loss answers when provided by user and list returns NOT_FOUND from API" in new StubbedService {
       val downstreamError: SingleDownstreamError = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
@@ -201,7 +201,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       assert(ifsBusinessDetailsConnector.createBroughtForwardLossResult === api1500SuccessResponse.asRight)
       assert(
         repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))))
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
     "successfully delete brought forward loss answers when none provided by user and some from API" in new StubbedService {
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
