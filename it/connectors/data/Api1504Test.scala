@@ -16,9 +16,11 @@
 
 package connectors.data
 
+import models.common.TaxYear
 import utils.BaseSpec._
 
 trait Api1504Test {
   val lossId        = "1234568790ABCDE"
   val downstreamUrl = s"/individuals/losses/$nino/brought-forward-losses/$lossId"
+  val hipDownstreamUrl = s"/income-tax/v1/brought-forward-losses/$nino/${TaxYear.asTys(taxYear)}/$lossId"
 }
