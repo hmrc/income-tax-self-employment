@@ -27,7 +27,6 @@ import gens.genOne
 import models.common.JourneyName.{
   AdvertisingOrMarketing,
   ExpensesTailoring,
-  FinancialCharges,
   GoodsToSellOrUse,
   IrrecoverableDebts,
   OfficeSupplies,

@@ -24,7 +24,6 @@ import models.common.JourneyName.{
   CapitalAllowancesTailoring,
   Construction,
   ExpensesTailoring,
-  FinancialCharges,
   GoodsToSellOrUse,
   IrrecoverableDebts,
   OfficeSupplies,
