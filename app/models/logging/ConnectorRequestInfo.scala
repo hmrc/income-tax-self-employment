@@ -25,7 +25,7 @@ final case class ConnectorRequestInfo(method: String, url: String, apiId: ApiNam
 
   def logRequestWithBody[A: Writes](logger: Logger, body: A): Unit = {
     val jsonBody = implicitly[Writes[A]].writes(body)
-    logger.info(s"Connector: Sending Request $apiIdStr $method $url:\n===\n${Json.prettyPrint(jsonBody)}\n===")
+    logger.debug(s"Connector: Sending Request $apiIdStr $method $url:\n===\n${Json.prettyPrint(jsonBody)}\n===")
   }
 
   def logRequest(logger: Logger): Unit =

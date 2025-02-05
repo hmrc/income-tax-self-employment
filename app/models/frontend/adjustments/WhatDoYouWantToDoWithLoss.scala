@@ -33,10 +33,16 @@ object WhatDoYouWantToDoWithLoss extends Enumerable.Implicits {
 
   implicit val enumerable: Enumerable[WhatDoYouWantToDoWithLoss] = Enumerable(values.map(v => v.toString -> v): _*)
 
-  def apply(reliefClaimType: ReliefClaimType): WhatDoYouWantToDoWithLoss =
+  def fromReliefClaimType(reliefClaimType: ReliefClaimType): WhatDoYouWantToDoWithLoss =
     reliefClaimType match {
       case ReliefClaimType.CF   => CarryItForward
       case ReliefClaimType.CSGI => DeductFromOtherTypes
+    }
+
+  def toReliefClaimType(whatDoYouWantToDoWithLoss: WhatDoYouWantToDoWithLoss): ReliefClaimType =
+    whatDoYouWantToDoWithLoss match {
+      case CarryItForward       => ReliefClaimType.CF
+      case DeductFromOtherTypes => ReliefClaimType.CSGI
     }
 
 }

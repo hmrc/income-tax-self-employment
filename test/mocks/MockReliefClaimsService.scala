@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,28 @@
  * limitations under the License.
  */
 
-package stubs.services
+package mocks
 
 import cats.data.EitherT
+import cats.implicits.catsStdInstancesForFuture
 import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
 import models.error.ServiceError
-import models.frontend.adjustments.ProfitOrLossJourneyAnswers
-import services.journeyAnswers.ProfitOrLossAnswersService
+import org.mockito.ArgumentMatchers
+import org.mockito.MockitoSugar.when
+import org.mockito.stubbing.ScalaOngoingStubbing
+import org.scalatestplus.mockito.MockitoSugar.mock
+import services.journeyAnswers.ReliefClaimsService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-case class StubProfitOrLossAnswersService(getProfitOrLossRes: Option[ProfitOrLossJourneyAnswers] = None) extends ProfitOrLossAnswersService {
-  override def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    EitherT.rightT[Future, ServiceError](())
+object MockReliefClaimsService {
+  val mockInstance: ReliefClaimsService = mock[ReliefClaimsService]
 
-  override def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
-    EitherT.rightT[Future, ServiceError](getProfitOrLossRes)
+//  def cacheClaimIds(ctx: JourneyContextWithNino, taxYear: String): ScalaOngoingStubbing[ApiResultT[Unit]] =
+//    when(mockInstance.cacheReliefClaims(ArgumentMatchers.eq(ctx), ArgumentMatchers.eq(taxYear))(ArgumentMatchers.any[HeaderCarrier]()))
+//      .thenReturn(EitherT.right[ServiceError](Future.successful(())))
+
 }
