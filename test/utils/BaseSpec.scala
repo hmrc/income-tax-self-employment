@@ -72,6 +72,7 @@ object BaseSpec {
   val staffCostsCtx: JourneyContext                 = journeyCtxWithNino.toJourneyContext(JourneyName.StaffCosts)
   val constructionCostsCtx: JourneyContext          = journeyCtxWithNino.toJourneyContext(JourneyName.Construction)
   val professionalFeesCtx: JourneyContext           = journeyCtxWithNino.toJourneyContext(JourneyName.ProfessionalFees)
+  val irrecoverableDebtsExpensesCtx: JourneyContext = journeyCtxWithNino.toJourneyContext(JourneyName.IrrecoverableDebts)
   val capitalAllowancesTailoringCtx: JourneyContext = journeyCtxWithNino.toJourneyContext(JourneyName.CapitalAllowancesTailoring)
   val zeroEmissionCarsCtx: JourneyContext           = journeyCtxWithNino.toJourneyContext(JourneyName.ZeroEmissionCars)
 

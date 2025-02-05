@@ -128,3 +128,5 @@ POST        /:taxYear/clear-staff-costs-expenses-answers/:nino/:businessId      
 POST        /:taxYear/clear-construction-expenses-answers/:nino/:businessId                                controllers.JourneyAnswersController.clearConstructionExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/clear-professional-fees-expenses-answers/:nino/:businessId                          controllers.JourneyAnswersController.clearProfessionalFeesExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
+POST        /:taxYear/clear-irrecoverable-debts-expenses-answers/:nino/:businessId                          controllers.JourneyAnswersController.clearIrrecoverableDebtsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

@@ -21,20 +21,11 @@ import cats.implicits._
 import connectors.IFSConnector
 import models.common.JourneyName.{
   AdvertisingOrMarketing,
+  CapitalAllowancesTailoring,
   Construction,
-  CapitalAllowancesTailoring,
   ExpensesTailoring,
   GoodsToSellOrUse,
-  OfficeSupplies,
-  RepairsAndMaintenanceCosts,
-  StaffCosts,
-  WorkplaceRunningCosts
-}
-import models.common.JourneyName.{
-  AdvertisingOrMarketing,
-  CapitalAllowancesTailoring,
-  ExpensesTailoring,
-  GoodsToSellOrUse,
+  IrrecoverableDebts,
   OfficeSupplies,
   ProfessionalFees,
   RepairsAndMaintenanceCosts,
@@ -116,6 +107,7 @@ trait ExpensesAnswersService {
   def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearAdvertisingOrMarketingExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearIrrecoverableDebtsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
 @Singleton
@@ -365,6 +357,9 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   def clearProfessionalFeesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearExpensesData(ctx, ProfessionalFees)
 
+  def clearIrrecoverableDebtsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesData(ctx, IrrecoverableDebts)
+
   private def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
@@ -385,6 +380,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       case StaffCosts                 => deductions.copy(staffCosts = None)
       case Construction               => deductions.copy(constructionIndustryScheme = None)
       case ProfessionalFees           => deductions.copy(professionalFees = None)
+      case IrrecoverableDebts         => deductions.copy(badDebt = None)
       case _                          => deductions
     }
 }
