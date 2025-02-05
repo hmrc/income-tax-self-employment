@@ -32,6 +32,10 @@ class TaxYearSpec extends AnyWordSpecLike {
     assert(TaxYear.asTys(year) === "23-24")
   }
 
+  "get a TaxYear (YY-YY) format" in {
+    assert(TaxYear.asTy("2023-24") === TaxYear(2024))
+  }
+
   "toYYYY_YY" should {
     "get a YYYY-YY format" in {
       assert(TaxYear(2024).toYYYY_YY === "2023-24")

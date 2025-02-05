@@ -41,11 +41,15 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   }
 
   val ifsEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
+  val hipEnvironment: String = config.get[String]("microservice.services.hip-integration-framework.environment")
 
   // TODO This is not good. It means that the app will fail on missing config only on first request, not on bootstrap
   def ifsAuthorisationToken(api: String): String = config.get[String](s"microservice.services.integration-framework.authorisation-token.$api")
+  def hipAuthorisationToken(api: String): String = config.get[String](s"microservice.services.hip-integration-framework.authorisation-token.$api")
 
   val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
+
+  val hipBaseUrl: String = servicesConfig.baseUrl("hip-integration-framework")
 
   val ifsApi1171: String = servicesConfig.baseUrl("integration-framework-api1171")
 
@@ -60,5 +64,7 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   // Feature switching
   def emaSupportingAgentsEnabled: Boolean = servicesConfig.getBoolean("feature-switch.ema-supporting-agents-enabled")
+
+  def hipMigration1504Enabled: Boolean = servicesConfig.getBoolean("feature-switch.hip-migration-enabled")
 
 }
