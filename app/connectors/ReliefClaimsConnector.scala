@@ -23,7 +23,7 @@ import jakarta.inject.Inject
 import models.common._
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.common.ReliefClaim
-import models.connector.{ApiResponse, IFSApiName, IntegrationContext, ReliefClaimType, commonGetListReads}
+import models.connector.{ApiResponse, IFSApiName, IntegrationContext, ReliefClaimType, commonGetListReads, lossClaimReads}
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
@@ -37,11 +37,15 @@ class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppCon
 
   private val fulcrumTaxYear = 2025
 
-  def createReliefClaims(context: IntegrationContext, body: CreateLossClaimRequestBody)(implicit
-      reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]],
-      hc: HeaderCarrier,
-      ec: ExecutionContext): Future[ApiResponse[CreateLossClaimSuccessResponse]] =
+  def createReliefClaims(ctx: JourneyContextWithNino, body: CreateLossClaimRequestBody)(
+      implicit hc: HeaderCarrier,
+      ec: ExecutionContext): Future[ApiResponse[CreateLossClaimSuccessResponse]] = {
+    implicit val reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]] = lossClaimReads[CreateLossClaimSuccessResponse]
+
+    val context = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.businessId))
+
     post[CreateLossClaimRequestBody, ApiResponse[CreateLossClaimSuccessResponse]](httpClient, context, body)
+  }
 
   def getAllReliefClaims(taxYear: TaxYear, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] = {
     implicit val reads: HttpReads[ApiResponse[List[ReliefClaim]]] = commonGetListReads[ReliefClaim]

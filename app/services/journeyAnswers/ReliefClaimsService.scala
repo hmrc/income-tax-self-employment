@@ -21,16 +21,14 @@ import cats.implicits._
 import config.AppConfig
 import connectors.ReliefClaimsConnector
 import models.common._
-import models.connector._
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhatDoYouWantToDoWithLoss}
-import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers.logger
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
+import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -76,9 +74,6 @@ class ReliefClaimsService @Inject() (reliefClaimsConnector: ReliefClaimsConnecto
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[List[CreateLossClaimSuccessResponse]] = {
 
-    val context = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.businessId))
-    implicit val reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]] = lossClaimReads[CreateLossClaimSuccessResponse]
-
     if (answers.isEmpty) {
       EitherT.right[ServiceError](Future.successful(Nil: List[CreateLossClaimSuccessResponse]))
     } else {
@@ -90,7 +85,7 @@ class ReliefClaimsService @Inject() (reliefClaimsConnector: ReliefClaimsConnecto
             taxYear = ctx.taxYear.endYear.toString
           )
 
-          reliefClaimsConnector.createReliefClaims(context, body)
+          reliefClaimsConnector.createReliefClaims(ctx, body)
         }
       }
 
