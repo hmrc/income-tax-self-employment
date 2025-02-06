@@ -42,7 +42,7 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
   val connector: ReliefClaimsConnector = app.injector.instanceOf[ReliefClaimsConnector]
 
   val api1505Url: String = s"/income-tax/claims-for-relief/${testBusinessId.value}"
-  val api1506Url: String = mockAppConfig.api1506Url(testContextWithNino.businessId, "claim1")
+  val api1506Url: String = s"/income-tax/claims-for-relief/${testBusinessId.value}/$testClaimId"
   val api1507Url: String = api1505Url
   val api1867Url: String = s"/income-tax/${testTaxYear2024.endYear}/claims-for-relief/${testBusinessId.value}"
 
@@ -67,7 +67,7 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
   )
 
   val claims: List[ReliefClaim] = List(
-    ReliefClaim("XAIS12345678900", None, CF, "2025", "claimId1", None, LocalDate.parse("2024-01-01")),
+    ReliefClaim("XAIS12345678900", None, CF, "2025", "12345", None, LocalDate.parse("2024-01-01")),
     ReliefClaim("XAIS12345678901", None, CF, "2024", "1234567890", None, LocalDate.parse("2024-01-01"))
   )
 
@@ -285,15 +285,7 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
       result.map { res =>
         res mustBe Right(List(WhatDoYouWantToDoWithLoss.CarryItForward))
       }
-
-      val finalClaims = result.map {
-        case Right(claims) => claims
-        case Left(_) => List.empty[WhatDoYouWantToDoWithLoss]
-      }
-
-      finalClaims.map { claims =>
-        claims must not contain WhatDoYouWantToDoWithLoss.fromReliefClaimType(ReliefClaimType.CF)
-      }
+      verify(1, deleteRequestedFor(urlPathMatching(api1506Url)))
     }
 
     "handle failure when creating relief claims" in {
@@ -316,7 +308,6 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
       val result = connector.updateReliefClaims(testContextWithNino, oldAnswers, newAnswers).value
 
       result.map { res =>
-
         res mustBe a[GenericDownstreamError]
       }
     }
