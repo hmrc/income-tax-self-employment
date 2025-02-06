@@ -24,13 +24,15 @@ import models.connector._
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.common.ReliefClaim
 import models.error.DownstreamError.GenericDownstreamError
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers.logger
-import org.scalatestplus.mockito.MockitoSugar.mock
-import play.api.Logger
 import play.api.http.Status._
+import play.api.libs.json.Format.GenericFormat
+import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
 import play.api.libs.json.{JsObject, Json}
 import testdata.CommonTestData
-import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+import uk.gov.hmrc.http.HttpReads
+import utils.TestUtils.mockAppConfig
 
 import java.time.LocalDate
 
@@ -40,6 +42,7 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
   val connector: ReliefClaimsConnector = app.injector.instanceOf[ReliefClaimsConnector]
 
   val api1505Url: String = s"/income-tax/claims-for-relief/${testBusinessId.value}"
+  val api1506Url: String = mockAppConfig.api1506Url(testContextWithNino.businessId, "claim1")
   val api1507Url: String = api1505Url
   val api1867Url: String = s"/income-tax/${testTaxYear2024.endYear}/claims-for-relief/${testBusinessId.value}"
 
@@ -61,6 +64,11 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
     taxYearClaimedFor = "2024",
     claimId = "1234567890",
     submissionDate = LocalDate.of(2024, 1, 1)
+  )
+
+  val claims: List[ReliefClaim] = List(
+    ReliefClaim("XAIS12345678900", None, CF, "2025", "claimId1", None, LocalDate.parse("2024-01-01")),
+    ReliefClaim("XAIS12345678901", None, CF, "2024", "1234567890", None, LocalDate.parse("2024-01-01"))
   )
 
   val expectedClaims: List[ReliefClaim] = List(
@@ -101,7 +109,6 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
       result mustBe Right(expectedClaims)
     }
 
-
     "the API returns 404 NOT_FOUND" should {
       "return a Left with an error message" in {
         val response: JsObject = Json.obj("failures" -> Json.arr(Json.obj("code" -> "NOT_FOUND", "reason" -> "Resource not found")))
@@ -117,6 +124,7 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
         result mustBe Right(Nil)
       }
     }
+
 
 //    "the API returns 400 BAD_REQUEST, 422 UNPROCESSABLE_ENTITY or 5xx response" should {
 //      "return a service error" in {
@@ -220,4 +228,121 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
     }
   }
 
+  "updateReliefClaims" should {
+    "create and delete relief claims correctly" in {
+      val oldAnswers = claims
+      val newAnswers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
+
+      stubPostWithResponseBody(
+        url = api1505Url,
+        expectedStatus = OK,
+        expectedResponse = newAnswers.toString()
+      )
+
+      stubDelete(
+        url = api1506Url,
+        expectedStatus = OK,
+        expectedResponse = ""
+      )
+
+      val result = connector.updateReliefClaims(testContextWithNino, oldAnswers, newAnswers).value
+
+      val finalClaims = result.map {
+        case Right(claims) => claims
+        case Left(_) => List.empty[WhatDoYouWantToDoWithLoss]
+      }
+
+      finalClaims.map { claims =>
+        claims must not contain WhatDoYouWantToDoWithLoss.fromReliefClaimType(ReliefClaimType.CF)
+      }
+
+      verify(1, postRequestedFor(urlEqualTo(api1505Url)))
+      verify(0, deleteRequestedFor(urlEqualTo(api1506Url)))
+
+    }
+
+    "delete relief claims correctly" in {
+      val oldAnswers = List(
+        ReliefClaim("XAIS12345678901", None, ReliefClaimType.CF, "2024", "1234567890", None, LocalDate.parse("2024-01-01")),
+        ReliefClaim("XAIS12345678901", None, ReliefClaimType.CF, "2025", "1234567890", None, LocalDate.parse("2024-01-01"))
+      )
+      val newAnswers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
+
+      stubDelete(
+        url = mockAppConfig.api1506Url(testContextWithNino.businessId, "1234567890"),
+        expectedStatus = OK,
+        expectedResponse = ""
+      )
+
+      stubPostWithResponseBody(
+        url = api1505Url,
+        expectedStatus = OK,
+        expectedResponse = newAnswers.toString()
+      )
+
+      val result = connector.updateReliefClaims(testContextWithNino, oldAnswers, newAnswers).value
+
+      result.map { res =>
+        res mustBe Right(List(WhatDoYouWantToDoWithLoss.CarryItForward))
+      }
+
+      val finalClaims = result.map {
+        case Right(claims) => claims
+        case Left(_) => List.empty[WhatDoYouWantToDoWithLoss]
+      }
+
+      finalClaims.map { claims =>
+        claims must not contain WhatDoYouWantToDoWithLoss.fromReliefClaimType(ReliefClaimType.CF)
+      }
+    }
+
+    "handle failure when creating relief claims" in {
+
+      val oldAnswers = claims
+      val newAnswers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
+
+      stubPostWithResponseBody(
+        url = api1505Url,
+        expectedStatus = INTERNAL_SERVER_ERROR,
+        expectedResponse = "Internal Server Error"
+      )
+
+      stubDelete(
+        url = api1506Url,
+        expectedStatus = OK,
+        expectedResponse = ""
+      )
+
+      val result = connector.updateReliefClaims(testContextWithNino, oldAnswers, newAnswers).value
+
+      result.map { res =>
+
+        res mustBe a[GenericDownstreamError]
+      }
+    }
+
+    "handle failure when deleting relief claims" in {
+
+      val oldAnswers = claims
+      val newAnswers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
+
+      stubPostWithResponseBody(
+        url = api1505Url,
+        expectedStatus = OK,
+        expectedResponse = newAnswers.toString()
+      )
+
+      stubDelete(
+        url = api1506Url,
+        expectedStatus = INTERNAL_SERVER_ERROR,
+        expectedResponse = "Internal Server Error"
+      )
+
+      val result = connector.updateReliefClaims(testContextWithNino, oldAnswers, newAnswers).value
+
+      result.map { res =>
+        res mustBe a[GenericDownstreamError]
+      }
+    }
+  }
 }
