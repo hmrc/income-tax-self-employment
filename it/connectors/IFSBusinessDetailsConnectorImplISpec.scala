@@ -89,17 +89,6 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
     }
   }
 
-  "deleteBroughtForwardLoss" must {
-    "return unit with NO_CONTENT status" in new Api1504Test {
-      stubDelete(
-        url = downstreamUrl,
-        expectedResponse = "",
-        expectedStatus = NO_CONTENT
-      )
-      connector.deleteBroughtForwardLoss(nino, lossId).value.futureValue shouldBe Right(())
-    }
-  }
-
   "listBroughtForwardLoss" must {
     "return successful response" in new Api1870Test {
       stubGetWithResponseBody(

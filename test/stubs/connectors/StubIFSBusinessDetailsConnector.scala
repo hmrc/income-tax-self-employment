@@ -37,7 +37,6 @@ case class StubIFSBusinessDetailsConnector(
     createBroughtForwardLossResult: Api1500Response = api1500EmptyResponse.asRight,
     updateBroughtForwardLossResult: Api1501Response = api1501EmptyResponse.asRight,
     getBroughtForwardLossResult: Api1502Response = api1502EmptyResponse.asRight,
-    deleteBroughtForwardLossResult: Either[ServiceError, Unit] = Right(()),
     listBroughtForwardLossesResult: Api1870Response = api1870EmptyResponse.asRight,
     listOfIncomeSources: Api2085Response = api2085EmptyResponse.asRight
 ) extends IFSBusinessDetailsConnector {
@@ -67,11 +66,6 @@ case class StubIFSBusinessDetailsConnector(
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1502.SuccessResponseSchema] =
     EitherT.fromEither[Future](getBroughtForwardLossResult)
-
-  def deleteBroughtForwardLoss(nino: Nino, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
-    if (deleteBroughtForwardLossResult.isRight) updatedBroughtForwardLossData = None
-    EitherT.fromEither[Future](deleteBroughtForwardLossResult)
-  }
 
   def listBroughtForwardLosses(nino: Nino, taxYear: TaxYear)(implicit
       hc: HeaderCarrier,

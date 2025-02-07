@@ -152,11 +152,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
   private def deleteBroughtForwardLoss(nino: Nino, taxYear: TaxYear, lossId: String)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[Unit] =
-    if (appConfig.hipMigration1504Enabled) {
       hipConnector.deleteBroughtForwardLoss(nino = nino, taxYear = taxYear, lossId = lossId)
-    } else {
-      ifsBusinessDetailsConnector.deleteBroughtForwardLoss(nino, lossId)
-    }
 
   private def updateBroughtForwardLossYear(data: UpdateBroughtForwardLossYear)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] =
     deleteBroughtForwardLoss(data.nino, data.taxYear, data.lossId).map(_ =>
