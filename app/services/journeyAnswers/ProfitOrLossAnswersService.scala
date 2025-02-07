@@ -54,6 +54,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
                                                 appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends ProfitOrLossAnswersService {
 
+
   def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       _      <- createUpdateOrDeleteAnnualSummaries(ctx, answers)
@@ -77,7 +78,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     EitherT(submissionBody).flatMap(ifsConnector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
   }
 
-  private def createUpdateOrDeleteLossClaim(ctx: JourneyContextWithNino,
+  def createUpdateOrDeleteLossClaim(ctx: JourneyContextWithNino,
                                             submittedAnswers: ProfitOrLossJourneyAnswers)
                                            (implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
@@ -118,7 +119,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 //      case (None, None)                 => EitherT.rightT[Future, ServiceError](())                       // Do nothing
 //    }
 
-  def getBroughtForwardLossByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[LossData]] = {
+  private def getBroughtForwardLossByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[LossData]] = {
     val losses = ifsBusinessDetailsConnector.listBroughtForwardLosses(ctx.nino, ctx.taxYear)
     losses.transform {
       case Right(list) =>
