@@ -85,7 +85,11 @@ class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppCon
 
     val mappedResponses: Future[List[WhatDoYouWantToDoWithLoss]] = combinedAnswers.map { responses =>
       responses.toList.collect {
-        case response if response.status == 200 => WhatDoYouWantToDoWithLoss.fromReliefClaimType(ReliefClaimType.CF)
+        case response if response.status == 200 =>
+          response.json.as[ReliefClaimType] match {
+            case ReliefClaimType.CF   => WhatDoYouWantToDoWithLoss.CarryItForward
+            case ReliefClaimType.CSGI => WhatDoYouWantToDoWithLoss.DeductFromOtherTypes
+          }
       }
     }
 

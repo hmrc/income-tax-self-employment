@@ -125,37 +125,37 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
     }
 
 
-//    "the API returns 400 BAD_REQUEST, 422 UNPROCESSABLE_ENTITY or 5xx response" should {
-//      "return a service error" in {
-//        Seq(
-//          (BAD_REQUEST, "INVALID_TAX_YEAR", "Submission has not passed validation. Invalid parameter taxYear."),
-//          (UNPROCESSABLE_ENTITY, "TAX_YEAR_NOT_SUPPORTED", "The remote endpoint has indicated that this tax year is not supported."),
-//          (INTERNAL_SERVER_ERROR, "SERVER_ERROR", "IF is currently experiencing problems that require live service intervention."),
-//          (SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE", "Dependent systems are currently not responding.")
-//        ) foreach { case (status, code, reason) =>
-//
-//          val response: JsObject = Json.obj(
-//            "failures" -> Json.arr(
-//              Json.obj(
-//                "code" -> code,
-//                "reason" -> reason
-//              )
-//            )
-//          )
-//
-//          stubGetWithResponseBody(
-//            url = api1867Url,
-//            expectedStatus = status,
-//            expectedResponse = Json.stringify(response)
-//          )
-//
-//          val result = await(connector.getAllReliefClaims(testTaxYear2024, testBusinessId).value)
-//
-//          result.isLeft mustBe true
-//          result mustBe a[GenericDownstreamError]
-//        }
-//      }
-//    }
+    "the API returns 400 BAD_REQUEST, 422 UNPROCESSABLE_ENTITY or 5xx response" should {
+      "return a service error" in {
+        Seq(
+          (BAD_REQUEST, "INVALID_TAX_YEAR", "Submission has not passed validation. Invalid parameter taxYear."),
+          (UNPROCESSABLE_ENTITY, "TAX_YEAR_NOT_SUPPORTED", "The remote endpoint has indicated that this tax year is not supported."),
+          (INTERNAL_SERVER_ERROR, "SERVER_ERROR", "IF is currently experiencing problems that require live service intervention."),
+          (SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE", "Dependent systems are currently not responding.")
+        ) foreach { case (status, code, reason) =>
+
+          val response: JsObject = Json.obj(
+            "failures" -> Json.arr(
+              Json.obj(
+                "code" -> code,
+                "reason" -> reason
+              )
+            )
+          )
+
+          stubGetWithResponseBody(
+            url = api1507Url,
+            expectedStatus = status,
+            expectedResponse = Json.stringify(response)
+          )
+
+          val result = connector.getAllReliefClaims(testTaxYear2024, testBusinessId).value.futureValue
+
+          result.isLeft mustBe true
+          result.merge mustBe a[GenericDownstreamError]
+        }
+      }
+    }
   }
 
   "createLossClaims" should {
@@ -258,6 +258,24 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
       verify(1, postRequestedFor(urlEqualTo(api1505Url)))
       verify(1, deleteRequestedFor(urlEqualTo(api1506Url)))
 
+    }
+
+    "do nothing if answer exists in both lists" in {
+      val oldAnswers = List(
+        ReliefClaim("XAIS12345678900", None, ReliefClaimType.CF, "2024", "1234567890", None, LocalDate.parse("2024-01-01")),
+        ReliefClaim("XAIS12345678900", None, ReliefClaimType.CF, "2024", "1234567891", None, LocalDate.parse("2024-01-01")),
+        ReliefClaim("XAIS12345678901", None, ReliefClaimType.CF, "2025", "1234567892", None, LocalDate.parse("2024-01-01"))
+      )
+      val newAnswers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
+
+      val result = connector.updateReliefClaims(testContextWithNino, oldAnswers, newAnswers).value
+
+      result.map { res =>
+        res mustBe Right(oldAnswers)
+      }
+
+      verify(1, postRequestedFor(urlEqualTo(api1505Url)))
+      verify(0, deleteRequestedFor(urlEqualTo(api1506Url)))
     }
 
     "delete relief claims correctly" in {
