@@ -19,7 +19,7 @@ package connectors
 import base.IntegrationBaseSpec
 import com.github.tomakehurst.wiremock.client.WireMock._
 import helpers.WiremockSpec
-import models.connector.ReliefClaimType.CF
+import models.connector.ReliefClaimType.{CF, CSGI}
 import models.connector._
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.common.ReliefClaim
@@ -32,7 +32,6 @@ import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
 import play.api.libs.json.{JsObject, Json}
 import testdata.CommonTestData
 import uk.gov.hmrc.http.HttpReads
-import utils.TestUtils.mockAppConfig
 
 import java.time.LocalDate
 
@@ -42,7 +41,7 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
   val connector: ReliefClaimsConnector = app.injector.instanceOf[ReliefClaimsConnector]
 
   val api1505Url: String = s"/income-tax/claims-for-relief/${testBusinessId.value}"
-  val api1506Url: String = s"/income-tax/claims-for-relief/${testBusinessId.value}/$testClaimId"
+  val api1506Url: String = s"/income-tax/claims-for-relief/${testBusinessId.value}/1234567890"
   val api1507Url: String = api1505Url
   val api1867Url: String = s"/income-tax/${testTaxYear2024.endYear}/claims-for-relief/${testBusinessId.value}"
 
@@ -68,7 +67,7 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
 
   val claims: List[ReliefClaim] = List(
     ReliefClaim("XAIS12345678900", None, CF, "2025", "12345", None, LocalDate.parse("2024-01-01")),
-    ReliefClaim("XAIS12345678901", None, CF, "2024", "1234567890", None, LocalDate.parse("2024-01-01"))
+    ReliefClaim("XAIS12345678901", None, CSGI, "2024", "1234567890", None, LocalDate.parse("2024-01-01"))
   )
 
   val expectedClaims: List[ReliefClaim] = List(
@@ -233,16 +232,16 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
       val oldAnswers = claims
       val newAnswers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
 
-      stubPostWithResponseBody(
-        url = api1505Url,
-        expectedStatus = OK,
-        expectedResponse = newAnswers.toString()
-      )
-
       stubDelete(
         url = api1506Url,
         expectedStatus = OK,
         expectedResponse = ""
+      )
+
+      stubPostWithResponseBody(
+        url = api1505Url,
+        expectedStatus = OK,
+        expectedResponse = newAnswers.toString()
       )
 
       val result = connector.updateReliefClaims(testContextWithNino, oldAnswers, newAnswers).value
@@ -257,19 +256,19 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
       }
 
       verify(1, postRequestedFor(urlEqualTo(api1505Url)))
-      verify(0, deleteRequestedFor(urlEqualTo(api1506Url)))
+      verify(1, deleteRequestedFor(urlEqualTo(api1506Url)))
 
     }
 
     "delete relief claims correctly" in {
       val oldAnswers = List(
-        ReliefClaim("XAIS12345678901", None, ReliefClaimType.CF, "2024", "1234567890", None, LocalDate.parse("2024-01-01")),
-        ReliefClaim("XAIS12345678901", None, ReliefClaimType.CF, "2025", "1234567890", None, LocalDate.parse("2024-01-01"))
+        ReliefClaim("XAIS12345678900", None, ReliefClaimType.CF, "2024", "1234567890", None, LocalDate.parse("2024-01-01")),
+        ReliefClaim("XAIS12345678901", None, ReliefClaimType.CSGI, "2025", "1234567890", None, LocalDate.parse("2024-01-01"))
       )
       val newAnswers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
 
       stubDelete(
-        url = mockAppConfig.api1506Url(testContextWithNino.businessId, "1234567890"),
+        url = api1506Url,
         expectedStatus = OK,
         expectedResponse = ""
       )
@@ -285,7 +284,9 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
       result.map { res =>
         res mustBe Right(List(WhatDoYouWantToDoWithLoss.CarryItForward))
       }
-      verify(1, deleteRequestedFor(urlPathMatching(api1506Url)))
+
+      verify(1, deleteRequestedFor(urlEqualTo(api1506Url)))
+
     }
 
     "handle failure when creating relief claims" in {
@@ -310,6 +311,8 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
       result.map { res =>
         res mustBe a[GenericDownstreamError]
       }
+
+      verify(1, postRequestedFor(urlEqualTo(api1505Url)))
     }
 
     "handle failure when deleting relief claims" in {
@@ -334,6 +337,8 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
       result.map { res =>
         res mustBe a[GenericDownstreamError]
       }
+
+      verify(1, deleteRequestedFor(urlEqualTo(api1506Url)))
     }
   }
 }
