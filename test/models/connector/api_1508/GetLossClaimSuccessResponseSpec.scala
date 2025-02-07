@@ -22,12 +22,12 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsResultException, JsValue, Json}
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, Month}
 
 class GetLossClaimSuccessResponseSpec extends AnyWordSpec with Matchers {
 
   "GetLossClaimSuccessResponse" must {
-    val submissionDate = LocalDateTime.now().withSecond(0)
+    val submissionDate = LocalDateTime.of(2020, Month.JULY, 10, 10, 10, 10)
     val lossClaimSuccessResponse = GetLossClaimSuccessResponse(
       incomeSourceId = "012345678912345",
       reliefClaimed = CF,
