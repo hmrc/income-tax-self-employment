@@ -27,7 +27,7 @@ import java.time.{LocalDateTime, Month}
 class GetLossClaimSuccessResponseSpec extends AnyWordSpec with Matchers {
 
   "GetLossClaimSuccessResponse" must {
-    val submissionDate = LocalDateTime.of(2020, Month.JULY, 10, 10 , 10, 10)
+    val submissionDate = LocalDateTime.of(2020, Month.JULY, 10, 10, 10, 10)
     val lossClaimSuccessResponse = GetLossClaimSuccessResponse(
       incomeSourceId = "012345678912345",
       reliefClaimed = CF,
