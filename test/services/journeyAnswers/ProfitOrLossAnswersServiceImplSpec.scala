@@ -28,7 +28,7 @@ import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.api_1802.request._
 import models.connector.api_1870.{LossData, SuccessResponseSchema}
-import models.connector.common.ReliefClaim
+import models.connector.common.{ReliefClaim, UkProperty}
 import models.connector.{api_1867, api_1870}
 import models.database.adjustments.ProfitOrLossDb
 import models.error.DownstreamError.SingleDownstreamError
@@ -36,6 +36,7 @@ import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
 import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhatDoYouWantToDoWithLoss, WhichYearIsLossReported}
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.MockitoSugar.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor3}
@@ -421,11 +422,29 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 
       val reliefClaimsService: ReliefClaimsService = mock[ReliefClaimsService]
 
+      val claim1: ReliefClaim = ReliefClaim("XH1234567890", None, CF, "2025", "claimId1", None, LocalDate.now())
+      val claim2: ReliefClaim = ReliefClaim("XH1234567891", Some(UkProperty), CF, "2025", "claimId2", None, LocalDate.now())
+      val claim3: ReliefClaim = ReliefClaim("XH1234567890", None, CF, "2024", "claimId3", None, LocalDate.now())
+
+      val claims: List[ReliefClaim] = List(claim1, claim2, claim3)
+//
+//      when(reliefClaimsService.getAllReliefClaims(any())(any()))
+//        .thenReturn(EitherT.pure(claims))
+
+      when(reliefClaimsService.getAllReliefClaims(any())(any()))
+        .thenReturn(EitherT.liftF(Future.successful(Nil)))
+
+//      when(reliefClaimsService.getAllReliefClaims(any()))
+//        .thenReturn(Future.successful(claims))
+
       when(reliefClaimsService.createReliefClaims(any(), any())(any(), any()))
         .thenReturn(EitherT.rightT(List(api1505SuccessResponse)))
 
-      when(reliefClaimsService.getAllReliefClaims(any())(any()))
-        .thenReturn(EitherT.rightT[Future, ServiceError](Nil))
+//      when(reliefClaimsService.updateReliefClaims(any(), any(), any()))
+//        .thenReturn(EitherT.right(Future.successful(Nil)))
+
+//      when(reliefClaimsService.getAllReliefClaims(any())(any()))
+//        .thenReturn(EitherT.rightT[Future, ServiceError](claims))
 
       val submittedAnswers: ProfitOrLossJourneyAnswers = ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
