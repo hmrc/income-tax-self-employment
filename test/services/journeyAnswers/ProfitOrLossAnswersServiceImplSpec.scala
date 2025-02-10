@@ -30,7 +30,7 @@ import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.api_1802.request._
 import models.connector.api_1870.{LossData, SuccessResponseSchema}
-import models.connector.common.ReliefClaim
+import models.connector.common.{ReliefClaim, UkProperty}
 import models.connector.{api_1867, api_1870}
 import models.database.adjustments.ProfitOrLossDb
 import models.error.DownstreamError.SingleDownstreamError
@@ -585,6 +585,21 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
     "create a new loss claim when there is no existing data and submission data is provided" in new StubbedService {
 
       val reliefClaimsService: ReliefClaimsService = mock[ReliefClaimsService]
+
+      val claim1: ReliefClaim = ReliefClaim("XH1234567890", None, CF, "2025", "claimId1", None, LocalDate.now())
+      val claim2: ReliefClaim = ReliefClaim("XH1234567891", Some(UkProperty), CF, "2025", "claimId2", None, LocalDate.now())
+      val claim3: ReliefClaim = ReliefClaim("XH1234567890", None, CF, "2024", "claimId3", None, LocalDate.now())
+
+      val claims: List[ReliefClaim] = List(claim1, claim2, claim3)
+//
+//      when(reliefClaimsService.getAllReliefClaims(any())(any()))
+//        .thenReturn(EitherT.pure(claims))
+
+      when(reliefClaimsService.getAllReliefClaims(any())(any()))
+        .thenReturn(EitherT.liftF(Future.successful(Nil)))
+
+//      when(reliefClaimsService.getAllReliefClaims(any()))
+//        .thenReturn(Future.successful(claims))
 
       when(reliefClaimsService.createReliefClaims(any(), any())(any(), any()))
         .thenReturn(EitherT.rightT(List(api1505SuccessResponse)))
