@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,13 +30,13 @@ class ClaimIdSpec extends AnyWordSpec with Matchers {
         val response      = ClaimId("claimId123")
         val json: JsValue = Json.toJson(response)
 
-        (json \ "claimId").as[String] shouldBe "claimId123"
+        (json \ "value").as[String] shouldBe "claimId123"
       }
 
       "successfully convert from JSON" in {
         val json: JsValue = Json.parse("""
             |{
-            |  "claimId": "claimId123"
+            |  "value": "claimId123"
             |}
             |""".stripMargin)
 
@@ -62,7 +62,7 @@ class ClaimIdSpec extends AnyWordSpec with Matchers {
       "fail to convert from JSON with incorrect field types" in {
         val json: JsValue = Json.parse("""
             |{
-            |  "claimId": 123
+            |  "value": 123
             |}
             |""".stripMargin)
 
@@ -74,7 +74,7 @@ class ClaimIdSpec extends AnyWordSpec with Matchers {
       "ignore additional unexpected fields when reading from JSON" in {
         val json: JsValue = Json.parse("""
             |{
-            |  "claimId": "claimId123",
+            |  "value": "claimId123",
             |  "unexpectedField": "unexpectedValue"
             |}
             |""".stripMargin)

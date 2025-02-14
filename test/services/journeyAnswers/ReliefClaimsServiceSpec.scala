@@ -20,10 +20,12 @@ import data.CommonTestData
 import mocks.connectors.MockReliefClaimsConnector
 import models.common.JourneyName.ProfitOrLoss
 import models.common._
+import models.connector.ReliefClaimType
 import models.connector.ReliefClaimType.{CF, CSGI}
 import models.connector.api_1505._
 import models.connector.common.{ReliefClaim, UkProperty}
 import models.error.ServiceError
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.{CarryItForward, DeductFromOtherTypes}
 import models.frontend.adjustments._
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.times
@@ -179,105 +181,65 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
   }
 
   "updateReliefClaims" should {
+
     "Make a single delete call if the user un-checks one answer" in new ReliefClaimsServiceTestSetup {
-      val newAnswers: Seq[WhatDoYouWantToDoWithLoss] = List(WhatDoYouWantToDoWithLoss.CarryItForward)
+      val newAnswers: Seq[WhatDoYouWantToDoWithLoss] = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
 
       MockReliefClaimsConnector.deleteReliefClaim(testContextCurrentYear, seClaimId2.value)
+      MockReliefClaimsConnector.createReliefClaim(testContextCurrentYear, seClaim1.reliefClaimed)(seClaimId1)
 
       val result: Future[Either[ServiceError, UpdateReliefClaimsResponse]] =
         service.updateReliefClaims(testContextCurrentYear, claims, newAnswers).value
 
       whenReady(result) { res =>
-        res shouldBe Right(List(WhatDoYouWantToDoWithLoss.CarryItForward))
+        res shouldBe Right(UpdateReliefClaimsResponse(
+          created = List(WhatDoYouWantToDoWithLoss.CarryItForward),
+          deleted = List(WhatDoYouWantToDoWithLoss.DeductFromOtherTypes)
+        ))
       }
 
-      verify(MockReliefClaimsConnector.mockInstance, times(1)).deleteReliefClaim(testContextCurrentYear, seClaimId2.value)
+      verify(MockReliefClaimsConnector.mockInstance, times(1)).deleteReliefClaim(any(), any())(any())
+      verify(MockReliefClaimsConnector.mockInstance, times(1)).createReliefClaim(any(), any())(any())
     }
 
-    // TODO: Finish tests
+    "Make two create calls if the user checks both answers" in new ReliefClaimsServiceTestSetup {
+      val newAnswers: Seq[WhatDoYouWantToDoWithLoss] = Seq(WhatDoYouWantToDoWithLoss.CarryItForward, WhatDoYouWantToDoWithLoss.DeductFromOtherTypes)
 
-//    "return updated list with multiple WhatDoYouWantToDoWithLoss items when connector call is successful" in new ReliefClaimsServiceTestSetup {
-//      when(mockConnector.updateReliefClaims(ctxWithNino2024, oldAnswers, newAnswers))
-//        .thenReturn(EitherT.right(Future.successful(List(
-//          WhatDoYouWantToDoWithLoss.CarryItForward,
-//          WhatDoYouWantToDoWithLoss.DeductFromOtherTypes
-//        ))))
-//
-//      val result: Future[Either[ServiceError, List[WhatDoYouWantToDoWithLoss]]] =
-//        service.updateReliefClaims(ctxWithNino2024, oldAnswers, newAnswers).value
-//
-//      whenReady(result) { res =>
-//        res shouldBe Right(List(
-//          WhatDoYouWantToDoWithLoss.CarryItForward,
-//          WhatDoYouWantToDoWithLoss.DeductFromOtherTypes
-//        ))
-//      }
-//
-//      verify(mockConnector, times(1)).updateReliefClaims(ctxWithNino2024, oldAnswers, newAnswers)
-//    }
-//
-//    "return an error when connector call fails" in new ReliefClaimsServiceTestSetup {
-//      val testServiceError: ServiceError = new ServiceError {
-//        val errorMessage: String = "Error fetching relief claims"
-//      }
-//
-//      when(mockConnector.updateReliefClaims(ctxWithNino2024, oldAnswers, newAnswers))
-//        .thenReturn(EitherT.left(Future.successful(testServiceError)))
-//
-//      val result: Future[Either[ServiceError, List[WhatDoYouWantToDoWithLoss]]] =
-//        service.updateReliefClaims(ctxWithNino2024, oldAnswers, newAnswers).value
-//
-//      whenReady(result) { res =>
-//        res shouldBe Left(testServiceError)
-//      }
-//
-//      verify(mockConnector, times(1)).updateReliefClaims(ctxWithNino2024, oldAnswers, newAnswers)
-//    }
+      MockReliefClaimsConnector.createReliefClaim(testContextCurrentYear, seClaim1.reliefClaimed)(seClaimId1)
+      MockReliefClaimsConnector.createReliefClaim(testContextCurrentYear, seClaim2.reliefClaimed)(seClaimId2)
 
+      val result: Future[Either[ServiceError, UpdateReliefClaimsResponse]] =
+        service.updateReliefClaims(testContextCurrentYear, claims, newAnswers).value
+
+      whenReady(result) { res =>
+        res shouldBe Right(UpdateReliefClaimsResponse(
+          created = List(WhatDoYouWantToDoWithLoss.CarryItForward, WhatDoYouWantToDoWithLoss.DeductFromOtherTypes),
+          deleted = List()
+        ))
+      }
+
+      verify(MockReliefClaimsConnector.mockInstance, times(0)).deleteReliefClaim(any(), any())(any())
+      verify(MockReliefClaimsConnector.mockInstance, times(2)).createReliefClaim(any(), any())(any())
+    }
+
+    "return an error when connector call fails" in new ReliefClaimsServiceTestSetup {
+      val newAnswers: Seq[WhatDoYouWantToDoWithLoss] = Seq(WhatDoYouWantToDoWithLoss.CarryItForward, WhatDoYouWantToDoWithLoss.DeductFromOtherTypes)
+
+      val testServiceError: ServiceError = new ServiceError {
+        val errorMessage: String = "Error fetching relief claims"
+      }
+
+      MockReliefClaimsConnector.createReliefClaimError(testContextCurrentYear, seClaim1.reliefClaimed)(testServiceError)
+
+      val result: Future[Either[ServiceError, UpdateReliefClaimsResponse]] =
+        service.updateReliefClaims(testContextCurrentYear, claims, newAnswers).value
+
+      whenReady(result) { res =>
+        res shouldBe Left(testServiceError)
+      }
+
+      verify(MockReliefClaimsConnector.mockInstance, times(2)).createReliefClaim(any(), any())(any())
+    }
   }
-
-//  "call API 1505 twice to create a relief claim for each selected check box" in {
-  //      val expectedResponse1 = CreateLossClaimSuccessResponse(claimId = "claimId1")
-  //      val expectedResponse2 = CreateLossClaimSuccessResponse(claimId = "claimId2")
-  //
-  //      val body1: CreateLossClaimRequestBody = CreateLossClaimRequestBody(
-  //        incomeSourceId = "012345678912345",
-  //        reliefClaimed = "CF",
-  //        taxYear = "2024"
-  //      )
-  //
-  //      val body2: CreateLossClaimRequestBody = CreateLossClaimRequestBody(
-  //        incomeSourceId = "012345678912346",
-  //        reliefClaimed = "CF",
-  //        taxYear = "2024"
-  //      )
-  //
-  //      stubPostWithRequestAndResponseBody(
-  //        url = api1505Url,
-  //        requestBody = body1,
-  //        expectedStatus = OK,
-  //        expectedResponse = Json.stringify(Json.toJson(expectedResponse1))
-  //      )
-  //
-  //      stubPostWithRequestAndResponseBody(
-  //        url = api1505Url,
-  //        requestBody = body2,
-  //        expectedStatus = OK,
-  //        expectedResponse = Json.stringify(Json.toJson(expectedResponse2))
-  //      )
-  //
-  //      val result1 = connector.createReliefClaim(testContextWithNino, body1)
-  //      val result2 = connector.createReliefClaim(testContextWithNino, body2)
-  //
-  //      whenReady(result1) { res1 =>
-  //        res1 mustBe Right(expectedResponse1)
-  //      }
-  //
-  //      whenReady(result2) { res2 =>
-  //        res2 mustBe Right(expectedResponse2)
-  //      }
-  //
-  //      verify(2, postRequestedFor(urlEqualTo(api1505Url)))
-  //    }
 
 }
