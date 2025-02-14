@@ -203,7 +203,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers {
       whenReady(result) { res =>
         res shouldBe Right(List.empty[CreateLossClaimSuccessResponse])
       }
-      verify(mockConnector, times(0)).createReliefClaims(any(), any())(any(), any())
+      verify(mockConnector, times(0)).createReliefClaim(any(), any())(any(), any())
     }
 
     "return a list with multiple successful responses when there are multiple valid answers" in new ReliefClaimsServiceTestSetup {
@@ -217,7 +217,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers {
 
       var callCount = 0
 
-      when(mockConnector.createReliefClaims(any(), any())(any(), any()))
+      when(mockConnector.createReliefClaim(any(), any())(any(), any()))
         .thenAnswer { _: InvocationOnMock =>
           callCount += 1
           if (callCount == 1) {
@@ -234,7 +234,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers {
         res shouldBe Right(List(expectedResponse1, expectedResponse2))
       }
 
-      verify(mockConnector, times(2)).createReliefClaims(any(), any())(any(), any())
+      verify(mockConnector, times(2)).createReliefClaim(any(), any())(any(), any())
     }
 
     "return a list with one successful response when there is one valid answer" in new ReliefClaimsServiceTestSetup {
@@ -244,7 +244,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers {
       )
       val expectedResponse: CreateLossClaimSuccessResponse = CreateLossClaimSuccessResponse("claimId1")
 
-      when(mockConnector.createReliefClaims(any(), any())(any(), any()))
+      when(mockConnector.createReliefClaim(any(), any())(any(), any()))
         .thenReturn(Future.successful(Right(expectedResponse)))
 
       val result: Future[Either[ServiceError, List[CreateLossClaimSuccessResponse]]] =
@@ -254,7 +254,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers {
         res shouldBe Right(List(expectedResponse))
       }
 
-      verify(mockConnector, times(1)).createReliefClaims(any(), any())(any(), any())
+      verify(mockConnector, times(1)).createReliefClaim(any(), any())(any(), any())
     }
 
     "return an error when one of the answers results in a service error" in new ReliefClaimsServiceTestSetup {
@@ -271,7 +271,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers {
 
       var callCount = 0
 
-      when(mockConnector.createReliefClaims(any(), any())(any(), any()))
+      when(mockConnector.createReliefClaim(any(), any())(any(), any()))
         .thenAnswer { _: InvocationOnMock =>
           callCount += 1
           if (callCount == 1) {
@@ -288,7 +288,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers {
         res shouldBe Left(error)
       }
 
-      verify(mockConnector, times(2)).createReliefClaims(any(), any())(any(), any())
+      verify(mockConnector, times(2)).createReliefClaim(any(), any())(any(), any())
     }
 
     "updateReliefClaims" should {
