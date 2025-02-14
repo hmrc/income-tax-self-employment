@@ -18,42 +18,47 @@ package mocks.repositories
 
 import cats.data.EitherT
 import cats.implicits._
-import data.CommonTestData
-import models.common.{JourneyContext, JourneyName, JourneyStatus}
+import models.common.{JourneyContext, JourneyStatus, Mtditid, TaxYear}
 import models.database.JourneyAnswers
-import models.error.ServiceError
+import models.domain.{ApiResultT, Business}
+import models.frontend.TaskList
+import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar.when
+import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar._
-import play.api.libs.json._
+import play.api.libs.json.{JsValue, Reads}
 import repositories.JourneyAnswersRepository
 
-import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 object MockJourneyAnswersRepository {
-  testData: CommonTestData =>
 
   val mockInstance: JourneyAnswersRepository = mock[JourneyAnswersRepository]
-  val now: Instant                           = Instant.now()
 
-  def get[T](context: JourneyContext)(returnValue: Option[T]): Unit =
-    when(mockInstance.get(context)).thenReturn(
-      EitherT.pure[Future, ServiceError](
-        returnValue.map(value =>
-          JourneyAnswers(
-            mtditid = testData.testMtdId,
-            businessId = testData.testBusinessId,
-            taxYear = testData.testCurrentTaxYear,
-            journey = JourneyName.ProfitOrLoss,
-            status = JourneyStatus.InProgress,
-            data = Json.toJson(value).as[JsObject],
-            expireAt = testData.now,
-            createdAt = testData.now,
-            updatedAt = testData.now
-          )
-        )
-      )
-    )
+  def get(context: JourneyContext)
+         (returnValue: Option[JourneyAnswers]): ScalaOngoingStubbing[ApiResultT[Option[JourneyAnswers]]] =
+    when(mockInstance.get(context)).thenReturn(EitherT.pure(returnValue))
+
+  def getAll(taxYear: TaxYear,
+             mtdId: Mtditid,
+             businesses: List[Business])
+            (returnValue: TaskList): ApiResultT[TaskList] =
+    when(mockInstance.getAll(taxYear, mtdId, businesses)).thenReturn(EitherT.pure(returnValue))
+
+  def getAnswers[A: Reads](ctx: JourneyContext)
+                   (returnValue: Option[A]): ApiResultT[Option[A]] =
+    when(mockInstance.getAnswers[A](ctx)(any(), any())).thenReturn(EitherT.pure(returnValue))
+
+  def upsertAnswers(ctx: JourneyContext,
+                    newData: JsValue): ApiResultT[Unit] =
+    when(mockInstance.upsertAnswers(ctx, newData)).thenReturn(EitherT.pure(()))
+
+  def setStatus(ctx: JourneyContext,
+                status: JourneyStatus): ApiResultT[Unit] =
+    when(mockInstance.setStatus(ctx, status)).thenReturn(EitherT.pure(()))
+
+  def deleteOneOrMoreJourneys(ctx: JourneyContext,
+                              multiplePrefix: Option[String] = None): ApiResultT[Unit] =
+    when(mockInstance.deleteOneOrMoreJourneys(ctx, multiplePrefix)).thenReturn(EitherT.pure(()))
 
 }

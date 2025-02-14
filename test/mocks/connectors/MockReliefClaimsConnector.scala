@@ -21,11 +21,13 @@ import cats.implicits.catsStdInstancesForFuture
 import connectors.ReliefClaimsConnector
 import models.common.{BusinessId, JourneyContextWithNino, TaxYear}
 import models.connector.ReliefClaimType
-import models.connector.api_1505.CreateLossClaimSuccessResponse
+import models.connector.api_1505.ClaimId
 import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
+import models.error.ServiceError
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.MockitoSugar.when
 import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
@@ -33,31 +35,39 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class MockReliefClaimsConnector {
+object MockReliefClaimsConnector {
 
   val mockInstance: ReliefClaimsConnector = mock[ReliefClaimsConnector]
 
-  def createReliefClaim(ctx: JourneyContextWithNino, answer: ReliefClaimType)
-                       (returnValue: CreateLossClaimSuccessResponse): ScalaOngoingStubbing[ApiResultT[CreateLossClaimSuccessResponse]] =
+  def createReliefClaim(ctx: JourneyContextWithNino,
+                        answer: ReliefClaimType)
+                       (returnValue: ClaimId): ScalaOngoingStubbing[ApiResultT[ClaimId]] =
     when(mockInstance.createReliefClaim(
       ArgumentMatchers.eq(ctx),
       ArgumentMatchers.eq(answer))(any())
     ).thenReturn(EitherT.pure(returnValue))
 
+  def createReliefClaimError(ctx: JourneyContextWithNino,
+                             answer: ReliefClaimType)
+                            (returnValue: ServiceError): ScalaOngoingStubbing[ApiResultT[ClaimId]] =
+    when(mockInstance.createReliefClaim(eqTo(ctx), eqTo(answer))(any()))
+      .thenReturn(EitherT.leftT(returnValue))
 
-  def deleteReliefClaim(ctx: JourneyContextWithNino, claimId: String): ScalaOngoingStubbing[ApiResultT[Unit]] = {
-    when(mockInstance.deleteReliefClaim(
-      ArgumentMatchers.eq(ctx),
-      ArgumentMatchers.eq(claimId))(any())
-    ).thenReturn(EitherT.pure(()))
-  }
+  def deleteReliefClaim(ctx: JourneyContextWithNino,
+                        claimId: String): ScalaOngoingStubbing[ApiResultT[Unit]] =
+    when(mockInstance.deleteReliefClaim(eqTo(ctx), eqTo(claimId))(any()))
+      .thenReturn(EitherT.pure(()))
 
-  def getAllReliefClaims(taxYear: TaxYear, businessId: BusinessId)
-                        (returnValue: List[ReliefClaim]): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] = {
-    when(mockInstance.getAllReliefClaims(
-      ArgumentMatchers.eq(taxYear),
-      ArgumentMatchers.eq(businessId))(any())
-    ).thenReturn(EitherT.pure(returnValue))
-  }
+  def getAllReliefClaims(taxYear: TaxYear,
+                         businessId: BusinessId)
+                        (returnValue: List[ReliefClaim]): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
+    when(mockInstance.getAllReliefClaims(eqTo(taxYear), eqTo(businessId))(any()))
+      .thenReturn(EitherT.pure(returnValue))
+
+  def getAllReliefClaimsError(taxYear: TaxYear,
+                              businessId: BusinessId)
+                             (returnValue: ServiceError): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
+    when(mockInstance.getAllReliefClaims(eqTo(taxYear), eqTo(businessId))(any()))
+      .thenReturn(EitherT.leftT(returnValue))
 
 }

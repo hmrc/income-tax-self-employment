@@ -26,7 +26,7 @@ import models.connector.ReliefClaimType.CF
 import models.connector._
 import models.connector.api_1171.{BusinessDataDetails, BusinessDataDetailsTestData}
 import models.connector.api_1500.LossType
-import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
+import models.connector.api_1505.{CreateLossClaimRequestBody, ClaimId}
 import models.connector.api_1508.GetLossClaimSuccessResponse
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
@@ -48,22 +48,22 @@ import java.time.{LocalDateTime, OffsetDateTime}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class StubIFSConnector(
-    createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(().asRight),
-    amendSEPeriodSummaryResult: Either[DownstreamError, Unit] = Right(()),
-    getAnnualSummariesResult: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
-    createAmendSEAnnualSubmissionResult: Either[DownstreamError, Unit] = Right(()),
-    deleteSEAnnualSummariesResult: Either[ServiceError, Unit] = Right(()),
-    listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
-    getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight),
-    getDisclosuresSubmissionResult: Either[ServiceError, Option[SuccessResponseAPI1639]] = Right(None),
-    upsertDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(()),
-    deleteDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(()),
-    getAnnualSummariesResultTest1: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
-    getAnnualSummariesResultTest2: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
-    getAnnualSummariesResultTest3: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
-    getAnnualSummariesResultTest4: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
-    createLossClaimResult: Either[DownstreamError, CreateLossClaimSuccessResponse] = Right(api1505SuccessResponse),
-    getLossClaimResult: Either[DownstreamError, GetLossClaimSuccessResponse] = Right(api1508SuccessResponse)
+                             createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(().asRight),
+                             amendSEPeriodSummaryResult: Either[DownstreamError, Unit] = Right(()),
+                             getAnnualSummariesResult: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
+                             createAmendSEAnnualSubmissionResult: Either[DownstreamError, Unit] = Right(()),
+                             deleteSEAnnualSummariesResult: Either[ServiceError, Unit] = Right(()),
+                             listSEPeriodSummariesResult: Future[Api1965Response] = Future.successful(api1965MatchedResponse.asRight),
+                             getPeriodicSummaryDetailResult: Future[Api1786Response] = Future.successful(api1786EmptySuccessResponse.asRight),
+                             getDisclosuresSubmissionResult: Either[ServiceError, Option[SuccessResponseAPI1639]] = Right(None),
+                             upsertDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(()),
+                             deleteDisclosuresSubmissionResult: Either[ServiceError, Unit] = Right(()),
+                             getAnnualSummariesResultTest1: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
+                             getAnnualSummariesResultTest2: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
+                             getAnnualSummariesResultTest3: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
+                             getAnnualSummariesResultTest4: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
+                             createLossClaimResult: Either[DownstreamError, ClaimId] = Right(api1505SuccessResponse),
+                             getLossClaimResult: Either[DownstreamError, GetLossClaimSuccessResponse] = Right(api1508SuccessResponse)
 ) extends IFSConnector {
   var amendSEPeriodSummaryResultData: Option[AmendSEPeriodSummaryRequestData]                    = None
   var upsertDisclosuresSubmissionData: Option[RequestSchemaAPI1638]                              = None
@@ -143,7 +143,7 @@ case class StubIFSConnector(
 
   def createLossClaim(ctx: JourneyContextWithNino, requestBody: CreateLossClaimRequestBody)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): ApiResultT[CreateLossClaimSuccessResponse] = EitherT.fromEither[Future](createLossClaimResult)
+      ec: ExecutionContext): ApiResultT[ClaimId] = EitherT.fromEither[Future](createLossClaimResult)
 
   def getLossClaim(ctx: JourneyContextWithNino, claimId: String)(implicit
       hc: HeaderCarrier,
@@ -239,14 +239,14 @@ object StubIFSConnector {
             "GET"
           )))
     )
-  val api1505SuccessResponse: api_1505.CreateLossClaimSuccessResponse =
-    api_1505.CreateLossClaimSuccessResponse("1234568790ABCDE")
+  val api1505SuccessResponse: api_1505.ClaimId =
+    api_1505.ClaimId("1234568790ABCDE")
 
   val api1508SuccessResponse: api_1508.GetLossClaimSuccessResponse =
     api_1508.GetLossClaimSuccessResponse(
       incomeSourceId = "012345678912345",
       reliefClaimed = CF,
-      claimId = ClaimId("AAZZ1234567890A"),
+      claimId = models.connector.ClaimId("AAZZ1234567890A"),
       sequence = Option(2),
       submissionDate = LocalDateTime.now())
   val api1870EmptyResponse: api_1870.SuccessResponseSchema = api_1870.SuccessResponseSchema(List.empty)

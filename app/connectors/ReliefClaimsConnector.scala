@@ -21,7 +21,7 @@ import cats.implicits._
 import config.AppConfig
 import jakarta.inject.Inject
 import models.common._
-import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
+import models.connector.api_1505.{CreateLossClaimRequestBody, ClaimId}
 import models.connector.common.ReliefClaim
 import models.connector._
 import models.domain.ApiResultT
@@ -51,8 +51,8 @@ class ReliefClaimsConnector @Inject()(httpClient: HttpClient, appConfig: AppConf
 
   def createReliefClaim(ctx: JourneyContextWithNino,
                         answer: ReliefClaimType)
-                       (implicit hc: HeaderCarrier): ApiResultT[CreateLossClaimSuccessResponse] = {
-    implicit val reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]] = lossClaimReads[CreateLossClaimSuccessResponse]
+                       (implicit hc: HeaderCarrier): ApiResultT[ClaimId] = {
+    implicit val reads: HttpReads[ApiResponse[ClaimId]] = lossClaimReads[ClaimId]
     val context = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.businessId))
 
     val body = CreateLossClaimRequestBody(
@@ -61,7 +61,7 @@ class ReliefClaimsConnector @Inject()(httpClient: HttpClient, appConfig: AppConf
       taxYear = ctx.taxYear.endYear.toString
     )
 
-    EitherT(post[CreateLossClaimRequestBody, ApiResponse[CreateLossClaimSuccessResponse]](httpClient, context, body))
+    EitherT(post[CreateLossClaimRequestBody, ApiResponse[ClaimId]](httpClient, context, body))
   }
 
   def deleteReliefClaim(ctx: JourneyContextWithNino,

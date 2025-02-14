@@ -17,8 +17,12 @@
 package data
 
 import models.common._
+import models.error.ServiceError
+import uk.gov.hmrc.http.HeaderCarrier
 
 trait CommonTestData {
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val testBusinessId: BusinessId = BusinessId("XH1234567890")
   val testMtdId: Mtditid = Mtditid("12345")
@@ -29,5 +33,9 @@ trait CommonTestData {
 
   val testContextCurrentYear: JourneyContextWithNino = JourneyContextWithNino(testCurrentTaxYear, testBusinessId, testMtdId, testNino)
   val testContextPrevYear: JourneyContextWithNino = JourneyContextWithNino(testPrevTaxYear, testBusinessId, testMtdId, testNino)
+
+  val testServiceError: ServiceError = new ServiceError {
+    val errorMessage: String = "Returned a service error"
+  }
 
 }

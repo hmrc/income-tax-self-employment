@@ -2,6 +2,7 @@
 package testdata
 
 import models.common.{BusinessId, JourneyContextWithNino, Mtditid, Nino, TaxYear}
+import uk.gov.hmrc.http.HeaderCarrier
 
 trait CommonTestData {
 
