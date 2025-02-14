@@ -17,7 +17,7 @@
 package models.connector.common
 
 import models.connector.ReliefClaimType
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, Json, Writes}
 
 import java.time.LocalDate
 

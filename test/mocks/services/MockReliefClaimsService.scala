@@ -14,28 +14,38 @@
  * limitations under the License.
  */
 
-package mocks
+package mocks.services
 
 import cats.data.EitherT
 import cats.implicits.catsStdInstancesForFuture
 import models.common.JourneyContextWithNino
+import models.connector.api_1505.CreateLossClaimSuccessResponse
+import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
-import models.error.ServiceError
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
 import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar.when
 import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
 import services.journeyAnswers.ReliefClaimsService
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 object MockReliefClaimsService {
   val mockInstance: ReliefClaimsService = mock[ReliefClaimsService]
 
-//  def cacheClaimIds(ctx: JourneyContextWithNino, taxYear: String): ScalaOngoingStubbing[ApiResultT[Unit]] =
-//    when(mockInstance.cacheReliefClaims(ArgumentMatchers.eq(ctx), ArgumentMatchers.eq(taxYear))(ArgumentMatchers.any[HeaderCarrier]()))
-//      .thenReturn(EitherT.right[ServiceError](Future.successful(())))
+  def getAllReliefClaims(ctx: JourneyContextWithNino)
+                        (returnValue: List[ReliefClaim] = Nil): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
+    when(mockInstance.getAllReliefClaims(ArgumentMatchers.eq(ctx))(any()))
+      .thenReturn(EitherT.pure(returnValue))
+
+  def createReliefClaims(ctx: JourneyContextWithNino,
+                         answers: WhatDoYouWantToDoWithLoss*)
+                        (returnValue: List[CreateLossClaimSuccessResponse] = Nil): ScalaOngoingStubbing[ApiResultT[List[CreateLossClaimSuccessResponse]]] =
+    when(mockInstance.createReliefClaims(
+      ArgumentMatchers.eq(ctx),
+      ArgumentMatchers.eq(answers))(any(), any())
+    ).thenReturn(EitherT.rightT(returnValue))
 
 }

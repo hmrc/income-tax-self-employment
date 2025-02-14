@@ -175,13 +175,13 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
         taxYear = "2024"
       )
 
-      whenReady(connector.createReliefClaims(testContextWithNino, body)) { result =>
-        result mustBe Right(expectedResponse)
-      }
+      val result = await(connector.createReliefClaim(testContextWithNino, ReliefClaimType.CF).value)
+      result mustBe Right(expectedResponse)
 
       verify(1, postRequestedFor(urlEqualTo(api1505Url)))
     }
 
+    // TODO: Move tests to service spec because we've refactored the connector to only make singular calls
     "call API 1505 twice to create a relief claim for each selected check box" in {
       val expectedResponse1 = CreateLossClaimSuccessResponse(claimId = "claimId1")
       val expectedResponse2 = CreateLossClaimSuccessResponse(claimId = "claimId2")
@@ -212,8 +212,8 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
         expectedResponse = Json.stringify(Json.toJson(expectedResponse2))
       )
 
-      val result1 = connector.createReliefClaims(testContextWithNino, body1)
-      val result2 = connector.createReliefClaims(testContextWithNino, body2)
+      val result1 = connector.createReliefClaim(testContextWithNino, body1)
+      val result2 = connector.createReliefClaim(testContextWithNino, body2)
 
       whenReady(result1) { res1 =>
         res1 mustBe Right(expectedResponse1)
@@ -227,6 +227,7 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
     }
   }
 
+  // TODO: Move test to service spec
   "updateReliefClaims" should {
     "create and delete relief claims correctly" in {
       val oldAnswers = claims
