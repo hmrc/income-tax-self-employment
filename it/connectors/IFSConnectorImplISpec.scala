@@ -22,7 +22,7 @@ import connectors.data.{Api1505Test, Api1786Test, Api1803Test}
 import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import models.common.TaxYear.{asTys, endDate, startDate}
-import models.connector.api_1505.CreateLossClaimSuccessResponse
+import models.connector.api_1505.ClaimId
 import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics}
 import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics}
 import models.connector.api_1802.request._
@@ -234,7 +234,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedStatus = BAD_REQUEST
       )
 
-      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 400
@@ -253,7 +253,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedStatus = NOT_FOUND
       )
 
-      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 404
@@ -272,7 +272,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedStatus = CONFLICT
       )
 
-      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 409
@@ -291,7 +291,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedStatus = UNPROCESSABLE_ENTITY
       )
 
-      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 422
@@ -306,18 +306,18 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
       stubPostWithRequestAndResponseBody(
         url = downstreamUrl,
         requestBody = requestBody,
-        expectedResponse = successResponse.claimId,
+        expectedResponse = successResponse.value,
         expectedStatus = CREATED
       )
 
-      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
 
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 201
           message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
           message should include(s"status=$CREATED")
-          message should include(s"body:\n${successResponse.claimId}")
+          message should include(s"body:\n${successResponse.value}")
         case _ => fail("Expected a GenericDownstreamError")
       }
     }

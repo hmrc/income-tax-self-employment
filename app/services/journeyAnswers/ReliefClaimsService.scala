@@ -21,7 +21,7 @@ import cats.implicits._
 import connectors.ReliefClaimsConnector
 import models.common._
 import models.connector.ReliefClaimType
-import models.connector.api_1505.CreateLossClaimSuccessResponse
+import models.connector.api_1505.ClaimId
 import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
@@ -45,16 +45,14 @@ class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector
 
   def createReliefClaims(ctx: JourneyContextWithNino,
                          answers: Seq[WhatDoYouWantToDoWithLoss])
-                        (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Seq[CreateLossClaimSuccessResponse]] =
+                        (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Seq[ClaimId]] =
     if (answers.isEmpty) {
-      EitherT.pure(Nil: Seq[CreateLossClaimSuccessResponse])
+      EitherT.pure(Nil: Seq[ClaimId])
     } else {
       answers.map { answer =>
         reliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
       }.sequence
     }
-
-  case class UpdateReliefClaimsResponse(created: Seq[ReliefClaimType], deleted: Seq[ReliefClaimType])
 
   def updateReliefClaims(ctx: JourneyContextWithNino,
                          oldAnswers: List[ReliefClaim],
@@ -72,7 +70,11 @@ class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector
     for {
       _ <- deleteResponses.sequence
       _ <- createResponses.sequence
-    } yield UpdateReliefClaimsResponse(answersToCreate, answersToDelete.map(_.reliefClaimed))
+    } yield UpdateReliefClaimsResponse(
+      created = answersToCreate.map(WhatDoYouWantToDoWithLoss.fromReliefClaimType),
+      deleted = answersToDelete.map(answer => WhatDoYouWantToDoWithLoss.fromReliefClaimType(answer.reliefClaimed)))
   }
 
 }
+
+case class UpdateReliefClaimsResponse(created: Seq[WhatDoYouWantToDoWithLoss], deleted: Seq[WhatDoYouWantToDoWithLoss])

@@ -19,7 +19,7 @@ package mocks.services
 import cats.data.EitherT
 import cats.implicits.catsStdInstancesForFuture
 import models.common.JourneyContextWithNino
-import models.connector.api_1505.CreateLossClaimSuccessResponse
+import models.connector.api_1505.ClaimId
 import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
@@ -42,7 +42,7 @@ object MockReliefClaimsService {
 
   def createReliefClaims(ctx: JourneyContextWithNino,
                          answers: WhatDoYouWantToDoWithLoss*)
-                        (returnValue: List[CreateLossClaimSuccessResponse] = Nil): ScalaOngoingStubbing[ApiResultT[List[CreateLossClaimSuccessResponse]]] =
+                        (returnValue: List[ClaimId] = Nil): ScalaOngoingStubbing[ApiResultT[List[ClaimId]]] =
     when(mockInstance.createReliefClaims(
       ArgumentMatchers.eq(ctx),
       ArgumentMatchers.eq(answers))(any(), any())

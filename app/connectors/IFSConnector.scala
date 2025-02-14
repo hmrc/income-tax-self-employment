@@ -22,7 +22,7 @@ import connectors.IFSConnector._
 import models.common.TaxYear.{asTys, endDate, startDate}
 import models.common._
 import models.connector._
-import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
+import models.connector.api_1505.{CreateLossClaimRequestBody, ClaimId}
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
@@ -59,12 +59,12 @@ trait IFSConnector {
 
   def createLossClaim(ctx: JourneyContextWithNino, request: CreateLossClaimRequestBody)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): ApiResultT[CreateLossClaimSuccessResponse]
+      ec: ExecutionContext): ApiResultT[ClaimId]
 
 }
 
 object IFSConnector {
-  type Api1505Response = ApiResponse[api_1505.CreateLossClaimSuccessResponse]
+  type Api1505Response = ApiResponse[api_1505.ClaimId]
   type Api1508Response = ApiResponse[api_1508.GetLossClaimSuccessResponse]
   type Api1638Response = ApiResponse[Unit]
   type Api1639Response = ApiResponseOption[SuccessResponseAPI1639]
@@ -198,10 +198,10 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
 
   def createLossClaim(ctx: JourneyContextWithNino,
                       requestBody: CreateLossClaimRequestBody)
-                     (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[CreateLossClaimSuccessResponse] = {
+                     (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[ClaimId] = {
     val url                                                                    = createLossClaimUrl(ctx.nino)
     val context                                                                = appConfig.mkMetadata(IFSApiName.Api1505, url)
-    implicit val reads: HttpReads[ApiResponse[CreateLossClaimSuccessResponse]] = lossClaimReads[CreateLossClaimSuccessResponse]
+    implicit val reads: HttpReads[ApiResponse[ClaimId]] = lossClaimReads[ClaimId]
 
     EitherT(post[CreateLossClaimRequestBody, Api1505Response](http, context, requestBody))
   }

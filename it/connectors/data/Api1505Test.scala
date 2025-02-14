@@ -16,7 +16,7 @@
 
 package connectors.data
 
-import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
+import models.connector.api_1505.{CreateLossClaimRequestBody, ClaimId}
 import play.api.libs.json.Json
 import utils.BaseSpec.nino
 
@@ -46,5 +46,5 @@ trait Api1505Test {
   }
   """
 
-  val successResponse: CreateLossClaimSuccessResponse = Json.parse(successResponseRaw).as[CreateLossClaimSuccessResponse]
+  val successResponse: ClaimId = Json.parse(successResponseRaw).as[ClaimId]
 }
