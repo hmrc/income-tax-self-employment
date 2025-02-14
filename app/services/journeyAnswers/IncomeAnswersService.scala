@@ -88,7 +88,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
 
   private def maybeDeleteExpenses(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers): EitherT[Future, ServiceError, Unit] =
     answers.tradingAllowance match {
-      case UseTradingAllowance => repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(ExpensesTailoring), Some("expenses-"))
+      case UseTradingAllowance => repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(ExpensesTailoring), Option("expenses-"))
       case DeclareExpenses     => EitherT.rightT[Future, ServiceError](())
     }
 

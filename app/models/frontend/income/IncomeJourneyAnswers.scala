@@ -34,14 +34,13 @@ case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
                                 tradingAllowanceAmount: Option[BigDecimal])
     extends FrontendAnswers[IncomeStorageAnswers] {
 
-  def toDbModel: Option[IncomeStorageAnswers] = Some(
-    IncomeStorageAnswers(
-      incomeNotCountedAsTurnover,
-      anyOtherIncome,
-      turnoverNotTaxable,
-      tradingAllowance,
-      howMuchTradingAllowance
-    ))
+  def toDbModel: Option[IncomeStorageAnswers] = Option(IncomeStorageAnswers(
+    incomeNotCountedAsTurnover,
+    anyOtherIncome,
+    turnoverNotTaxable,
+    tradingAllowance,
+    howMuchTradingAllowance
+  ))
 
   override def toDownStreamAnnualAdjustments(current: Option[AnnualAdjustments]): AnnualAdjustments =
     current.getOrElse(AnnualAdjustments.empty).copy(includedNonTaxableProfits = notTaxableAmount, outstandingBusinessIncome = otherIncomeAmount)

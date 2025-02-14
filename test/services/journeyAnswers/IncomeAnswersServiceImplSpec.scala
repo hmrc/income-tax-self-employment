@@ -25,6 +25,7 @@ import models.database.JourneyAnswers
 import models.database.income.IncomeStorageAnswers
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
+import models.error.ServiceError
 import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
 import org.mockito.IdiomaticMockito.StubbingOps
@@ -59,31 +60,30 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
     }
 
     "return error if cannot read IncomeJourneyAnswers" in new TestCase(
-      repo = StubJourneyAnswersRepository(getAnswer = Some(brokenJourneyAnswers))
+      repo = StubJourneyAnswersRepository(getAnswer = Option(brokenJourneyAnswers))
     ) {
-      val result = await(service.getAnswers(journeyCtxWithNino).value)
-      val error  = result.left.value
+      val result: Either[ServiceError, Option[IncomeJourneyAnswers]] = await(service.getAnswers(journeyCtxWithNino).value)
+      val error: ServiceError = result.left.value
       error shouldBe a[InvalidJsonFormatError]
     }
 
     "return IncomeJourneyAnswers" in new TestCase(
-      repo = StubJourneyAnswersRepository(getAnswer = Some(sampleIncomeJourneyAnswers))
+      repo = StubJourneyAnswersRepository(getAnswer = Option(sampleIncomeJourneyAnswers))
     ) {
-      val incomeStorageAnswers = repo.getAnswer.value.data.as[IncomeStorageAnswers]
-      val result               = service.getAnswers(journeyCtxWithNino).value.futureValue
-      result.value shouldBe Some(
-        IncomeJourneyAnswers(
-          incomeStorageAnswers.incomeNotCountedAsTurnover,
-          None,
-          BigDecimal("0"),
-          incomeStorageAnswers.anyOtherIncome,
-          None,
-          incomeStorageAnswers.turnoverNotTaxable,
-          None,
-          incomeStorageAnswers.tradingAllowance,
-          incomeStorageAnswers.howMuchTradingAllowance,
-          None
-        ))
+      val incomeStorageAnswers: IncomeStorageAnswers = repo.getAnswer.value.data.as[IncomeStorageAnswers]
+      val result: Either[ServiceError, Option[IncomeJourneyAnswers]] = service.getAnswers(journeyCtxWithNino).value.futureValue
+      result.value shouldBe Option(IncomeJourneyAnswers(
+        incomeStorageAnswers.incomeNotCountedAsTurnover,
+        None,
+        BigDecimal("0"),
+        incomeStorageAnswers.anyOtherIncome,
+        None,
+        incomeStorageAnswers.turnoverNotTaxable,
+        None,
+        incomeStorageAnswers.tradingAllowance,
+        incomeStorageAnswers.howMuchTradingAllowance,
+        None
+      ))
     }
   }
 
