@@ -18,25 +18,21 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
-import config.AppConfig
 import connectors.ReliefClaimsConnector
 import models.common._
 import models.connector.ReliefClaimType
 import models.connector.api_1505.CreateLossClaimSuccessResponse
 import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
-import models.error.ServiceError
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.toReliefClaimType
-import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector,
-                                    appConfig: AppConfig)
+class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector)
                                     (implicit ec: ExecutionContext) {
 
   def getAllReliefClaims(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] =
@@ -51,7 +47,7 @@ class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector
                          answers: Seq[WhatDoYouWantToDoWithLoss])
                         (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Seq[CreateLossClaimSuccessResponse]] =
     if (answers.isEmpty) {
-      EitherT.pure(Future.successful(Nil: List[CreateLossClaimSuccessResponse]))
+      EitherT.pure(Nil: Seq[CreateLossClaimSuccessResponse])
     } else {
       answers.map { answer =>
         reliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
