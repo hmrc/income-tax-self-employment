@@ -36,10 +36,10 @@ class AuditServiceSpec extends AnyFreeSpec with MockitoSugar with BeforeAndAfter
 
   case class Test(data: String)
   val mockAuditConnector: AuditConnector = mock[AuditConnector]
-  val mocAppConfig: AppConfig = mock[AppConfig]
-  implicit val hc: HeaderCarrier = HeaderCarrier()
-  implicit val writes: OWrites[Test] = Json.writes[Test]
-  val eventDetail: Test = Test("someData")
+  val mocAppConfig: AppConfig            = mock[AppConfig]
+  implicit val hc: HeaderCarrier         = HeaderCarrier()
+  implicit val writes: OWrites[Test]     = Json.writes[Test]
+  val eventDetail: Test                  = Test("someData")
 
   override def beforeEach(): Unit =
     reset(mockAuditConnector)

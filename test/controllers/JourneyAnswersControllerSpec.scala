@@ -231,7 +231,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save return a $INTERNAL_SERVER_ERROR when downstream fails" in {
-      val data = incomeJourneyAnswersGen.sample.value
+      val data            = incomeJourneyAnswersGen.sample.value
       val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
 
       val underTest = new JourneyAnswersController(

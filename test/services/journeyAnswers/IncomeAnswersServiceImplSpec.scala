@@ -53,7 +53,7 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers with BeforeAndAfterEach{
+class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers with BeforeAndAfterEach {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   override def beforeEach(): Unit = {
@@ -70,27 +70,28 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
       repo = StubJourneyAnswersRepository(getAnswer = Option(brokenJourneyAnswers))
     ) {
       val result: Either[ServiceError, Option[IncomeJourneyAnswers]] = await(service.getAnswers(journeyCtxWithNino).value)
-      val error: ServiceError = result.left.value
+      val error: ServiceError                                        = result.left.value
       error shouldBe a[InvalidJsonFormatError]
     }
 
     "return IncomeJourneyAnswers" in new TestCase(
       repo = StubJourneyAnswersRepository(getAnswer = Option(sampleIncomeJourneyAnswers))
     ) {
-      val incomeStorageAnswers: IncomeStorageAnswers = repo.getAnswer.value.data.as[IncomeStorageAnswers]
+      val incomeStorageAnswers: IncomeStorageAnswers                 = repo.getAnswer.value.data.as[IncomeStorageAnswers]
       val result: Either[ServiceError, Option[IncomeJourneyAnswers]] = service.getAnswers(journeyCtxWithNino).value.futureValue
-      result.value shouldBe Option(IncomeJourneyAnswers(
-        incomeStorageAnswers.incomeNotCountedAsTurnover,
-        None,
-        BigDecimal("0"),
-        incomeStorageAnswers.anyOtherIncome,
-        None,
-        incomeStorageAnswers.turnoverNotTaxable,
-        None,
-        incomeStorageAnswers.tradingAllowance,
-        incomeStorageAnswers.howMuchTradingAllowance,
-        None
-      ))
+      result.value shouldBe Option(
+        IncomeJourneyAnswers(
+          incomeStorageAnswers.incomeNotCountedAsTurnover,
+          None,
+          BigDecimal("0"),
+          incomeStorageAnswers.anyOtherIncome,
+          None,
+          incomeStorageAnswers.turnoverNotTaxable,
+          None,
+          incomeStorageAnswers.tradingAllowance,
+          incomeStorageAnswers.howMuchTradingAllowance,
+          None
+        ))
     }
   }
 
@@ -115,7 +116,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
         verify(connector, times(1)).createSEPeriodSummary(*)(*, *)
-        verify(auditService, times(1)).sendAuditEvent(*,*)(*, *)
+        verify(auditService, times(1)).sendAuditEvent(*, *)(*, *)
         verify(connector, never).amendSEPeriodSummary(*)(*, *)
       }
     }
@@ -142,7 +143,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
         verify(connector, times(1)).amendSEPeriodSummary(*)(*, *)
-        verify(auditService, times(1)).sendAuditEvent(*,*)(*, *)
+        verify(auditService, times(1)).sendAuditEvent(*, *)(*, *)
         verify(connector, never).createSEPeriodSummary(*)(*, *)
       }
     }
@@ -169,7 +170,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
         verify(connector, times(1)).amendSEPeriodSummary(*)(*, *)
-        verify(auditService, times(1)).sendAuditEvent(*,*)(*, *)
+        verify(auditService, times(1)).sendAuditEvent(*, *)(*, *)
         verify(connector, never).createSEPeriodSummary(*)(*, *)
       }
     }
@@ -186,8 +187,10 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 }
 
 object IncomeAnswersServiceImplSpec {
-  val mockAuditService: AuditService =  mock[AuditService]
-  abstract class TestCase(val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(), val connector: IFSConnector = StubIFSConnector(), val auditService: AuditService = mockAuditService) {
+  val mockAuditService: AuditService = mock[AuditService]
+  abstract class TestCase(val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(),
+                          val connector: IFSConnector = StubIFSConnector(),
+                          val auditService: AuditService = mockAuditService) {
     val service = new IncomeAnswersServiceImpl(repo, connector, auditService)
   }
 
