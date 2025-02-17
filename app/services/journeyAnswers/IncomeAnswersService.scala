@@ -19,6 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
+import models.audit.AuditTradingAllowance
 import models.common.JourneyName.{ExpensesTailoring, Income}
 import models.common.TaxYear.{endDate, startDate}
 import models.common._
@@ -34,6 +35,7 @@ import models.frontend.income.IncomeJourneyAnswers
 import models.frontend.income.TradingAllowance.{DeclareExpenses, UseTradingAllowance}
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
+import services.AuditService
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTOps._
 
@@ -46,7 +48,8 @@ trait IncomeAnswersService {
 }
 
 @Singleton
-class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, connector: IFSConnector)(implicit ec: ExecutionContext)
+class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, connector: IFSConnector, auditService: AuditService)(implicit
+    ec: ExecutionContext)
     extends IncomeAnswersService {
 
   def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[IncomeJourneyAnswers]] =
@@ -83,7 +86,17 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[IncomeStorageAnswers](maybeAnnualSummaries, answers)
     } yield updatedAnnualSubmissionBody
 
-    EitherT(submissionBody).flatMap(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
+    EitherT(submissionBody).flatMap(createUpdateDeleteAnnualSummaryAndLogEvent(ctx, answers, _))
+  }
+
+  private def createUpdateDeleteAnnualSummaryAndLogEvent(ctx: JourneyContextWithNino,
+                                                         answers: IncomeJourneyAnswers,
+                                                         x: Option[CreateAmendSEAnnualSubmissionRequestBody])(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] = {
+    val result = connector.createUpdateOrDeleteApiAnnualSummaries(ctx, x)
+    auditService.sendAuditEvent(AuditTradingAllowance.auditType, AuditTradingAllowance.apply(ctx, answers))
+    result
+
   }
 
   private def maybeDeleteExpenses(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers): EitherT[Future, ServiceError, Unit] =

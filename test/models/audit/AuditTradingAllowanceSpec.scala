@@ -18,6 +18,7 @@ package models.audit
 
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import models.common.BusinessId
+import models.common.TaxYear.asTys
 import models.frontend.income.HowMuchTradingAllowance.{LessThan, Maximum}
 import models.frontend.income.TradingAllowance.{DeclareExpenses, UseTradingAllowance}
 import org.scalatest.OptionValues
@@ -27,13 +28,13 @@ import utils.BaseSpec.{journeyCtxWithNino, nino}
 
 class AuditTradingAllowanceSpec extends BaseSpec with Matchers with OptionValues {
 
-  val years: String = journeyCtxWithNino.taxYear.toYY_YY
+  val years: String = asTys(journeyCtxWithNino.taxYear)
 
   "AuditTradingAllowance" should {
     "convert the user answers to Trading allowance  when DeclareExpenses is selected" in {
       val incomeJourneyAnswers = incomeJourneyAnswersGen.sample.value.copy(tradingAllowance = DeclareExpenses)
 
-      val result = AuditTradingAllowance.convertUserAnswersToAuditModel(journeyCtxWithNino, incomeJourneyAnswers)
+      val result = AuditTradingAllowance.apply(journeyCtxWithNino, incomeJourneyAnswers)
       result shouldBe AuditTradingAllowance(nino, BusinessId("SJPR05893938418"), "SJPR05893938418", years, useTradingAllowance = false, None, None)
     }
 
@@ -41,7 +42,7 @@ class AuditTradingAllowanceSpec extends BaseSpec with Matchers with OptionValues
       val incomeJourneyAnswers =
         incomeJourneyAnswersGen.sample.value.copy(tradingAllowance = UseTradingAllowance, howMuchTradingAllowance = Option(Maximum))
 
-      val result = AuditTradingAllowance.convertUserAnswersToAuditModel(journeyCtxWithNino, incomeJourneyAnswers)
+      val result = AuditTradingAllowance.apply(journeyCtxWithNino, incomeJourneyAnswers)
       result shouldBe AuditTradingAllowance(
         nino,
         BusinessId("SJPR05893938418"),
@@ -58,7 +59,7 @@ class AuditTradingAllowanceSpec extends BaseSpec with Matchers with OptionValues
         howMuchTradingAllowance = Option(LessThan),
         tradingAllowanceAmount = Option(20))
 
-      val result = AuditTradingAllowance.convertUserAnswersToAuditModel(journeyCtxWithNino, incomeJourneyAnswers)
+      val result = AuditTradingAllowance.apply(journeyCtxWithNino, incomeJourneyAnswers)
       result shouldBe AuditTradingAllowance(
         nino,
         BusinessId("SJPR05893938418"),

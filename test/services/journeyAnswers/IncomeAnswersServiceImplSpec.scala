@@ -29,9 +29,10 @@ import models.error.ServiceError
 import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
 import org.mockito.IdiomaticMockito.StubbingOps
-import org.mockito.Mockito.times
+import org.mockito.Mockito.{reset, times}
 import org.mockito.MockitoSugar.{mock, never, verify}
 import org.mockito.matchers.MacroBasedMatchers
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.EitherValues._
 import org.scalatest.OptionValues._
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
@@ -40,6 +41,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import services.AuditService
 import services.journeyAnswers.IncomeAnswersServiceImplSpec._
 import stubs.connectors.StubIFSConnector
 import stubs.connectors.StubIFSConnector._
@@ -51,8 +53,13 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers {
+class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers with BeforeAndAfterEach{
   implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  override def beforeEach(): Unit = {
+    reset(mockAuditService)
+    super.beforeEach()
+  }
 
   "getAnswers" should {
     "return empty answers if there is no answers submitted" in new TestCase() {
@@ -108,9 +115,11 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
         verify(connector, times(1)).createSEPeriodSummary(*)(*, *)
+        verify(auditService, times(1)).sendAuditEvent(*,*)(*, *)
         verify(connector, never).amendSEPeriodSummary(*)(*, *)
       }
     }
+
     "prior submission data exists" must {
       "successfully store data and amend the period summary" in new TestCase(connector = mock[IFSConnector]) {
         connector.listSEPeriodSummary(*)(*, *) returns
@@ -133,6 +142,34 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
         verify(connector, times(1)).amendSEPeriodSummary(*)(*, *)
+        verify(auditService, times(1)).sendAuditEvent(*,*)(*, *)
+        verify(connector, never).createSEPeriodSummary(*)(*, *)
+      }
+    }
+
+    "prior submission data exists" must {
+      "fail to store data and amend the period summary when downstream fails" in new TestCase(connector = mock[IFSConnector]) {
+        connector.listSEPeriodSummary(*)(*, *) returns
+          Future.successful(api1965MatchedResponse.asRight)
+
+        connector.getPeriodicSummaryDetail(*)(*, *) returns
+          Future.successful(api1786DeductionsSuccessResponse.asRight)
+
+        connector.amendSEPeriodSummary(*)(*, *) returns Future.successful(().asRight)
+
+        connector.getAnnualSummaries(*)(*, *) returns
+          Future.successful(api1803SuccessResponse.asRight)
+
+        connector.createUpdateOrDeleteApiAnnualSummaries(*, *)(*, *) returns
+          EitherT.rightT(())
+
+        val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
+        val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
+
+        service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
+
+        verify(connector, times(1)).amendSEPeriodSummary(*)(*, *)
+        verify(auditService, times(1)).sendAuditEvent(*,*)(*, *)
         verify(connector, never).createSEPeriodSummary(*)(*, *)
       }
     }
@@ -149,8 +186,9 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 }
 
 object IncomeAnswersServiceImplSpec {
-  abstract class TestCase(val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(), val connector: IFSConnector = StubIFSConnector()) {
-    val service = new IncomeAnswersServiceImpl(repo, connector)
+  val mockAuditService: AuditService =  mock[AuditService]
+  abstract class TestCase(val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(), val connector: IFSConnector = StubIFSConnector(), val auditService: AuditService = mockAuditService) {
+    val service = new IncomeAnswersServiceImpl(repo, connector, auditService)
   }
 
   val brokenJourneyAnswers: JourneyAnswers = JourneyAnswers(

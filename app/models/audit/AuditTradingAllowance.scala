@@ -16,6 +16,7 @@
 
 package models.audit
 
+import models.common.TaxYear.asTys
 import models.common.{BusinessId, JourneyContextWithNino, Nino}
 import models.frontend.income.HowMuchTradingAllowance.Maximum
 import models.frontend.income.IncomeJourneyAnswers
@@ -31,20 +32,23 @@ case class AuditTradingAllowance(nino: Nino,
                                  tradingAllowanceUsed: Option[BigDecimal])
 
 object AuditTradingAllowance {
+
+  val auditType: String = "TradingIncomeAllowance"
+
   implicit val format: OFormat[AuditTradingAllowance] = Json.format[AuditTradingAllowance]
 
-  def convertUserAnswersToAuditModel(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers): AuditTradingAllowance =
+  def apply(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers): AuditTradingAllowance =
     answers.tradingAllowance match {
       case DeclareExpenses =>
-        AuditTradingAllowance(ctx.nino, ctx.businessId, ctx.businessId.toString, ctx.taxYear.toYY_YY, useTradingAllowance = false, None, None)
+        AuditTradingAllowance(ctx.nino, ctx.businessId, ctx.businessId.toString, asTys(ctx.taxYear), useTradingAllowance = false, None, None)
       case UseTradingAllowance =>
-        val useMaximum: Boolean                              = answers.howMuchTradingAllowance.contains(Maximum)
+        val useMaximum: Boolean                      = answers.howMuchTradingAllowance.contains(Maximum)
         val tradingAllowanceUsed: Option[BigDecimal] = if (useMaximum) None else answers.tradingAllowanceAmount
         AuditTradingAllowance(
           ctx.nino,
           ctx.businessId,
           ctx.businessId.toString,
-          ctx.taxYear.toYY_YY,
+          asTys(ctx.taxYear),
           useTradingAllowance = true,
           Option(useMaximum),
           tradingAllowanceUsed)

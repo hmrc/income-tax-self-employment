@@ -22,7 +22,7 @@ import org.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.freespec.AnyFreeSpec
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{Json, OWrites}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.{Disabled, Failure, Success}
@@ -34,10 +34,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AuditServiceSpec extends AnyFreeSpec with MockitoSugar with BeforeAndAfterEach with ScalaFutures {
 
+  case class Test(data: String)
   val mockAuditConnector: AuditConnector = mock[AuditConnector]
   val mocAppConfig: AppConfig = mock[AppConfig]
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val eventDetail: JsObject              = Json.obj("test-param1" -> "test-value-1")
+  implicit val writes: OWrites[Test] = Json.writes[Test]
+  val eventDetail: Test = Test("someData")
 
   override def beforeEach(): Unit =
     reset(mockAuditConnector)
@@ -56,7 +58,7 @@ class AuditServiceSpec extends AnyFreeSpec with MockitoSugar with BeforeAndAfter
       val result = auditService.sendAuditEvent(
         "dummy app",
         eventDetail
-      )(hc)
+      )
 
       result.futureValue mustBe Success
 
@@ -79,7 +81,7 @@ class AuditServiceSpec extends AnyFreeSpec with MockitoSugar with BeforeAndAfter
       val result = auditService.sendAuditEvent(
         "dummy app",
         eventDetail
-      )(hc)
+      )
 
       result.futureValue mustBe Failure("Some thing gone wrong")
 
@@ -102,7 +104,7 @@ class AuditServiceSpec extends AnyFreeSpec with MockitoSugar with BeforeAndAfter
       val result = auditService.sendAuditEvent(
         "dummy app",
         eventDetail
-      )(hc)
+      )
 
       result.futureValue mustBe Disabled
 

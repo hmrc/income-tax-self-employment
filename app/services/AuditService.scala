@@ -18,7 +18,7 @@ package services
 
 import config.AppConfig
 import play.api.Logging
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json, Writes}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.{Disabled, Failure}
@@ -28,38 +28,39 @@ import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuditService @Inject()(
-                              appConfig: AppConfig,
-                              auditConnector: AuditConnector
+class AuditService @Inject() (
+    appConfig: AppConfig,
+    auditConnector: AuditConnector
 )(implicit ec: ExecutionContext)
     extends Logging {
 
-  def sendAuditEvent(
-    eventName: String,
-    detail: JsValue
+  def sendAuditEvent[T](
+      auditType: String,
+      detail: T
   )(implicit
-    hc: HeaderCarrier
+      hc: HeaderCarrier,
+      writes: Writes[T]
   ): Future[AuditResult] =
     auditConnector.sendExtendedEvent(
       ExtendedDataEvent(
         auditSource = appConfig.appName,
-        auditType = eventName,
-        detail = detail,
+        auditType = auditType,
+        detail = Json.toJson(detail),
         tags = AuditExtensions.auditHeaderCarrier(hc).toAuditDetails()
       )
     ) map { auditResult: AuditResult =>
       auditResult match {
         case Failure(msg, _) =>
           logger.warn(
-            s"The attempt to issue audit event $eventName failed with message : $msg"
+            s"The attempt to issue audit event $auditType failed with message : $msg"
           )
           auditResult
-        case Disabled        =>
+        case Disabled =>
           logger.warn(
-            s"The attempt to issue audit event $eventName was unsuccessful, as auditing is currently disabled in config"
+            s"The attempt to issue audit event $auditType was unsuccessful, as auditing is currently disabled in config"
           ); auditResult
-        case _               =>
-          logger.info(s"Audit event $eventName issued successful.");
+        case _ =>
+          logger.info(s"Audit event $auditType issued successful.");
           auditResult
       }
     }
