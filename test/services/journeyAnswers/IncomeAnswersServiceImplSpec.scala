@@ -21,7 +21,7 @@ import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
-import models.common.{BusinessId, JourneyContextWithNino, JourneyName, JourneyStatus, Nino}
+import models.common._
 import models.database.JourneyAnswers
 import models.database.income.IncomeStorageAnswers
 import models.error.DownstreamError.SingleDownstreamError
@@ -42,8 +42,8 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import services.{AuditService, BusinessService}
 import services.journeyAnswers.IncomeAnswersServiceImplSpec._
+import services.{AuditService, BusinessService}
 import stubs.connectors.StubIFSConnector
 import stubs.connectors.StubIFSConnector._
 import stubs.repositories.StubJourneyAnswersRepository
@@ -99,7 +99,8 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
   "saving income answers" when {
     "no period summary or annual submission data exists" must {
       "successfully store data and create the period summary" in new TestCase(connector = mock[IFSConnector]) {
-        when(mockBusinessService.getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier])).thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
+        when(mockBusinessService.getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier]))
+          .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
 
         connector.listSEPeriodSummary(*)(*, *) returns
           Future.successful(api1965EmptyResponse.asRight)
@@ -127,7 +128,8 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 
     "prior submission data exists" must {
       "successfully store data and amend the period summary" in new TestCase(connector = mock[IFSConnector]) {
-        when(mockBusinessService.getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier])).thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
+        when(mockBusinessService.getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier]))
+          .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
 
         connector.listSEPeriodSummary(*)(*, *) returns
           Future.successful(api1965MatchedResponse.asRight)
@@ -169,7 +171,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 }
 
 object IncomeAnswersServiceImplSpec {
-  val mockAuditService: AuditService = mock[AuditService]
+  val mockAuditService: AuditService       = mock[AuditService]
   val mockBusinessService: BusinessService = mock[BusinessService]
   abstract class TestCase(val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(),
                           val connector: IFSConnector = StubIFSConnector(),

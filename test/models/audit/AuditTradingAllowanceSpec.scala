@@ -58,10 +58,17 @@ class AuditTradingAllowanceSpec extends BaseSpec with Matchers with OptionValues
       val incomeJourneyAnswers = incomeJourneyAnswersGen.sample.value.copy(
         tradingAllowance = UseTradingAllowance,
         howMuchTradingAllowance = Option(LessThan),
-        tradingAllowanceAmount = Option(20))
+        tradingAllowanceAmount = Option(20.00))
 
       val result = AuditTradingAllowance.apply(journeyCtxWithNino, None, incomeJourneyAnswers)
-      result shouldBe AuditTradingAllowance(nino, BusinessId("SJPR05893938418"), None, years, useTradingAllowance = true, Option(false), Option(20))
+      result shouldBe AuditTradingAllowance(
+        nino,
+        BusinessId("SJPR05893938418"),
+        None,
+        years,
+        useTradingAllowance = true,
+        Option(false),
+        Option(20.00))
     }
 
     "serialise to json" in {

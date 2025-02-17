@@ -123,22 +123,24 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository,
     }
   }
 
-  private def createSEPeriod(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier) = {
+  private def createSEPeriod(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit
+      hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
     val createIncome = IncomesType(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount)
-    val createBody   = CreateSEPeriodSummaryRequestBody(startDate(ctx.taxYear), endDate(ctx.taxYear), Some(FinancialsType(createIncome.some, None)))
+    val createBody   = CreateSEPeriodSummaryRequestBody(startDate(ctx.taxYear), endDate(ctx.taxYear), Option(FinancialsType(createIncome.some, None)))
     val createData   = CreateSEPeriodSummaryRequestData(ctx.taxYear, ctx.businessId, ctx.nino, createBody)
 
     EitherT(connector.createSEPeriodSummary(createData)).leftAs[ServiceError].void
   }
 
-  private def updateSEPeriod(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier) =
+  private def updateSEPeriod(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit
+      hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] =
     for {
       periodicSummaryDetails <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
       _                      <- updateSEPeriodSummary(ctx, periodicSummaryDetails, answers)
     } yield ()
 
   private def updateSEPeriodSummary(ctx: JourneyContextWithNino, periodicSummaryDetails: SuccessResponseSchema, answers: IncomeJourneyAnswers)(
-      implicit hc: HeaderCarrier) = {
+      implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
     def createIncome(taxTakenOffTradingIncome: Option[BigDecimal]) = Incomes(
       turnover = answers.turnoverIncomeAmount.some,
       other = answers.nonTurnoverIncomeAmount,
@@ -153,7 +155,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository,
     }
 
     val amendBody = AmendSEPeriodSummaryRequestBody(
-      incomes = Some(updatedIncomes),
+      incomes = Option(updatedIncomes),
       deductions = updatedDeductions.map(_.toApi1895)
     )
 
