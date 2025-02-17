@@ -35,7 +35,7 @@ import models.frontend.income.IncomeJourneyAnswers
 import models.frontend.income.TradingAllowance.{DeclareExpenses, UseTradingAllowance}
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
-import services.AuditService
+import services.{AuditService, BusinessService}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTOps._
 
@@ -48,8 +48,10 @@ trait IncomeAnswersService {
 }
 
 @Singleton
-class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, connector: IFSConnector, auditService: AuditService)(implicit
-    ec: ExecutionContext)
+class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository,
+                                          connector: IFSConnector,
+                                          auditService: AuditService,
+                                          businessService: BusinessService)(implicit ec: ExecutionContext)
     extends IncomeAnswersService {
 
   def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[IncomeJourneyAnswers]] =
@@ -94,7 +96,9 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
                                                          x: Option[CreateAmendSEAnnualSubmissionRequestBody])(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
     val result = connector.createUpdateOrDeleteApiAnnualSummaries(ctx, x)
-    auditService.sendAuditEvent(AuditTradingAllowance.auditType, AuditTradingAllowance.apply(ctx, answers))
+    businessService.getBusiness(ctx.nino, ctx.businessId).map(_.tradingName).getOrElse(None) map { businessName =>
+      auditService.sendAuditEvent(AuditTradingAllowance.auditType, AuditTradingAllowance.apply(ctx, businessName, answers))
+    }
     result
 
   }

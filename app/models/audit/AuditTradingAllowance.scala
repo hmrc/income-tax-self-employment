@@ -25,7 +25,7 @@ import play.api.libs.json.{Json, OFormat}
 
 case class AuditTradingAllowance(nino: Nino,
                                  businessId: BusinessId,
-                                 businessName: String,
+                                 businessName: Option[String],
                                  taxYear: String,
                                  useTradingAllowance: Boolean,
                                  useMaximum: Option[Boolean],
@@ -37,17 +37,17 @@ object AuditTradingAllowance {
 
   implicit val format: OFormat[AuditTradingAllowance] = Json.format[AuditTradingAllowance]
 
-  def apply(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers): AuditTradingAllowance =
+  def apply(ctx: JourneyContextWithNino, tradingName: Option[String], answers: IncomeJourneyAnswers): AuditTradingAllowance =
     answers.tradingAllowance match {
       case DeclareExpenses =>
-        AuditTradingAllowance(ctx.nino, ctx.businessId, ctx.businessId.toString, asTys(ctx.taxYear), useTradingAllowance = false, None, None)
+        AuditTradingAllowance(ctx.nino, ctx.businessId, tradingName, asTys(ctx.taxYear), useTradingAllowance = false, None, None)
       case UseTradingAllowance =>
         val useMaximum: Boolean                      = answers.howMuchTradingAllowance.contains(Maximum)
         val tradingAllowanceUsed: Option[BigDecimal] = if (useMaximum) None else answers.tradingAllowanceAmount
         AuditTradingAllowance(
           ctx.nino,
           ctx.businessId,
-          ctx.businessId.toString,
+          tradingName,
           asTys(ctx.taxYear),
           useTradingAllowance = true,
           Option(useMaximum),
