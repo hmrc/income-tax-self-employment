@@ -96,11 +96,10 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository,
                                                          x: Option[CreateAmendSEAnnualSubmissionRequestBody])(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
     val result = connector.createUpdateOrDeleteApiAnnualSummaries(ctx, x)
-    businessService.getBusiness(ctx.nino, ctx.businessId).map(_.tradingName).getOrElse(None) map { businessName =>
+    businessService.getBusiness(ctx.nino, ctx.businessId).map(_.tradingName) map { businessName =>
       auditService.sendAuditEvent(AuditTradingAllowance.auditType, AuditTradingAllowance.apply(ctx, businessName, answers))
     }
     result
-
   }
 
   private def maybeDeleteExpenses(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers): EitherT[Future, ServiceError, Unit] =
