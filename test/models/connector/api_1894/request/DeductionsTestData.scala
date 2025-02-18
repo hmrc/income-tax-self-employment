@@ -18,21 +18,21 @@ package models.connector.api_1894.request
 
 object DeductionsTestData {
   val sample: Deductions = Deductions(
-    adminCosts = Some(SelfEmploymentDeductionsDetailType(Some(1.0), Some(2.0))),
-    advertisingCosts = Some(SelfEmploymentDeductionsDetailType(Some(3.0), Some(4.0))),
-    badDebt = Some(SelfEmploymentDeductionsDetailPosNegType(Some(5.0), Some(6.0))),
-    constructionIndustryScheme = Some(SelfEmploymentDeductionsDetailType(Some(7.0), Some(8.0))),
-    costOfGoods = Some(SelfEmploymentDeductionsDetailPosNegType(Some(9.0), Some(10.0))),
-    depreciation = Some(SelfEmploymentDeductionsDetailPosNegType(Some(11.0), Some(12.0))),
-    financialCharges = Some(SelfEmploymentDeductionsDetailPosNegType(Some(13.0), Some(14.0))),
-    interest = Some(SelfEmploymentDeductionsDetailPosNegType(Some(15.0), Some(16.0))),
-    maintenanceCosts = Some(SelfEmploymentDeductionsDetailPosNegType(Some(17.0), Some(18.0))),
-    other = Some(SelfEmploymentDeductionsDetailType(Some(19.0), Some(20.0))),
-    professionalFees = Some(SelfEmploymentDeductionsDetailAllowablePosNegType(Some(21.0), Some(22.0))),
-    premisesRunningCosts = Some(SelfEmploymentDeductionsDetailPosNegType(Some(23.0), Some(24.0))),
-    staffCosts = Some(SelfEmploymentDeductionsDetailType(Some(25.0), Some(26.0))),
-    travelCosts = Some(SelfEmploymentDeductionsDetailType(Some(27.0), Some(28.0))),
-    businessEntertainmentCosts = Some(SelfEmploymentDeductionsDetailType(Some(29.0), Some(30.0))),
-    simplifiedExpenses = Some(31)
+    adminCosts = Option(SelfEmploymentDeductionsDetailType(Some(1.0), Some(2.0))),
+    advertisingCosts = Option(SelfEmploymentDeductionsDetailType(Some(3.0), Some(4.0))),
+    badDebt = Option(SelfEmploymentDeductionsDetailPosNegType(Some(5.0), Some(6.0))),
+    constructionIndustryScheme = Option(SelfEmploymentDeductionsDetailType(Some(7.0), Some(8.0))),
+    costOfGoods = Option(SelfEmploymentDeductionsDetailPosNegType(Some(9.0), Some(10.0))),
+    depreciation = Option(SelfEmploymentDeductionsDetailPosNegType(Some(11.0), Some(12.0))),
+    financialCharges = Option(SelfEmploymentDeductionsDetailPosNegType(Some(13.0), Some(14.0))),
+    interest = Option(SelfEmploymentDeductionsDetailPosNegType(Some(15.0), Some(16.0))),
+    maintenanceCosts = Option(SelfEmploymentDeductionsDetailPosNegType(Some(17.0), Some(18.0))),
+    other = Option(SelfEmploymentDeductionsDetailType(Option(19.0), Option(20.0))),
+    professionalFees = Option(SelfEmploymentDeductionsDetailAllowablePosNegType(Some(21.0), Some(22.0))),
+    premisesRunningCosts = Option(SelfEmploymentDeductionsDetailPosNegType(Some(23.0), Some(24.0))),
+    staffCosts = Option(SelfEmploymentDeductionsDetailType(Some(25.0), Some(26.0))),
+    travelCosts = Option(SelfEmploymentDeductionsDetailType(Some(27.0), Some(28.0))),
+    businessEntertainmentCosts = Option(SelfEmploymentDeductionsDetailType(Some(29.0), Some(30.0))),
+    simplifiedExpenses = Option(31)
   )
 }

@@ -27,6 +27,7 @@ import models.common.JourneyName.{
   GoodsToSellOrUse,
   IrrecoverableDebts,
   OfficeSupplies,
+  OtherExpenses,
   ProfessionalFees,
   RepairsAndMaintenanceCosts,
   StaffCosts,
@@ -108,6 +109,7 @@ trait ExpensesAnswersService {
   def clearAdvertisingOrMarketingExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearIrrecoverableDebtsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearOtherExpensesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
 @Singleton
@@ -360,6 +362,9 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   def clearIrrecoverableDebtsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearExpensesData(ctx, IrrecoverableDebts)
 
+  def clearOtherExpensesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesData(ctx, OtherExpenses)
+
   private def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
@@ -380,7 +385,8 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       StaffCosts                 -> deductions.copy(staffCosts = None),
       Construction               -> deductions.copy(constructionIndustryScheme = None),
       ProfessionalFees           -> deductions.copy(professionalFees = None),
-      IrrecoverableDebts         -> deductions.copy(badDebt = None)
+      IrrecoverableDebts         -> deductions.copy(badDebt = None),
+      OtherExpenses              -> deductions.copy(other = None)
     )
     journeyDeductionsMap.getOrElse(journeyName, deductions)
   }
