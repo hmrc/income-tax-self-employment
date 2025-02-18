@@ -17,12 +17,13 @@
 package bulders
 
 import models.common._
+import models.connector.api_1171.BusinessDataDetails
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.connector.api_2085.{IncomeSource, ListOfIncomeSources}
 import models.connector.citizen_details.SuccessResponseSchema
 import models.connector.{api_1171, citizen_details}
 import models.domain.Business.mkBusiness
-import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
+import models.domain.{Business, JourneyNameAndStatus, TradesJourneyStatuses}
 import models.frontend.adjustments.NetBusinessProfitOrLossValues
 import play.api.libs.json.Json
 
@@ -40,9 +41,9 @@ object BusinessDataBuilder {
     totalExpenses = 200,
     netProfit = 200,
     netLoss = 200,
-    totalAdditions = Some(200),
-    totalDeductions = Some(200),
-    accountingAdjustments = Some(200),
+    totalAdditions = Option(200),
+    totalDeductions = Option(200),
+    accountingAdjustments = Option(200),
     taxableProfit = 200,
     taxableLoss = 200
   )

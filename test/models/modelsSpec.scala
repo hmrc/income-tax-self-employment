@@ -21,7 +21,7 @@ import models.error.ServiceError.InvalidJsonFormatError
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{Json, JsonValidationError, OFormat, __}
-import modelsSpec._
+import models.modelsSpec._
 
 class modelsSpec extends AnyWordSpecLike with Matchers {
 

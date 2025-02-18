@@ -34,7 +34,7 @@ case class IncomeJourneyAnswers(incomeNotCountedAsTurnover: Boolean,
                                 tradingAllowanceAmount: Option[BigDecimal])
     extends FrontendAnswers[IncomeStorageAnswers] {
 
-  def toDbModel: Option[IncomeStorageAnswers] = Some(
+  def toDbModel: Option[IncomeStorageAnswers] = Option(
     IncomeStorageAnswers(
       incomeNotCountedAsTurnover,
       anyOtherIncome,

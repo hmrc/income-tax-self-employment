@@ -19,6 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
+import models.audit.AuditTradingAllowance
 import models.common.JourneyName.{ExpensesTailoring, Income}
 import models.common.TaxYear.{endDate, startDate}
 import models.common._
@@ -34,6 +35,7 @@ import models.frontend.income.IncomeJourneyAnswers
 import models.frontend.income.TradingAllowance.{DeclareExpenses, UseTradingAllowance}
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
+import services.{AuditService, BusinessService}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTOps._
 
@@ -46,7 +48,10 @@ trait IncomeAnswersService {
 }
 
 @Singleton
-class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, connector: IFSConnector)(implicit ec: ExecutionContext)
+class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository,
+                                          connector: IFSConnector,
+                                          auditService: AuditService,
+                                          businessService: BusinessService)(implicit ec: ExecutionContext)
     extends IncomeAnswersService {
 
   def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[IncomeJourneyAnswers]] =
@@ -83,12 +88,23 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
       updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[IncomeStorageAnswers](maybeAnnualSummaries, answers)
     } yield updatedAnnualSubmissionBody
 
-    EitherT(submissionBody).flatMap(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
+    EitherT(submissionBody).flatMap(createUpdateDeleteAnnualSummaryAndLogEvent(ctx, answers, _))
+  }
+
+  private def createUpdateDeleteAnnualSummaryAndLogEvent(ctx: JourneyContextWithNino,
+                                                         answers: IncomeJourneyAnswers,
+                                                         x: Option[CreateAmendSEAnnualSubmissionRequestBody])(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] = {
+    val result = connector.createUpdateOrDeleteApiAnnualSummaries(ctx, x)
+    businessService.getBusiness(ctx.nino, ctx.businessId).map(_.tradingName) map { businessName =>
+      auditService.sendAuditEvent(AuditTradingAllowance.auditType, AuditTradingAllowance.apply(ctx, businessName, answers))
+    }
+    result
   }
 
   private def maybeDeleteExpenses(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers): EitherT[Future, ServiceError, Unit] =
     answers.tradingAllowance match {
-      case UseTradingAllowance => repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(ExpensesTailoring), Some("expenses-"))
+      case UseTradingAllowance => repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(ExpensesTailoring), Option("expenses-"))
       case DeclareExpenses     => EitherT.rightT[Future, ServiceError](())
     }
 
@@ -106,22 +122,24 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
     }
   }
 
-  private def createSEPeriod(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier) = {
+  private def createSEPeriod(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit
+      hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
     val createIncome = IncomesType(answers.turnoverIncomeAmount.some, answers.nonTurnoverIncomeAmount)
-    val createBody   = CreateSEPeriodSummaryRequestBody(startDate(ctx.taxYear), endDate(ctx.taxYear), Some(FinancialsType(createIncome.some, None)))
+    val createBody   = CreateSEPeriodSummaryRequestBody(startDate(ctx.taxYear), endDate(ctx.taxYear), Option(FinancialsType(createIncome.some, None)))
     val createData   = CreateSEPeriodSummaryRequestData(ctx.taxYear, ctx.businessId, ctx.nino, createBody)
 
     EitherT(connector.createSEPeriodSummary(createData)).leftAs[ServiceError].void
   }
 
-  private def updateSEPeriod(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit hc: HeaderCarrier) =
+  private def updateSEPeriod(ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit
+      hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] =
     for {
       periodicSummaryDetails <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
       _                      <- updateSEPeriodSummary(ctx, periodicSummaryDetails, answers)
     } yield ()
 
   private def updateSEPeriodSummary(ctx: JourneyContextWithNino, periodicSummaryDetails: SuccessResponseSchema, answers: IncomeJourneyAnswers)(
-      implicit hc: HeaderCarrier) = {
+      implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
     def createIncome(taxTakenOffTradingIncome: Option[BigDecimal]) = Incomes(
       turnover = answers.turnoverIncomeAmount.some,
       other = answers.nonTurnoverIncomeAmount,
@@ -136,7 +154,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository, 
     }
 
     val amendBody = AmendSEPeriodSummaryRequestBody(
-      incomes = Some(updatedIncomes),
+      incomes = Option(updatedIncomes),
       deductions = updatedDeductions.map(_.toApi1895)
     )
 
