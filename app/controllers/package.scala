@@ -47,7 +47,7 @@ package object controllers {
     handleResultT(resultT)
   }
 
-  def handleResultT(result: ApiResultT[Result])(implicit ec: ExecutionContext, logger: Logger): Future[Result] =
+  private def handleResultT(result: ApiResultT[Result])(implicit ec: ExecutionContext, logger: Logger): Future[Result] =
     result.leftMap { error =>
       handleError(error)
     }.merge

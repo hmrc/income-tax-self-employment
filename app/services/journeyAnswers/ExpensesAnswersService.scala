@@ -27,6 +27,7 @@ import models.common.JourneyName.{
   GoodsToSellOrUse,
   IrrecoverableDebts,
   OfficeSupplies,
+  OtherExpenses,
   ProfessionalFees,
   RepairsAndMaintenanceCosts,
   StaffCosts,
@@ -108,6 +109,7 @@ trait ExpensesAnswersService {
   def clearAdvertisingOrMarketingExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearIrrecoverableDebtsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearOtherExpensesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
 @Singleton
@@ -126,7 +128,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
         case NoExpensesAnswers => financials.copy(deductions = None) // clear all expenses
         case AsOneTotalAnswers(totalAmount) =>
           val deductions = api_1894.request.Deductions.empty
-          financials.updateDeductions(deductions.copy(simplifiedExpenses = Some(totalAmount))) // clear all expenses and set one total
+          financials.updateDeductions(deductions.copy(simplifiedExpenses = Option(totalAmount))) // clear all expenses and set one total
         case _: ExpensesTailoringIndividualCategoriesAnswers =>
           val deductions = financials.deductions.getOrElse(api_1894.request.Deductions.empty)
           financials.updateDeductions(deductions.copy(simplifiedExpenses = None)) // leave all existing deductions except simplifiedExpenses
@@ -328,8 +330,8 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
     for {
       _      <- EitherT(updateExpensesPeriodicSummaries)
       _      <- EitherT(updateCapitalAllowancesAnnualSummaries)
-      _      <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(ExpensesTailoring), Some("expenses-"))
-      result <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(CapitalAllowancesTailoring), Some("capital-allowances-"))
+      _      <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(ExpensesTailoring), Option("expenses-"))
+      result <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(CapitalAllowancesTailoring), Option("capital-allowances-"))
     } yield result
   }
 
@@ -360,6 +362,9 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
   def clearIrrecoverableDebtsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearExpensesData(ctx, IrrecoverableDebts)
 
+  def clearOtherExpensesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    clearExpensesData(ctx, OtherExpenses)
+
   private def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
@@ -370,17 +375,20 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       _ <- repository.deleteOneOrMoreJourneys(ctx.toJourneyContext(journeyName))
     } yield ()
 
-  private[journeyAnswers] def clearSpecificExpensesData(deductions: Deductions, journeyName: JourneyName): Deductions =
-    journeyName match {
-      case OfficeSupplies             => deductions.copy(adminCosts = None)
-      case GoodsToSellOrUse           => deductions.copy(costOfGoods = None)
-      case RepairsAndMaintenanceCosts => deductions.copy(maintenanceCosts = None)
-      case WorkplaceRunningCosts      => deductions.copy(premisesRunningCosts = None)
-      case AdvertisingOrMarketing     => deductions.copy(advertisingCosts = None)
-      case StaffCosts                 => deductions.copy(staffCosts = None)
-      case Construction               => deductions.copy(constructionIndustryScheme = None)
-      case ProfessionalFees           => deductions.copy(professionalFees = None)
-      case IrrecoverableDebts         => deductions.copy(badDebt = None)
-      case _                          => deductions
-    }
+  private[journeyAnswers] def clearSpecificExpensesData(deductions: Deductions, journeyName: JourneyName): Deductions = {
+    val journeyDeductionsMap: Map[JourneyName, Deductions] = Map(
+      OfficeSupplies             -> deductions.copy(adminCosts = None),
+      GoodsToSellOrUse           -> deductions.copy(costOfGoods = None),
+      RepairsAndMaintenanceCosts -> deductions.copy(maintenanceCosts = None),
+      WorkplaceRunningCosts      -> deductions.copy(premisesRunningCosts = None),
+      AdvertisingOrMarketing     -> deductions.copy(advertisingCosts = None),
+      StaffCosts                 -> deductions.copy(staffCosts = None),
+      Construction               -> deductions.copy(constructionIndustryScheme = None),
+      ProfessionalFees           -> deductions.copy(professionalFees = None),
+      IrrecoverableDebts         -> deductions.copy(badDebt = None),
+      OtherExpenses              -> deductions.copy(other = None)
+    )
+    journeyDeductionsMap.getOrElse(journeyName, deductions)
+  }
+
 }

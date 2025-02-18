@@ -16,11 +16,16 @@
 
 import cats.data.EitherT
 import models.domain.ApiResultT
+import models.error.DownstreamError.SingleDownstreamError
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
+import play.api.http.Status.INTERNAL_SERVER_ERROR
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 package object stubs {
+  val downstreamError: SingleDownstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
   def serviceUnitT: ApiResultT[Unit] = EitherT.right[ServiceError](Future.successful(()))
+  def serviceErrorT: ApiResultT[Unit] = EitherT.leftT(downstreamError)
 }

@@ -57,6 +57,7 @@ import play.api.http.Status._
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent}
 import services.journeyAnswers.{CapitalAllowancesAnswersService, ExpensesAnswersService}
+import stubs.serviceErrorT
 import stubs.services._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
@@ -202,7 +203,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         auth = mockAuthorisedAction,
         cc = stubControllerComponents,
         abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(getAnswersRes = Some(answers).asRight),
+        incomeService = StubIncomeAnswersService(getAnswersRes = Option(answers).asRight),
         expensesService = StubExpensesAnswersService(),
         capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
         prepopAnswersService = StubPrepopAnswersService(),
@@ -288,7 +289,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         behave like testRoute(
           request = buildRequestNoContent,
           expectedStatus = expectedStatus,
-          expectedBody = journeyAnswers.map(j => Json.stringify(Json.toJson(j))).getOrElse(""),
+          expectedBody = journeyAnswers.fold("")(j => Json.stringify(Json.toJson(j))),
           methodBlock = () => controller.getExpensesTailoring(currTaxYear, businessId, nino)
         )
       }
@@ -398,6 +399,28 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       expectedBody = "",
       methodBlock = () => underTest.clearProfessionalFeesExpensesData(currTaxYear, businessId, nino)
     )
+  }
+
+  "clearOtherExpensesExpensesData" in {
+    behave like testRoute(
+      request = buildRequestNoContent,
+      expectedStatus = NO_CONTENT,
+      expectedBody = "",
+      methodBlock = () => underTest.clearProfessionalFeesExpensesData(currTaxYear, businessId, nino)
+    )
+
+    (BAD_REQUEST, INTERNAL_SERVER_ERROR) map { status =>
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = status,
+        expectedBody = "",
+        methodBlock = () => {
+          val expenses: StubExpensesAnswersService = StubExpensesAnswersService(clearOtherExpensesDataRes = serviceErrorT)
+          val controller                           = mkUnderTest(expensesService = expenses)
+          controller.clearOtherExpensesData(currTaxYear, businessId, nino)
+        }
+      )
+    }
   }
 
   "clearAdvertisingOrMarketingExpensesData" in {
@@ -953,7 +976,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "SpecialTaxSites" should {
     val answers           = genOne(specialTaxSitesGen)
-    def underTestWithData = mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getSpecialTaxSites = Some(answers).asRight))
+    def underTestWithData = mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getSpecialTaxSites = Option(answers).asRight))
 
     checkGetAndSave(
       actionForGetNoContent = underTest.getSpecialTaxSites(currTaxYear, businessId, nino),
@@ -966,7 +989,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "StructuresBuildings" should {
     val answers           = genOne(structuresBuildingsWithYeses)
-    def underTestWithData = mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getStructuresBuildings = Some(answers).asRight))
+    def underTestWithData = mkJourneyAnswersController(StubCapitalAllowancesAnswersAnswersService(getStructuresBuildings = Option(answers).asRight))
 
     checkGetAndSave(
       actionForGetNoContent = underTest.getStructuresBuildings(currTaxYear, businessId, nino),
@@ -1031,13 +1054,13 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       (expensesService
         .getGoodsToSellOrUseAnswers(_: JourneyContextWithNino)(_: HeaderCarrier))
         .expects(*, *)
-        .returns(EitherT.right[ServiceError](Future.successful(Some(answers))))
+        .returns(EitherT.right[ServiceError](Future.successful(Option(answers))))
 
     def mockWorkplaceRunningCostsExpensesService(answers: WorkplaceRunningCostsAnswers)
         : CallHandler2[JourneyContextWithNino, HeaderCarrier, ApiResultT[Option[WorkplaceRunningCostsAnswers]]] =
       (expensesService
         .getWorkplaceRunningCostsAnswers(_: JourneyContextWithNino)(_: HeaderCarrier))
         .expects(*, *)
-        .returns(EitherT.right[ServiceError](Future.successful(Some(answers))))
+        .returns(EitherT.right[ServiceError](Future.successful(Option(answers))))
   }
 }
