@@ -16,21 +16,24 @@
 
 package services.journeyAnswers
 
+import bulders.BusinessDataBuilder
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
-import models.common.{JourneyContextWithNino, JourneyName, JourneyStatus}
+import models.common._
 import models.database.JourneyAnswers
 import models.database.income.IncomeStorageAnswers
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
+import models.error.ServiceError
 import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
 import org.mockito.IdiomaticMockito.StubbingOps
-import org.mockito.Mockito.times
+import org.mockito.Mockito.{reset, times, when}
 import org.mockito.MockitoSugar.{mock, never, verify}
 import org.mockito.matchers.MacroBasedMatchers
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.EitherValues._
 import org.scalatest.OptionValues._
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
@@ -40,6 +43,7 @@ import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import services.journeyAnswers.IncomeAnswersServiceImplSpec._
+import services.{AuditService, BusinessService}
 import stubs.connectors.StubIFSConnector
 import stubs.connectors.StubIFSConnector._
 import stubs.repositories.StubJourneyAnswersRepository
@@ -50,8 +54,13 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers {
+class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers with BeforeAndAfterEach {
   implicit val hc: HeaderCarrier = HeaderCarrier()
+
+  override def beforeEach(): Unit = {
+    reset(mockAuditService, mockBusinessService)
+    super.beforeEach()
+  }
 
   "getAnswers" should {
     "return empty answers if there is no answers submitted" in new TestCase() {
@@ -59,19 +68,19 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
     }
 
     "return error if cannot read IncomeJourneyAnswers" in new TestCase(
-      repo = StubJourneyAnswersRepository(getAnswer = Some(brokenJourneyAnswers))
+      repo = StubJourneyAnswersRepository(getAnswer = Option(brokenJourneyAnswers))
     ) {
-      val result = await(service.getAnswers(journeyCtxWithNino).value)
-      val error  = result.left.value
+      val result: Either[ServiceError, Option[IncomeJourneyAnswers]] = await(service.getAnswers(journeyCtxWithNino).value)
+      val error: ServiceError                                        = result.left.value
       error shouldBe a[InvalidJsonFormatError]
     }
 
     "return IncomeJourneyAnswers" in new TestCase(
-      repo = StubJourneyAnswersRepository(getAnswer = Some(sampleIncomeJourneyAnswers))
+      repo = StubJourneyAnswersRepository(getAnswer = Option(sampleIncomeJourneyAnswers))
     ) {
-      val incomeStorageAnswers = repo.getAnswer.value.data.as[IncomeStorageAnswers]
-      val result               = service.getAnswers(journeyCtxWithNino).value.futureValue
-      result.value shouldBe Some(
+      val incomeStorageAnswers: IncomeStorageAnswers                 = repo.getAnswer.value.data.as[IncomeStorageAnswers]
+      val result: Either[ServiceError, Option[IncomeJourneyAnswers]] = service.getAnswers(journeyCtxWithNino).value.futureValue
+      result.value shouldBe Option(
         IncomeJourneyAnswers(
           incomeStorageAnswers.incomeNotCountedAsTurnover,
           None,
@@ -90,6 +99,9 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
   "saving income answers" when {
     "no period summary or annual submission data exists" must {
       "successfully store data and create the period summary" in new TestCase(connector = mock[IFSConnector]) {
+        when(mockBusinessService.getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier]))
+          .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
+
         connector.listSEPeriodSummary(*)(*, *) returns
           Future.successful(api1965EmptyResponse.asRight)
 
@@ -108,11 +120,17 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
         verify(connector, times(1)).createSEPeriodSummary(*)(*, *)
+        verify(auditService, times(1)).sendAuditEvent(*, *)(*, *)
+        verify(mockBusinessService, times(1)).getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier])
         verify(connector, never).amendSEPeriodSummary(*)(*, *)
       }
     }
+
     "prior submission data exists" must {
       "successfully store data and amend the period summary" in new TestCase(connector = mock[IFSConnector]) {
+        when(mockBusinessService.getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier]))
+          .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
+
         connector.listSEPeriodSummary(*)(*, *) returns
           Future.successful(api1965MatchedResponse.asRight)
 
@@ -133,6 +151,8 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
         verify(connector, times(1)).amendSEPeriodSummary(*)(*, *)
+        verify(auditService, times(1)).sendAuditEvent(*, *)(*, *)
+        verify(mockBusinessService, times(1)).getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier])
         verify(connector, never).createSEPeriodSummary(*)(*, *)
       }
     }
@@ -140,6 +160,8 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 
   "saveAnswers" should {
     "save data in the repository" in new TestCase() {
+      when(mockBusinessService.getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier])).thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
+
       service
         .saveAnswers(journeyCtxWithNino, sampleIncomeJourneyAnswersData)
         .value
@@ -149,8 +171,12 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 }
 
 object IncomeAnswersServiceImplSpec {
-  abstract class TestCase(val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(), val connector: IFSConnector = StubIFSConnector()) {
-    val service = new IncomeAnswersServiceImpl(repo, connector)
+  val mockAuditService: AuditService       = mock[AuditService]
+  val mockBusinessService: BusinessService = mock[BusinessService]
+  abstract class TestCase(val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(),
+                          val connector: IFSConnector = StubIFSConnector(),
+                          val auditService: AuditService = mockAuditService) {
+    val service = new IncomeAnswersServiceImpl(repo, connector, auditService, mockBusinessService)
   }
 
   val brokenJourneyAnswers: JourneyAnswers = JourneyAnswers(

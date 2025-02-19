@@ -31,6 +31,8 @@ import gens.genOne
 import models.common.JourneyContextWithNino
 import models.connector.Api1786ExpensesResponseParser
 import models.domain.ApiResultT
+import models.error.DownstreamError.SingleDownstreamError
+import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
@@ -51,6 +53,7 @@ import models.frontend.nics.{NICsAnswers, NICsClass2Answers}
 import models.frontend.prepop.AdjustmentsPrepopAnswers.fromAnnualAdjustmentsType
 import org.scalacheck.Gen
 import org.scalamock.handlers.{CallHandler2, CallHandler3}
+import org.scalatest.OptionValues
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
@@ -63,7 +66,7 @@ import utils.BaseSpec._
 
 import scala.concurrent.Future
 
-class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckPropertyChecks with TableDrivenPropertyChecks {
+class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckPropertyChecks with TableDrivenPropertyChecks with OptionValues {
 
   private def mkUnderTest(abroadAnswersService: StubAbroadAnswersService = StubAbroadAnswersService(),
                           incomeService: StubIncomeAnswersService = StubIncomeAnswersService(),
@@ -222,6 +225,29 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       behave like testRoute(
         request = buildRequest(data),
         expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.saveIncomeAnswers(currTaxYear, businessId, nino)
+      )
+    }
+
+    s"Save return a $INTERNAL_SERVER_ERROR when downstream fails" in {
+      val data            = incomeJourneyAnswersGen.sample.value
+      val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
+
+      val underTest = new JourneyAnswersController(
+        auth = mockAuthorisedAction,
+        cc = stubControllerComponents,
+        abroadAnswersService = StubAbroadAnswersService(),
+        incomeService = StubIncomeAnswersService(incomeJourneyAnswersRes = EitherT.leftT(downstreamError)),
+        expensesService = StubExpensesAnswersService(),
+        capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
+        prepopAnswersService = StubPrepopAnswersService(),
+        nicsAnswersService = StubNICsAnswersService(),
+        profitOrLossAnswersService = StubProfitOrLossAnswersService()
+      )
+      behave like testRoute(
+        request = buildRequest(data),
+        expectedStatus = INTERNAL_SERVER_ERROR,
         expectedBody = "",
         methodBlock = () => underTest.saveIncomeAnswers(currTaxYear, businessId, nino)
       )
