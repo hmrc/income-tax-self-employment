@@ -132,3 +132,5 @@ POST        /:taxYear/clear-professional-fees-expenses-answers/:nino/:businessId
 POST        /:taxYear/clear-irrecoverable-debts-expenses-answers/:nino/:businessId                        controllers.JourneyAnswersController.clearIrrecoverableDebtsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/clear-other-expenses-answers/:nino/:businessId                                      controllers.JourneyAnswersController.clearOtherExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
+POST        /:taxYear/clear-financial-charges-expenses-answers/:nino/:businessId                          controllers.JourneyAnswersController.clearFinancialChargeExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

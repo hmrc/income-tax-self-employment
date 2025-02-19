@@ -19,20 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
-import models.common.JourneyName.{
-  AdvertisingOrMarketing,
-  CapitalAllowancesTailoring,
-  Construction,
-  ExpensesTailoring,
-  GoodsToSellOrUse,
-  IrrecoverableDebts,
-  OfficeSupplies,
-  OtherExpenses,
-  ProfessionalFees,
-  RepairsAndMaintenanceCosts,
-  StaffCosts,
-  WorkplaceRunningCosts
-}
+import models.common.JourneyName.{AdvertisingOrMarketing, CapitalAllowancesTailoring, Construction, ExpensesTailoring, FinancialCharges, GoodsToSellOrUse, IrrecoverableDebts, OfficeSupplies, OtherExpenses, ProfessionalFees, RepairsAndMaintenanceCosts, StaffCosts, WorkplaceRunningCosts}
 import models.common._
 import models.connector.api_1894.request.{Deductions, FinancialsType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
@@ -99,17 +86,8 @@ trait ExpensesAnswersService {
   def getWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WorkplaceRunningCostsAnswers]]
 
   def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
-  def clearOfficeSuppliesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
-  def clearGoodsToSellOrUseExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
-  def clearRepairsAndMaintenanceExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
-  def clearStaffCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
-  def clearProfessionalFeesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
-  def clearWorkplaceRunningCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
   def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
-  def clearAdvertisingOrMarketingExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
-  def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
-  def clearIrrecoverableDebtsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
-  def clearOtherExpensesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
 @Singleton
@@ -335,37 +313,7 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
     } yield result
   }
 
-  def clearOfficeSuppliesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearExpensesData(ctx, OfficeSupplies)
-
-  def clearRepairsAndMaintenanceExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearExpensesData(ctx, RepairsAndMaintenanceCosts)
-
-  def clearAdvertisingOrMarketingExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearExpensesData(ctx, AdvertisingOrMarketing)
-
-  def clearGoodsToSellOrUseExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearExpensesData(ctx, GoodsToSellOrUse)
-
-  def clearWorkplaceRunningCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearExpensesData(ctx, WorkplaceRunningCosts)
-
-  def clearStaffCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearExpensesData(ctx, StaffCosts)
-
-  def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearExpensesData(ctx, Construction)
-
-  def clearProfessionalFeesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearExpensesData(ctx, ProfessionalFees)
-
-  def clearIrrecoverableDebtsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearExpensesData(ctx, IrrecoverableDebts)
-
-  def clearOtherExpensesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearExpensesData(ctx, OtherExpenses)
-
-  private def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingPeriodicSummary <- EitherT(connector.getPeriodicSummaryDetail(ctx)).leftAs[ServiceError]
       deductionsWithoutMaintenanceCosts = existingPeriodicSummary.financials.toApi1894.deductions.map(d => clearSpecificExpensesData(d, journeyName))
@@ -386,7 +334,8 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       Construction               -> deductions.copy(constructionIndustryScheme = None),
       ProfessionalFees           -> deductions.copy(professionalFees = None),
       IrrecoverableDebts         -> deductions.copy(badDebt = None),
-      OtherExpenses              -> deductions.copy(other = None)
+      OtherExpenses              -> deductions.copy(other = None),
+      FinancialCharges           -> deductions.copy(financialCharges = None)
     )
     journeyDeductionsMap.getOrElse(journeyName, deductions)
   }

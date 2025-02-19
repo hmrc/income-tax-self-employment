@@ -145,62 +145,68 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
 
   def clearOfficeSuppliesExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-    val result = expensesService.clearOfficeSuppliesExpensesData(ctx)
+    val result = expensesService.clearExpensesData(ctx, OfficeSupplies)
     handleApiUnitResultT(result)
   }
 
   def clearGoodsToSellOrUseExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-    val result = expensesService.clearGoodsToSellOrUseExpensesData(ctx)
+    val result = expensesService.clearExpensesData(ctx, GoodsToSellOrUse)
     handleApiUnitResultT(result)
   }
 
   def clearRepairsAndMaintenanceExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-    val result = expensesService.clearRepairsAndMaintenanceExpensesData(ctx)
+    val result = expensesService.clearExpensesData(ctx, RepairsAndMaintenanceCosts)
     handleApiUnitResultT(result)
   }
 
   def clearAdvertisingOrMarketingExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async {
     implicit user =>
       val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-      val result = expensesService.clearAdvertisingOrMarketingExpensesData(ctx)
+      val result = expensesService.clearExpensesData(ctx, AdvertisingOrMarketing)
       handleApiUnitResultT(result)
   }
 
   def clearWorkplaceRunningCostsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-    val result = expensesService.clearWorkplaceRunningCostsExpensesData(ctx)
+    val result = expensesService.clearExpensesData(ctx, WorkplaceRunningCosts)
     handleApiUnitResultT(result)
   }
 
   def clearStaffCostsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-    val result = expensesService.clearStaffCostsExpensesData(ctx)
+    val result = expensesService.clearExpensesData(ctx, StaffCosts)
     handleApiUnitResultT(result)
   }
 
   def clearConstructionExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-    val result = expensesService.clearConstructionExpensesData(ctx)
+    val result = expensesService.clearExpensesData(ctx, Construction)
     handleApiUnitResultT(result)
   }
 
   def clearProfessionalFeesExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-    val result = expensesService.clearProfessionalFeesExpensesData(ctx)
+    val result = expensesService.clearExpensesData(ctx, ProfessionalFees)
     handleApiUnitResultT(result)
   }
 
   def clearIrrecoverableDebtsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-    val result = expensesService.clearIrrecoverableDebtsExpensesData(ctx)
+    val result = expensesService.clearExpensesData(ctx, IrrecoverableDebts)
     handleApiUnitResultT(result)
   }
 
   def clearOtherExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
-    val result = expensesService.clearOtherExpensesExpensesData(ctx)
+    val result = expensesService.clearExpensesData(ctx, OtherExpenses)
+    handleApiUnitResultT(result)
+  }
+
+  def clearFinancialChargeExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    val ctx    = JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)
+    val result = expensesService.clearExpensesData(ctx, FinancialCharges)
     handleApiUnitResultT(result)
   }
 
