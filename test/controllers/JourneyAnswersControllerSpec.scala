@@ -75,8 +75,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
                           capitalAllowancesService: StubCapitalAllowancesAnswersAnswersService = StubCapitalAllowancesAnswersAnswersService(),
                           prepopAnswersService: StubPrepopAnswersService = StubPrepopAnswersService(),
                           nicsAnswersService: StubNICsAnswersService = StubNICsAnswersService(),
-                          profitOrLossAnswersService: StubProfitOrLossAnswersService = StubProfitOrLossAnswersService()): JourneyAnswersController =
-    new JourneyAnswersController(
+                          profitOrLossAnswersService: StubProfitOrLossAnswersService = StubProfitOrLossAnswersService()): JourneyAnswersController =new JourneyAnswersController(
       auth = mockAuthorisedAction,
       cc = stubControllerComponents,
       abroadAnswersService = abroadAnswersService,
@@ -1071,9 +1070,18 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "ProfitOrLoss" should {
-    val answers = genOne(profitOrLossAnswersGen)
+    "save answers and return a NO_CONTENT when successful" in {
+      val answers = genOne(profitOrLossAnswersGen)
 
-    testSaveAnswers(underTest.saveProfitOrLoss(currTaxYear, businessId, nino), answers)
+      behave like testRoute(
+        request = buildRequest(answers),
+        expectedStatus = NO_CONTENT,
+        expectedBody = "",
+        methodBlock = () => underTest.saveProfitOrLoss(currTaxYear, businessId, nino)
+      )
+
+
+    }
   }
 
   "NationalInsuranceContributions" when {

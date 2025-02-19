@@ -26,8 +26,11 @@ import connectors.HipConnector
 import models.common.{JourneyContextWithNino, Nino, TaxYear}
 import models.connector.api_1500.LossType
 import mocks.services.MockReliefClaimsService
+import models.connector.ReliefClaimType
 import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
+import models.connector.api_1505.ClaimId
 import models.connector.api_1802.request._
+import models.connector.common.ReliefClaim
 import models.database.adjustments.ProfitOrLossDb
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
@@ -37,20 +40,26 @@ import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.Mockito.times
 import org.mockito.MockitoSugar.{reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.{CarryItForward, DeductFromOtherTypes}
 import models.frontend.adjustments._
+import org.mockito.ArgumentMatchers.any
+import org.mockito.MockitoSugar.{reset, times, verify}
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.libs.json.Json
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import stubs.connectors.StubIFSConnector._
 import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HttpClient
-import utils.BaseSpec.{hc, journeyCtxWithNino}
+import utils.BaseSpec.{businessId, hc, journeyCtxWithNino, taxYear}
 import utils.EitherTTestOps.convertScalaFuture
 
+import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrivenPropertyChecks with Matchers with BeforeAndAfterEach {
@@ -60,6 +69,18 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 
   val mockAppConfig: AppConfig   = mock[AppConfig]
   val mockHttpClient: HttpClient = mock[HttpClient]
+
+  val testDate: LocalDate = LocalDate.of(2025, 1, 5)
+  val testClaimId1: ClaimId = ClaimId("claimId1")
+  val testClaimId2: ClaimId = ClaimId("claimId2")
+
+  override def afterEach(): Unit = {
+    super.afterEach()
+    reset(MockReliefClaimsService.mockInstance)
+  }
+
+  def testReliefClaim(claimId: ClaimId, claimType: ReliefClaimType): ReliefClaim =
+    ReliefClaim(businessId.value, None, claimType, "2025", claimId.value, None, testDate)
 
   def expectedAnnualSummariesData(adjustments: Option[AnnualAdjustments],
                                   allowances: Option[AnnualAllowances]): CreateAmendSEAnnualSubmissionRequestData =
@@ -109,6 +130,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           getAnnualSummariesResult = api1803SuccessResponse.asRight
         )
 
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
       val allowancesData: AnnualAllowances = AnnualAllowances(None, None, None, Option(5000), None, None, None, None, None, None, Option(5000), None)
       val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
@@ -122,20 +144,45 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
 
+    "successfully save data when answers are true (with WhatDoYouWantToDoWithLoss answer)" in new StubbedService {
+      override val ifsConnector: StubIFSConnector =
+        StubIFSConnector(
+          getAnnualSummariesResult = api1803SuccessResponse.asRight
+        )
+
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
+      MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(List(testClaimId1))
+
+      val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers.copy(whatDoYouWantToDoWithLoss = Some(Seq(CarryItForward)))
+      val allowancesData: AnnualAllowances    = AnnualAllowances(None, None, None, Some(5000), None, None, None, None, None, None, Some(5000), None)
+      val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
+        expectedAnnualSummariesData(Some(answers.toDownStreamAnnualAdjustments(Some(AnnualAdjustments.empty))), Some(allowancesData))
+
+      val result: Either[ServiceError, Unit] = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+
+      assert(result == ().asRight)
+      assert(ifsConnector.upsertAnnualSummariesSubmissionData === Some(expectedAnnualSummariesAnswers))
+      assert(
+        repository.lastUpsertedAnswer === Some(
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))))
+    }
+
     "successfully save data when answers are false" in new StubbedService {
       override val ifsConnector: StubIFSConnector =
         StubIFSConnector(
           getAnnualSummariesResult = api1803SuccessResponse.asRight
         )
+
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers = noBroughtForwardLossAnswers
       val allowancesData: AnnualAllowances = AnnualAllowances(None, None, None, Option(5000), None, None, None, None, None, None, Option(5000), None)
       val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData = expectedAnnualSummariesData(None, Option(allowancesData))
+
       val result: Either[ServiceError, Unit] = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
 
       assert(result == ().asRight)
       assert(ifsConnector.upsertAnnualSummariesSubmissionData === Option(expectedAnnualSummariesAnswers))
-      assert(
-        repository.lastUpsertedAnswer === Option(
+      assert(repository.lastUpsertedAnswer === Option(
           Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = false, claimLossRelief = Option(false), previousUnusedLosses = false))))
     }
 
@@ -144,6 +191,8 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         StubIFSConnector(
           getAnnualSummariesResult = api1803EmptyResponse.asRight
         )
+
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
       val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
         expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(None)), None)
@@ -161,6 +210,8 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         StubIFSConnector(
           getAnnualSummariesResult = downstreamError.asLeft
         )
+
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
       val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
 
@@ -172,6 +223,8 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         StubIFSConnector(
           createAmendSEAnnualSubmissionResult = downstreamError.asLeft
         )
+
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
       val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
 
@@ -180,6 +233,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 
     "return left when upsertAnswers returns left" in new StubbedService {
       override val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository(upsertDataField = downstreamError.asLeft)
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers               = yesBroughtForwardLossAnswers
       val result: Either[ServiceError, Unit]                = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
 
@@ -193,6 +247,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           getBroughtForwardLossResult = api1502SuccessResponse.asRight,
           updateBroughtForwardLossResult = api1501SuccessResponse.asRight
         )
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
       val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
@@ -208,6 +263,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           getBroughtForwardLossResult = downstreamError.asLeft,
           createBroughtForwardLossResult = api1500SuccessResponse.asRight
         )
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
       val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
@@ -224,6 +280,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           listBroughtForwardLossesResult = downstreamError.asLeft,
           createBroughtForwardLossResult = api1500SuccessResponse.asRight
         )
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
       val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
@@ -239,7 +296,6 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           getBroughtForwardLossResult = api1502SuccessResponse.asRight,
           deleteBroughtForwardLossResult = Right(())
         )
-
 
       when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(EitherT.rightT(Right(())))
@@ -257,6 +313,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         StubIFSBusinessDetailsConnector(
           getBroughtForwardLossResult = notFoundError.asLeft
         )
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers = emptyBroughtForwardLossAnswers
       val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
       assert(result == ().asRight)
@@ -268,6 +325,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
     "return error without updating AnnualSummaries, BFL or DB data when AnnualSummaries API returns a ServiceError" in new StubbedService {
       override val ifsConnector = new StubIFSConnector(getAnnualSummariesResult = downstreamError.asLeft)
 
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
       val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
 
@@ -281,8 +339,9 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
         StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = downstreamError.asLeft)
 
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit] = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
 
       assert(result == downstreamError.asLeft)
       assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
@@ -290,7 +349,108 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
     }
   }
 
-  "createUpdateOrDeleteBroughtForwardLoss" should {
+  "storeReliefClaimAnswers" when {
+    "the user is answering the WhatDoYouWantToDoWithLoss question for the first time" must {
+      "call the ReliefClaimService create method once, with a single selection" in new StubbedService {
+        MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(Nil)
+        MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(List(testClaimId1))
+
+        val result: Either[ServiceError, Unit] = service.storeReliefClaimAnswers(journeyCtxWithNino, testProfitOrLossAnswers(CarryItForward)).value.futureValue
+
+        result shouldBe Right(())
+        verify(MockReliefClaimsService.mockInstance, times(1)).createReliefClaims(journeyCtxWithNino, Seq(CarryItForward))
+        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any(), any(), any())(any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any(), any())(any())
+      }
+
+      "call the ReliefClaimService create method once, with both selections" in new StubbedService {
+        MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(Nil)
+        MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward, DeductFromOtherTypes)(List(testClaimId1))
+
+        val result: Either[ServiceError, Unit] = service.storeReliefClaimAnswers(
+          ctx = journeyCtxWithNino,
+          submittedAnswers = testProfitOrLossAnswers(CarryItForward, DeductFromOtherTypes)
+        ).value.futureValue
+
+        result shouldBe Right(())
+        verify(MockReliefClaimsService.mockInstance, times(1)).createReliefClaims(journeyCtxWithNino, Seq(CarryItForward, DeductFromOtherTypes))
+        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any(), any(), any())(any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any(), any())(any())
+      }
+
+      "Do nothing if the user selects no options" in new StubbedService {
+        MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(Nil)
+        MockReliefClaimsService.createReliefClaims(journeyCtxWithNino)(Nil)
+
+        val result: Either[ServiceError, Unit] = service.storeReliefClaimAnswers(
+          ctx = journeyCtxWithNino,
+          submittedAnswers = testProfitOrLossAnswers()
+        ).value.futureValue
+
+        result shouldBe Right(())
+        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any(), any())(any(), any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any(), any(), any())(any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any(), any())(any())
+      }
+    }
+
+    "the user is updating their answer to the WhatDoYouWantToDoWithLoss question" must {
+      "add a 2nd selection when the user previously selected 1" in new StubbedService {
+        val oldAnswers = List(testReliefClaim(testClaimId1, ReliefClaimType.CF))
+        MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(oldAnswers)
+        MockReliefClaimsService.updateReliefClaims(journeyCtxWithNino, oldAnswers, CarryItForward, DeductFromOtherTypes)(
+          returnValue = UpdateReliefClaimsResponse(Seq(DeductFromOtherTypes), Nil)
+        )
+
+        val result: Either[ServiceError, Unit] = await(service.storeReliefClaimAnswers(
+          ctx = journeyCtxWithNino,
+          submittedAnswers = testProfitOrLossAnswers(CarryItForward, DeductFromOtherTypes)
+        ).value)
+
+        result shouldBe Right(())
+
+        verify(MockReliefClaimsService.mockInstance, times(1)).updateReliefClaims(journeyCtxWithNino, oldAnswers, Seq(CarryItForward, DeductFromOtherTypes))
+        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any(), any())(any(), any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any(), any())(any())
+      }
+      "Remove the 2nd selection when the user previously selected both" in new StubbedService {
+        val oldAnswers = List(testReliefClaim(testClaimId1, ReliefClaimType.CF), testReliefClaim(testClaimId2, ReliefClaimType.CSGI))
+        MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(oldAnswers)
+        MockReliefClaimsService.updateReliefClaims(journeyCtxWithNino, oldAnswers, CarryItForward)(
+          returnValue = UpdateReliefClaimsResponse(Seq(DeductFromOtherTypes), Nil)
+        )
+
+        val result: Either[ServiceError, Unit] = await(service.storeReliefClaimAnswers(
+          ctx = journeyCtxWithNino,
+          submittedAnswers = testProfitOrLossAnswers(CarryItForward)
+        ).value)
+
+        result shouldBe Right(())
+
+        verify(MockReliefClaimsService.mockInstance, times(1)).updateReliefClaims(journeyCtxWithNino, oldAnswers, Seq(CarryItForward))
+        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any(), any())(any(), any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any(), any())(any())
+      }
+      "Remove both options if the user deselects both" in new StubbedService {
+        val oldAnswers = List(testReliefClaim(testClaimId1, ReliefClaimType.CF), testReliefClaim(testClaimId2, ReliefClaimType.CSGI))
+        MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(oldAnswers)
+        MockReliefClaimsService.deleteReliefClaims(journeyCtxWithNino, oldAnswers)
+
+        val result: Either[ServiceError, Unit] = await(service.storeReliefClaimAnswers(
+          ctx = journeyCtxWithNino,
+          submittedAnswers = testProfitOrLossAnswers()
+        ).value)
+
+        result shouldBe Right(())
+
+        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any(), any(), any())(any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any(), any())(any(), any())
+        verify(MockReliefClaimsService.mockInstance, times(1)).deleteReliefClaims(journeyCtxWithNino, oldAnswers)(any())
+      }
+    }
+  }
+
+  "storeBroughtForwardLossAnswers" should {
     val unusedLossAmount: BigDecimal = 400
     val yesBroughtForwardLossAnswers =
       ProfitOrLossJourneyAnswers(
@@ -596,7 +756,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(returnValue = Nil)
       MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(returnValue = List(api1505SuccessResponse))
 
-      val result: Either[ServiceError, Unit] = service.storeLossClaimAnswers(
+      val result: Either[ServiceError, Unit] = service.storeReliefClaimAnswers(
         journeyCtxWithNino,
         testProfitOrLossAnswers(CarryItForward)
       ).value.futureValue
@@ -608,7 +768,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(returnValue = Nil)
       MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(returnValue = Nil)
 
-      val result: Either[ServiceError, Unit] = service.storeLossClaimAnswers(
+      val result: Either[ServiceError, Unit] = service.storeReliefClaimAnswers(
         journeyCtxWithNino,
         testProfitOrLossAnswers(CarryItForward)
       ).value.futureValue

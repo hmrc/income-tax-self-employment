@@ -45,13 +45,13 @@ class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector
 
   def createReliefClaims(ctx: JourneyContextWithNino,
                          answers: Seq[WhatDoYouWantToDoWithLoss])
-                        (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Seq[ClaimId]] =
+                        (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[List[ClaimId]] =
     if (answers.isEmpty) {
-      EitherT.pure(Nil: Seq[ClaimId])
+      EitherT.pure(Nil: List[ClaimId])
     } else {
       answers.map { answer =>
         reliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
-      }.sequence
+      }.sequence.map(_.toList)
     }
 
   def updateReliefClaims(ctx: JourneyContextWithNino,
@@ -74,6 +74,17 @@ class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector
       created = answersToCreate.map(WhatDoYouWantToDoWithLoss.fromReliefClaimType),
       deleted = answersToDelete.map(answer => WhatDoYouWantToDoWithLoss.fromReliefClaimType(answer.reliefClaimed)))
   }
+
+  def deleteReliefClaims(ctx: JourneyContextWithNino,
+                         reliefClaims: Seq[ReliefClaim])
+                        (implicit hc: HeaderCarrier): ApiResultT[Unit] =
+    if (reliefClaims.isEmpty) {
+      EitherT.pure(())
+    } else {
+      reliefClaims.map { reliefClaim =>
+        reliefClaimsConnector.deleteReliefClaim(ctx, reliefClaim.claimId)
+      }.sequence.map(_ => ())
+    }
 
 }
 

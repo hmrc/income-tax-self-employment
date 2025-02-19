@@ -57,9 +57,9 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 
   def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      _      <- createUpdateOrDeleteAnnualSummaries(ctx, answers)
-      _      <- createUpdateOrDeleteLossClaim(ctx, answers) // TODO SASS-10335 update Spec to include the change
-      _      <- createUpdateOrDeleteBroughtForwardLoss(ctx, answers)
+      _      <- handleAnnualSummaries(ctx, answers)
+      _      <- storeReliefClaimAnswers(ctx, answers)
+      _      <- storeBroughtForwardLossAnswers(ctx, answers)
       result <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(answers.toDbAnswers))
     } yield result
 
@@ -68,8 +68,9 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       optProfitOrLoss <- getDbAnswers(ctx)
     } yield optProfitOrLoss
 
-  private def createUpdateOrDeleteAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)
-                                                 (implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+  private def handleAnnualSummaries(ctx: JourneyContextWithNino,
+                                    answers: ProfitOrLossJourneyAnswers)
+                                   (implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     val submissionBody = for {
       maybeAnnualSummaries <- ifsConnector.getAnnualSummaries(ctx)
       updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[ProfitOrLossDb](maybeAnnualSummaries, answers)
@@ -78,15 +79,21 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     EitherT(submissionBody).flatMap(ifsConnector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
   }
 
-  def createUpdateOrDeleteLossClaim(ctx: JourneyContextWithNino,
-                                            submittedAnswers: ProfitOrLossJourneyAnswers)
-                                           (implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def storeReliefClaimAnswers(ctx: JourneyContextWithNino,
+                              submittedAnswers: ProfitOrLossJourneyAnswers)
+                             (implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       reliefClaims <- reliefClaimsService.getAllReliefClaims(ctx)
       optLossClaimAnswer = submittedAnswers.whatDoYouWantToDoWithLoss
       result                 <- (reliefClaims, optLossClaimAnswer) match {
-        case (Nil, Some(lossClaimAnswer)) => reliefClaimsService.createReliefClaims(ctx, lossClaimAnswer)
-        case (claims, Some(lossClaimAnswer)) => reliefClaimsService.updateReliefClaims(ctx, claims, lossClaimAnswer)
+        case (Nil, Some(lossClaimAnswer)) if lossClaimAnswer.nonEmpty =>
+          reliefClaimsService.createReliefClaims(ctx, lossClaimAnswer)
+        case (claims, Some(lossClaimAnswer)) if claims.nonEmpty && lossClaimAnswer.nonEmpty =>
+          reliefClaimsService.updateReliefClaims(ctx, claims, lossClaimAnswer)
+        case (claims, None | Some(Nil)) if claims.nonEmpty =>
+          reliefClaimsService.deleteReliefClaims(ctx, claims)
+        case _ =>
+          EitherT.rightT[Future, ServiceError](())
       }
     } yield result
 
@@ -102,8 +109,9 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     }
   }
 
-  def createUpdateOrDeleteBroughtForwardLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
-      hc: HeaderCarrier): ApiResultT[Unit] =
+  def storeBroughtForwardLossAnswers(ctx: JourneyContextWithNino,
+                                     answers: ProfitOrLossJourneyAnswers)
+                                    (implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       maybeLoss <- getBroughtForwardLossByBusinessId(ctx)
       result    <- handleBroughtForwardLoss(ctx, maybeLoss, answers)
