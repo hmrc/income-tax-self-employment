@@ -24,10 +24,26 @@ import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne
-import models.common.JourneyName.{AdvertisingOrMarketing, ExpensesTailoring, GoodsToSellOrUse, IrrecoverableDebts, OfficeSupplies, OtherExpenses, ProfessionalFees, RepairsAndMaintenanceCosts, StaffCosts, WorkplaceRunningCosts}
+import models.common.JourneyName.{
+  AdvertisingOrMarketing,
+  ExpensesTailoring,
+  GoodsToSellOrUse,
+  IrrecoverableDebts,
+  OfficeSupplies,
+  OtherExpenses,
+  ProfessionalFees,
+  RepairsAndMaintenanceCosts,
+  StaffCosts,
+  WorkplaceRunningCosts
+}
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
-import models.connector.api_1802.request.{AnnualAllowances, AnnualNonFinancials, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1802.request.{
+  AnnualAllowances,
+  AnnualNonFinancials,
+  CreateAmendSEAnnualSubmissionRequestBody,
+  CreateAmendSEAnnualSubmissionRequestData
+}
 import models.connector.api_1895.request._
 import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
@@ -795,5 +811,9 @@ object ExpensesAnswersServiceImplSpec {
     SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serverError).asLeft
 
   def buildPeriodData(deductions: Option[Deductions]): AmendSEPeriodSummaryRequestData =
-    AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, AmendSEPeriodSummaryRequestBody(Option(Incomes(Option(100.00), None, None)), deductions))
+    AmendSEPeriodSummaryRequestData(
+      taxYear,
+      nino,
+      businessId,
+      AmendSEPeriodSummaryRequestBody(Option(Incomes(Option(100.00), None, None)), deductions))
 }
