@@ -30,6 +30,7 @@ import models.common.JourneyName.{
   GoodsToSellOrUse,
   IrrecoverableDebts,
   OfficeSupplies,
+  OtherExpenses,
   ProfessionalFees,
   RepairsAndMaintenanceCosts,
   StaffCosts,
@@ -215,7 +216,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     val result: Either[ServiceError, GoodsToSellOrUseJourneyAnswers] =
       underTest.getAnswers(journeyCtxWithNino)(goodsToSellOrUseParser, hc).value.futureValue
 
-    val expectedResult: GoodsToSellOrUseJourneyAnswers = GoodsToSellOrUseJourneyAnswers(100.0, Some(100.0))
+    val expectedResult: GoodsToSellOrUseJourneyAnswers = GoodsToSellOrUseJourneyAnswers(100.0, Option(100.0))
 
     result shouldBe expectedResult.asRight
   }
@@ -309,12 +310,12 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
 
   "deleteSimplifiedExpensesAnswers" should {
     "delete Tailoring DB answers and SimplifiedAmount API answer" in new Test {
-      val existingPeriodData: AmendSEPeriodSummaryRequestData = buildPeriodData(Some(DeductionsTestData.sample))
+      val existingPeriodData: AmendSEPeriodSummaryRequestData = buildPeriodData(Option(DeductionsTestData.sample))
 
       override val connector: StubIFSConnector = StubIFSConnector()
-      connector.amendSEPeriodSummaryResultData = Some(existingPeriodData)
+      connector.amendSEPeriodSummaryResultData = Option(existingPeriodData)
       override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers.some)
-      repo.lastUpsertedAnswer = Some(Json.toJson(ExpensesCategoriesDb(IndividualCategories)))
+      repo.lastUpsertedAnswer = Option(Json.toJson(ExpensesCategoriesDb(IndividualCategories)))
 
       val result: Either[ServiceError, Unit] = underTest.deleteSimplifiedExpensesAnswers(journeyCtxWithNino).value.futureValue
 
@@ -597,6 +598,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       .advertisingCosts shouldBe None
     underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, ProfessionalFees).professionalFees shouldBe None
     underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, IrrecoverableDebts).badDebt shouldBe None
+    underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, OtherExpenses).other shouldBe None
   }
 
   "clearConstructionExpensesData" must {
@@ -615,6 +617,37 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
 
       val result: Either[ServiceError, Unit] = underTest.clearConstructionExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe downstreamError
+      repo.lastUpsertedAnswer shouldBe None
+    }
+  }
+
+  "clearOtherUseExpensesData" must {
+    "delete all other expenses API answer" in new Test2 {
+      prepareData()
+
+      val result: Either[ServiceError, Unit] = underTest.clearOtherExpensesExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe ().asRight
+
+      incomeResult should not be None
+      otherExpensesResult shouldBe None
+    }
+
+    "connector fails to update the PeriodSummary API" in new Test2 {
+      override lazy val connector: StubIFSConnector = new StubIFSConnector(amendSEPeriodSummaryResult = downstreamError)
+      val result: Either[ServiceError, Unit]        = underTest.clearOtherExpensesExpensesData(journeyCtxWithNino).value.futureValue
+
+      result shouldBe downstreamError
+
+      periodicApiResult shouldBe None
+    }
+
+    "connector fails to update the repository database" in new Test {
+      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
+
+      val result: Either[ServiceError, Unit] = underTest.clearOtherExpensesExpensesData(journeyCtxWithNino).value.futureValue
 
       result shouldBe downstreamError
       repo.lastUpsertedAnswer shouldBe None
@@ -647,23 +680,24 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       _ <- repository.upsertAnswers(workplaceRunningCostsCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(capitalAllowancesTailoringCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(zeroEmissionCarsCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(otherExpensesCtx, Json.obj("field" -> "value"))
     } yield ()
 
     def preparePeriodData(): Unit = {
-      def existingPeriodData = buildPeriodData(Some(DeductionsTestData.sample))
-      connector.amendSEPeriodSummaryResultData = Some(existingPeriodData)
+      def existingPeriodData = buildPeriodData(Option(DeductionsTestData.sample))
+      connector.amendSEPeriodSummaryResultData = Option(existingPeriodData)
     }
 
     def prepareAnnualSummariesData(): Unit = {
       val adjustments   = genOne(annualAdjustmentsTypeGen).toApi1802AnnualAdjustments
       val allowances    = AnnualAllowancesData.example
-      val nonFinancials = AnnualNonFinancials(true, Some("002"))
+      val nonFinancials = AnnualNonFinancials(exemptFromPayingClass4Nics = true, Option("002"))
       val existingAnnualSummariesData = CreateAmendSEAnnualSubmissionRequestData(
         taxYear,
         nino,
         businessId,
         CreateAmendSEAnnualSubmissionRequestBody(adjustments.some, allowances.some, nonFinancials.some))
-      connector.upsertAnnualSummariesSubmissionData = Some(existingAnnualSummariesData)
+      connector.upsertAnnualSummariesSubmissionData = Option(existingAnnualSummariesData)
     }
 
     def prepareData(): Either[ServiceError, Unit] = {
@@ -682,9 +716,10 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       workplaceRunningCostsResult,
       repairsAndMaintenanceCosts,
       staffCosts,
-      constructionCostsResult,
       professionalFees,
       irrecoverableDebts,
+      constructionCostsResult,
+      otherExpensesResult,
       capitalAllowancesResult,
       zeroEmissionCarsResult) =
       (for {
@@ -698,6 +733,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
         professionalFees           <- repository.get(professionalFeesCtx)
         irrecoverableDebts         <- repository.get(irrecoverableDebtsExpensesCtx)
         constructionCosts          <- repository.get(constructionCostsCtx)
+        otherExpenses              <- repository.get(otherExpensesCtx)
         capitalAllowancesTailoring <- repository.get(capitalAllowancesTailoringCtx)
         zeroEmissionCars           <- repository.get(zeroEmissionCarsCtx)
       } yield (
@@ -711,6 +747,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
         professionalFees,
         irrecoverableDebts,
         constructionCosts,
+        otherExpenses,
         capitalAllowancesTailoring,
         zeroEmissionCars)).rightValue
   }
@@ -762,7 +799,7 @@ object ExpensesAnswersServiceImplSpec {
     None,
     None,
     None,
-    false,
+    wfbpExpensesAreDisallowable = false,
     None,
     None,
     None,
@@ -774,5 +811,9 @@ object ExpensesAnswersServiceImplSpec {
     SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serverError).asLeft
 
   def buildPeriodData(deductions: Option[Deductions]): AmendSEPeriodSummaryRequestData =
-    AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), deductions))
+    AmendSEPeriodSummaryRequestData(
+      taxYear,
+      nino,
+      businessId,
+      AmendSEPeriodSummaryRequestBody(Option(Incomes(Option(100.00), None, None)), deductions))
 }
