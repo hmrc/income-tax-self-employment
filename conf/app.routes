@@ -113,24 +113,24 @@ POST        /:taxYear/clear-simplified-expenses-answers/:nino/:businessId       
 
 POST        /:taxYear/clear-expenses-and-capital-allowances/:nino/:businessId                            controllers.JourneyAnswersController.clearExpensesAndCapitalAllowancesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
-POST        /:taxYear/clear-office-supplies-expenses-answers/:nino/:businessId                           controllers.JourneyAnswersController.clearOfficeSuppliesExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/clear-expenses-office-supplies-answers/:nino/:businessId                           controllers.JourneyAnswersController.clearOfficeSuppliesExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
-POST        /:taxYear/clear-goods-to-sell-or-use-answers/:nino/:businessId                               controllers.JourneyAnswersController.clearGoodsToSellOrUseExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/clear-expenses-goods-to-sell-or-use-answers/:nino/:businessId                      controllers.JourneyAnswersController.clearGoodsToSellOrUseExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
-POST        /:taxYear/clear-repairs-and-maintenance-expenses-answers/:nino/:businessId                   controllers.JourneyAnswersController.clearRepairsAndMaintenanceExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/clear-expenses-repairs-and-maintenance-answers/:nino/:businessId                   controllers.JourneyAnswersController.clearRepairsAndMaintenanceExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
-POST        /:taxYear/clear-workplace-running-cost-expenses-answers/:nino/:businessId                     controllers.JourneyAnswersController.clearWorkplaceRunningCostsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/clear-expenses-workplace-running-costs-answers/:nino/:businessId                   controllers.JourneyAnswersController.clearWorkplaceRunningCostsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
-POST        /:taxYear/clear-advertising-or-marketing-expenses-answers/:nino/:businessId                   controllers.JourneyAnswersController.clearAdvertisingOrMarketingExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/clear-expenses-advertising-marketing-answers/:nino/:businessId                     controllers.JourneyAnswersController.clearAdvertisingOrMarketingExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
-POST        /:taxYear/clear-staff-costs-expenses-answers/:nino/:businessId                                controllers.JourneyAnswersController.clearStaffCostsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/clear-expenses-staff-costs-answers/:nino/:businessId                               controllers.JourneyAnswersController.clearStaffCostsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
-POST        /:taxYear/clear-construction-expenses-answers/:nino/:businessId                               controllers.JourneyAnswersController.clearConstructionExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/clear-expenses-construction-answers/:nino/:businessId                               controllers.JourneyAnswersController.clearConstructionExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
-POST        /:taxYear/clear-professional-fees-expenses-answers/:nino/:businessId                          controllers.JourneyAnswersController.clearProfessionalFeesExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/clear-expenses-professional-fees-answers/:nino/:businessId                          controllers.JourneyAnswersController.clearProfessionalFeesExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
-POST        /:taxYear/clear-irrecoverable-debts-expenses-answers/:nino/:businessId                        controllers.JourneyAnswersController.clearIrrecoverableDebtsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/clear-expenses-irrecoverable-debts-answers/:nino/:businessId                        controllers.JourneyAnswersController.clearIrrecoverableDebtsExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
-POST        /:taxYear/clear-other-expenses-answers/:nino/:businessId                                      controllers.JourneyAnswersController.clearOtherExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/clear-expenses-other-expenses-answers/:nino/:businessId                             controllers.JourneyAnswersController.clearOtherExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
-POST        /:taxYear/clear-financial-charges-expenses-answers/:nino/:businessId                          controllers.JourneyAnswersController.clearFinancialChargeExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+POST        /:taxYear/clear-expenses-financial-charges-answers/:nino/:businessId                          controllers.JourneyAnswersController.clearFinancialChargeExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
