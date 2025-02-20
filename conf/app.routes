@@ -134,3 +134,5 @@ POST        /:taxYear/clear-expenses-irrecoverable-debts-answers/:nino/:business
 POST        /:taxYear/clear-expenses-other-expenses-answers/:nino/:businessId                             controllers.JourneyAnswersController.clearOtherExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/clear-expenses-financial-charges-answers/:nino/:businessId                          controllers.JourneyAnswersController.clearFinancialChargeExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
+POST        /:taxYear/clear-expenses-interest-answers/:nino/:businessId                                   controllers.JourneyAnswersController.clearInterestOnBankAndOtherExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)

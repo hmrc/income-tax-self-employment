@@ -24,29 +24,10 @@ import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne
-import models.common.JourneyName.{
-  AdvertisingOrMarketing,
-  Construction,
-  ExpensesTailoring,
-  FinancialCharges,
-  GoodsToSellOrUse,
-  IrrecoverableDebts,
-  OfficeSupplies,
-  OtherExpenses,
-  ProfessionalFees,
-  ProfitOrLoss,
-  RepairsAndMaintenanceCosts,
-  StaffCosts,
-  WorkplaceRunningCosts
-}
+import models.common.JourneyName.{AdvertisingOrMarketing, Construction, ExpensesTailoring, FinancialCharges, GoodsToSellOrUse, Interest, IrrecoverableDebts, OfficeSupplies, OtherExpenses, ProfessionalFees, ProfitOrLoss, RepairsAndMaintenanceCosts, StaffCosts, WorkplaceRunningCosts}
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
-import models.connector.api_1802.request.{
-  AnnualAllowances,
-  AnnualNonFinancials,
-  CreateAmendSEAnnualSubmissionRequestBody,
-  CreateAmendSEAnnualSubmissionRequestData
-}
+import models.connector.api_1802.request.{AnnualAllowances, AnnualNonFinancials, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1895.request._
 import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
@@ -500,6 +481,17 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       repairsAndMaintenanceCosts shouldBe None
     }
 
+    "delete all interest on banks and other expenses API answer" in new Test2 {
+      prepareData()
+
+      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, Interest).value.futureValue
+
+      result shouldBe ().asRight
+
+      incomeResult should not be None
+      interestOnBanksAndOtherResult shouldBe None
+    }
+
     "connector fails to update the PeriodSummary API" in new Test2 {
       override lazy val connector: StubIFSConnector = new StubIFSConnector(amendSEPeriodSummaryResult = downstreamError)
       val result: Either[ServiceError, Unit]        = underTest.clearExpensesData(journeyCtxWithNino, StaffCosts).value.futureValue
@@ -544,6 +536,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
 
       underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, IrrecoverableDebts).badDebt shouldBe None
       underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, OtherExpenses).other shouldBe None
+      underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, Interest).interest shouldBe None
 
       underTest
         .clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, FinancialCharges)
@@ -580,6 +573,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       _ <- repository.upsertAnswers(otherExpensesCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(financialChargesCtx, Json.obj("field" -> "value"))
       _ <- repository.upsertAnswers(advertisingOrMarketingCtx, Json.obj("field" -> "value"))
+      _ <- repository.upsertAnswers(interestCtx, Json.obj("field" -> "value"))
     } yield ()
 
     def preparePeriodData(): Unit = {
@@ -621,6 +615,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       otherExpensesResult,
       financialChargesResult,
       advertisingOrMarketingResult,
+      interestOnBanksAndOtherResult,
       capitalAllowancesResult,
       zeroEmissionCarsResult) =
       (for {
@@ -637,6 +632,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
         otherExpenses              <- repository.get(otherExpensesCtx)
         financialCharges           <- repository.get(financialChargesCtx)
         advertisingOrMarketing     <- repository.get(advertisingOrMarketingCtx)
+        interests                  <- repository.get(interestCtx)
         capitalAllowancesTailoring <- repository.get(capitalAllowancesTailoringCtx)
         zeroEmissionCars           <- repository.get(zeroEmissionCarsCtx)
       } yield (
@@ -653,6 +649,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
         otherExpenses,
         financialCharges,
         advertisingOrMarketing,
+        interests,
         capitalAllowancesTailoring,
         zeroEmissionCars)).rightValue
   }

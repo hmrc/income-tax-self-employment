@@ -19,21 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFSConnector
-import models.common.JourneyName.{
-  AdvertisingOrMarketing,
-  CapitalAllowancesTailoring,
-  Construction,
-  ExpensesTailoring,
-  FinancialCharges,
-  GoodsToSellOrUse,
-  IrrecoverableDebts,
-  OfficeSupplies,
-  OtherExpenses,
-  ProfessionalFees,
-  RepairsAndMaintenanceCosts,
-  StaffCosts,
-  WorkplaceRunningCosts
-}
+import models.common.JourneyName.{AdvertisingOrMarketing, CapitalAllowancesTailoring, Construction, ExpensesTailoring, FinancialCharges, GoodsToSellOrUse, Interest, IrrecoverableDebts, OfficeSupplies, OtherExpenses, ProfessionalFees, RepairsAndMaintenanceCosts, StaffCosts, WorkplaceRunningCosts}
 import models.common._
 import models.connector.api_1894.request.{Deductions, FinancialsType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
@@ -349,7 +335,8 @@ class ExpensesAnswersServiceImpl @Inject() (connector: IFSConnector, repository:
       ProfessionalFees           -> deductions.copy(professionalFees = None),
       IrrecoverableDebts         -> deductions.copy(badDebt = None),
       OtherExpenses              -> deductions.copy(other = None),
-      FinancialCharges           -> deductions.copy(financialCharges = None)
+      FinancialCharges           -> deductions.copy(financialCharges = None),
+      Interest                   -> deductions.copy(interest = None)
     )
     journeyDeductionsMap.getOrElse(journeyName, deductions)
   }

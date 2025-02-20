@@ -78,6 +78,7 @@ object BaseSpec {
   val otherExpensesCtx: JourneyContext              = journeyCtxWithNino.toJourneyContext(JourneyName.OtherExpenses)
   val financialChargesCtx: JourneyContext           = journeyCtxWithNino.toJourneyContext(JourneyName.FinancialCharges)
   val advertisingOrMarketingCtx: JourneyContext     = journeyCtxWithNino.toJourneyContext(JourneyName.AdvertisingOrMarketing)
+  val interestCtx: JourneyContext                   = journeyCtxWithNino.toJourneyContext(JourneyName.Interest)
 
   // operations
   def mkNow(): Instant                 = Instant.now().truncatedTo(ChronoUnit.SECONDS)
