@@ -16,24 +16,27 @@
 
 package models.connector.api_1508
 
+import data.TimeData
 import models.connector.ClaimId
 import models.connector.ReliefClaimType.CF
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsResultException, JsValue, Json}
 
-import java.time.{LocalDateTime, Month}
+import java.time.format.DateTimeFormatter
 
-class GetLossClaimSuccessResponseSpec extends AnyWordSpec with Matchers {
+class GetLossClaimSuccessResponseSpec extends AnyWordSpec with Matchers with TimeData {
+
 
   "GetLossClaimSuccessResponse" must {
-    val submissionDate = LocalDateTime.of(2020, Month.JULY, 10, 10, 10, 10)
+
     val lossClaimSuccessResponse = GetLossClaimSuccessResponse(
       incomeSourceId = "012345678912345",
       reliefClaimed = CF,
       claimId = ClaimId("AAZZ1234567890A"),
       sequence = Option(2),
-      submissionDate = submissionDate)
+      submissionDate = testDateTime
+    )
 
     "serialise to JSON" in {
       val expectedJson = Json.parse(s"""{
@@ -41,7 +44,7 @@ class GetLossClaimSuccessResponseSpec extends AnyWordSpec with Matchers {
                            |"reliefClaimed": "CF",
                            |"claimId": "AAZZ1234567890A",
                            |"sequence": 2,
-                           |"submissionDate": "${submissionDate.toString}"
+                           |"submissionDate": "${testDateTime.format(DateTimeFormatter.ISO_DATE_TIME)}"
                            |}
                            |""".stripMargin)
       Json.toJson(lossClaimSuccessResponse) shouldBe expectedJson
@@ -54,7 +57,7 @@ class GetLossClaimSuccessResponseSpec extends AnyWordSpec with Matchers {
                                |"taxYearClaimedFor": "2020",
                                |"claimId": "AAZZ1234567890A",
                                |"sequence": 2,
-                               |"submissionDate": "${submissionDate.toString}"
+                               |"submissionDate": "${testDateTime.toString}"
                                |}
                                |""".stripMargin)
 
@@ -78,7 +81,7 @@ class GetLossClaimSuccessResponseSpec extends AnyWordSpec with Matchers {
                              |"reliefClaimed": "CF",
                              |"claimId": "AAZZ1234567890A",
                              |"sequence": "2",
-                             |"submissionDate": "${submissionDate.toString}"
+                             |"submissionDate": "${testDateTime.toString}"
                              |}
                              |""".stripMargin)
 

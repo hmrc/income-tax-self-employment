@@ -16,6 +16,7 @@
 
 package repositories
 
+import itData.IntegrationTimeData
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
@@ -23,7 +24,13 @@ import org.scalatest.{BeforeAndAfterEach, OptionValues}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import uk.gov.hmrc.mongo.test.MongoSupport
 
-trait MongoSpec extends AnyWordSpec with Matchers with MongoSupport with BeforeAndAfterEach with GuiceOneAppPerSuite with OptionValues {
+trait MongoSpec extends AnyWordSpec
+  with Matchers
+  with MongoSupport
+  with BeforeAndAfterEach
+  with GuiceOneAppPerSuite
+  with OptionValues
+  with IntegrationTimeData {
 
   implicit override val patienceConfig: PatienceConfig = PatienceConfig(
     timeout = Span(5, Seconds),
