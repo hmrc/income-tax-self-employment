@@ -471,7 +471,6 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
-
   "clearInterestOnBankAndOtherExpensesData" in {
     behave like testRoute(
       request = buildRequestNoContent,

@@ -24,10 +24,30 @@ import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne
-import models.common.JourneyName.{AdvertisingOrMarketing, Construction, ExpensesTailoring, FinancialCharges, GoodsToSellOrUse, Interest, IrrecoverableDebts, OfficeSupplies, OtherExpenses, ProfessionalFees, ProfitOrLoss, RepairsAndMaintenanceCosts, StaffCosts, WorkplaceRunningCosts}
+import models.common.JourneyName.{
+  AdvertisingOrMarketing,
+  Construction,
+  ExpensesTailoring,
+  FinancialCharges,
+  GoodsToSellOrUse,
+  Interest,
+  IrrecoverableDebts,
+  OfficeSupplies,
+  OtherExpenses,
+  ProfessionalFees,
+  ProfitOrLoss,
+  RepairsAndMaintenanceCosts,
+  StaffCosts,
+  WorkplaceRunningCosts
+}
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
-import models.connector.api_1802.request.{AnnualAllowances, AnnualNonFinancials, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1802.request.{
+  AnnualAllowances,
+  AnnualNonFinancials,
+  CreateAmendSEAnnualSubmissionRequestBody,
+  CreateAmendSEAnnualSubmissionRequestData
+}
 import models.connector.api_1895.request._
 import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
