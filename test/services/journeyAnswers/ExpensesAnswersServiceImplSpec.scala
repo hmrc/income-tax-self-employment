@@ -39,7 +39,12 @@ import models.common.JourneyName.{
 }
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
-import models.connector.api_1802.request.{AnnualAllowances, AnnualNonFinancials, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1802.request.{
+  AnnualAllowances,
+  AnnualNonFinancials,
+  CreateAmendSEAnnualSubmissionRequestBody,
+  CreateAmendSEAnnualSubmissionRequestData
+}
 import models.connector.api_1895.request._
 import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
@@ -98,7 +103,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     testInstant,
     testInstant
   )
-  val goodsToSellOrUseJourneyAnswers: JourneyAnswers = tailoringJourneyAnswers.copy(journey = JourneyName.GoodsToSellOrUse)
+  val goodsToSellOrUseJourneyAnswers: JourneyAnswers      = tailoringJourneyAnswers.copy(journey = JourneyName.GoodsToSellOrUse)
   val workplaceRunningCostsJourneyAnswers: JourneyAnswers = tailoringJourneyAnswers.copy(journey = JourneyName.WorkplaceRunningCosts)
 
   val workplaceRunningCostsDb: WorkplaceRunningCostsDb = WorkplaceRunningCostsDb(
@@ -699,7 +704,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
   }
 
   trait Test2 extends TimeData {
-    lazy val connector: StubIFSConnector          = new StubIFSConnector()
+    lazy val connector: StubIFSConnector = new StubIFSConnector()
 
     when(clock.instant()).thenReturn(testInstant)
 

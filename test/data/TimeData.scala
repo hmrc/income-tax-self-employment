@@ -19,13 +19,12 @@ package data
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneOffset}
 import java.time.temporal.ChronoUnit
 
-
 trait TimeData {
 
-  val testDate: LocalDate    = LocalDate.of(2024, 2, 17)
+  val testDate: LocalDate         = LocalDate.of(2024, 2, 17)
   val testDateTime: LocalDateTime = testDate.atTime(1, 0)
-  val testInstant: Instant = testDateTime.truncatedTo(ChronoUnit.SECONDS).toInstant(ZoneOffset.UTC)
+  val testInstant: Instant        = testDateTime.truncatedTo(ChronoUnit.SECONDS).toInstant(ZoneOffset.UTC)
 
-  val currentTaxYear: LocalDate    = LocalDate.now()
+  val currentTaxYear: LocalDate = LocalDate.now()
 
 }

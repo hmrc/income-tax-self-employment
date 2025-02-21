@@ -42,7 +42,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport[JourneyAnswers] {
 
   private val mockAppConfig = mock[AppConfig]
-  private val mockClock = mock[Clock]
+  private val mockClock     = mock[Clock]
 
   when(mockAppConfig.mongoTTL) thenReturn 30
 
@@ -178,8 +178,8 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val updatedAt = testInstant.plus(Duration.ofDays(1))
       when(mockClock.instant()).thenReturn(testInstant, updatedAt)
       val result = (for {
-        _ <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
-        _ <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "updated"))
+        _       <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
+        _       <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "updated"))
         updated <- repository.get(incomeCtx)
       } yield updated.value).rightValue
 
@@ -203,7 +203,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val updatedAt = testInstant.plus(Duration.ofDays(2))
       when(mockClock.instant()).thenReturn(testInstant, updatedAt)
       val result = (for {
-        _ <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
+        _        <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
         _        <- repository.setStatus(incomeCtx, Completed)
         inserted <- repository.get(incomeCtx)
       } yield inserted.value).rightValue

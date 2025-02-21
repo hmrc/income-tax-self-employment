@@ -27,7 +27,6 @@ import java.time.format.DateTimeFormatter
 
 class GetLossClaimSuccessResponseSpec extends AnyWordSpec with Matchers with TimeData {
 
-
   "GetLossClaimSuccessResponse" must {
 
     val lossClaimSuccessResponse = GetLossClaimSuccessResponse(
