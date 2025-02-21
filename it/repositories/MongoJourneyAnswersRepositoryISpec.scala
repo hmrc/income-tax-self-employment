@@ -27,7 +27,7 @@ import models.database.JourneyAnswers
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import models.error.ServiceError
 import models.frontend.TaskList
-import org.mockito.MockitoSugar.when
+import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.EitherValues._
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.libs.json.{JsObject, Json}
@@ -36,27 +36,29 @@ import support.MongoTestSupport
 import utils.BaseSpec._
 import utils.EitherTTestOps._
 
-import java.time.Duration
+import java.time.{Clock, Duration}
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration._
 
 class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport[JourneyAnswers] {
-  private val now   = mkNow()
-  private val clock = mkClock(now)
 
   private val mockAppConfig = mock[AppConfig]
-  when(mockAppConfig.mongoTTL) thenReturn 28
+  private val mockClock     = mock[Clock]
+
+  when(mockAppConfig.mongoTTL) thenReturn 30
+
   private val TTLinSeconds = mockAppConfig.mongoTTL * 3600 * 24
 
-  override val repository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, clock)
+  override val repository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, mockClock)
 
   override def beforeEach(): Unit = {
-    clock.reset(now)
+    reset(mockClock)
     await(removeAll(repository.collection))
   }
 
   "setStatus" should {
     "set trade details journey status with trade-details businessId" in {
+      when(mockClock.instant()).thenReturn(testInstant)
+
       val result = (for {
         _      <- repository.setStatus(tradeDetailsCtx, NotStarted)
         answer <- repository.get(tradeDetailsCtx)
@@ -76,6 +78,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
     }
 
     "set business id for income journey" in {
+      when(mockClock.instant()).thenReturn(testInstant)
       val result = (for {
         _      <- repository.setStatus(incomeCtx, NotStarted)
         answer <- repository.get(incomeCtx)
@@ -97,11 +100,13 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
 
   "getAll" should {
     "return an empty task list" in {
+      when(mockClock.instant()).thenReturn(testInstant)
       val result = repository.getAll(currTaxYear, mtditid, List.empty).value.futureValue.value
       result shouldBe TaskList(None, Nil, None)
     }
 
     "return trade details without businesses" in {
+      when(mockClock.instant()).thenReturn(testInstant)
       val result = (for {
         _        <- repository.setStatus(tradeDetailsCtx, NotStarted)
         taskList <- repository.getAll(tradeDetailsCtx.taxYear, tradeDetailsCtx.mtditid, Nil)
@@ -111,6 +116,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
     }
 
     "return task list with businesses" in {
+      when(mockClock.instant()).thenReturn(testInstant)
       val businesses = List(
         aBusiness.copy(businessId = incomeCtx.businessId.value, accountingType = Some("ACCRUAL")),
         aBusiness.copy(businessId = "business2", tradingName = Some("some other business"), accountingType = Some("CASH"))
@@ -148,12 +154,14 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
 
   "upsertData + get" should {
     "insert a new journey answers in in-progress status and calculate dates" in {
+      when(mockClock.instant()).thenReturn(testInstant)
       val result = (for {
         _        <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
         inserted <- repository.get(incomeCtx)
       } yield inserted.value).rightValue
 
-      val expectedExpireAt = now.plusSeconds(TTLinSeconds)
+      val expectedExpireAt = testInstant.plusSeconds(TTLinSeconds)
+
       result shouldBe JourneyAnswers(
         mtditid,
         businessId,
@@ -162,19 +170,20 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
         NotStarted,
         Json.obj("field" -> "value"),
         expectedExpireAt,
-        now,
-        now)
+        testInstant,
+        testInstant)
     }
 
     "update already existing answers (values, updateAt)" in {
+      val updatedAt = testInstant.plus(Duration.ofDays(1))
+      when(mockClock.instant()).thenReturn(testInstant, updatedAt)
       val result = (for {
-        _ <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
-        _ = clock.advanceBy(1.day)
+        _       <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
         _       <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "updated"))
         updated <- repository.get(incomeCtx)
       } yield updated.value).rightValue
 
-      val expectedExpireAt = now.plusSeconds(TTLinSeconds)
+      val expectedExpireAt = testInstant.plusSeconds(TTLinSeconds)
       result shouldBe JourneyAnswers(
         mtditid,
         businessId,
@@ -183,28 +192,30 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
         NotStarted,
         Json.obj("field" -> "updated"),
         expectedExpireAt,
-        now,
-        now.plus(Duration.ofDays(1))
+        testInstant,
+        updatedAt
       )
     }
   }
 
   "updateStatus + get" should {
     "update status to a new one" in {
+      val updatedAt = testInstant.plus(Duration.ofDays(2))
+      when(mockClock.instant()).thenReturn(testInstant, updatedAt)
       val result = (for {
-        _ <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
-        _ = clock.advanceBy(2.day)
+        _        <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
         _        <- repository.setStatus(incomeCtx, Completed)
         inserted <- repository.get(incomeCtx)
       } yield inserted.value).rightValue
 
       result.status shouldBe Completed
-      result.updatedAt shouldBe now.plus(Duration.ofDays(2))
+      result.updatedAt shouldBe updatedAt
     }
   }
 
   "testOnlyClearAllData" should {
     "clear all the data" in {
+      when(mockClock.instant()).thenReturn(testInstant)
       val res = (for {
         _        <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
         _        <- repository.testOnlyClearAllData()
@@ -217,6 +228,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
 
   "deleteOneOrMoreJourneys" should {
     "clear specific journey in the absence of prefix" in {
+      when(mockClock.instant()).thenReturn(testInstant)
       val res = (for {
         _        <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
         _        <- repository.deleteOneOrMoreJourneys(incomeCtx)
@@ -227,6 +239,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
     }
 
     "clear all journeys starting with prefix" in {
+      when(mockClock.instant()).thenReturn(testInstant)
       val (incomeJourney, expensesTailoringJourney, goodsToSellOrUseJourney) = (for {
         _                 <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
         _                 <- repository.upsertAnswers(expensesTailoringCtx, Json.obj("field" -> "value"))
@@ -245,6 +258,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
 
   "upsertStatus" should {
     "return correct UpdateResult for insert and update" in {
+      when(mockClock.instant()).thenReturn(testInstant)
       val ctx = JourneyContext(currTaxYear, businessId, mtditid, JourneyName.Income)
       val result = (for {
         beginning     <- repository.get(ctx)

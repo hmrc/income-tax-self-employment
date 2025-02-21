@@ -18,7 +18,6 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
-import config.AppConfig
 import connectors.HipConnector
 import models.common.{JourneyContextWithNino, Nino, TaxYear}
 import models.connector.api_1500.LossType
@@ -34,7 +33,7 @@ import models.error.ServiceError
 import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhichYearIsLossReported}
 import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.Mockito.times
-import org.mockito.MockitoSugar.{reset, verify, when}
+import org.mockito.MockitoSugar.{verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor3}
@@ -46,11 +45,10 @@ import stubs.connectors.StubIFSConnector._
 import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
-import utils.BaseSpec.{businessId, currTaxYear, hc, journeyCtxWithNino}
+import utils.BaseSpec.{businessId, currTaxYear, hc, journeyCtxWithNino, testDateTime}
 import utils.EitherTTestOps.convertScalaFuture
 
 import java.lang.reflect.Method
-import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -512,11 +510,11 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
   }
 
   val listWithNoMatchingIds: List[LossData] = List(
-    LossData("11111", "wwwwwww", LossType.SelfEmployment, 400, "2022-23", LocalDateTime.now),
-    LossData("22222", "xxxxxxx", LossType.SelfEmployment, 400, "2022-23", LocalDateTime.now),
-    LossData("33333", "zzzzzzz", LossType.SelfEmployment, 500, "2021-22", LocalDateTime.now)
+    LossData("11111", "wwwwwww", LossType.SelfEmployment, 400, "2022-23", testDateTime),
+    LossData("22222", "xxxxxxx", LossType.SelfEmployment, 400, "2022-23", testDateTime),
+    LossData("33333", "zzzzzzz", LossType.SelfEmployment, 500, "2021-22", testDateTime)
   )
-  val singleLossData: LossData            = LossData("99999", businessId.value, LossType.SelfEmployment, 999, "2022-23", LocalDateTime.now)
+  val singleLossData: LossData            = LossData("99999", businessId.value, LossType.SelfEmployment, 999, "2022-23", testDateTime)
   val listWithAMatchingId: List[LossData] = listWithNoMatchingIds.appended(singleLossData)
   val getLossByBusinessIdTestCases
       : TableFor3[String, Either[SingleDownstreamError, SuccessResponseSchema], Either[SingleDownstreamError, Option[LossData]]] = Table(
@@ -546,14 +544,12 @@ trait StubbedService {
   val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
   val mockHipConnector: HipConnector                               = mock[HipConnector]
   val repository: StubJourneyAnswersRepository                     = StubJourneyAnswersRepository()
-  val mockAppConfig: AppConfig                                     = mock[AppConfig]
 
   def service: ProfitOrLossAnswersServiceImpl =
     new ProfitOrLossAnswersServiceImpl(
       ifsConnector = ifsConnector,
       ifsBusinessDetailsConnector = ifsBusinessDetailsConnector,
       hipConnector = mockHipConnector,
-      repository = repository,
-      appConfig = mockAppConfig
+      repository = repository
     )
 }

@@ -52,7 +52,7 @@ object NICsAnswers {
         val class4ExemptReason: Option[ExemptionReason] = {
           val reason: Option[AnnualNonFinancialsType.Class4NicsExemptionReason.Value] =
             answers.annualNonFinancials.flatMap(_.class4NicsExemptionReason)
-          reason.map(ExemptionReason.fromNonFinancialType)
+          reason.flatMap(ExemptionReason.fromNonFinancialType)
         }
         Class4ExemptionAnswers(businessId, class4Exempt, class4ExemptReason)
       }

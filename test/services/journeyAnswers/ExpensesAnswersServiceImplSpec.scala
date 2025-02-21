@@ -19,6 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import config.AppConfig
+import data.TimeData
 import data.api1802.AnnualAllowancesData
 import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
@@ -71,13 +72,13 @@ import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategorie
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
 import models.frontend.expenses.workplaceRunningCosts.{WorkplaceRunningCostsAnswers, WorkplaceRunningCostsJourneyAnswers}
+import org.mockito.MockitoSugar.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.{JsObject, Json}
 import repositories.MongoJourneyAnswersRepository
-import services.journeyAnswers.ExpensesAnswersServiceImplSpec._
 import stubs.connectors.StubIFSConnector
 import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
 import stubs.repositories.StubJourneyAnswersRepository
@@ -85,13 +86,52 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.test.MongoSupport
 import utils.BaseSpec._
 import utils.EitherTTestOps.EitherTExtensions
-import utils.TestClock
 
-import java.time.Instant
+import java.time.Clock
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with MongoSupport {
+class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with MongoSupport with TimeData {
+
+  val clock: Clock             = mock[Clock]
+  val mockAppConfig: AppConfig = mock[AppConfig]
+
+  val tailoringJourneyAnswers: JourneyAnswers = JourneyAnswers(
+    mtditid,
+    businessId,
+    currTaxYear,
+    JourneyName.ExpensesTailoring,
+    JourneyStatus.Completed,
+    JsObject.empty,
+    testInstant,
+    testInstant,
+    testInstant
+  )
+  val goodsToSellOrUseJourneyAnswers: JourneyAnswers      = tailoringJourneyAnswers.copy(journey = JourneyName.GoodsToSellOrUse)
+  val workplaceRunningCostsJourneyAnswers: JourneyAnswers = tailoringJourneyAnswers.copy(journey = JourneyName.WorkplaceRunningCosts)
+
+  val workplaceRunningCostsDb: WorkplaceRunningCostsDb = WorkplaceRunningCostsDb(
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    false,
+    None,
+    None,
+    None,
+    None,
+    None
+  )
+
+  val downstreamError: Either[SingleDownstreamError, Nothing] =
+    SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serverError).asLeft
+
+  def buildPeriodData(deductions: Option[Deductions]): AmendSEPeriodSummaryRequestData =
+    AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), deductions))
 
   "save answers" should {
     "saveTailoringAnswers" in new Test {
@@ -572,8 +612,12 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
   }
-  trait Test2 {
-    lazy val connector: StubIFSConnector          = new StubIFSConnector()
+
+  trait Test2 extends TimeData {
+    lazy val connector: StubIFSConnector = new StubIFSConnector()
+
+    when(clock.instant()).thenReturn(testInstant)
+
     val repository: MongoJourneyAnswersRepository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, clock)
 
     lazy val underTest = new ExpensesAnswersServiceImpl(connector, repository)
@@ -676,7 +720,6 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
 }
 
 object ExpensesAnswersServiceImplSpec {
-  val clock: TestClock         = mkClock(mkNow())
   val mockAppConfig: AppConfig = mock[AppConfig]
 
   val tailoringJourneyAnswers: JourneyAnswers = JourneyAnswers(
@@ -686,9 +729,9 @@ object ExpensesAnswersServiceImplSpec {
     JourneyName.ExpensesTailoring,
     JourneyStatus.Completed,
     JsObject.empty,
-    Instant.now(),
-    Instant.now(),
-    Instant.now()
+    testInstant,
+    testInstant,
+    testInstant
   )
   val goodsToSellOrUseJourneyAnswers: JourneyAnswers = JourneyAnswers(
     mtditid,
@@ -697,9 +740,9 @@ object ExpensesAnswersServiceImplSpec {
     JourneyName.GoodsToSellOrUse,
     JourneyStatus.Completed,
     JsObject.empty,
-    Instant.now(),
-    Instant.now(),
-    Instant.now()
+    testInstant,
+    testInstant,
+    testInstant
   )
   val workplaceRunningCostsJourneyAnswers: JourneyAnswers = JourneyAnswers(
     mtditid,
@@ -708,9 +751,9 @@ object ExpensesAnswersServiceImplSpec {
     JourneyName.WorkplaceRunningCosts,
     JourneyStatus.Completed,
     JsObject.empty,
-    Instant.now(),
-    Instant.now(),
-    Instant.now()
+    testInstant,
+    testInstant,
+    testInstant
   )
   val workplaceRunningCostsDb: WorkplaceRunningCostsDb = WorkplaceRunningCostsDb(
     None,

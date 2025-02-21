@@ -16,6 +16,7 @@
 
 package utils
 
+import data.TimeData
 import models.common.JourneyName.TradeDetails
 import models.common._
 import models.database.JourneyAnswers
@@ -28,8 +29,6 @@ import play.api.mvc.{AnyContentAsEmpty, ControllerComponents, DefaultActionBuild
 import play.api.test.{FakeRequest, Helpers}
 import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.temporal.ChronoUnit
-import java.time.{Instant, LocalDate, ZoneOffset}
 import scala.concurrent.ExecutionContext
 
 trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar with ScalaFutures {
@@ -44,7 +43,7 @@ trait BaseSpec extends AnyWordSpec with MockitoSugar with ArgumentMatchersSugar 
   protected val fakeRequest: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withHeaders("mtditid" -> "1234567890")
 }
 
-object BaseSpec {
+object BaseSpec extends TimeData {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   // static data
@@ -56,7 +55,7 @@ object BaseSpec {
   val mtditid: Mtditid       = Mtditid("1234567890")
 
   // dynamic & generated data
-  val currTaxYear: TaxYear     = TaxYear(LocalDate.now().getYear)
+  val currTaxYear: TaxYear     = TaxYear(currentTaxYear.getYear)
   val currTaxYearStart: String = TaxYear.startDate(currTaxYear)
   val currTaxYearEnd: String   = TaxYear.endDate(currTaxYear)
 
@@ -80,9 +79,6 @@ object BaseSpec {
   val advertisingOrMarketingCtx: JourneyContext     = journeyCtxWithNino.toJourneyContext(JourneyName.AdvertisingOrMarketing)
   val interestCtx: JourneyContext                   = journeyCtxWithNino.toJourneyContext(JourneyName.Interest)
 
-  // operations
-  def mkNow(): Instant                 = Instant.now().truncatedTo(ChronoUnit.SECONDS)
-  def mkClock(now: Instant): TestClock = TestClock(now, ZoneOffset.UTC)
   def mkJourneyAnswers(journey: JourneyName, status: JourneyStatus, data: JsObject): JourneyAnswers = JourneyAnswers(
     mtditid,
     businessId,
@@ -90,9 +86,9 @@ object BaseSpec {
     journey,
     status,
     data,
-    Instant.now(),
-    Instant.now(),
-    Instant.now()
+    testInstant,
+    testInstant,
+    testInstant
   )
 
 }

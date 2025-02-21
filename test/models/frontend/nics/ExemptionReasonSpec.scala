@@ -48,8 +48,13 @@ class ExemptionReasonSpec extends AnyWordSpec with Matchers {
     }
 
     "convert from non-financial type correctly" in {
-      ExemptionReason.fromNonFinancialType(AnnualNonFinancialsType.Class4NicsExemptionReason._003) shouldBe ExemptionReason.DiverDivingInstructor
-      ExemptionReason.fromNonFinancialType(AnnualNonFinancialsType.Class4NicsExemptionReason._002) shouldBe ExemptionReason.TrusteeExecutorAdmin
+      ExemptionReason.fromNonFinancialType(AnnualNonFinancialsType.Class4NicsExemptionReason._001) shouldBe None
+      ExemptionReason.fromNonFinancialType(AnnualNonFinancialsType.Class4NicsExemptionReason._003) shouldBe Some(
+        ExemptionReason.DiverDivingInstructor)
+      ExemptionReason.fromNonFinancialType(AnnualNonFinancialsType.Class4NicsExemptionReason._002) shouldBe Some(ExemptionReason.TrusteeExecutorAdmin)
+      ExemptionReason.fromNonFinancialType(AnnualNonFinancialsType.Class4NicsExemptionReason._004) shouldBe None
+      ExemptionReason.fromNonFinancialType(AnnualNonFinancialsType.Class4NicsExemptionReason._005) shouldBe None
+      ExemptionReason.fromNonFinancialType(AnnualNonFinancialsType.Class4NicsExemptionReason._006) shouldBe None
     }
   }
 }

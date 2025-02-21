@@ -34,12 +34,14 @@ object ExemptionReason extends Enum[ExemptionReason] with utils.PlayJsonEnum[Exe
     override val exemptionCode: String = "003"
   }
 
-  def fromNonFinancialType(exemption: AnnualNonFinancialsType.Class4NicsExemptionReason.Value): ExemptionReason =
+  def fromNonFinancialType(exemption: AnnualNonFinancialsType.Class4NicsExemptionReason.Value): Option[ExemptionReason] =
     exemption match {
       case AnnualNonFinancialsType.Class4NicsExemptionReason._003 =>
-        ExemptionReason.DiverDivingInstructor
+        Some(ExemptionReason.DiverDivingInstructor)
       case AnnualNonFinancialsType.Class4NicsExemptionReason._002 =>
-        ExemptionReason.TrusteeExecutorAdmin
+        Some(ExemptionReason.TrusteeExecutorAdmin)
+      case _ =>
+        None
     }
 
 }
