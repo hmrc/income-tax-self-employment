@@ -471,6 +471,28 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
   }
 
+  "clearInterestOnBankAndOtherExpensesData" in {
+    behave like testRoute(
+      request = buildRequestNoContent,
+      expectedStatus = NO_CONTENT,
+      expectedBody = "",
+      methodBlock = () => underTest.clearInterestOnBankAndOtherExpensesData(currTaxYear, businessId, nino)
+    )
+
+    (BAD_REQUEST, INTERNAL_SERVER_ERROR) map { status =>
+      behave like testRoute(
+        request = buildRequestNoContent,
+        expectedStatus = status,
+        expectedBody = "",
+        methodBlock = () => {
+          val expenses: StubExpensesAnswersService = StubExpensesAnswersService(clearExpensesDataRes = serviceErrorT)
+          val controller                           = mkUnderTest(expensesService = expenses)
+          controller.clearInterestOnBankAndOtherExpensesData(currTaxYear, businessId, nino)
+        }
+      )
+    }
+  }
+
   "clearAdvertisingOrMarketingExpensesData" in {
     val controller: JourneyAnswersController = new JourneyAnswersController(
       auth = mockAuthorisedAction,
