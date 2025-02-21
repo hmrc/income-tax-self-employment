@@ -52,16 +52,7 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
                                       getWorkplaceRunningCostsAnswers: Option[WorkplaceRunningCostsAnswers] = None,
                                       deleteSimplifiedExpensesAnswersRes: ApiResultT[Unit] = serviceUnitT,
                                       clearExpensesAndCapitalAllowancesDataRes: ApiResultT[Unit] = serviceUnitT,
-                                      clearOfficeSuppliesExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
-                                      clearGoodsToSellOrUseExpensesData: ApiResultT[Unit] = serviceUnitT,
-                                      clearRepairsAndMaintenanceExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
-                                      clearWorkspaceRunningCostsExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
-                                      clearAdvertisingOrMarketingExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
-                                      clearStaffCostsExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
-                                      clearConstructionExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
-                                      clearProfessionalFeesExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
-                                      clearIrrecoverableDebtsExpensesDataRes: ApiResultT[Unit] = serviceUnitT,
-                                      clearOtherExpensesDataRes: ApiResultT[Unit] = serviceUnitT)
+                                      clearExpensesDataRes: ApiResultT[Unit] = serviceUnitT)
     extends ExpensesAnswersService {
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
@@ -134,33 +125,5 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
   def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     clearExpensesAndCapitalAllowancesDataRes
 
-  def clearOfficeSuppliesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearOfficeSuppliesExpensesDataRes
-
-  override def clearGoodsToSellOrUseExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearGoodsToSellOrUseExpensesData
-
-  def clearRepairsAndMaintenanceExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearRepairsAndMaintenanceExpensesDataRes
-
-  def clearWorkplaceRunningCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearWorkspaceRunningCostsExpensesDataRes
-
-  def clearAdvertisingOrMarketingExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearAdvertisingOrMarketingExpensesDataRes
-
-  override def clearStaffCostsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearStaffCostsExpensesDataRes
-
-  def clearConstructionExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearConstructionExpensesDataRes
-
-  override def clearProfessionalFeesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearProfessionalFeesExpensesDataRes
-
-  override def clearIrrecoverableDebtsExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearIrrecoverableDebtsExpensesDataRes
-
-  override def clearOtherExpensesExpensesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-    clearOtherExpensesDataRes
+  def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] = clearExpensesDataRes
 }
