@@ -17,7 +17,6 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
-import config.AppConfig
 import connectors.{HipConnector, IFSBusinessDetailsConnector, IFSConnector}
 import models.common.{JourneyContextWithNino, JourneyName, Nino, TaxYear}
 import models.connector.api_1500.CreateBroughtForwardLossRequestData
@@ -47,8 +46,7 @@ trait ProfitOrLossAnswersService {
 class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
                                                 ifsBusinessDetailsConnector: IFSBusinessDetailsConnector,
                                                 hipConnector: HipConnector,
-                                                repository: JourneyAnswersRepository,
-                                                appConfig: AppConfig)(implicit ec: ExecutionContext)
+                                                repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends ProfitOrLossAnswersService {
 
   def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =

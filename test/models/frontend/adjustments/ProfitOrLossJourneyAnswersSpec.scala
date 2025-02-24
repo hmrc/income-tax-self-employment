@@ -16,6 +16,7 @@
 
 package models.frontend.adjustments
 
+import data.TimeData
 import models.common.JourneyContextWithNino
 import models.connector.ReliefClaimType.{CF, CSGI}
 import models.connector.api_1505.CreateLossClaimRequestBody
@@ -27,7 +28,7 @@ import utils.BaseSpec.{businessId, currTaxYear, mtditid, nino}
 
 import java.time.{LocalDate, LocalDateTime}
 
-class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers {
+class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with TimeData {
 
   val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
 
@@ -53,7 +54,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers {
           CreateLossClaimRequestBody(
             incomeSourceId = "SJPR05893938418",
             reliefClaimed = ReliefClaimType.CF.toString,
-            taxYear = LocalDate.now().getYear.toString
+            taxYear = currentTaxYear.getYear.toString
           ))
       }
 
@@ -129,7 +130,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers {
             reliefClaimed = CF,
             claimId = ClaimId("AAZZ1234567890A"),
             sequence = Option(2),
-            submissionDate = LocalDateTime.now())
+            submissionDate = testDateTime)
 
         val result = ProfitOrLossJourneyAnswers.apply(apiResponse = apiResponse, journeyAnswers = answers)
 
@@ -155,7 +156,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers {
             reliefClaimed = CSGI,
             claimId = ClaimId("AAZZ1234567890A"),
             sequence = Option(2),
-            submissionDate = LocalDateTime.now())
+            submissionDate = testDateTime)
 
         val result = ProfitOrLossJourneyAnswers.apply(apiResponse = apiResponse, journeyAnswers = answers)
 

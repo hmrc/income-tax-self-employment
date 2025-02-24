@@ -27,10 +27,11 @@ import models.frontend.capitalAllowances.zeroEmissionCars._
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.{ZegvHowMuchDoYouWantToClaim, ZegvUseOutsideSE, ZeroEmissionGoodsVehicleAnswers}
 import models.frontend.capitalAllowances.{CapitalAllowances, CapitalAllowancesTailoringAnswers}
 import org.scalacheck.Gen
+import data.TimeData
 
 import java.time.LocalDate
 
-object CapitalAllowancesAnswersGen {
+object CapitalAllowancesAnswersGen extends TimeData {
   val capitalAllowancesTailoringGen: Gen[CapitalAllowances] = Gen.oneOf(CapitalAllowances.accrualAllowances)
 
   val capitalAllowancesTailoringAnswersGen: Gen[CapitalAllowancesTailoringAnswers] = for {
@@ -165,9 +166,9 @@ object CapitalAllowancesAnswersGen {
     val newSpecialTaxSites = List(
       NewSpecialTaxSite(
         contractForBuildingConstruction = Some(true),
-        contractStartDate = Some(LocalDate.now()),
-        constructionStartDate = Some(LocalDate.now()),
-        qualifyingUseStartDate = Some(LocalDate.now()),
+        contractStartDate = Some(testDate),
+        constructionStartDate = Some(testDate),
+        qualifyingUseStartDate = Some(testDate),
         qualifyingExpenditure = claimingAmount,
         specialTaxSiteLocation = Some(SpecialTaxSiteLocation(Some("name"), Some("number"), "AA11AA")),
         newSiteClaimingAmount = claimingAmount
@@ -192,7 +193,7 @@ object CapitalAllowancesAnswersGen {
     structuresBuildingsClaimed = Some(true),
     newStructuresBuildings = Some(List(
       NewStructureBuilding(
-        qualifyingUse = Some(LocalDate.now()),
+        qualifyingUse = Some(testDate),
         newStructureBuildingLocation = Some(StructuresBuildingsLocation(Some("name"), Some("number"), "AA11AA")),
         newStructureBuildingClaimingAmount = Some(newStructureBuildingClaimingAmount)
       )
