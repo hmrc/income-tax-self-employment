@@ -26,7 +26,7 @@ trait Api1505Test {
 
   val successResponseRaw: String =
     s"""{
-       |   "claimId": "1234568790ABCDE"
+       |   "value": "1234568790ABCDE"
        |}
        |""".stripMargin
 

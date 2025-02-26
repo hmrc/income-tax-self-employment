@@ -20,16 +20,14 @@ import data.CommonTestData
 import mocks.connectors.MockReliefClaimsConnector
 import models.common.JourneyName.ProfitOrLoss
 import models.common._
-import models.connector.ReliefClaimType
 import models.connector.ReliefClaimType.{CF, CSGI}
 import models.connector.api_1505._
 import models.connector.common.{ReliefClaim, UkProperty}
 import models.error.ServiceError
-import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.{CarryItForward, DeductFromOtherTypes}
 import models.frontend.adjustments._
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.times
-import org.mockito.MockitoSugar.{reset, verify, when}
+import org.mockito.MockitoSugar.{reset, verify}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike

@@ -17,7 +17,6 @@
 package connectors
 
 import cats.data.EitherT
-import cats.implicits._
 import config.AppConfig
 import jakarta.inject.Inject
 import models.common._
@@ -25,13 +24,10 @@ import models.connector.api_1505.{CreateLossClaimRequestBody, ClaimId}
 import models.connector.common.ReliefClaim
 import models.connector._
 import models.domain.ApiResultT
-import models.error.ServiceError
-import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
-import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.toReliefClaimType
 import uk.gov.hmrc.http._
 import utils.Logging
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class ReliefClaimsConnector @Inject()(httpClient: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) extends Logging {
 

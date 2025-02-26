@@ -17,13 +17,10 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
-import config.AppConfig
 import connectors.{HipConnector, IFSBusinessDetailsConnector, IFSConnector}
 import models.common.{JourneyContextWithNino, JourneyName, Nino, TaxYear}
 import models.connector.api_1500.CreateBroughtForwardLossRequestData
 import models.connector.api_1501.UpdateBroughtForwardLossYear
-import connectors.{IFSBusinessDetailsConnector, IFSConnector, ReliefClaimsConnector}
-import models.common.{JourneyContextWithNino, JourneyName}
 import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
 import models.domain.ApiResultT
@@ -48,10 +45,8 @@ trait ProfitOrLossAnswersService {
 class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
                                                 ifsBusinessDetailsConnector: IFSBusinessDetailsConnector,
                                                 hipConnector: HipConnector,
-                                                reliefClaimsConnector: ReliefClaimsConnector,
                                                 reliefClaimsService: ReliefClaimsService,
-                                                repository: JourneyAnswersRepository,
-                                                appConfig: AppConfig)(implicit ec: ExecutionContext)
+                                                repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends ProfitOrLossAnswersService {
 
 
@@ -126,8 +121,10 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       case None           => handleBroughtForwardLossNoExistingLoss(ctx, answers)
     }
 
-  private def handleBroughtForwardLossWithExistingLoss(ctx: JourneyContextWithNino, lossData: LossData, answers: ProfitOrLossJourneyAnswers)(implicit
-      hc: HeaderCarrier): ApiResultT[Unit] =
+  private def handleBroughtForwardLossWithExistingLoss(ctx: JourneyContextWithNino,
+                                                       lossData: LossData,
+                                                       answers: ProfitOrLossJourneyAnswers)
+                                                      (implicit hc: HeaderCarrier): ApiResultT[Unit] =
     (answers.unusedLossAmount, answers.whichYearIsLossReported) match {
       case (Some(amount), Some(whichYear)) =>
         if (whichYear.apiTaxYear == lossData.taxYearBroughtForwardFrom) {
@@ -135,14 +132,11 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
             .updateBroughtForwardLoss(ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossData(ctx, lossData.lossId, amount))
             .map(_ => ())
         } else {
-          ifsBusinessDetailsConnector
-            .updateBroughtForwardLossYear(
-              ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossYearData(ctx, lossData.lossId, amount, whichYear.apiTaxYear))
+          updateBroughtForwardLossYear(
+            ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossYearData(ctx, lossData.lossId, amount, whichYear.apiTaxYear))
             .map(_ => ())
         }
-      //case _ => deleteBroughtForwardLoss(ctx.nino, TaxYear.asTy(lossData.taxYearBroughtForwardFrom), lossData.lossId)
-
-      case _ => ifsBusinessDetailsConnector.deleteBroughtForwardLoss(ctx.nino, lossData.lossId)
+      case _ => deleteBroughtForwardLoss(ctx.nino, TaxYear.asTy(lossData.taxYearBroughtForwardFrom), lossData.lossId)
     }
 
   private def deleteBroughtForwardLoss(nino: Nino, taxYear: TaxYear, lossId: String)(implicit

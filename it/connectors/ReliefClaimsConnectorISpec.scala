@@ -21,10 +21,9 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import helpers.WiremockSpec
 import models.connector.ReliefClaimType.{CF, CSGI}
 import models.connector._
-import models.connector.api_1505.{CreateLossClaimRequestBody, ClaimId}
+import models.connector.api_1505.ClaimId
 import models.connector.common.ReliefClaim
 import models.error.DownstreamError.GenericDownstreamError
-import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
 import models.frontend.capitalAllowances.specialTaxSites.SpecialTaxSitesAnswers.logger
 import play.api.http.Status._
 import play.api.libs.json.Format.GenericFormat
@@ -108,21 +107,21 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
       result mustBe Right(expectedClaims)
     }
 
-//    "the API returns 404 NOT_FOUND" should {
-//      "return a Left with an error message" in {
-//        val response: JsObject = Json.obj("failures" -> Json.arr(Json.obj("code" -> "NOT_FOUND", "reason" -> "Resource not found")))
-//
-//        stubGetWithResponseBody(
-//          url = api1867Url,
-//          expectedStatus = NOT_FOUND,
-//          expectedResponse = Json.stringify(response)
-//        )
-//
-//        val result = connector.getAllReliefClaims(testTaxYear2024, testBusinessId).value.futureValue
-//
-//        result mustBe Right(Nil)
-//      }
-//    }
+    "the API returns 404 NOT_FOUND" should {
+      "return a Left with an error message" in {
+        val response: JsObject = Json.obj("failures" -> Json.obj("code" -> "NOT_FOUND", "reason" -> "Resource not found"))
+
+        stubGetWithResponseBody(
+          url = api1867Url,
+          expectedStatus = NOT_FOUND,
+          expectedResponse = Json.stringify(response)
+        )
+
+        val result = connector.getAllReliefClaims(testTaxYear2024, testBusinessId).value.futureValue
+
+        result mustBe Right(Nil)
+      }
+    }
 
 
     "the API returns 400 BAD_REQUEST, 422 UNPROCESSABLE_ENTITY or 5xx response" should {
@@ -169,153 +168,11 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
         expectedResponse = Json.stringify(Json.toJson(expectedResponse))
       )
 
-      val body: CreateLossClaimRequestBody = CreateLossClaimRequestBody(
-        incomeSourceId = "012345678912345",
-        reliefClaimed = "CF",
-        taxYear = "2024"
-      )
-
       val result = await(connector.createReliefClaim(testContextWithNino, ReliefClaimType.CF).value)
       result mustBe Right(expectedResponse)
 
       verify(1, postRequestedFor(urlEqualTo(api1505Url)))
     }
 
-    // TODO: Move tests to service spec because we've refactored the connector to only make singular calls
-
   }
-
-  // TODO: Move test to service spec
-//  "updateReliefClaims" should {
-//    "create and delete relief claims correctly" in {
-//      val oldAnswers = claims
-//      val newAnswers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
-//
-//      stubDelete(
-//        url = api1506Url,
-//        expectedStatus = OK,
-//        expectedResponse = ""
-//      )
-//
-//      stubPostWithResponseBody(
-//        url = api1505Url,
-//        expectedStatus = OK,
-//        expectedResponse = newAnswers.toString()
-//      )
-//
-//      val result = connector.updateReliefClaims(testContextWithNino, oldAnswers, newAnswers).value
-//
-//      val finalClaims = result.map {
-//        case Right(claims) => claims
-//        case Left(_) => List.empty[WhatDoYouWantToDoWithLoss]
-//      }
-//
-//      finalClaims.map { claims =>
-//        claims must not contain WhatDoYouWantToDoWithLoss.fromReliefClaimType(ReliefClaimType.CF)
-//      }
-//
-//      verify(1, postRequestedFor(urlEqualTo(api1505Url)))
-//      verify(1, deleteRequestedFor(urlEqualTo(api1506Url)))
-//
-//    }
-//
-//    "do nothing if answer exists in both lists" in {
-//      val oldAnswers = List(
-//        ReliefClaim("XAIS12345678900", None, ReliefClaimType.CF, "2024", "1234567890", None, LocalDate.parse("2024-01-01")),
-//        ReliefClaim("XAIS12345678900", None, ReliefClaimType.CF, "2024", "1234567891", None, LocalDate.parse("2024-01-01")),
-//        ReliefClaim("XAIS12345678901", None, ReliefClaimType.CF, "2025", "1234567892", None, LocalDate.parse("2024-01-01"))
-//      )
-//      val newAnswers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
-//
-//      val result = connector.updateReliefClaims(testContextWithNino, oldAnswers, newAnswers).value
-//
-//      result.map { res =>
-//        res mustBe Right(oldAnswers)
-//      }
-//
-//      verify(1, postRequestedFor(urlEqualTo(api1505Url)))
-//      verify(0, deleteRequestedFor(urlEqualTo(api1506Url)))
-//    }
-//
-//    "delete relief claims correctly" in {
-//      val oldAnswers = List(
-//        ReliefClaim("XAIS12345678900", None, ReliefClaimType.CF, "2024", "1234567890", None, LocalDate.parse("2024-01-01")),
-//        ReliefClaim("XAIS12345678901", None, ReliefClaimType.CSGI, "2025", "1234567890", None, LocalDate.parse("2024-01-01"))
-//      )
-//      val newAnswers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
-//
-//      stubDelete(
-//        url = api1506Url,
-//        expectedStatus = OK,
-//        expectedResponse = ""
-//      )
-//
-//      stubPostWithResponseBody(
-//        url = api1505Url,
-//        expectedStatus = OK,
-//        expectedResponse = newAnswers.toString()
-//      )
-//
-//      val result = connector.updateReliefClaims(testContextWithNino, oldAnswers, newAnswers).value
-//
-//      result.map { res =>
-//        res mustBe Right(List(WhatDoYouWantToDoWithLoss.CarryItForward))
-//      }
-//
-//      verify(1, deleteRequestedFor(urlEqualTo(api1506Url)))
-//
-//    }
-//
-//    "handle failure when creating relief claims" in {
-//
-//      val oldAnswers = claims
-//      val newAnswers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
-//
-//      stubPostWithResponseBody(
-//        url = api1505Url,
-//        expectedStatus = INTERNAL_SERVER_ERROR,
-//        expectedResponse = "Internal Server Error"
-//      )
-//
-//      stubDelete(
-//        url = api1506Url,
-//        expectedStatus = OK,
-//        expectedResponse = ""
-//      )
-//
-//      val result = connector.updateReliefClaims(testContextWithNino, oldAnswers, newAnswers).value
-//
-//      result.map { res =>
-//        res mustBe a[GenericDownstreamError]
-//      }
-//
-//      verify(1, postRequestedFor(urlEqualTo(api1505Url)))
-//    }
-//
-//    "handle failure when deleting relief claims" in {
-//
-//      val oldAnswers = claims
-//      val newAnswers = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
-//
-//      stubPostWithResponseBody(
-//        url = api1505Url,
-//        expectedStatus = OK,
-//        expectedResponse = newAnswers.toString()
-//      )
-//
-//      stubDelete(
-//        url = api1506Url,
-//        expectedStatus = INTERNAL_SERVER_ERROR,
-//        expectedResponse = "Internal Server Error"
-//      )
-//
-//      val result = connector.updateReliefClaims(testContextWithNino, oldAnswers, newAnswers).value
-//
-//      result.map { res =>
-//        res mustBe a[GenericDownstreamError]
-//      }
-//
-//      verify(1, deleteRequestedFor(urlEqualTo(api1506Url)))
-//    }
-//  }
 }

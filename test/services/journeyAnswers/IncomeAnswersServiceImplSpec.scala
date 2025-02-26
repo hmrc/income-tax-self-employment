@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
 import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
-import org.mockito.ArgumentMatchers.any
 import org.mockito.IdiomaticMockito.StubbingOps
 import org.mockito.Mockito.{reset, times, when}
 import org.mockito.MockitoSugar.{mock, never, verify}
@@ -55,7 +54,7 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with BeforeAndAfterEach {
+class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers with BeforeAndAfterEach {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   override def beforeEach(): Unit = {
@@ -100,16 +99,19 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Be
   "saving income answers" when {
     "no period summary or annual submission data exists" must {
       "successfully store data and create the period summary" in new TestCase(connector = mock[IFSConnector]) {
-        connector.listSEPeriodSummary(any())(any(), any()) returns
+        when(mockBusinessService.getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier]))
+          .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
+
+        connector.listSEPeriodSummary(*)(*, *) returns
           Future.successful(api1965EmptyResponse.asRight)
 
-        connector.createSEPeriodSummary(any())(any(), any()) returns
+        connector.createSEPeriodSummary(*)(*, *) returns
           Future.successful(().asRight)
 
-        connector.getAnnualSummaries(any())(any(), any()) returns
+        connector.getAnnualSummaries(*)(*, *) returns
           Future.successful(SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound).asLeft)
 
-        connector.createUpdateOrDeleteApiAnnualSummaries(any(), any())(any(), any()) returns
+        connector.createUpdateOrDeleteApiAnnualSummaries(*, *)(*, *) returns
           EitherT.rightT(())
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
@@ -117,25 +119,30 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Be
 
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
-        verify(connector, times(1)).createSEPeriodSummary(any())(any(), any())
-        verify(connector, never).amendSEPeriodSummary(any())(any(), any())
+        verify(connector, times(1)).createSEPeriodSummary(*)(*, *)
+        verify(auditService, times(1)).sendAuditEvent(*, *)(*, *)
+        verify(mockBusinessService, times(1)).getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier])
+        verify(connector, never).amendSEPeriodSummary(*)(*, *)
       }
     }
 
     "prior submission data exists" must {
       "successfully store data and amend the period summary" in new TestCase(connector = mock[IFSConnector]) {
-        connector.listSEPeriodSummary(any())(any(), any()) returns
+        when(mockBusinessService.getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier]))
+          .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
+
+        connector.listSEPeriodSummary(*)(*, *) returns
           Future.successful(api1965MatchedResponse.asRight)
 
-        connector.getPeriodicSummaryDetail(any())(any(), any()) returns
+        connector.getPeriodicSummaryDetail(*)(*, *) returns
           Future.successful(api1786DeductionsSuccessResponse.asRight)
 
-        connector.amendSEPeriodSummary(any())(any(), any()) returns Future.successful(().asRight)
+        connector.amendSEPeriodSummary(*)(*, *) returns Future.successful(().asRight)
 
-        connector.getAnnualSummaries(any())(any(), any()) returns
+        connector.getAnnualSummaries(*)(*, *) returns
           Future.successful(api1803SuccessResponse.asRight)
 
-        connector.createUpdateOrDeleteApiAnnualSummaries(any(), any())(any(), any()) returns
+        connector.createUpdateOrDeleteApiAnnualSummaries(*, *)(*, *) returns
           EitherT.rightT(())
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
@@ -143,8 +150,10 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Be
 
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
-        verify(connector, times(1)).amendSEPeriodSummary(any())(any(), any())
-        verify(connector, never).createSEPeriodSummary(any())(any(), any())
+        verify(connector, times(1)).amendSEPeriodSummary(*)(*, *)
+        verify(auditService, times(1)).sendAuditEvent(*, *)(*, *)
+        verify(mockBusinessService, times(1)).getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier])
+        verify(connector, never).createSEPeriodSummary(*)(*, *)
       }
     }
   }

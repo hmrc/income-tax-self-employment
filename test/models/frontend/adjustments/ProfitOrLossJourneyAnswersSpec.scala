@@ -17,152 +17,110 @@
 package models.frontend.adjustments
 
 import models.common.JourneyContextWithNino
-import models.connector.ReliefClaimType.{CF, CSGI}
-import models.connector.api_1505.CreateLossClaimRequestBody
-import models.connector.{ClaimId, ReliefClaimType, api_1508}
-import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.{CarryItForward, DeductFromOtherTypes}
+import models.connector.api_1500.{CreateBroughtForwardLossRequestData, LossType}
+import models.connector.api_1501.{UpdateBroughtForwardLossRequestData, UpdateBroughtForwardLossYear}
+import models.connector.api_1802.request.AnnualAdjustments
+import models.database.adjustments.ProfitOrLossDb
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import utils.BaseSpec.{businessId, currTaxYear, mtditid, nino}
+import play.api.libs.json.{JsValue, Json}
+import utils.BaseSpec._
 
-import java.time.{LocalDate, LocalDateTime}
 
 class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers {
 
   val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
 
-  "ProfitOrLossJourneyAnswers" when {
+  "ProfitOrLossJourneyAnswers" should {
 
-//    "calling toLossClaimSubmission" should {
-//
-//      "return Some(CreateLossClaimRequestBody) when conditions are met" in {
-//        val answers = ProfitOrLossJourneyAnswers(
-//          goodsAndServicesForYourOwnUse = true,
-//          goodsAndServicesAmount = Some(BigDecimal(1000)),
-//          claimLossRelief = Some(true),
-//          whatDoYouWantToDoWithLoss = Some(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
-//          carryLossForward = Some(true),
-//          previousUnusedLosses = true,
-//          unusedLossAmount = Some(BigDecimal(500)),
-//          whichYearIsLossReported = Some(WhichYearIsLossReported.Year2022to2023)
-//        )
-//
-//        val result = answers.toLossClaimSubmission(journeyCtxWithNino)
-//
-//        result shouldBe Some(
-//          CreateLossClaimRequestBody(
-//            incomeSourceId = "SJPR05893938418",
-//            reliefClaimed = ReliefClaimType.CF.toString,
-//            taxYear = LocalDate.now().getYear.toString
-//          ))
-//      }
-//
-//      "return None when carryLossForward is false" in {
-//        val answers = ProfitOrLossJourneyAnswers(
-//          goodsAndServicesForYourOwnUse = true,
-//          goodsAndServicesAmount = Some(BigDecimal(1000)),
-//          claimLossRelief = Some(true),
-//          whatDoYouWantToDoWithLoss = Some(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
-//          carryLossForward = Some(false),
-//          previousUnusedLosses = true,
-//          unusedLossAmount = Some(BigDecimal(500)),
-//          whichYearIsLossReported = Some(WhichYearIsLossReported.Year2022to2023)
-//        )
-//
-//        val result = answers.toLossClaimSubmission(journeyCtxWithNino)
-//
-//        result shouldBe None
-//      }
-//
-//      "return None when whatDoYouWantToDoWithLoss is None" in {
-//        val answers = ProfitOrLossJourneyAnswers(
-//          goodsAndServicesForYourOwnUse = true,
-//          goodsAndServicesAmount = Some(BigDecimal(1000)),
-//          claimLossRelief = Some(true),
-//          whatDoYouWantToDoWithLoss = None,
-//          carryLossForward = Some(true),
-//          previousUnusedLosses = true,
-//          unusedLossAmount = Some(BigDecimal(500)),
-//          whichYearIsLossReported = Some(WhichYearIsLossReported.Year2022to2023)
-//        )
-//
-//        val result = answers.toLossClaimSubmission(journeyCtxWithNino)
-//
-//        result shouldBe None
-//      }
-//
-//      "return None when carryLossForward is None" in {
-//        val answers = ProfitOrLossJourneyAnswers(
-//          goodsAndServicesForYourOwnUse = true,
-//          goodsAndServicesAmount = Some(BigDecimal(1000)),
-//          claimLossRelief = Some(true),
-//          whatDoYouWantToDoWithLoss = Some(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
-//          carryLossForward = None,
-//          previousUnusedLosses = true,
-//          unusedLossAmount = Some(BigDecimal(500)),
-//          whichYearIsLossReported = Some(WhichYearIsLossReported.Year2022to2023)
-//        )
-//
-//        val result = answers.toLossClaimSubmission(journeyCtxWithNino)
-//
-//        result shouldBe None
-//      }
-//    }
+    "read and write successfully" in {
+      val answers: ProfitOrLossJourneyAnswers = ProfitOrLossJourneyAnswers(
+        goodsAndServicesForYourOwnUse = true,
+        goodsAndServicesAmount = Some(BigDecimal(100.00)),
+        claimLossRelief = Some(true),
+        whatDoYouWantToDoWithLoss = Some(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
+        carryLossForward = Some(true),
+        previousUnusedLosses = true,
+        unusedLossAmount = Some(BigDecimal(200.00)),
+        whichYearIsLossReported = Some(WhichYearIsLossReported.Year2022to2023)
+      )
 
-    "calling ProfitOrLossJourneyAnswers apply method" should {
+      val json: JsValue = Json.toJson(answers)
+      val readAnswers: ProfitOrLossJourneyAnswers = json.as[ProfitOrLossJourneyAnswers]
 
-//      "return ProfitOrLossJourneyAnswers with updated data from GetLossClaimSuccessResponse" in {
-//        val answers = ProfitOrLossJourneyAnswers(
-//          goodsAndServicesForYourOwnUse = true,
-//          goodsAndServicesAmount = Option(BigDecimal(1000)),
-//          claimLossRelief = Option(true),
-//          whatDoYouWantToDoWithLoss = Option(Seq(WhatDoYouWantToDoWithLoss.DeductFromOtherTypes, WhatDoYouWantToDoWithLoss.CarryItForward)),
-//          carryLossForward = None,
-//          previousUnusedLosses = true,
-//          unusedLossAmount = Option(BigDecimal(500)),
-//          whichYearIsLossReported = Option(WhichYearIsLossReported.Year2022to2023)
-//        )
-//
-//        val apiResponse: api_1508.GetLossClaimSuccessResponse =
-//          api_1508.GetLossClaimSuccessResponse(
-//            incomeSourceId = "012345678912345",
-//            reliefClaimed = CF,
-//            claimId = ClaimId("AAZZ1234567890A"),
-//            sequence = Option(2),
-//            submissionDate = LocalDateTime.now())
-//
-//        val result = ProfitOrLossJourneyAnswers.apply(apiResponse = apiResponse, journeyAnswers = answers)
-//
-//        result shouldBe answers.copy(whatDoYouWantToDoWithLoss = Option(List(CarryItForward)), carryLossForward = Option(true))
-//
-//      }
+      readAnswers shouldEqual answers
+    }
 
-//      "return ProfitOrLossJourneyAnswers with updated data from GetLossClaimSuccessResponse when reliefClaimed is CSGI" in {
-//        val answers = ProfitOrLossJourneyAnswers(
-//          goodsAndServicesForYourOwnUse = true,
-//          goodsAndServicesAmount = Option(BigDecimal(1000)),
-//          claimLossRelief = Option(true),
-//          whatDoYouWantToDoWithLoss = Option(Seq(WhatDoYouWantToDoWithLoss.DeductFromOtherTypes, WhatDoYouWantToDoWithLoss.CarryItForward)),
-//          carryLossForward = None,
-//          previousUnusedLosses = true,
-//          unusedLossAmount = Option(BigDecimal(500)),
-//          whichYearIsLossReported = Option(WhichYearIsLossReported.Year2022to2023)
-//        )
-//
-//        val apiResponse: api_1508.GetLossClaimSuccessResponse =
-//          api_1508.GetLossClaimSuccessResponse(
-//            incomeSourceId = "012345678912345",
-//            reliefClaimed = CSGI,
-//            claimId = ClaimId("AAZZ1234567890A"),
-//            sequence = Option(2),
-//            submissionDate = LocalDateTime.now())
-//
-//        val result = ProfitOrLossJourneyAnswers.apply(apiResponse = apiResponse, journeyAnswers = answers)
-//
-//        result shouldBe answers.copy(whatDoYouWantToDoWithLoss = Option(List(DeductFromOtherTypes)), carryLossForward = Option(false))
-//
-//      }
+    "convert to database model successfully" in {
+      val answers: ProfitOrLossJourneyAnswers = ProfitOrLossJourneyAnswers(
+        goodsAndServicesForYourOwnUse = true,
+        goodsAndServicesAmount = Some(BigDecimal(100.00)),
+        claimLossRelief = Some(true),
+        whatDoYouWantToDoWithLoss = Some(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
+        carryLossForward = Some(true),
+        previousUnusedLosses = true,
+        unusedLossAmount = Some(BigDecimal(200.00)),
+        whichYearIsLossReported = Some(WhichYearIsLossReported.Year2018to2019)
+      )
 
+      val dbModel: Option[ProfitOrLossDb] = answers.toDbModel
+      dbModel shouldEqual Some(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))
+    }
+
+    "convert to downstream annual adjustments successfully" in {
+      val answers: ProfitOrLossJourneyAnswers = ProfitOrLossJourneyAnswers(
+        goodsAndServicesForYourOwnUse = true,
+        goodsAndServicesAmount = Some(BigDecimal(100.00)),
+        claimLossRelief = Some(true),
+        whatDoYouWantToDoWithLoss = Some(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
+        carryLossForward = Some(true),
+        previousUnusedLosses = true,
+        unusedLossAmount = Some(BigDecimal(200.00)),
+        whichYearIsLossReported = Some(WhichYearIsLossReported.Year2022to2023)
+      )
+
+      val annualAdjustments: AnnualAdjustments = answers.toDownStreamAnnualAdjustments(None)
+      annualAdjustments.goodsAndServicesOwnUse shouldEqual Some(BigDecimal(100.00))
     }
   }
+
+  "BroughtForwardLossYearData" should {
+
+    "CreateBroughtForwardLoss data successfully" in {
+      val unusedLossAmount: BigDecimal = BigDecimal(500.00)
+      val whichYearIsLossReported: WhichYearIsLossReported = WhichYearIsLossReported.Year2022to2023
+
+      val result: CreateBroughtForwardLossRequestData =
+        ProfitOrLossJourneyAnswers.toCreateBroughtForwardLossData(journeyCtxWithNino, unusedLossAmount, whichYearIsLossReported)
+
+      result.body.lossAmount shouldEqual unusedLossAmount
+      result.body.taxYearBroughtForwardFrom shouldEqual whichYearIsLossReported.apiTaxYear
+      result.body.typeOfLoss shouldEqual LossType.SelfEmployment
+    }
+
+    "UpdateBroughtForwardLoss data successfully" in {
+      val lossId: String = "lossId123"
+      val unusedLossAmount: BigDecimal = BigDecimal(400.00)
+
+      val result: UpdateBroughtForwardLossRequestData =
+        ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossData(journeyCtxWithNino, lossId, unusedLossAmount)
+
+      result.body.lossAmount shouldEqual unusedLossAmount
+    }
+
+    "UpdateBroughtForwardLossYear data successfully" in {
+      val lossId: String = "lossId123"
+      val amount: BigDecimal = BigDecimal(300.00)
+      val whichYear: String = "2024"
+
+      val result: UpdateBroughtForwardLossYear =
+        ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossYearData(journeyCtxWithNino, lossId, amount, whichYear)
+
+      result.lossId shouldEqual lossId
+      result.body.lossAmount shouldEqual amount
+      result.body.taxYearBroughtForwardFrom shouldEqual whichYear
+      result.body.typeOfLoss shouldEqual LossType.SelfEmployment
+    }
+  }
+
 }

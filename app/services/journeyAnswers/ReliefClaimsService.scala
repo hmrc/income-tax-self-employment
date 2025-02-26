@@ -20,7 +20,6 @@ import cats.data.EitherT
 import cats.implicits._
 import connectors.ReliefClaimsConnector
 import models.common._
-import models.connector.ReliefClaimType
 import models.connector.api_1505.ClaimId
 import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
