@@ -15,7 +15,6 @@
  */
 
 import models.connector.IntegrationContext
-import play.api.Logger
 import play.api.libs.json.Writes
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 

@@ -21,7 +21,7 @@ import config.AppConfig
 import connectors.IFSConnector._
 import models.common.TaxYear.{asTys, endDate, startDate}
 import models.common._
-import models.connector._
+import models.connector.{ApiResponse, _}
 import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
 import models.connector.api_1508.GetLossClaimSuccessResponse
 import models.connector.api_1638.RequestSchemaAPI1638
@@ -29,6 +29,7 @@ import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
+import models.connector.api_1965.ListSEPeriodSummariesResponse
 import models.domain.ApiResultT
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import utils.Logging
@@ -49,7 +50,8 @@ trait IFSConnector {
   def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response]
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response]
   def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response]
-  def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response]
+  def listSEPeriodSummary(
+      ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ApiResponse[Option[ListSEPeriodSummariesResponse]]]
 
   def getDisclosuresSubmission(
       ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[SuccessResponseAPI1639]]
@@ -77,7 +79,7 @@ object IFSConnector {
   type Api1803Response = ApiResponse[api_1803.SuccessResponseSchema]
   type Api1894Response = ApiResponse[Unit]
   type Api1895Response = ApiResponse[Unit]
-  type Api1965Response = ApiResponse[api_1965.ListSEPeriodSummariesResponse]
+  type Api1965Response = ApiResponseOption[api_1965.ListSEPeriodSummariesResponse]
 
 }
 
@@ -122,8 +124,10 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
   }
 
   def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response] = {
-    val url     = periodicSummaries(ctx.nino, ctx.businessId, ctx.taxYear)
-    val context = appConfig.mkMetadata(IFSApiName.Api1965, url)
+    val url                                                                           = periodicSummaries(ctx.nino, ctx.businessId, ctx.taxYear)
+    val context                                                                       = appConfig.mkMetadata(IFSApiName.Api1965, url)
+    implicit val reads: HttpReads[ApiResponse[Option[ListSEPeriodSummariesResponse]]] = commonGetReadsTemp[api_1965.ListSEPeriodSummariesResponse]
+
     get[Api1965Response](http, context)
   }
 
