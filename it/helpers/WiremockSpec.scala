@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,19 +48,24 @@ trait WiremockSpec
   lazy val connectedServices: Seq[String] =
     Seq("auth", "integration-framework", "hip-integration-framework", "integration-framework-api1171", "citizen-details")
 
-  protected lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
-
-  protected val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
-
   def servicesToUrlConfig: Seq[(String, String)] = connectedServices
     .flatMap(service => Seq(s"microservice.services.$service.host" -> s"localhost", s"microservice.services.$service.port" -> wireMockPort.toString))
+
+  val testApiToken = "testToken"
+
+  def apiTokens: Seq[(String, String)] = Seq("1867")
+    .map(api => s"microservice.services.integration-framework.authorisation-token.$api" -> testApiToken)
 
   override implicit lazy val app: Application = GuiceApplicationBuilder()
     .configure(
       ("auditing.consumer.baseUri.port" -> wireMockPort) +:
-        servicesToUrlConfig: _*
+        servicesToUrlConfig ++: apiTokens: _*
     )
     .build()
+
+  protected lazy val httpClient: HttpClient = app.injector.instanceOf[HttpClient]
+
+  protected val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   override def beforeAll(): Unit = {
     super.beforeAll()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,29 +20,29 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.libs.json.{JsResultException, JsValue, Json}
 
-class CreateLossClaimSuccessResponseSpec extends AnyWordSpec with Matchers {
+class ClaimIdSpec extends AnyWordSpec with Matchers {
 
   "CreateLossClaimSuccessResponse" when {
 
     "converting to and from JSON" should {
 
       "successfully convert to JSON" in {
-        val response      = CreateLossClaimSuccessResponse("claimId123")
+        val response      = ClaimId("claimId123")
         val json: JsValue = Json.toJson(response)
 
-        (json \ "claimId").as[String] shouldBe "claimId123"
+        (json \ "value").as[String] shouldBe "claimId123"
       }
 
       "successfully convert from JSON" in {
         val json: JsValue = Json.parse("""
             |{
-            |  "claimId": "claimId123"
+            |  "value": "claimId123"
             |}
             |""".stripMargin)
 
-        val response = json.as[CreateLossClaimSuccessResponse]
+        val response = json.as[ClaimId]
 
-        response.claimId shouldBe "claimId123"
+        response.value shouldBe "claimId123"
       }
     }
 
@@ -55,33 +55,33 @@ class CreateLossClaimSuccessResponseSpec extends AnyWordSpec with Matchers {
             |""".stripMargin)
 
         intercept[JsResultException] {
-          json.as[CreateLossClaimSuccessResponse]
+          json.as[ClaimId]
         }
       }
 
       "fail to convert from JSON with incorrect field types" in {
         val json: JsValue = Json.parse("""
             |{
-            |  "claimId": 123
+            |  "value": 123
             |}
             |""".stripMargin)
 
         intercept[JsResultException] {
-          json.as[CreateLossClaimSuccessResponse]
+          json.as[ClaimId]
         }
       }
 
       "ignore additional unexpected fields when reading from JSON" in {
         val json: JsValue = Json.parse("""
             |{
-            |  "claimId": "claimId123",
+            |  "value": "claimId123",
             |  "unexpectedField": "unexpectedValue"
             |}
             |""".stripMargin)
 
-        val request = json.as[CreateLossClaimSuccessResponse]
+        val request = json.as[ClaimId]
 
-        request.claimId shouldBe "claimId123"
+        request.value shouldBe "claimId123"
       }
 
     }

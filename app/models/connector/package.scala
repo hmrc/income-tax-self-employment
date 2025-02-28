@@ -68,6 +68,17 @@ package object connector {
       }
     }
 
+  def commonGetListReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[List[A]]] =
+    (method: String, url: String, response: HttpResponse) => {
+      ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
+
+      response.status match {
+        case OK                     => toA[List[A]](response, method, url)
+        case NOT_FOUND | NO_CONTENT => Right(Nil)
+        case _                      => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+      }
+    }
+
   def listSEPeriodGetReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[Option[A]]] =
     (method: String, url: String, response: HttpResponse) => {
       ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)

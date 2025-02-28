@@ -180,10 +180,10 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
         StubIFSBusinessDetailsConnector(getBusinessesResult = api1171MultipleBusinessResponse(
           List(BusinessId("BusinessId1"), BusinessId("BusinessId2"), BusinessId("BusinessId3"), BusinessId("BusinessId4"))).asRight)
       override val connector: StubIFSConnector = StubIFSConnector(
-        getAnnualSummariesResultTest1 = buildDataResponse(existingDataId1),
-        getAnnualSummariesResultTest2 = buildDataResponse(existingDataId2),
-        getAnnualSummariesResultTest3 = buildDataResponse(existingDataId3),
-        getAnnualSummariesResultTest4 = buildDataResponse(existingDataId4)
+        getAnnualSummariesResultTest1 = this.buildDataResponse(existingDataId1),
+        getAnnualSummariesResultTest2 = this.buildDataResponse(existingDataId2),
+        getAnnualSummariesResultTest3 = this.buildDataResponse(existingDataId3),
+        getAnnualSummariesResultTest4 = this.buildDataResponse(existingDataId4)
       )
 
       val expectedResultId1: Option[CreateAmendSEAnnualSubmissionRequestData] = // Replace empty answers

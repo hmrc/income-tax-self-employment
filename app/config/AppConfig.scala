@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package config
 
 import com.typesafe.config.ConfigFactory
+import models.common.{BusinessId, TaxYear}
 import models.connector.ApiName
 import models.connector.IntegrationContext.IntegrationHeaderCarrier
 import play.api.Configuration
@@ -53,6 +54,17 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val hipBaseUrl: String = servicesConfig.baseUrl("hip-integration-framework")
 
   val ifsApi1171: String = servicesConfig.baseUrl("integration-framework-api1171")
+
+  val api1507Url: BusinessId => String = businessId => s"$ifsBaseUrl/income-tax/claims-for-relief/${businessId.value}"
+
+  def api1505Url(businessId: BusinessId): String = s"$ifsBaseUrl/income-tax/claims-for-relief/${businessId.value}"
+
+  def api1506Url(businessId: BusinessId, claimId: String): String = s"$ifsBaseUrl/income-tax/claims-for-relief/${businessId.value}/$claimId"
+
+  def api1508Url(businessId: BusinessId, claimId: String): String = s"$ifsBaseUrl/income-tax/claims-for-relief/${businessId.value}/$claimId"
+
+  val api1867Url: (TaxYear, BusinessId) => String =
+    (taxYear, businessId) => s"$ifsBaseUrl/income-tax/${TaxYear.asTys(taxYear)}/claims-for-relief/${businessId.value}"
 
   val citizenDetailsUrl: String = servicesConfig.baseUrl("citizen-details")
 
