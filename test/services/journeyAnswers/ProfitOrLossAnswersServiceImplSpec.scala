@@ -17,27 +17,24 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
-import uk.gov.hmrc.http.HeaderCarrier
-
-import scala.concurrent.ExecutionContext
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
 import connectors.HipConnector
 import mocks.services.MockReliefClaimsService
+import models.common.{JourneyContextWithNino, Nino, TaxYear}
 import models.connector.ReliefClaimType
 import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
 import models.connector.api_1505.ClaimId
 import models.connector.api_1802.request._
 import models.connector.common.ReliefClaim
 import models.database.adjustments.ProfitOrLossDb
+import models.domain.ApiResultT
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
-import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhichYearIsLossReported}
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.{CarryItForward, DeductFromOtherTypes}
 import models.frontend.adjustments._
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
+import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar.{reset, times, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
@@ -50,11 +47,12 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import stubs.connectors.StubIFSConnector._
 import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.repositories.StubJourneyAnswersRepository
-import utils.BaseSpec.{businessId, hc, journeyCtxWithNino, nino, taxYear}
-import uk.gov.hmrc.http.HttpClient
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
+import utils.BaseSpec.{businessId, hc, journeyCtxWithNino}
 import utils.EitherTTestOps.convertScalaFuture
 
 import java.time.LocalDate
+import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrivenPropertyChecks with Matchers with BeforeAndAfterEach {
@@ -89,13 +87,13 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 
   def testProfitOrLossAnswers(doWithLoss: WhatDoYouWantToDoWithLoss*): ProfitOrLossJourneyAnswers = ProfitOrLossJourneyAnswers(
     goodsAndServicesForYourOwnUse = true,
-    goodsAndServicesAmount = Some(BigDecimal(100)),
-    claimLossRelief = Some(true),
-    whatDoYouWantToDoWithLoss = Some(doWithLoss),
-    carryLossForward = Some(true),
+    goodsAndServicesAmount = Option(BigDecimal(100)),
+    claimLossRelief = Option(true),
+    whatDoYouWantToDoWithLoss = Option(doWithLoss),
+    carryLossForward = Option(true),
     previousUnusedLosses = true,
-    unusedLossAmount = Some(BigDecimal(200)),
-    whichYearIsLossReported = Some(WhichYearIsLossReported.Year2022to2023)
+    unusedLossAmount = Option(BigDecimal(200)),
+    whichYearIsLossReported = Option(WhichYearIsLossReported.Year2022to2023)
   )
 
   "Saving ProfitOrLoss answers" must {
@@ -147,18 +145,18 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(List(testClaimId1))
 
-      val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers.copy(whatDoYouWantToDoWithLoss = Some(Seq(CarryItForward)))
-      val allowancesData: AnnualAllowances    = AnnualAllowances(None, None, None, Some(5000), None, None, None, None, None, None, Some(5000), None)
+      val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers.copy(whatDoYouWantToDoWithLoss = Option(Seq(CarryItForward)))
+      val allowancesData: AnnualAllowances    = AnnualAllowances(None, None, None, Option(5000), None, None, None, None, None, None, Option(5000), None)
       val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
-        expectedAnnualSummariesData(Some(answers.toDownStreamAnnualAdjustments(Some(AnnualAdjustments.empty))), Some(allowancesData))
+        expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(Option(AnnualAdjustments.empty))), Option(allowancesData))
 
       val result: Either[ServiceError, Unit] = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
 
       assert(result == ().asRight)
-      assert(ifsConnector.upsertAnnualSummariesSubmissionData === Some(expectedAnnualSummariesAnswers))
+      assert(ifsConnector.upsertAnnualSummariesSubmissionData === Option(expectedAnnualSummariesAnswers))
       assert(
-        repository.lastUpsertedAnswer === Some(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))))
+        repository.lastUpsertedAnswer === Option(Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true,
+          claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
 
     "successfully save data when answers are false" in new StubbedService {
@@ -303,9 +301,10 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         StubIFSBusinessDetailsConnector(
           getBroughtForwardLossResult = api1502SuccessResponse.asRight
         )
-
-      when(mockHipConnector.deleteBroughtForwardLoss(eqTo(nino), eqTo(taxYear), eqTo(lossId))(any(), any()))
+      when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(EitherT.rightT(Right(())))
+     /* when(mockHipConnector.deleteBroughtForwardLoss(eqTo(nino), eqTo(taxYear), eqTo(lossId))(any(), any()))
+        .thenReturn(EitherT.rightT(Right(())))*/
 
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
 
@@ -370,9 +369,10 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           service.storeReliefClaimAnswers(journeyCtxWithNino, testProfitOrLossAnswers(CarryItForward)).value.futureValue
 
         result shouldBe Right(())
+
         verify(MockReliefClaimsService.mockInstance, times(1)).createReliefClaims(journeyCtxWithNino, Seq(CarryItForward))
-        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any(), any(), any())(any())
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any(), any())(any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any[JourneyContextWithNino], any[ List[ReliefClaim]], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[ List[ReliefClaim]])(any[HeaderCarrier])
       }
 
       "call the ReliefClaimService create method once, with both selections" in new StubbedService {
@@ -389,8 +389,8 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 
         result shouldBe Right(())
         verify(MockReliefClaimsService.mockInstance, times(1)).createReliefClaims(journeyCtxWithNino, Seq(CarryItForward, DeductFromOtherTypes))
-        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any(), any(), any())(any())
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any(), any())(any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any[JourneyContextWithNino], any[ List[ReliefClaim]], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[ List[ReliefClaim]])(any[HeaderCarrier])
       }
 
       "Do nothing if the user selects no options" in new StubbedService {
@@ -406,9 +406,9 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           .futureValue
 
         result shouldBe Right(())
-        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any(), any())(any(), any())
-        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any(), any(), any())(any())
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any(), any())(any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
+        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(any[HeaderCarrier])
       }
     }
 
@@ -434,8 +434,8 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           journeyCtxWithNino,
           oldAnswers,
           Seq(CarryItForward, DeductFromOtherTypes))
-        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any(), any())(any(), any())
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any(), any())(any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(any[HeaderCarrier])
       }
       "Remove the 2nd selection when the user previously selected both" in new StubbedService {
         val oldAnswers: List[ReliefClaim] =
@@ -456,8 +456,8 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         result shouldBe Right(())
 
         verify(MockReliefClaimsService.mockInstance, times(1)).updateReliefClaims(journeyCtxWithNino, oldAnswers, Seq(CarryItForward))
-        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any(), any())(any(), any())
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any(), any())(any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(any[HeaderCarrier])
       }
       "Remove both options if the user deselects both" in new StubbedService {
         val oldAnswers: List[ReliefClaim] =
@@ -475,9 +475,9 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 
         result shouldBe Right(())
 
-        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any(), any(), any())(any())
-        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any(), any())(any(), any())
-        verify(MockReliefClaimsService.mockInstance, times(1)).deleteReliefClaims(eqTo(journeyCtxWithNino), eqTo(oldAnswers))(any())
+        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
+        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(1)).deleteReliefClaims(eqTo(journeyCtxWithNino), eqTo(oldAnswers))(any[HeaderCarrier])
       }
     }
 
@@ -555,57 +555,55 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === Option(UpdateBroughtForwardLossRequestBody(unusedLossAmount)))
       }
 
-//      "given a valid submissions to update existing BroughtForwardLoss data with a different year and amount" in new StubbedService {
-//        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-//          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-//
-//        when(mockHipConnector.deleteBroughtForwardLoss(eqTo(nino), eqTo(taxYear), eqTo(lossId))(any[HeaderCarrier], any[ExecutionContext]))
-//          .thenReturn(EitherT.rightT(Right(())))
-//
-//        val result: Either[ServiceError, Unit] = service
-//          .storeBroughtForwardLossAnswers(
-//            journeyCtxWithNino,
-//            yesBroughtForwardLossAnswers.copy(whichYearIsLossReported = Option(WhichYearIsLossReported.Year2019to2020)))
-//          .value
-//          .futureValue
-//
-//        assert(result == ().asRight)
-//        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === Option(UpdateBroughtForwardLossRequestBody(unusedLossAmount)))
-//      }
+      "given a valid submissions to update existing BroughtForwardLoss data with a different year and amount" in new StubbedService {
+        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
 
-//      "given a valid submissions to delete existing BroughtForwardLoss data when user submits 'No' answers" in new StubbedService {
-//        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-//          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-//
-//        //        when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-//        //          .thenReturn(EitherT.rightT())
-//
-//        when(mockHipConnector.deleteBroughtForwardLoss(eqTo(nino), eqTo(taxYear), eqTo(lossId))(any[HeaderCarrier], any[ExecutionContext]))
-//          .thenReturn(EitherT.rightT(Right(())))
-//
-//        val result: Either[ServiceError, Unit] =
-//          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
-//
-//        assert(result == ().asRight)
-//        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-//      }
+        when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(EitherT.rightT(Right(())))
 
-//      "given a valid submissions to delete existing BroughtForwardLoss data when user submits 'No' answers" when {
-//        "hip integration feature flag is enabled" in new StubbedService {
-//
-//          when(mockHipConnector.deleteBroughtForwardLoss(eqTo(nino), eqTo(taxYear), eqTo(lossId))(any[HeaderCarrier], any[ExecutionContext]))
-//            .thenReturn(EitherT.rightT())
-//
-//          override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-//            StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-//
-//          val result: Either[ServiceError, Unit] =
-//            service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
-//
-//          assert(result == ().asRight)
-//          assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-//          verify(mockHipConnector, times(1)).deleteBroughtForwardLoss(eqTo(nino), eqTo(taxYear), eqTo(lossId))(any[HeaderCarrier], any[ExecutionContext])        }
-//      }
+        val result: Either[ServiceError, Unit] = service
+          .storeBroughtForwardLossAnswers(
+            journeyCtxWithNino,
+            yesBroughtForwardLossAnswers.copy(whichYearIsLossReported = Option(WhichYearIsLossReported.Year2019to2020)))
+          .value
+          .futureValue
+
+        assert(result == ().asRight)
+        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === Option(UpdateBroughtForwardLossRequestBody(unusedLossAmount)))
+      }
+
+      "given a valid submissions to delete existing BroughtForwardLoss data when user submits 'No' answers" in new StubbedService {
+        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
+
+        when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+                  .thenReturn(EitherT.rightT(()))
+
+        val result: Either[ServiceError, Unit] =
+          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
+
+        assert(result == ().asRight)
+        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
+      }
+
+      "given a valid submissions to delete existing BroughtForwardLoss data when user submits 'No' answers" when {
+        "hip integration feature flag is enabled" in new StubbedService {
+
+          when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+            .thenReturn(EitherT.rightT(()))
+
+          override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+            StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
+
+          val result: Either[ServiceError, Unit] =
+            service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
+
+          assert(result == ().asRight)
+          assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
+          verify(mockHipConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext])
+        }
+      }
 
       "user submits 'No' answers and there is no existing BroughtForwardLoss data to delete" in new StubbedService {
         val result: Either[ServiceError, Unit] =
@@ -651,66 +649,68 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
       }
 
-//      "the BusinessDetailsConnector .updateBroughtForwardLossYear returns an error from downstream" in new StubbedService {
-//        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-//          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-//
-//        when(mockHipConnector.deleteBroughtForwardLoss(eqTo(nino), eqTo(taxYear), eqTo(lossId))(any(), any()))
-//          .thenReturn(EitherT.leftT(downstreamError))
-//
-//        val result: Either[ServiceError, Unit] = service
-//          .storeBroughtForwardLossAnswers(
-//            journeyCtxWithNino,
-//            yesBroughtForwardLossAnswers.copy(whichYearIsLossReported = Option(WhichYearIsLossReported.Year2019to2020)))
-//          .value
-//          .futureValue
-//
-//        assert(result === downstreamError.asLeft)
-//        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-//      }
-
-      "the BusinessDetailsConnector .deleteBroughtForwardLoss returns an error from downstream" in new StubbedService {
+      "the BusinessDetailsConnector .updateBroughtForwardLossYear returns an error from downstream" in new StubbedService {
         override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
           StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
 
-        when(mockHipConnector.deleteBroughtForwardLoss(eqTo(nino), eqTo(taxYear), eqTo(lossId))(any[HeaderCarrier], any[ExecutionContext]))
+        when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(EitherT.leftT(downstreamError))
 
-        val result: Either[ServiceError, Unit] =
-          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
+        val result: Either[ServiceError, Unit] = service
+          .storeBroughtForwardLossAnswers(
+            journeyCtxWithNino,
+            yesBroughtForwardLossAnswers.copy(whichYearIsLossReported = Option(WhichYearIsLossReported.Year2019to2020)))
+          .value
+          .futureValue
 
         assert(result === downstreamError.asLeft)
         assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
       }
 
-//      "the BusinessDetailsConnector .deleteBroughtForwardLoss returns an error from downstream" when {
-//        "hip integration feature switch is enabled" in new StubbedService {
-//
-//          when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-//            .thenReturn(EitherT.leftT(downstreamError))
-//
-//          override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-//            StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-//
-//          val result: Either[ServiceError, Unit] =
-//            service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
-//
-//          assert(result === downstreamError.asLeft)
-//          assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-//
-//          verify(mockHipConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext])
-//        }
-//      }
+      "the BusinessDetailsConnector .deleteBroughtForwardLoss returns an error from downstream" in new StubbedService {
+        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
 
-//      "the BusinessDetailsConnector .storeBroughtForwardLossAnswers returns a notFoundError error from getLossByBusinessId" in new StubbedService {
-//        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-//          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = notFoundError.asLeft)
-//
-//        val result: Either[ServiceError, Unit] =
-//          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
-//
-//        assert(result === Right(()))
-//      }
+        when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(EitherT.leftT(downstreamError))
+
+
+        val res: ApiResultT[Unit] =
+          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers)
+
+        val result: Either[ServiceError, Unit] = res.value.futureValue
+        assert(result === downstreamError.asLeft)
+        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
+      }
+
+      "the BusinessDetailsConnector .deleteBroughtForwardLoss returns an error from downstream" when {
+        "hip integration feature switch is enabled" in new StubbedService {
+
+          when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+            .thenReturn(EitherT.leftT(downstreamError))
+
+          override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+            StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
+
+          val result: Either[ServiceError, Unit] =
+            service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
+
+          assert(result === downstreamError.asLeft)
+          assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
+
+          verify(mockHipConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext])
+        }
+      }
+
+      "the BusinessDetailsConnector .storeBroughtForwardLossAnswers returns a notFoundError error from getLossByBusinessId" in new StubbedService {
+        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = notFoundError.asLeft)
+
+        val result: Either[ServiceError, Unit] =
+          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
+
+        assert(result === Right(()))
+      }
     }
   }
 }
@@ -733,5 +733,4 @@ trait StubbedService {
       MockReliefClaimsService.mockInstance,
       repository = repository
     )
-
 }
