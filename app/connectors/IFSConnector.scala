@@ -126,7 +126,7 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
   def listSEPeriodSummary(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1965Response] = {
     val url                                                                           = periodicSummaries(ctx.nino, ctx.businessId, ctx.taxYear)
     val context                                                                       = appConfig.mkMetadata(IFSApiName.Api1965, url)
-    implicit val reads: HttpReads[ApiResponse[Option[ListSEPeriodSummariesResponse]]] = commonGetReadsTemp[api_1965.ListSEPeriodSummariesResponse]
+    implicit val reads: HttpReads[ApiResponse[Option[ListSEPeriodSummariesResponse]]] = listSEPeriodGetReads[api_1965.ListSEPeriodSummariesResponse]
 
     get[Api1965Response](http, context)
   }

@@ -68,7 +68,7 @@ package object connector {
       }
     }
 
-  def commonGetReadsTemp[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[Option[A]]] =
+  def listSEPeriodGetReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[Option[A]]] =
     (method: String, url: String, response: HttpResponse) => {
       ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
 
