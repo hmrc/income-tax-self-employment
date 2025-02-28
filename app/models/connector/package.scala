@@ -79,6 +79,17 @@ package object connector {
       }
     }
 
+  def listSEPeriodGetReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[Option[A]]] =
+    (method: String, url: String, response: HttpResponse) => {
+      ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
+
+      response.status match {
+        case OK | CREATED | ACCEPTED                      => toA(response, method, url).map(Option(_))
+        case NOT_FOUND | NO_CONTENT | SERVICE_UNAVAILABLE => Right(None)
+        case _                                            => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+      }
+    }
+
   /** It treats NOT_FOUND / NO_CONTENT / OK / ACCEPTED as correct response and returns None
     */
   def commonDeleteReads(implicit logger: Logger): HttpReads[ApiResponse[Unit]] = (method: String, url: String, response: HttpResponse) => {

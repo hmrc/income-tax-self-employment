@@ -17,13 +17,12 @@
 package bulders
 
 import models.common._
-import models.connector.api_1171.BusinessDataDetails
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.connector.api_2085.{IncomeSource, ListOfIncomeSources}
 import models.connector.citizen_details.SuccessResponseSchema
 import models.connector.{api_1171, citizen_details}
 import models.domain.Business.mkBusiness
-import models.domain.{Business, JourneyNameAndStatus, TradesJourneyStatuses}
+import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import models.frontend.adjustments.NetBusinessProfitOrLossValues
 import play.api.libs.json.Json
 

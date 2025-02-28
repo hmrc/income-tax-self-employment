@@ -16,6 +16,7 @@
 
 package models.frontend.adjustments
 
+import data.TimeData
 import models.common.JourneyContextWithNino
 import models.connector.api_1500.{CreateBroughtForwardLossRequestData, LossType}
 import models.connector.api_1501.{UpdateBroughtForwardLossRequestData, UpdateBroughtForwardLossYear}
@@ -27,7 +28,7 @@ import play.api.libs.json.{JsValue, Json}
 import utils.BaseSpec._
 
 
-class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers {
+class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with TimeData {
 
   val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
 

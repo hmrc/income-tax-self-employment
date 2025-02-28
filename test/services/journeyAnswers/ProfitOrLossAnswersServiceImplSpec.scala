@@ -18,7 +18,6 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
-import config.AppConfig
 import connectors.HipConnector
 import mocks.services.MockReliefClaimsService
 import models.common.{JourneyContextWithNino, Nino, TaxYear}
@@ -36,6 +35,10 @@ import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.{CarryItForward, De
 import models.frontend.adjustments._
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar.{reset, times, verify, when}
+import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhichYearIsLossReported}
+import org.mockito.ArgumentMatchersSugar.any
+import org.mockito.Mockito.times
+import org.mockito.MockitoSugar.{verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
@@ -49,10 +52,13 @@ import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.BaseSpec.{businessId, hc, journeyCtxWithNino}
+import uk.gov.hmrc.http.HeaderCarrier
+import utils.BaseSpec.{businessId, currTaxYear, hc, journeyCtxWithNino, testDateTime}
 import utils.EitherTTestOps.convertScalaFuture
 
 import java.time.LocalDate
 import scala.concurrent.ExecutionContext
+import java.lang.reflect.Method
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrivenPropertyChecks with Matchers with BeforeAndAfterEach {
