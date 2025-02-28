@@ -21,17 +21,14 @@ import config.AppConfig
 import connectors.IFSConnector._
 import models.common.TaxYear.{asTys, endDate, startDate}
 import models.common._
-import models.connector.{ApiResponse, _}
-import models.connector.api_1505.{CreateLossClaimRequestBody, CreateLossClaimSuccessResponse}
-import models.connector.api_1508.GetLossClaimSuccessResponse
-import models.connector._
-import models.connector.api_1505.{CreateLossClaimRequestBody, ClaimId}
+import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBody}
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
 import models.connector.api_1965.ListSEPeriodSummariesResponse
+import models.connector.{ApiResponse, _}
 import models.domain.ApiResultT
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import utils.Logging
