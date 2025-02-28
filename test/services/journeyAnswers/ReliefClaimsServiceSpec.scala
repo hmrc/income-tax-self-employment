@@ -38,7 +38,6 @@ import java.time.LocalDate
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-
 class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonTestData with BeforeAndAfterEach {
 
   override def afterEach(): Unit = {
@@ -46,20 +45,20 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
     reset(MockReliefClaimsConnector.mockInstance)
   }
 
-  trait ReliefClaimsServiceTestSetup  {
+  trait ReliefClaimsServiceTestSetup {
 
     val service: ReliefClaimsService = new ReliefClaimsService(MockReliefClaimsConnector.mockInstance)
 
     val ctxNoNino2025: JourneyContext = testContextCurrentYear.toJourneyContext(ProfitOrLoss)
     val ctxNoNino2024: JourneyContext = testContextPrevYear.toJourneyContext(ProfitOrLoss)
 
-    val seClaimId1: ClaimId = ClaimId("claimId1")
+    val seClaimId1: ClaimId      = ClaimId("claimId1")
     val propertyClaimId: ClaimId = ClaimId("claimId2")
-    val seClaimId2: ClaimId = ClaimId("claimId3")
+    val seClaimId2: ClaimId      = ClaimId("claimId3")
 
-    val seClaim1: ReliefClaim = ReliefClaim(testBusinessId.value, None, CF, "2025", seClaimId1.value, None, LocalDate.now())
+    val seClaim1: ReliefClaim      = ReliefClaim(testBusinessId.value, None, CF, "2025", seClaimId1.value, None, LocalDate.now())
     val propertyClaim: ReliefClaim = ReliefClaim(testBusinessId.value, Some(UkProperty), CF, "2025", propertyClaimId.value, None, LocalDate.now())
-    val seClaim2: ReliefClaim = ReliefClaim(testBusinessId.value, None, CSGI, "2024", seClaimId2.value, None, LocalDate.now())
+    val seClaim2: ReliefClaim      = ReliefClaim(testBusinessId.value, None, CSGI, "2024", seClaimId2.value, None, LocalDate.now())
 
     val claims: List[ReliefClaim] = List(seClaim1, propertyClaim, seClaim2)
 
@@ -105,7 +104,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
   }
 
   "createReliefClaims" should {
-    "return an empty list when answers are empty" in new ReliefClaimsServiceTestSetup  {
+    "return an empty list when answers are empty" in new ReliefClaimsServiceTestSetup {
       val emptyAnswers: List[WhatDoYouWantToDoWithLoss] = List.empty[WhatDoYouWantToDoWithLoss]
 
       val result: Future[Either[ServiceError, Seq[ClaimId]]] =
@@ -132,7 +131,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
       val result: Future[Either[ServiceError, Seq[ClaimId]]] =
         service.createReliefClaims(testContextCurrentYear, validAnswers).value
 
-      whenReady(result){ res =>
+      whenReady(result) { res =>
         res shouldBe Right(List(expectedResponse1, expectedResponse2))
       }
 
@@ -190,10 +189,11 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
         service.updateReliefClaims(testContextCurrentYear, claims, newAnswers).value
 
       whenReady(result) { res =>
-        res shouldBe Right(UpdateReliefClaimsResponse(
-          created = List(WhatDoYouWantToDoWithLoss.CarryItForward),
-          deleted = List(WhatDoYouWantToDoWithLoss.DeductFromOtherTypes)
-        ))
+        res shouldBe Right(
+          UpdateReliefClaimsResponse(
+            created = List(WhatDoYouWantToDoWithLoss.CarryItForward),
+            deleted = List(WhatDoYouWantToDoWithLoss.DeductFromOtherTypes)
+          ))
       }
 
       verify(MockReliefClaimsConnector.mockInstance, times(1)).deleteReliefClaim(any(), any())(any())
@@ -210,10 +210,11 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
         service.updateReliefClaims(testContextCurrentYear, claims, newAnswers).value
 
       whenReady(result) { res =>
-        res shouldBe Right(UpdateReliefClaimsResponse(
-          created = List(WhatDoYouWantToDoWithLoss.CarryItForward, WhatDoYouWantToDoWithLoss.DeductFromOtherTypes),
-          deleted = List()
-        ))
+        res shouldBe Right(
+          UpdateReliefClaimsResponse(
+            created = List(WhatDoYouWantToDoWithLoss.CarryItForward, WhatDoYouWantToDoWithLoss.DeductFromOtherTypes),
+            deleted = List()
+          ))
       }
 
       verify(MockReliefClaimsConnector.mockInstance, times(0)).deleteReliefClaim(any(), any())(any())

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package controllers
 
 import base.IntegrationBaseSpec
@@ -24,31 +23,33 @@ import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhichYearIsLossR
 import play.api.http.Status.NO_CONTENT
 import play.api.libs.json.{JsValue, Json}
 
-
 class JourneyAnswersControllerISpec extends WiremockSpec with IntegrationBaseSpec {
 
-  //TODO ticket - create new tests and required stubbing for integration controller
+  // TODO ticket - create new tests and required stubbing for integration controller
   "POST /:taxYear/:businessId/profit-or-loss/:nino/answers" should {
     "Save answers and return NO CONTENT" ignore new IntegrationBaseSpec {
-      val answers: JsValue = Json.toJson(ProfitOrLossJourneyAnswers(
-        goodsAndServicesForYourOwnUse = true,
-        goodsAndServicesAmount = Some(200),
-        claimLossRelief = Some(true),
-        whatDoYouWantToDoWithLoss = None,
-        carryLossForward = Some(true),
-        previousUnusedLosses = true,
-        unusedLossAmount = Some(BigDecimal("200")),
-        whichYearIsLossReported = Some(WhichYearIsLossReported.Year2018to2019)
-      ))
+      val answers: JsValue = Json.toJson(
+        ProfitOrLossJourneyAnswers(
+          goodsAndServicesForYourOwnUse = true,
+          goodsAndServicesAmount = Some(200),
+          claimLossRelief = Some(true),
+          whatDoYouWantToDoWithLoss = None,
+          carryLossForward = Some(true),
+          previousUnusedLosses = true,
+          unusedLossAmount = Some(BigDecimal("200")),
+          whichYearIsLossReported = Some(WhichYearIsLossReported.Year2018to2019)
+        ))
 
-      val api1803Response: JsValue = Json.toJson(SuccessResponseSchema(
-        annualAdjustments = None,
-        annualAllowances = Some(AnnualAllowancesType.emptyAnnualAllowancesType.copy(
-          zeroEmissionsCarAllowance = Some(5000.00),
-          zeroEmissionGoodsVehicleAllowance = Some(5000.00)
-        )),
-        annualNonFinancials = None
-      ))
+      val api1803Response: JsValue = Json.toJson(
+        SuccessResponseSchema(
+          annualAdjustments = None,
+          annualAllowances = Some(
+            AnnualAllowancesType.emptyAnnualAllowancesType.copy(
+              zeroEmissionsCarAllowance = Some(5000.00),
+              zeroEmissionGoodsVehicleAllowance = Some(5000.00)
+            )),
+          annualNonFinancials = None
+        ))
 
       stubPostWithResponseBody(
         url = s"/income-tax-self-employment/$taxYear/$businessId/profit-or-loss/$nino/answers",

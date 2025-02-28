@@ -29,13 +29,11 @@ import utils.Logging
 
 import scala.concurrent.ExecutionContext
 
-class ReliefClaimsConnector @Inject()(httpClient: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) extends Logging {
+class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) extends Logging {
 
   private val fulcrumTaxYear = 2025
 
-  def getAllReliefClaims(taxYear: TaxYear,
-                         businessId: BusinessId)
-                        (implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] = {
+  def getAllReliefClaims(taxYear: TaxYear, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] = {
     implicit val reads: HttpReads[ApiResponse[List[ReliefClaim]]] = commonGetListReads[ReliefClaim]
 
     val context =
@@ -45,11 +43,9 @@ class ReliefClaimsConnector @Inject()(httpClient: HttpClient, appConfig: AppConf
     EitherT(get[ApiResponse[List[ReliefClaim]]](httpClient, context))
   }
 
-  def createReliefClaim(ctx: JourneyContextWithNino,
-                        answer: ReliefClaimType)
-                       (implicit hc: HeaderCarrier): ApiResultT[ClaimId] = {
+  def createReliefClaim(ctx: JourneyContextWithNino, answer: ReliefClaimType)(implicit hc: HeaderCarrier): ApiResultT[ClaimId] = {
     implicit val reads: HttpReads[ApiResponse[ClaimId]] = lossClaimReads[ClaimId]
-    val context = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.businessId))
+    val context                                         = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.businessId))
 
     val body = CreateLossClaimRequestBody(
       incomeSourceId = ctx.businessId.value,
@@ -60,11 +56,9 @@ class ReliefClaimsConnector @Inject()(httpClient: HttpClient, appConfig: AppConf
     EitherT(post[CreateLossClaimRequestBody, ApiResponse[ClaimId]](httpClient, context, body))
   }
 
-  def deleteReliefClaim(ctx: JourneyContextWithNino,
-                        claimId: String)
-                       (implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+  def deleteReliefClaim(ctx: JourneyContextWithNino, claimId: String)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
-    val context = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1508Url(ctx.businessId, claimId))
+    val context                                      = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1508Url(ctx.businessId, claimId))
 
     EitherT(delete(httpClient, context))
   }

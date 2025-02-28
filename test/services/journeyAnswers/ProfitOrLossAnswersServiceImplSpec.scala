@@ -145,7 +145,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(List(testClaimId1))
 
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers.copy(whatDoYouWantToDoWithLoss = Option(Seq(CarryItForward)))
-      val allowancesData: AnnualAllowances    = AnnualAllowances(None, None, None, Option(5000), None, None, None, None, None, None, Option(5000), None)
+      val allowancesData: AnnualAllowances = AnnualAllowances(None, None, None, Option(5000), None, None, None, None, None, None, Option(5000), None)
       val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
         expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(Option(AnnualAdjustments.empty))), Option(allowancesData))
 
@@ -154,8 +154,8 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       assert(result == ().asRight)
       assert(ifsConnector.upsertAnnualSummariesSubmissionData === Option(expectedAnnualSummariesAnswers))
       assert(
-        repository.lastUpsertedAnswer === Option(Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true,
-          claimLossRelief = Option(true), previousUnusedLosses = true))))
+        repository.lastUpsertedAnswer === Option(
+          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
 
     "successfully save data when answers are false" in new StubbedService {
@@ -302,7 +302,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         )
       when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(EitherT.rightT(Right(())))
-     /* when(mockHipConnector.deleteBroughtForwardLoss(eqTo(nino), eqTo(taxYear), eqTo(lossId))(any(), any()))
+      /* when(mockHipConnector.deleteBroughtForwardLoss(eqTo(nino), eqTo(taxYear), eqTo(lossId))(any(), any()))
         .thenReturn(EitherT.rightT(Right(())))*/
 
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
@@ -370,8 +370,12 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         result shouldBe Right(())
 
         verify(MockReliefClaimsService.mockInstance, times(1)).createReliefClaims(journeyCtxWithNino, Seq(CarryItForward))
-        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any[JourneyContextWithNino], any[ List[ReliefClaim]], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[ List[ReliefClaim]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(
+          any[JourneyContextWithNino],
+          any[List[ReliefClaim]],
+          any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(
+          any[HeaderCarrier])
       }
 
       "call the ReliefClaimService create method once, with both selections" in new StubbedService {
@@ -388,8 +392,12 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 
         result shouldBe Right(())
         verify(MockReliefClaimsService.mockInstance, times(1)).createReliefClaims(journeyCtxWithNino, Seq(CarryItForward, DeductFromOtherTypes))
-        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any[JourneyContextWithNino], any[ List[ReliefClaim]], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[ List[ReliefClaim]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(
+          any[JourneyContextWithNino],
+          any[List[ReliefClaim]],
+          any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(
+          any[HeaderCarrier])
       }
 
       "Do nothing if the user selects no options" in new StubbedService {
@@ -405,9 +413,14 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           .futureValue
 
         result shouldBe Right(())
-        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
-        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(0))
+          .createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
+        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(
+          any[JourneyContextWithNino],
+          any[List[ReliefClaim]],
+          any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(
+          any[HeaderCarrier])
       }
     }
 
@@ -433,8 +446,10 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           journeyCtxWithNino,
           oldAnswers,
           Seq(CarryItForward, DeductFromOtherTypes))
-        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(0))
+          .createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(
+          any[HeaderCarrier])
       }
       "Remove the 2nd selection when the user previously selected both" in new StubbedService {
         val oldAnswers: List[ReliefClaim] =
@@ -455,8 +470,10 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         result shouldBe Right(())
 
         verify(MockReliefClaimsService.mockInstance, times(1)).updateReliefClaims(journeyCtxWithNino, oldAnswers, Seq(CarryItForward))
-        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(0))
+          .createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
+        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(
+          any[HeaderCarrier])
       }
       "Remove both options if the user deselects both" in new StubbedService {
         val oldAnswers: List[ReliefClaim] =
@@ -474,8 +491,12 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 
         result shouldBe Right(())
 
-        verify(MockReliefClaimsService.mockInstance, times(0)).createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
-        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
+        verify(MockReliefClaimsService.mockInstance, times(0))
+          .createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
+        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(
+          any[JourneyContextWithNino],
+          any[List[ReliefClaim]],
+          any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
         verify(MockReliefClaimsService.mockInstance, times(1)).deleteReliefClaims(eqTo(journeyCtxWithNino), eqTo(oldAnswers))(any[HeaderCarrier])
       }
     }
@@ -577,7 +598,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
           StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
 
         when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-                  .thenReturn(EitherT.rightT(()))
+          .thenReturn(EitherT.rightT(()))
 
         val result: Either[ServiceError, Unit] =
           service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
@@ -672,7 +693,6 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
 
         when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(EitherT.leftT(downstreamError))
-
 
         val res: ApiResultT[Unit] =
           service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers)

@@ -19,9 +19,7 @@ package models.connector.api_1505
 import models.connector.common.ReliefClaim
 import play.api.libs.json.{Format, Json}
 
-case class CreateLossClaimRequestBody(incomeSourceId: String,
-                                      reliefClaimed: String,
-                                      taxYear: String)
+case class CreateLossClaimRequestBody(incomeSourceId: String, reliefClaimed: String, taxYear: String)
 
 object CreateLossClaimRequestBody {
   implicit lazy val format: Format[CreateLossClaimRequestBody] = Json.format[CreateLossClaimRequestBody]

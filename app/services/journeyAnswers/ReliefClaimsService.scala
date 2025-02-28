@@ -31,8 +31,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector)
-                                    (implicit ec: ExecutionContext) {
+class ReliefClaimsService @Inject() (reliefClaimsConnector: ReliefClaimsConnector)(implicit ec: ExecutionContext) {
 
   def getAllReliefClaims(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] =
     for {
@@ -42,21 +41,22 @@ class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector
         claim.taxYearClaimedFor == ctx.taxYear.endYear.toString &&
         claim.incomeSourceId == ctx.businessId.value)
 
-  def createReliefClaims(ctx: JourneyContextWithNino,
-                         answers: Seq[WhatDoYouWantToDoWithLoss])
-                        (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[List[ClaimId]] =
+  def createReliefClaims(ctx: JourneyContextWithNino, answers: Seq[WhatDoYouWantToDoWithLoss])(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[List[ClaimId]] =
     if (answers.isEmpty) {
       EitherT.pure(Nil: List[ClaimId])
     } else {
-      answers.map { answer =>
-        reliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
-      }.sequence.map(_.toList)
+      answers
+        .map { answer =>
+          reliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
+        }
+        .sequence
+        .map(_.toList)
     }
 
-  def updateReliefClaims(ctx: JourneyContextWithNino,
-                         oldAnswers: List[ReliefClaim],
-                         newAnswers: Seq[WhatDoYouWantToDoWithLoss])
-                        (implicit hc: HeaderCarrier): ApiResultT[UpdateReliefClaimsResponse] = {
+  def updateReliefClaims(ctx: JourneyContextWithNino, oldAnswers: List[ReliefClaim], newAnswers: Seq[WhatDoYouWantToDoWithLoss])(implicit
+      hc: HeaderCarrier): ApiResultT[UpdateReliefClaimsResponse] = {
 
     val newAnswersAsReliefClaimType = newAnswers.map(toReliefClaimType)
     val answersToKeep               = oldAnswers.filter(claim => newAnswersAsReliefClaimType.contains(claim.reliefClaimed))
@@ -71,18 +71,20 @@ class ReliefClaimsService @Inject()(reliefClaimsConnector: ReliefClaimsConnector
       _ <- createResponses.sequence
     } yield UpdateReliefClaimsResponse(
       created = answersToCreate.map(WhatDoYouWantToDoWithLoss.fromReliefClaimType),
-      deleted = answersToDelete.map(answer => WhatDoYouWantToDoWithLoss.fromReliefClaimType(answer.reliefClaimed)))
+      deleted = answersToDelete.map(answer => WhatDoYouWantToDoWithLoss.fromReliefClaimType(answer.reliefClaimed))
+    )
   }
 
-  def deleteReliefClaims(ctx: JourneyContextWithNino,
-                         reliefClaims: Seq[ReliefClaim])
-                        (implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def deleteReliefClaims(ctx: JourneyContextWithNino, reliefClaims: Seq[ReliefClaim])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     if (reliefClaims.isEmpty) {
       EitherT.pure(())
     } else {
-      reliefClaims.map { reliefClaim =>
-        reliefClaimsConnector.deleteReliefClaim(ctx, reliefClaim.claimId)
-      }.sequence.map(_ => ())
+      reliefClaims
+        .map { reliefClaim =>
+          reliefClaimsConnector.deleteReliefClaim(ctx, reliefClaim.claimId)
+        }
+        .sequence
+        .map(_ => ())
     }
 
 }

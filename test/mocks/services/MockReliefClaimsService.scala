@@ -37,21 +37,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object MockReliefClaimsService {
   val mockInstance: ReliefClaimsService = mock[ReliefClaimsService]
 
-  def getAllReliefClaims(ctx: JourneyContextWithNino)
-                        (returnValue: List[ReliefClaim] = Nil): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
+  def getAllReliefClaims(ctx: JourneyContextWithNino)(returnValue: List[ReliefClaim] = Nil): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
     when(mockInstance.getAllReliefClaims(eqTo(ctx))(any()))
       .thenReturn(EitherT.pure(returnValue))
 
-  def createReliefClaims(ctx: JourneyContextWithNino,
-                         answers: WhatDoYouWantToDoWithLoss*)
-                        (returnValue: List[ClaimId] = Nil): ScalaOngoingStubbing[ApiResultT[List[ClaimId]]] =
+  def createReliefClaims(ctx: JourneyContextWithNino, answers: WhatDoYouWantToDoWithLoss*)(
+      returnValue: List[ClaimId] = Nil): ScalaOngoingStubbing[ApiResultT[List[ClaimId]]] =
     when(mockInstance.createReliefClaims(eqTo(ctx), eqTo(answers))(any(), any()))
       .thenReturn(EitherT.pure(returnValue))
 
-  def updateReliefClaims(ctx: JourneyContextWithNino,
-                         oldAnswers: List[ReliefClaim],
-                         newAnswers: WhatDoYouWantToDoWithLoss*)
-                        (returnValue: UpdateReliefClaimsResponse): ScalaOngoingStubbing[ApiResultT[UpdateReliefClaimsResponse]] =
+  def updateReliefClaims(ctx: JourneyContextWithNino, oldAnswers: List[ReliefClaim], newAnswers: WhatDoYouWantToDoWithLoss*)(
+      returnValue: UpdateReliefClaimsResponse): ScalaOngoingStubbing[ApiResultT[UpdateReliefClaimsResponse]] =
     when(mockInstance.updateReliefClaims(eqTo(ctx), eqTo(oldAnswers), eqTo(newAnswers))(any()))
       .thenReturn(EitherT.pure(returnValue))
 

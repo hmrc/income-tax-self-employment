@@ -34,10 +34,10 @@ trait IntegrationBaseSpec extends PlaySpec with GuiceOneServerPerSuite with Scal
   protected lazy val ws: WSClient = app.injector.instanceOf[WSClient]
 
   val headerCarrierConfig: Config = Config()
-  val taxYear: TaxYear       = TaxYear(2024)
-  val businessId: BusinessId = BusinessId("SJPR05893938418")
-  val nino: Nino             = Nino("nino")
-  val mtditid: Mtditid       = Mtditid("1234567890")
+  val taxYear: TaxYear            = TaxYear(2024)
+  val businessId: BusinessId      = BusinessId("SJPR05893938418")
+  val nino: Nino                  = Nino("nino")
+  val mtditid: Mtditid            = Mtditid("1234567890")
 
   protected def buildClient(urlandUri: String): WSRequest =
     ws

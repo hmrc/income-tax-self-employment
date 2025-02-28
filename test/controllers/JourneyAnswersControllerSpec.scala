@@ -75,7 +75,8 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
                           capitalAllowancesService: StubCapitalAllowancesAnswersAnswersService = StubCapitalAllowancesAnswersAnswersService(),
                           prepopAnswersService: StubPrepopAnswersService = StubPrepopAnswersService(),
                           nicsAnswersService: StubNICsAnswersService = StubNICsAnswersService(),
-                          profitOrLossAnswersService: StubProfitOrLossAnswersService = StubProfitOrLossAnswersService()): JourneyAnswersController =new JourneyAnswersController(
+                          profitOrLossAnswersService: StubProfitOrLossAnswersService = StubProfitOrLossAnswersService()): JourneyAnswersController =
+    new JourneyAnswersController(
       auth = mockAuthorisedAction,
       cc = stubControllerComponents,
       abroadAnswersService = abroadAnswersService,
@@ -1079,7 +1080,6 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         expectedBody = "",
         methodBlock = () => underTest.saveProfitOrLoss(currTaxYear, businessId, nino)
       )
-
 
     }
   }

@@ -34,7 +34,6 @@ import uk.gov.hmrc.http.HttpReads
 
 import java.time.LocalDate
 
-
 class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec with CommonTestData {
 
   val connector: ReliefClaimsConnector = app.injector.instanceOf[ReliefClaimsConnector]
@@ -94,7 +93,7 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
 
     "call API1507 and return all claims" in {
       val selfEmploymentClaim2025 = selfEmploymentClaim + ("taxYearClaimedFor" -> Json.toJson("2025"))
-      val response = Json.arr(selfEmploymentClaim, selfEmploymentClaim2025)
+      val response                = Json.arr(selfEmploymentClaim, selfEmploymentClaim2025)
 
       stubGetWithResponseBody(
         url = api1507Url,
@@ -123,7 +122,6 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
       }
     }
 
-
     "the API returns 400 BAD_REQUEST, 422 UNPROCESSABLE_ENTITY or 5xx response" should {
       "return a service error" in {
         Seq(
@@ -132,11 +130,10 @@ class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec w
           (INTERNAL_SERVER_ERROR, "SERVER_ERROR", "IF is currently experiencing problems that require live service intervention."),
           (SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE", "Dependent systems are currently not responding.")
         ) foreach { case (status, code, reason) =>
-
           val response: JsObject = Json.obj(
             "failures" -> Json.arr(
               Json.obj(
-                "code" -> code,
+                "code"   -> code,
                 "reason" -> reason
               )
             )

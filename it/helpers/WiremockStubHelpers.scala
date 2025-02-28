@@ -78,7 +78,6 @@ trait WiremockStubHelpers {
             .withHeader("Content-Type", "application/json; charset=utf-8")))
   }
 
-
   def stubPostWithResponseBody(url: String,
                                expectedStatus: Int,
                                expectedResponse: String,

@@ -49,7 +49,6 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
                                                 repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends ProfitOrLossAnswersService {
 
-
   def saveProfitOrLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       _      <- handleAnnualSummaries(ctx, answers)
@@ -63,9 +62,8 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       optProfitOrLoss <- getDbAnswers(ctx)
     } yield optProfitOrLoss
 
-  private def handleAnnualSummaries(ctx: JourneyContextWithNino,
-                                    answers: ProfitOrLossJourneyAnswers)
-                                   (implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+  private def handleAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] = {
     val submissionBody = for {
       maybeAnnualSummaries <- ifsConnector.getAnnualSummaries(ctx)
       updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[ProfitOrLossDb](maybeAnnualSummaries, answers)
@@ -74,13 +72,12 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     EitherT(submissionBody).flatMap(ifsConnector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
   }
 
-  def storeReliefClaimAnswers(ctx: JourneyContextWithNino,
-                              submittedAnswers: ProfitOrLossJourneyAnswers)
-                             (implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def storeReliefClaimAnswers(ctx: JourneyContextWithNino, submittedAnswers: ProfitOrLossJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       reliefClaims <- reliefClaimsService.getAllReliefClaims(ctx)
       optLossClaimAnswer = submittedAnswers.whatDoYouWantToDoWithLoss
-      result                 <- (reliefClaims, optLossClaimAnswer) match {
+      result <- (reliefClaims, optLossClaimAnswer) match {
         case (Nil, Some(lossClaimAnswer)) if lossClaimAnswer.nonEmpty =>
           reliefClaimsService.createReliefClaims(ctx, lossClaimAnswer)
         case (claims, Some(lossClaimAnswer)) if claims.nonEmpty && lossClaimAnswer.nonEmpty =>
@@ -104,27 +101,21 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     }
   }
 
-  def storeBroughtForwardLossAnswers(ctx: JourneyContextWithNino,
-                                     answers: ProfitOrLossJourneyAnswers)
-                                    (implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def storeBroughtForwardLossAnswers(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       maybeLoss <- getBroughtForwardLossByBusinessId(ctx)
       result    <- handleBroughtForwardLoss(ctx, maybeLoss, answers)
     } yield result
 
-  private def handleBroughtForwardLoss(ctx: JourneyContextWithNino,
-                                       maybeLoss: Option[LossData],
-                                       answers: ProfitOrLossJourneyAnswers)
-                                      (implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  private def handleBroughtForwardLoss(ctx: JourneyContextWithNino, maybeLoss: Option[LossData], answers: ProfitOrLossJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
     maybeLoss match {
       case Some(lossData) => handleBroughtForwardLossWithExistingLoss(ctx, lossData, answers)
       case None           => handleBroughtForwardLossNoExistingLoss(ctx, answers)
     }
 
-  private def handleBroughtForwardLossWithExistingLoss(ctx: JourneyContextWithNino,
-                                                       lossData: LossData,
-                                                       answers: ProfitOrLossJourneyAnswers)
-                                                      (implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  private def handleBroughtForwardLossWithExistingLoss(ctx: JourneyContextWithNino, lossData: LossData, answers: ProfitOrLossJourneyAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
     (answers.unusedLossAmount, answers.whichYearIsLossReported) match {
       case (Some(amount), Some(whichYear)) =>
         if (whichYear.apiTaxYear == lossData.taxYearBroughtForwardFrom) {

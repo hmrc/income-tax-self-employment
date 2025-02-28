@@ -27,7 +27,6 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
 import utils.BaseSpec._
 
-
 class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with TimeData {
 
   val journeyCtxWithNino: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
@@ -46,7 +45,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
         whichYearIsLossReported = Some(WhichYearIsLossReported.Year2022to2023)
       )
 
-      val json: JsValue = Json.toJson(answers)
+      val json: JsValue                           = Json.toJson(answers)
       val readAnswers: ProfitOrLossJourneyAnswers = json.as[ProfitOrLossJourneyAnswers]
 
       readAnswers shouldEqual answers
@@ -88,7 +87,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
   "BroughtForwardLossYearData" should {
 
     "CreateBroughtForwardLoss data successfully" in {
-      val unusedLossAmount: BigDecimal = BigDecimal(500.00)
+      val unusedLossAmount: BigDecimal                     = BigDecimal(500.00)
       val whichYearIsLossReported: WhichYearIsLossReported = WhichYearIsLossReported.Year2022to2023
 
       val result: CreateBroughtForwardLossRequestData =
@@ -100,7 +99,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
     }
 
     "UpdateBroughtForwardLoss data successfully" in {
-      val lossId: String = "lossId123"
+      val lossId: String               = "lossId123"
       val unusedLossAmount: BigDecimal = BigDecimal(400.00)
 
       val result: UpdateBroughtForwardLossRequestData =
@@ -110,9 +109,9 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
     }
 
     "UpdateBroughtForwardLossYear data successfully" in {
-      val lossId: String = "lossId123"
+      val lossId: String     = "lossId123"
       val amount: BigDecimal = BigDecimal(300.00)
-      val whichYear: String = "2024"
+      val whichYear: String  = "2024"
 
       val result: UpdateBroughtForwardLossYear =
         ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossYearData(journeyCtxWithNino, lossId, amount, whichYear)

@@ -97,8 +97,7 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
   private def disclosuresSubmissionUrl(nino: Nino, taxYear: TaxYear) =
     s"${appConfig.ifsBaseUrl}/income-tax/disclosures/$nino/${taxYear.toYYYY_YY}"
 
-  def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)
-                           (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {
+  def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response] = {
     val url                                          = periodicSummaries(data.nino, data.businessId, data.taxYear)
     val context                                      = appConfig.mkMetadata(IFSApiName.Api1894, url)
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonNoBodyResponse
@@ -106,8 +105,7 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     post[CreateSEPeriodSummaryRequestBody, Api1894Response](http, context, data.body)
   }
 
-  def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)
-                          (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] = {
+  def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response] = {
     val url                                          = periodicSummariesFromTo(data.nino, data.businessId, data.taxYear)
     val context                                      = appConfig.mkMetadata(IFSApiName.Api1895, url)
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonNoBodyResponse
@@ -123,15 +121,13 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     get[Api1965Response](http, context)
   }
 
-  def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)
-                              (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response] = {
+  def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response] = {
     val url     = periodicSummaryDetailUrl(ctx.nino, ctx.businessId, ctx.taxYear)
     val context = appConfig.mkMetadata(IFSApiName.Api1786, url)
     get[Api1786Response](http, context)
   }
 
-  def getAnnualSummaries(ctx: JourneyContextWithNino)
-                        (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] = {
+  def getAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1803Response] = {
     val url                                                                            = annualSummariesUrl(ctx.nino, ctx.businessId, ctx.taxYear)
     val context                                                                        = appConfig.mkMetadata(IFSApiName.Api1803, url)
     implicit val reads: HttpReads[ApiResponse[Option[api_1803.SuccessResponseSchema]]] = commonGetReads[api_1803.SuccessResponseSchema]
@@ -140,8 +136,8 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     result.map(_.getOrElse(api_1803.SuccessResponseSchema.empty)).value
   }
 
-  def createAmendSEAnnualSubmission(data: CreateAmendSEAnnualSubmissionRequestData)
-                                   (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
+  def createAmendSEAnnualSubmission(
+      data: CreateAmendSEAnnualSubmissionRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1802Response] = {
     val url                                          = annualSummariesUrl(data.nino, data.businessId, data.taxYear)
     val context                                      = appConfig.mkMetadata(IFSApiName.Api1802, url)
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonNoBodyResponse
@@ -149,8 +145,7 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     put[CreateAmendSEAnnualSubmissionRequestBody, Api1802Response](http, context, data.body)
   }
 
-  def deleteSEAnnualSummaries(ctx: JourneyContextWithNino)
-                             (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
+  def deleteSEAnnualSummaries(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
     val url                                          = annualSummariesUrl(ctx.nino, ctx.businessId, ctx.taxYear)
     val context                                      = appConfig.mkMetadata(IFSApiName.Api1787, url)
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
@@ -158,9 +153,9 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     EitherT(delete(http, context))
   }
 
-  def createUpdateOrDeleteApiAnnualSummaries(ctx: JourneyContextWithNino,
-                                             requestBody: Option[CreateAmendSEAnnualSubmissionRequestBody])
-                                            (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] =
+  def createUpdateOrDeleteApiAnnualSummaries(ctx: JourneyContextWithNino, requestBody: Option[CreateAmendSEAnnualSubmissionRequestBody])(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[Unit] =
     requestBody match {
       case Some(body) =>
         val requestData = CreateAmendSEAnnualSubmissionRequestData(ctx.taxYear, ctx.nino, ctx.businessId, body)
@@ -168,8 +163,8 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
       case None => deleteSEAnnualSummaries(ctx)
     }
 
-  def getDisclosuresSubmission(ctx: JourneyContextWithNino)
-                              (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[SuccessResponseAPI1639]] = {
+  def getDisclosuresSubmission(
+      ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[SuccessResponseAPI1639]] = {
     val url                                                                    = disclosuresSubmissionUrl(ctx.nino, ctx.taxYear)
     val context                                                                = appConfig.mkMetadata(IFSApiName.Api1639, url)
     implicit val reads: HttpReads[ApiResponse[Option[SuccessResponseAPI1639]]] = commonGetReads[SuccessResponseAPI1639]
@@ -177,9 +172,9 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     EitherT(get[Api1639Response](http, context))
   }
 
-  def upsertDisclosuresSubmission(ctx: JourneyContextWithNino,
-                                  data: RequestSchemaAPI1638)
-                                 (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
+  def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[Unit] = {
     val url                                          = disclosuresSubmissionUrl(ctx.nino, ctx.taxYear)
     val context                                      = appConfig.mkMetadata(IFSApiName.Api1638, url)
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonNoBodyResponse
@@ -187,8 +182,7 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
     EitherT(put[RequestSchemaAPI1638, Api1638Response](http, context, data))
   }
 
-  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)
-                                 (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
+  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
     val url                                          = disclosuresSubmissionUrl(ctx.nino, ctx.taxYear)
     val context                                      = appConfig.mkMetadata(IFSApiName.Api1640, url)
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
@@ -199,11 +193,11 @@ class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extend
   private def createLossClaimUrl(nino: Nino) =
     s"${appConfig.ifsBaseUrl}/income-tax/claims-for-relief/$nino"
 
-  def createLossClaim(ctx: JourneyContextWithNino,
-                      requestBody: CreateLossClaimRequestBody)
-                     (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[ClaimId] = {
-    val url                                                                    = createLossClaimUrl(ctx.nino)
-    val context                                                                = appConfig.mkMetadata(IFSApiName.Api1505, url)
+  def createLossClaim(ctx: JourneyContextWithNino, requestBody: CreateLossClaimRequestBody)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[ClaimId] = {
+    val url                                             = createLossClaimUrl(ctx.nino)
+    val context                                         = appConfig.mkMetadata(IFSApiName.Api1505, url)
     implicit val reads: HttpReads[ApiResponse[ClaimId]] = lossClaimReads[ClaimId]
 
     EitherT(post[CreateLossClaimRequestBody, Api1505Response](http, context, requestBody))

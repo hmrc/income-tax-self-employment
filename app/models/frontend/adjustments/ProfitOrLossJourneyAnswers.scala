@@ -31,7 +31,8 @@ case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,   
                                       carryLossForward: Option[Boolean],                                 // API 1505
                                       previousUnusedLosses: Boolean,                                     // db
                                       unusedLossAmount: Option[BigDecimal],                              // lossAmount API 1500
-                                      whichYearIsLossReported: Option[WhichYearIsLossReported]) extends FrontendAnswers[ProfitOrLossDb] {
+                                      whichYearIsLossReported: Option[WhichYearIsLossReported])
+    extends FrontendAnswers[ProfitOrLossDb] {
 
   def toDbModel: Option[ProfitOrLossDb] = Some(ProfitOrLossDb(goodsAndServicesForYourOwnUse, claimLossRelief, previousUnusedLosses))
   def toDbAnswers: ProfitOrLossDb       = ProfitOrLossDb(goodsAndServicesForYourOwnUse, claimLossRelief, previousUnusedLosses)
