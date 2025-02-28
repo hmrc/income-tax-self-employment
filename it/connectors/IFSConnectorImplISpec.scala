@@ -158,8 +158,8 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedResponse = downstreamSuccessResponse
       )
 
-      val expectedResponse: ListSEPeriodSummariesResponse =
-        ListSEPeriodSummariesResponse(Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05")))))
+      val expectedResponse: Option[ListSEPeriodSummariesResponse] =
+        Option(ListSEPeriodSummariesResponse(Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"))))))
 
       connector.listSEPeriodSummary(ctx).futureValue shouldBe expectedResponse.asRight
 

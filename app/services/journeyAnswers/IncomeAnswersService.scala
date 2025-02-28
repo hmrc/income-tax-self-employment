@@ -27,7 +27,7 @@ import models.connector.api_1786.SuccessResponseSchema
 import models.connector.api_1802.request._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
-import models.connector.api_1965.ListSEPeriodSummariesResponse
+import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import models.database.income.IncomeStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
@@ -108,10 +108,10 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository,
       case DeclareExpenses     => EitherT.rightT[Future, ServiceError](())
     }
 
-  private def upsertPeriodSummary(response: ListSEPeriodSummariesResponse, ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(implicit
-      hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
+  private def upsertPeriodSummary(response: Option[ListSEPeriodSummariesResponse], ctx: JourneyContextWithNino, answers: IncomeJourneyAnswers)(
+      implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] = {
 
-    val submissionPeriod = response.periods.getOrElse(Nil).find { period =>
+    val submissionPeriod = response.flatMap(_.periods).getOrElse(Nil).find { period =>
       period.from.contains(ctx.taxYear.fromAnnualPeriod) && period.to.contains(ctx.taxYear.toAnnualPeriod)
     }
 
