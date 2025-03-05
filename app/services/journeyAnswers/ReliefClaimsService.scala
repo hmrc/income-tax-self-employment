@@ -35,7 +35,7 @@ class ReliefClaimsService @Inject() (reliefClaimsConnector: ReliefClaimsConnecto
 
   def getAllReliefClaims(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] =
     for {
-      reliefClaims <- reliefClaimsConnector.getAllReliefClaims(ctx.taxYear, ctx.businessId)
+      reliefClaims <- reliefClaimsConnector.getAllReliefClaims(ctx)
     } yield reliefClaims.filter(claim =>
       claim.isSelfEmploymentClaim &&
         claim.taxYearClaimedFor == ctx.taxYear.endYear.toString &&

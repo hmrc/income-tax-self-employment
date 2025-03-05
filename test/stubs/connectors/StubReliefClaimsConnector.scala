@@ -18,15 +18,13 @@ package stubs.connectors
 
 import config.AppConfig
 import connectors.ReliefClaimsConnector
-import models.connector.common.ReliefClaim
-
-import scala.concurrent.ExecutionContext.Implicits.global
 import models.connector.ApiResponse
-
-import scala.concurrent.Future
+import models.connector.common.ReliefClaim
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 
 import javax.inject.Inject
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 final case class StubReliefClaimsConnector @Inject() (httpClient: HttpClient,
                                                       appConfig: AppConfig,

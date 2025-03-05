@@ -50,14 +50,12 @@ object MockReliefClaimsConnector {
     when(mockInstance.deleteReliefClaim(eqTo(ctx), eqTo(claimId))(any()))
       .thenReturn(EitherT.pure(()))
 
-  def getAllReliefClaims(taxYear: TaxYear, businessId: BusinessId)(
-      returnValue: List[ReliefClaim]): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
-    when(mockInstance.getAllReliefClaims(eqTo(taxYear), eqTo(businessId))(any()))
+  def getAllReliefClaims(ctx: JourneyContextWithNino)(returnValue: List[ReliefClaim]): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
+    when(mockInstance.getAllReliefClaims(eqTo(ctx))(any()))
       .thenReturn(EitherT.pure(returnValue))
 
-  def getAllReliefClaimsError(taxYear: TaxYear, businessId: BusinessId)(
-      returnValue: ServiceError): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
-    when(mockInstance.getAllReliefClaims(eqTo(taxYear), eqTo(businessId))(any()))
+  def getAllReliefClaimsError(ctx: JourneyContextWithNino)(returnValue: ServiceError): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
+    when(mockInstance.getAllReliefClaims(eqTo(ctx))(any()))
       .thenReturn(EitherT.leftT(returnValue))
 
 }

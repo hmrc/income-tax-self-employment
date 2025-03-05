@@ -306,7 +306,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
       stubPostWithRequestAndResponseBody(
         url = downstreamUrl,
         requestBody = requestBody,
-        expectedResponse = successResponse.value,
+        expectedResponse = successResponse.claimId,
         expectedStatus = CREATED
       )
 
@@ -317,7 +317,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
           status shouldBe 201
           message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
           message should include(s"status=$CREATED")
-          message should include(s"body:\n${successResponse.value}")
+          message should include(s"body:\n${successResponse.claimId}")
         case _ => fail("Expected a GenericDownstreamError")
       }
     }

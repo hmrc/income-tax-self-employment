@@ -34,7 +34,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import utils.EitherTTestOps.whenReady
 
-import java.time.LocalDate
+import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
@@ -51,26 +51,27 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
 
     val ctxNoNino2025: JourneyContext = testContextCurrentYear.toJourneyContext(ProfitOrLoss)
     val ctxNoNino2024: JourneyContext = testContextPrevYear.toJourneyContext(ProfitOrLoss)
+    val submittedDate: LocalDateTime  = LocalDateTime.parse("2024-10-01T12:13:48.763")
 
     val seClaimId1: ClaimId      = ClaimId("claimId1")
     val propertyClaimId: ClaimId = ClaimId("claimId2")
     val seClaimId2: ClaimId      = ClaimId("claimId3")
 
-    val seClaim1: ReliefClaim      = ReliefClaim(testBusinessId.value, None, CF, "2025", seClaimId1.value, None, LocalDate.now())
-    val propertyClaim: ReliefClaim = ReliefClaim(testBusinessId.value, Some(UkProperty), CF, "2025", propertyClaimId.value, None, LocalDate.now())
-    val seClaim2: ReliefClaim      = ReliefClaim(testBusinessId.value, None, CSGI, "2024", seClaimId2.value, None, LocalDate.now())
+    val seClaim1: ReliefClaim      = ReliefClaim(testBusinessId.value, None, CF, "2025", seClaimId1.claimId, None, submittedDate)
+    val propertyClaim: ReliefClaim = ReliefClaim(testBusinessId.value, Option(UkProperty), CF, "2025", propertyClaimId.claimId, None, submittedDate)
+    val seClaim2: ReliefClaim      = ReliefClaim(testBusinessId.value, None, CSGI, "2024", seClaimId2.claimId, None, submittedDate)
 
     val claims: List[ReliefClaim] = List(seClaim1, propertyClaim, seClaim2)
 
     val profitOrLossJourneyAnswers: ProfitOrLossJourneyAnswers = ProfitOrLossJourneyAnswers(
       goodsAndServicesForYourOwnUse = true,
-      goodsAndServicesAmount = Some(BigDecimal(1000)),
-      claimLossRelief = Some(true),
-      whatDoYouWantToDoWithLoss = Some(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
-      carryLossForward = Some(true),
+      goodsAndServicesAmount = Option(BigDecimal(1000)),
+      claimLossRelief = Option(true),
+      whatDoYouWantToDoWithLoss = Option(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
+      carryLossForward = Option(true),
       previousUnusedLosses = true,
-      unusedLossAmount = Some(BigDecimal(500)),
-      whichYearIsLossReported = Some(WhichYearIsLossReported.Year2022to2023)
+      unusedLossAmount = Option(BigDecimal(500)),
+      whichYearIsLossReported = Option(WhichYearIsLossReported.Year2022to2023)
     )
 
   }
@@ -78,7 +79,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
   "getAllReliefClaims" should {
 
     "return only the claims for a specific year (current year)" in new ReliefClaimsServiceTestSetup {
-      MockReliefClaimsConnector.getAllReliefClaims(testCurrentTaxYear, testBusinessId)(claims)
+      MockReliefClaimsConnector.getAllReliefClaims(testContextCurrentYear)(claims)
 
       val result: Either[ServiceError, List[ReliefClaim]] = await(service.getAllReliefClaims(testContextCurrentYear).value)
 
@@ -86,7 +87,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
     }
 
     "return only the claims for a specific year (previous year)" in new ReliefClaimsServiceTestSetup {
-      MockReliefClaimsConnector.getAllReliefClaims(testPrevTaxYear, testBusinessId)(claims)
+      MockReliefClaimsConnector.getAllReliefClaims(testContextPrevYear)(claims)
 
       val result: Either[ServiceError, List[ReliefClaim]] = await(service.getAllReliefClaims(testContextPrevYear).value)
 
@@ -94,7 +95,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
     }
 
     "return an error when the connector fails" in new ReliefClaimsServiceTestSetup {
-      MockReliefClaimsConnector.getAllReliefClaimsError(testCurrentTaxYear, testBusinessId)(testServiceError)
+      MockReliefClaimsConnector.getAllReliefClaimsError(testContextCurrentYear)(testServiceError)
 
       val result: Either[ServiceError, List[ReliefClaim]] = await(service.getAllReliefClaims(testContextCurrentYear).value)
 
@@ -182,7 +183,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
     "Make a single delete call if the user un-checks one answer" in new ReliefClaimsServiceTestSetup {
       val newAnswers: Seq[WhatDoYouWantToDoWithLoss] = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
 
-      MockReliefClaimsConnector.deleteReliefClaim(testContextCurrentYear, seClaimId2.value)
+      MockReliefClaimsConnector.deleteReliefClaim(testContextCurrentYear, seClaimId2.claimId)
       MockReliefClaimsConnector.createReliefClaim(testContextCurrentYear, seClaim1.reliefClaimed)(seClaimId1)
 
       val result: Future[Either[ServiceError, UpdateReliefClaimsResponse]] =

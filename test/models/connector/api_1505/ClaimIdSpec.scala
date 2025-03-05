@@ -30,19 +30,19 @@ class ClaimIdSpec extends AnyWordSpec with Matchers {
         val response      = ClaimId("claimId123")
         val json: JsValue = Json.toJson(response)
 
-        (json \ "value").as[String] shouldBe "claimId123"
+        (json \ "claimId").as[String] shouldBe "claimId123"
       }
 
       "successfully convert from JSON" in {
         val json: JsValue = Json.parse("""
             |{
-            |  "value": "claimId123"
+            |  "claimId": "claimId123"
             |}
             |""".stripMargin)
 
         val response = json.as[ClaimId]
 
-        response.value shouldBe "claimId123"
+        response.claimId shouldBe "claimId123"
       }
     }
 
@@ -74,14 +74,14 @@ class ClaimIdSpec extends AnyWordSpec with Matchers {
       "ignore additional unexpected fields when reading from JSON" in {
         val json: JsValue = Json.parse("""
             |{
-            |  "value": "claimId123",
+            |  "claimId": "claimId123",
             |  "unexpectedField": "unexpectedValue"
             |}
             |""".stripMargin)
 
         val request = json.as[ClaimId]
 
-        request.value shouldBe "claimId123"
+        request.claimId shouldBe "claimId123"
       }
 
     }

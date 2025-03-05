@@ -33,19 +33,21 @@ class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppCon
 
   private val fulcrumTaxYear = 2025
 
-  def getAllReliefClaims(taxYear: TaxYear, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] = {
+  def getAllReliefClaims(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] = {
+    val taxYear                                                   = ctx.taxYear
+    val nino                                                      = ctx.nino
     implicit val reads: HttpReads[ApiResponse[List[ReliefClaim]]] = commonGetListReads[ReliefClaim]
 
     val context =
-      if (taxYear.endYear >= fulcrumTaxYear) appConfig.mkMetadata(IFSApiName.Api1867, appConfig.api1867Url(taxYear, businessId))
-      else appConfig.mkMetadata(IFSApiName.Api1507, appConfig.api1507Url(businessId))
+      if (taxYear.endYear >= fulcrumTaxYear) appConfig.mkMetadata(IFSApiName.Api1867, appConfig.api1867Url(taxYear, nino))
+      else appConfig.mkMetadata(IFSApiName.Api1507, appConfig.api1507Url(nino))
 
     EitherT(get[ApiResponse[List[ReliefClaim]]](httpClient, context))
   }
 
   def createReliefClaim(ctx: JourneyContextWithNino, answer: ReliefClaimType)(implicit hc: HeaderCarrier): ApiResultT[ClaimId] = {
     implicit val reads: HttpReads[ApiResponse[ClaimId]] = lossClaimReads[ClaimId]
-    val context                                         = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.businessId))
+    val context                                         = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1505Url(ctx.nino, ctx.taxYear))
 
     val body = CreateLossClaimRequestBody(
       incomeSourceId = ctx.businessId.value,
@@ -58,7 +60,7 @@ class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppCon
 
   def deleteReliefClaim(ctx: JourneyContextWithNino, claimId: String)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
-    val context                                      = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1508Url(ctx.businessId, claimId))
+    val context                                      = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1509Url(ctx.nino, claimId))
 
     EitherT(delete(httpClient, context))
   }

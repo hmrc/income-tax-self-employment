@@ -19,7 +19,7 @@ package models.connector.common
 import models.connector.ReliefClaimType
 import play.api.libs.json.{Format, Json}
 
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 case class ReliefClaim(incomeSourceId: String,
                        incomeSourceType: Option[IncomeSourceType] = None,
@@ -27,7 +27,7 @@ case class ReliefClaim(incomeSourceId: String,
                        taxYearClaimedFor: String,
                        claimId: String,
                        sequence: Option[Int] = None,
-                       submissionDate: LocalDate) {
+                       submissionDate: LocalDateTime) {
 
   // This field is only present for property claims
   def isSelfEmploymentClaim: Boolean = incomeSourceType.isEmpty

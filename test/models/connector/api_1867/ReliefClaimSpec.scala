@@ -21,7 +21,7 @@ import models.connector.common._
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json._
 
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 class ReliefClaimSpec extends PlaySpec {
 
@@ -30,12 +30,12 @@ class ReliefClaimSpec extends PlaySpec {
     "write and read correctly" in {
       val reliefClaim = ReliefClaim(
         incomeSourceId = "12345",
-        incomeSourceType = Some(UkProperty),
+        incomeSourceType = Option(UkProperty),
         reliefClaimed = CF,
         taxYearClaimedFor = "2023-24",
         claimId = "claim123",
-        sequence = Some(1),
-        submissionDate = LocalDate.of(2024, 11, 29)
+        sequence = Option(1),
+        submissionDate = LocalDateTime.of(2024, 11, 29, 0, 0)
       )
 
       val json = Json.toJson(reliefClaim)
@@ -49,8 +49,8 @@ class ReliefClaimSpec extends PlaySpec {
         reliefClaimed = CF,
         taxYearClaimedFor = "2023-24",
         claimId = "claim123",
-        sequence = Some(1),
-        submissionDate = LocalDate.of(2024, 11, 29)
+        sequence = Option(1),
+        submissionDate = LocalDateTime.of(2024, 11, 29, 0, 0)
       )
 
       reliefClaim.isSelfEmploymentClaim mustBe true

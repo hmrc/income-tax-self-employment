@@ -50,7 +50,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.BaseSpec.{businessId, hc, journeyCtxWithNino}
 import utils.EitherTTestOps.convertScalaFuture
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -59,9 +59,9 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
   val downstreamError: SingleDownstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
   val notFoundError: SingleDownstreamError   = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
 
-  val testDate: LocalDate   = LocalDate.of(2025, 1, 5)
-  val testClaimId1: ClaimId = ClaimId("claimId1")
-  val testClaimId2: ClaimId = ClaimId("claimId2")
+  val testDate: LocalDateTime = LocalDateTime.of(2025, 1, 5, 0, 0)
+  val testClaimId1: ClaimId   = ClaimId("claimId1")
+  val testClaimId2: ClaimId   = ClaimId("claimId2")
 
   override def afterEach(): Unit = {
     super.afterEach()
@@ -69,7 +69,7 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
   }
 
   def testReliefClaim(claimId: ClaimId, claimType: ReliefClaimType): ReliefClaim =
-    ReliefClaim(businessId.value, None, claimType, "2025", claimId.value, None, testDate)
+    ReliefClaim(businessId.value, None, claimType, "2025", claimId.claimId, None, testDate)
 
   def expectedAnnualSummariesData(adjustments: Option[AnnualAdjustments],
                                   allowances: Option[AnnualAllowances]): CreateAmendSEAnnualSubmissionRequestData =

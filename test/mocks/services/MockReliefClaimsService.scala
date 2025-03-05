@@ -18,13 +18,11 @@ package mocks.services
 
 import cats.data.EitherT
 import cats.implicits.catsStdInstancesForFuture
-import com.sun.jndi.ldap.LdapCtx
 import models.common.JourneyContextWithNino
 import models.connector.api_1505.ClaimId
 import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.MockitoSugar.when

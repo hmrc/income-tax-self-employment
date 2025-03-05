@@ -26,7 +26,7 @@ import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpResponse
 
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 class CommonReadsSpec extends AnyWordSpec with Matchers {
 
@@ -44,7 +44,7 @@ class CommonReadsSpec extends AnyWordSpec with Matchers {
             reliefClaimed = CF,
             taxYearClaimedFor = testTaxYear,
             claimId = testClaimId,
-            submissionDate = LocalDate.of(2024, 1, 1)
+            submissionDate = LocalDateTime.of(2024, 1, 1, 0, 0)
           ))
         val response = HttpResponse(OK, Json.stringify(Json.toJson(reliefClaimList)))
 

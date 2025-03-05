@@ -18,7 +18,7 @@ package models.connector.api_1505
 
 import play.api.libs.json.{Format, Json}
 
-case class ClaimId(value: String)
+case class ClaimId(claimId: String)
 
 object ClaimId {
   implicit lazy val format: Format[ClaimId] = Json.format[ClaimId]
