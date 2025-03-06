@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,14 @@ package connectors
 
 import base.IntegrationBaseSpec
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
-import connectors.data.{Api1505Test, Api1508Test, Api1786Test, Api1803Test}
+import connectors.data.{Api1505Test, Api1786Test, Api1803Test}
 import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import models.common.TaxYear.{asTys, endDate, startDate}
-import models.connector.api_1505.CreateLossClaimSuccessResponse
-import models.connector.api_1508.GetLossClaimSuccessResponse
+import models.connector.api_1505.ClaimId
 import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics}
 import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics}
-import models.connector.api_1802.request.{AnnualAdjustments, CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1802.request._
 import models.connector.api_1803.SuccessResponseSchema
 import models.connector.api_1894.request._
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
@@ -37,7 +36,7 @@ import models.error.ErrorType.DownstreamErrorCode
 import models.error.ServiceError
 import org.scalatest.EitherValues._
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import play.api.http.Status.{BAD_REQUEST, CONFLICT, CREATED, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE, UNPROCESSABLE_ENTITY}
+import play.api.http.Status.{BAD_REQUEST, CONFLICT, CREATED, NOT_FOUND, OK, UNPROCESSABLE_ENTITY}
 import play.api.libs.json.Json
 
 class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
@@ -235,7 +234,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedStatus = BAD_REQUEST
       )
 
-      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 400
@@ -254,7 +253,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedStatus = NOT_FOUND
       )
 
-      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 404
@@ -273,7 +272,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedStatus = CONFLICT
       )
 
-      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 409
@@ -292,7 +291,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedStatus = UNPROCESSABLE_ENTITY
       )
 
-      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 422
@@ -311,7 +310,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedStatus = CREATED
       )
 
-      val result: Either[ServiceError, CreateLossClaimSuccessResponse] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
 
       result match {
         case Left(GenericDownstreamError(status, message)) =>
@@ -322,40 +321,6 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         case _ => fail("Expected a GenericDownstreamError")
       }
     }
-  }
-
-  "getClaimLoss" must {
-    "return a success" in new Api1508Test {
-      stubGetWithResponseBody(url = downstreamUrl, expectedResponse = successResponseRaw, expectedStatus = OK)
-
-      connector.getLossClaim(ctx, claimId).value.futureValue shouldBe successResponse.asRight
-    }
-
-    "return a ParsingError when expectedResponse is incorrect" in new Api1508Test {
-      stubGetWithResponseBody(url = downstreamUrl, expectedResponse = badRequestResponseRaw, expectedStatus = OK)
-
-      connector.getLossClaim(ctx, claimId).value.futureValue shouldBe
-        Left(SingleDownstreamError(500, SingleDownstreamErrorBody("PARSING_ERROR", "Error parsing response from API", DownstreamErrorCode)))
-    }
-
-    for (errorStatus <- Seq(BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, INTERNAL_SERVER_ERROR))
-      s"returns $errorStatus GenericDownstreamError when expected status is $errorStatus" in new Api1508Test {
-        stubGetWithResponseBody(
-          url = downstreamUrl,
-          expectedResponse = successResponseRaw,
-          expectedStatus = errorStatus
-        )
-
-        val result: Either[ServiceError, GetLossClaimSuccessResponse] = connector.getLossClaim(ctx, claimId).value.futureValue
-        result match {
-          case Left(GenericDownstreamError(status, message)) =>
-            status shouldBe errorStatus
-            message should include(s"Downstream error when calling GET http://localhost:11111$downstreamUrl")
-            message should include(s"status=$errorStatus")
-            message should include(s"body:\n$successResponseRaw")
-          case _ => fail("Expected a GenericDownstreamError")
-        }
-      }
   }
 
   trait Api1802Test {

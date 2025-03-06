@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package config
 
 import com.typesafe.config.ConfigFactory
+import models.common.TaxYear.asTys
+import models.common.{BusinessId, Nino, TaxYear}
 import models.connector.ApiName
 import models.connector.IntegrationContext.IntegrationHeaderCarrier
 import play.api.Configuration
@@ -29,10 +31,7 @@ import scala.concurrent.duration.Duration
 
 @Singleton
 class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) extends Logging {
-  val appName: String          = config.get[String]("appName")
-  val authBaseUrl: String      = servicesConfig.baseUrl("auth")
-  val auditingEnabled: Boolean = config.get[Boolean]("auditing.enabled")
-  val graphiteHost: String     = config.get[String]("microservice.metrics.graphite.host")
+  val appName: String = config.get[String]("appName")
   val testMode: List[String] =
     config.getOptional[String]("microservice.services.integration-framework.test-mode").map(_.split(",").toList).getOrElse(Nil)
 
@@ -53,6 +52,15 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   val hipBaseUrl: String = servicesConfig.baseUrl("hip-integration-framework")
 
   val ifsApi1171: String = servicesConfig.baseUrl("integration-framework-api1171")
+
+  val api1507Url: Nino => String = nino => s"$ifsBaseUrl/income-tax/claims-for-relief/${nino.value}"
+
+  def api1505Url(nino: Nino, taxYear: TaxYear): String = s"$ifsBaseUrl/income-tax/claims-for-relief/${nino.value}/${asTys(taxYear)}"
+
+  def api1509Url(nino: Nino, claimId: String): String = s"$ifsBaseUrl/income-tax/claims-for-relief/${nino.value}/$claimId"
+
+  val api1867Url: (TaxYear, Nino) => String =
+    (taxYear, nino) => s"$ifsBaseUrl/income-tax/${TaxYear.asTys(taxYear)}/claims-for-relief/${nino.value}"
 
   val citizenDetailsUrl: String = servicesConfig.baseUrl("citizen-details")
 

@@ -40,8 +40,8 @@ class CommonDownstreamParserSpec extends AnyWordSpecLike with PagerDutyAware wit
 
   "reportInvalidJsonError" should {
     "return a SingleDownstreamError and log a pager duty error" in new PagerDutyAware {
-      val jsPath = __ \ "some"
-      val result = CommonDownstreamParser("method", newValue, HttpResponse(200, "")).reportInvalidJsonError(
+      val jsPath: JsPath = __ \ "some"
+      val result: DownstreamError.SingleDownstreamError = CommonDownstreamParser("method", newValue, HttpResponse(200, "")).reportInvalidJsonError(
         List(
           (jsPath, Nil)
         ))

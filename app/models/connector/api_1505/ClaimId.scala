@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package models.connector.api_1505
 
 import play.api.libs.json.{Format, Json}
 
-case class CreateLossClaimSuccessResponse(claimId: String)
+case class ClaimId(claimId: String)
 
-object CreateLossClaimSuccessResponse {
-  implicit lazy val format: Format[CreateLossClaimSuccessResponse] = Json.format[CreateLossClaimSuccessResponse]
+object ClaimId {
+  implicit lazy val format: Format[ClaimId] = Json.format[ClaimId]
 }
