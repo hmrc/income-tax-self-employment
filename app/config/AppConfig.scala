@@ -18,7 +18,7 @@ package config
 
 import com.typesafe.config.ConfigFactory
 import models.common.TaxYear.asTys
-import models.common.{BusinessId, Nino, TaxYear}
+import models.common.{Nino, TaxYear}
 import models.connector.ApiName
 import models.connector.IntegrationContext.IntegrationHeaderCarrier
 import play.api.Configuration

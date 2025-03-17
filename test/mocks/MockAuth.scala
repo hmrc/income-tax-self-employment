@@ -44,6 +44,6 @@ trait MockAuth extends BaseSpec with MockAppConfig {
     .authorise(*, eqTo(Retrievals.affinityGroup))(*, *) returns Future
     .successful(Some(AffinityGroup.Individual))
 
-  protected val mockAuthorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents, mockedAppConfig)
+  protected val mockAuthorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents)
 
 }

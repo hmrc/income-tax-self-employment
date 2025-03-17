@@ -17,8 +17,6 @@
 package mocks
 
 import config.AppConfig
-import org.mockito.IdiomaticMockito.StubbingOps
-import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar
 
 trait MockAppConfig extends MockitoSugar {

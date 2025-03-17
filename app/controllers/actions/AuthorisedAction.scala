@@ -17,7 +17,6 @@
 package controllers.actions
 
 import common.{DelegatedAuthRules, EnrolmentIdentifiers, EnrolmentKeys}
-import config.AppConfig
 import controllers.actions.AuthorisedAction.User
 import models.common.Mtditid
 import play.api.Logger
@@ -36,8 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthorisedAction @Inject() ()(implicit
     val authConnector: AuthConnector,
     defaultActionBuilder: DefaultActionBuilder,
-    val cc: ControllerComponents,
-    appConfig: AppConfig)
+    val cc: ControllerComponents)
     extends AuthorisedFunctions {
 
   lazy val logger: Logger                         = Logger.apply(this.getClass)
@@ -115,13 +113,11 @@ class AuthorisedAction @Inject() ()(implicit
       .retrieve(allEnrolments) {
         populateAgent(block, mtdItId, _)
       }
-      .recoverWith(agentRecovery(block, mtdItId))
+      .recoverWith(agentRecovery())
 
   private val agentAuthLogString: String = "[AuthorisedAction][agentAuthentication]"
 
-  private def agentRecovery[A](block: User[A] => Future[Result], mtdItId: String)(implicit
-      request: Request[A],
-      hc: HeaderCarrier): PartialFunction[Throwable, Future[Result]] = {
+  private def agentRecovery(): PartialFunction[Throwable, Future[Result]] = {
     case _: NoActiveSession =>
       logger.info(s"$agentAuthLogString - No active session.")
       unauthorized

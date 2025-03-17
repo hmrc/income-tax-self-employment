@@ -36,7 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthorisedActionSpec extends TestUtils with MockAppConfig {
 
   override val mockAuthorisedAction: AuthorisedAction =
-    new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents, mockedAppConfig)
+    new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents)
   lazy val auth: AuthorisedAction = mockAuthorisedAction
 
   lazy val block: User[AnyContent] => Future[Result] =
