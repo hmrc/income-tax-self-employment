@@ -133,8 +133,7 @@ class AuthorisedAction @Inject() ()(implicit
       Future.successful(InternalServerError)
   }
 
-  private def populateAgent[A](block: User[A] => Future[Result], mtdItId: String, enrolments: Enrolments)(implicit
-      request: Request[A]) =
+  private def populateAgent[A](block: User[A] => Future[Result], mtdItId: String, enrolments: Enrolments)(implicit request: Request[A]) =
     enrolmentGetIdentifierValue(EnrolmentKeys.Agent, EnrolmentIdentifiers.agentReference, enrolments) match {
       case Some(arn) =>
         block(User(mtdItId, Some(arn)))
@@ -153,8 +152,7 @@ class AuthorisedAction @Inject() ()(implicit
 }
 
 object AuthorisedAction {
-  case class User[T](mtditid: String, arn: Option[String])(implicit val request: Request[T])
-      extends WrappedRequest[T](request) {
+  case class User[T](mtditid: String, arn: Option[String])(implicit val request: Request[T]) extends WrappedRequest[T](request) {
     def getMtditid: Mtditid = Mtditid(mtditid)
   }
 }
