@@ -25,7 +25,4 @@ trait MockAppConfig extends MockitoSugar {
 
   val mockedAppConfig: AppConfig = mock[AppConfig]
 
-  def mockEmaSupportingAgentEnabled(enabled: Boolean): ScalaOngoingStubbing[Boolean] =
-    mockedAppConfig.emaSupportingAgentsEnabled returns enabled
-
 }

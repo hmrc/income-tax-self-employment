@@ -71,7 +71,4 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   def mkMetadata(apiName: ApiName, url: String): IntegrationHeaderCarrier =
     IntegrationHeaderCarrier(headerCarrierConfig, this, apiName, url)
 
-  // Feature switching
-  def emaSupportingAgentsEnabled: Boolean = servicesConfig.getBoolean("feature-switch.ema-supporting-agents-enabled")
-
 }
