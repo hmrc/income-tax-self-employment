@@ -18,7 +18,7 @@ package config
 
 import com.typesafe.config.ConfigFactory
 import models.common.TaxYear.asTys
-import models.common.{BusinessId, Nino, TaxYear}
+import models.common.{Nino, TaxYear}
 import models.connector.ApiName
 import models.connector.IntegrationContext.IntegrationHeaderCarrier
 import play.api.Configuration
@@ -70,8 +70,5 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   def mkMetadata(apiName: ApiName, url: String): IntegrationHeaderCarrier =
     IntegrationHeaderCarrier(headerCarrierConfig, this, apiName, url)
-
-  // Feature switching
-  def emaSupportingAgentsEnabled: Boolean = servicesConfig.getBoolean("feature-switch.ema-supporting-agents-enabled")
 
 }

@@ -24,7 +24,7 @@ import utils.TestUtils._
 
 import scala.concurrent.Future
 
-case class StubAuthorisedAction() extends AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents, mockAppConfig) {
+case class StubAuthorisedAction() extends AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents) {
 
   override def async(block: AuthorisedAction.User[AnyContent] => Future[Result]): Action[AnyContent] = defaultActionBuilder.async {
     implicit request: Request[AnyContent] =>

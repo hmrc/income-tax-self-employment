@@ -17,15 +17,10 @@
 package mocks
 
 import config.AppConfig
-import org.mockito.IdiomaticMockito.StubbingOps
-import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar
 
 trait MockAppConfig extends MockitoSugar {
 
   val mockedAppConfig: AppConfig = mock[AppConfig]
-
-  def mockEmaSupportingAgentEnabled(enabled: Boolean): ScalaOngoingStubbing[Boolean] =
-    mockedAppConfig.emaSupportingAgentsEnabled returns enabled
 
 }

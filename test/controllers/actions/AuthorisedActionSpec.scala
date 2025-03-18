@@ -36,7 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthorisedActionSpec extends TestUtils with MockAppConfig {
 
   override val mockAuthorisedAction: AuthorisedAction =
-    new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents, mockedAppConfig)
+    new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents)
   lazy val auth: AuthorisedAction = mockAuthorisedAction
 
   lazy val block: User[AnyContent] => Future[Result] =
@@ -300,66 +300,9 @@ class AuthorisedActionSpec extends TestUtils with MockAppConfig {
           bodyOf(result) mustBe s"mtditid: $testMtditid arn: $testArn"
         }
       }
-
-      "the agent is authorised for the given user (Secondary Agent - EMA enabled)" which {
-        val enrolments = Enrolments(
-          Set(
-            Enrolment(EnrolmentKeys.SupportingAgent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.individualId, testMtditid)), "Activated"),
-            Enrolment(EnrolmentKeys.Agent, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.agentReference, testArn)), "Activated")
-          ))
-
-        lazy val result = {
-
-          // Enabled EMA Supporting/Secondary Agent feature
-          mockEmaSupportingAgentEnabled(true)
-
-          // Simulate first call failing for Primary Agent check
-          mockAuthReturnException(InsufficientEnrolments())
-
-          // Simulate second call for Secondary Agent check being successful
-          (mockAuthConnector
-            .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-            .expects(*, Retrievals.allEnrolments, *, *)
-            .returning(Future.successful(enrolments))
-            .once()
-
-          auth.agentAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
-        }
-
-        "has a status of OK" in {
-          status(result) mustBe OK
-        }
-
-        "has the correct body" in {
-          bodyOf(result) mustBe s"mtditid: $testMtditid arn: $testArn"
-        }
-      }
     }
 
     "return an Unauthorised" when {
-      "the authorisation service returns an AuthorisationException exception (EMA Secondary Agent Disabled)" in {
-        lazy val result = {
-          // Disable EMA Supporting/Secondary Agent feature
-          mockEmaSupportingAgentEnabled(false)
-          mockAuthReturnException(InsufficientEnrolments())
-
-          auth.agentAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
-        }
-        status(result) mustBe UNAUTHORIZED
-      }
-
-      "the authorisation service returns an AuthorisationException exception on the second call (EMA Secondary Enabled)" in {
-        lazy val result = {
-          // Enabled EMA Supporting/Secondary Agent feature
-          mockEmaSupportingAgentEnabled(true)
-
-          // Simulate first & second call failing for Primary Agent check
-          mockAuthReturnException(InsufficientEnrolments()).twice()
-
-          auth.agentAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
-        }
-        status(result) mustBe UNAUTHORIZED
-      }
 
       "the authorisation service returns a NoActiveSession exception" in {
         object NoActiveSession extends NoActiveSession("Some reason")
@@ -400,18 +343,6 @@ class AuthorisedActionSpec extends TestUtils with MockAppConfig {
         status(result) mustBe INTERNAL_SERVER_ERROR
       }
 
-      "[EMA enabled] an unexpected error occurs during secondary agent auth call" in {
-        object RandomError extends IndexOutOfBoundsException("Some reason")
-        object AuthError   extends AuthorisationException("Some reason")
-
-        mockEmaSupportingAgentEnabled(true)
-        mockAuthReturnException(AuthError)
-        mockAuthReturnException(RandomError)
-
-        lazy val result = auth.agentAuthentication(block, testMtditid)(fakeRequest, emptyHeaderCarrier)
-
-        status(result) mustBe INTERNAL_SERVER_ERROR
-      }
     }
   }
 
