@@ -18,23 +18,25 @@ package connectors.data
 
 import models.connector.api_1501._
 import play.api.libs.json.Json
-import utils.BaseSpec._
+import testdata.CommonTestData
 
-trait Api1501Test {
-  val lossId        = "1234568790ABCDE"
-  val downstreamUrl = s"/individuals/losses/$nino/brought-forward-losses/$lossId/change-loss-amount"
+trait Api1501Test extends CommonTestData {
+
+  val downstreamUrl = s"/individuals/losses/$testNino/brought-forward-losses/$testBusinessId/change-loss-amount"
+
   val requestBody = UpdateBroughtForwardLossRequestBody(
     lossAmount = BigDecimal(260)
   )
+
   val data = UpdateBroughtForwardLossRequestData(
-    nino = nino,
-    lossId = lossId,
+    nino = testNino,
+    lossId = testBusinessId.value,
     body = requestBody
   )
 
   val successResponseRaw: String =
     s"""{
-      |  "businessId": "12345678912345",
+      |  "businessId": "${testBusinessId.value}",
       |  "typeOfLoss": "self-employment",
       |  "lossAmount": 260,
       |  "taxYearBroughtForwardFrom": "2020-21",

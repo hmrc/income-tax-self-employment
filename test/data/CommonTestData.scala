@@ -17,10 +17,15 @@
 package data
 
 import models.common._
+import models.database.JourneyAnswers
 import models.error.ServiceError
+import play.api.libs.json.{JsObject, JsValue}
 import uk.gov.hmrc.http.HeaderCarrier
 
-trait CommonTestData {
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+
+trait CommonTestData extends TimeData {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -30,6 +35,7 @@ trait CommonTestData {
 
   val testCurrentTaxYear: TaxYear = TaxYear(2025)
   val testPrevTaxYear: TaxYear    = TaxYear(2024)
+  val testTaxYear                 = testCurrentTaxYear
 
   val testContextCurrentYear: JourneyContextWithNino = JourneyContextWithNino(testCurrentTaxYear, testBusinessId, testMtdId, testNino)
   val testContextPrevYear: JourneyContextWithNino    = JourneyContextWithNino(testPrevTaxYear, testBusinessId, testMtdId, testNino)
@@ -37,5 +43,18 @@ trait CommonTestData {
   val testServiceError: ServiceError = new ServiceError {
     val errorMessage: String = "Returned a service error"
   }
+
+  def testJourneyAnswers(journeyName: JourneyName, json: JsValue): JourneyAnswers =
+    JourneyAnswers(
+      mtditid = testMtdId,
+      businessId = testBusinessId,
+      taxYear = testTaxYear,
+      journey = journeyName,
+      status = JourneyStatus.InProgress,
+      data = json.as[JsObject],
+      expireAt = testInstant.plus(1, ChronoUnit.MINUTES),
+      createdAt = testInstant,
+      updatedAt = testInstant
+    )
 
 }

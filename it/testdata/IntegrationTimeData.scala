@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package itData
+package testdata
 
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, LocalDate, LocalDateTime, ZoneOffset}

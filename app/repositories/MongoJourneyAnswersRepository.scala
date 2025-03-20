@@ -45,6 +45,12 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 trait JourneyAnswersRepository {
+  // Answers API methods
+  def getJourneyAnswers(ctx: JourneyContext): Future[Option[JourneyAnswers]]
+  def upsertJourneyAnswers(ctx: JourneyContext, answerJson: JsValue): Future[Option[JsValue]]
+  def deleteJourneyAnswers(ctx: JourneyContext, journey: JourneyName): Future[Boolean]
+
+  // Legacy answers methods
   def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]]
   def getAnswers[A: Reads](ctx: JourneyContext)(implicit ct: ClassTag[A]): ApiResultT[Option[A]]
   def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): ApiResultT[TaskList]
@@ -81,6 +87,36 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     with JourneyAnswersRepository
     with Logging {
 
+  def getJourneyAnswers(ctx: JourneyContext): Future[Option[JourneyAnswers]] =
+    collection
+      .withReadPreference(ReadPreference.primaryPreferred())
+      .find(filterJourney(ctx))
+      .headOption()
+
+  def upsertJourneyAnswers(ctx: JourneyContext, answerJson: JsValue): Future[Option[JsValue]] = {
+    val bson    = BsonDocument(Json.stringify(answerJson))
+    val update  = createUpsert(ctx)("data", bson, JourneyStatus.NotStarted)
+    val options = new UpdateOptions().upsert(true)
+
+    collection.updateOne(filterJourney(ctx), update, options).toFuture().map {
+      case result if result.getUpsertedId != null && result.getModifiedCount == 0 && result.getMatchedCount == 0 =>
+        logger.info(s"[upsertSection] Successfully inserted section '${ctx.journey.entryName}' for businessId '${ctx.businessId.value}'")
+        Some(answerJson)
+      case result if result.getModifiedCount == 1 =>
+        logger.info(s"[upsertSection] Successfully updated section '${ctx.journey.entryName}' for businessId '${ctx.businessId.value}'")
+        Some(answerJson)
+      case _ =>
+        logger.error(s"[upsertSection] Failed to upsert section '${ctx.journey.entryName}' for businessId '${ctx.businessId.value}'")
+        None
+    }
+  }
+
+  def deleteJourneyAnswers(ctx: JourneyContext, journey: JourneyName): Future[Boolean] =
+    collection
+      .deleteOne(filterJourney(ctx, Some(journey.entryName)))
+      .toFuture()
+      .map(_.getDeletedCount == 1)
+
   def testOnlyClearAllData(): ApiResultT[Unit] =
     EitherT.right[ServiceError](
       collection
@@ -99,7 +135,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     val filter = filterJourney(ctx)
     EitherT.right[ServiceError](
       collection
-        .withReadPreference(ReadPreference.primaryPreferred()) // TODO Why? Cannot we just use standard?
+        .withReadPreference(ReadPreference.primaryPreferred())
         .find(filter)
         .headOption())
   }
@@ -127,7 +163,6 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
   )
 
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] = {
-    // When answers are submitted but no status yet submitted, journey status is set to NotStarted. This is then handled by the frontend.
     val filter  = filterJourney(ctx)
     val bson    = BsonDocument(Json.stringify(newData))
     val update  = createUpsert(ctx)("data", bson, JourneyStatus.NotStarted)

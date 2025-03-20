@@ -56,6 +56,7 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
   final case object StructuresBuildings            extends JourneyName("capital-allowances-structures-buildings")
   final case object ProfitOrLoss                   extends JourneyName("profit-or-loss")
   final case object NationalInsuranceContributions extends JourneyName("national-insurance-contributions")
+  final case object TravelExpenses                 extends JourneyName("travel-expenses")
 
   // Are we using this code? Should we be if not?
   implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[JourneyName] = new PathBindable[JourneyName] {

@@ -18,16 +18,15 @@ package connectors
 
 import base.IntegrationBaseSpec
 import connectors.data._
-import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import models.error.DownstreamError.GenericDownstreamError
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status._
 
-class HipConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
+class HipConnectorISpec extends IntegrationBaseSpec {
 
   val connector                   = new HipConnectorImpl(httpClient, appConfig)
-  val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
+  val ctx: JourneyContextWithNino = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
 
   "deleteBroughtForwardLoss" must {
     "return unit with NO_CONTENT status" in new Api1504Test {
@@ -36,7 +35,7 @@ class HipConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedResponse = "",
         expectedStatus = NO_CONTENT
       )
-      connector.deleteBroughtForwardLoss(nino, taxYear, lossId).value.futureValue shouldBe Right(())
+      connector.deleteBroughtForwardLoss(testNino, testTaxYear, testBusinessId.value).value.futureValue shouldBe Right(())
     }
 
     Seq(
@@ -53,7 +52,7 @@ class HipConnectorISpec extends WiremockSpec with IntegrationBaseSpec {
           expectedResponse = "",
           expectedStatus = status
         )
-        connector.deleteBroughtForwardLoss(nino, taxYear, lossId).value.futureValue shouldBe Left(
+        connector.deleteBroughtForwardLoss(testNino, testTaxYear, testBusinessId.value).value.futureValue shouldBe Left(
           GenericDownstreamError(status, s"Downstream error when calling DELETE http://localhost:11111$hipDownstreamUrl: status=$status, body:\n"))
       }
     }

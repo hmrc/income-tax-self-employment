@@ -19,7 +19,6 @@ package connectors
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
 import connectors.data._
-import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import models.connector.api_2085.ListOfIncomeSources
 import models.error.DownstreamError.GenericDownstreamError
@@ -27,10 +26,10 @@ import models.error.ServiceError
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status._
 
-class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
+class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
 
   val connector                   = new IFSBusinessDetailsConnectorImpl(httpClient, appConfig)
-  val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
+  val ctx: JourneyContextWithNino = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
 
   "getBusinesses" must {
     "return successful response" in new Api1171Test {
@@ -39,7 +38,7 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.getBusinesses(nino).value.futureValue shouldBe successResponse.asRight
+      connector.getBusinesses(testNino).value.futureValue shouldBe successResponse.asRight
     }
   }
 
@@ -50,7 +49,7 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue shouldBe successResponse.asRight
+      connector.getBusinessIncomeSourcesSummary(testTaxYear, testNino, testBusinessId).value.futureValue shouldBe successResponse.asRight
     }
   }
 
@@ -85,7 +84,7 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.getBroughtForwardLoss(nino, lossId).value.futureValue shouldBe successResponse.asRight
+      connector.getBroughtForwardLoss(testNino, testBusinessId.value).value.futureValue shouldBe successResponse.asRight
     }
   }
 
@@ -96,7 +95,7 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.listBroughtForwardLosses(nino, taxYear).value.futureValue shouldBe successResponse.asRight
+      connector.listBroughtForwardLosses(testNino, testTaxYear).value.futureValue shouldBe successResponse.asRight
     }
   }
 
@@ -108,7 +107,7 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
         expectedStatus = OK
       )
 
-      connector.getListOfIncomeSources(taxYear, nino).value.futureValue shouldBe successResponse.asRight
+      connector.getListOfIncomeSources(testTaxYear, testNino).value.futureValue shouldBe successResponse.asRight
     }
 
     for (errorStatus <- Seq(BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, INTERNAL_SERVER_ERROR))
@@ -119,12 +118,12 @@ class IFSBusinessDetailsConnectorImplISpec extends WiremockSpec with Integration
           expectedStatus = errorStatus
         )
 
-        val result: Either[ServiceError, ListOfIncomeSources] = connector.getListOfIncomeSources(taxYear, nino).value.futureValue
+        val result: Either[ServiceError, ListOfIncomeSources] = connector.getListOfIncomeSources(testTaxYear, testNino).value.futureValue
         result match {
           case Left(GenericDownstreamError(status, message)) =>
             status shouldBe errorStatus
             message should include(
-              s"Downstream error when calling GET http://localhost:11111/income-tax/income-sources/$nino?taxYear=${taxYear.toYYYY_YY}")
+              s"Downstream error when calling GET http://localhost:11111/income-tax/income-sources/$testNino?taxYear=${testTaxYear.toYYYY_YY}")
             message should include(s"status=$errorStatus")
             message should include(s"body:\n$failedResponse")
           case _ => fail("Expected a GenericDownstreamError")
