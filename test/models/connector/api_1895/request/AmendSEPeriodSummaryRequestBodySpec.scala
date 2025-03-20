@@ -31,8 +31,8 @@ import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCosts
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsJourneyAnswers
 import org.scalactic.TypeCheckedTripleEquals
-import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.OptionValues._
+import org.scalatest.wordspec.AnyWordSpecLike
 
 class AmendSEPeriodSummaryRequestBodySpec extends AnyWordSpecLike with TypeCheckedTripleEquals {
   private val data = AmendSEPeriodSummaryRequestBodyTestData.sample

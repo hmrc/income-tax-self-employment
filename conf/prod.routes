@@ -1,3 +1,4 @@
 # Add all the application routes to the app.routes file
 ->         /income-tax-self-employment              app.Routes
+->         /income-tax-self-employment/answers      answers.Routes
 ->         /                                        health.Routes

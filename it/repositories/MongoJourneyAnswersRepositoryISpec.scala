@@ -24,6 +24,7 @@ import models.common.JourneyName._
 import models.common.JourneyStatus._
 import models.common._
 import models.database.JourneyAnswers
+import models.database.expenses.travel.TravelExpensesDb
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import models.error.ServiceError
 import models.frontend.TaskList
@@ -31,7 +32,7 @@ import org.mockito.MockitoSugar.{reset, when}
 import org.scalatest.EitherValues._
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.libs.json.{JsObject, Json}
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import play.api.test.Helpers.await
 import support.MongoTestSupport
 import utils.BaseSpec._
 import utils.EitherTTestOps._
@@ -48,11 +49,84 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
 
   private val TTLinSeconds = mockAppConfig.mongoTTL * 3600 * 24
 
-  override val repository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, mockClock)
+  override val repository                           = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, mockClock)
+  override val mongo: MongoJourneyAnswersRepository = repository // Required by JourneyAnswersHelper
 
   override def beforeEach(): Unit = {
     reset(mockClock)
     await(removeAll(repository.collection))
+  }
+
+  "getJourneyAnswers" should {
+    "return Some(data) when answers exist for the journey" in {
+      val ctx     = JourneyContext(testTaxYear, testBusinessId, testMtdItId, TravelExpenses)
+      val answers = TravelExpensesDb(allowablePublicTransportExpenses = Some(BigDecimal("1")))
+      DbHelper.insertOne(TravelExpenses, answers)
+
+      val result         = await(repository.getJourneyAnswers(ctx))
+      val expectedResult = testBaseJourneyAnswers.copy(data = Json.toJson(answers).as[JsObject])
+
+      result shouldBe Some(expectedResult)
+    }
+
+    "return None when answers don't exist for the journey" in {
+      val ctx = JourneyContext(testTaxYear, testBusinessId, testMtdItId, TravelExpenses)
+
+      val result = await(repository.getJourneyAnswers(ctx))
+
+      result shouldBe None
+    }
+  }
+
+  "upsertAnswers" should {
+    "update existing answers" in {
+      when(mockClock.instant()).thenReturn(testInstant)
+
+      val ctx     = JourneyContext(testTaxYear, testBusinessId, testMtdItId, TravelExpenses)
+      val answers = TravelExpensesDb(allowablePublicTransportExpenses = Some(BigDecimal("1")))
+      val update  = Json.toJson(answers.copy(allowablePublicTransportExpenses = Some(BigDecimal("2")))).as[JsObject]
+      DbHelper.insertOne(TravelExpenses, answers)
+
+      val result = await(repository.upsertJourneyAnswers(ctx, update))
+
+      result shouldBe Some(update)
+      DbHelper.get[TravelExpensesDb](TravelExpenses) shouldBe Some(answers.copy(allowablePublicTransportExpenses = Some(BigDecimal("2"))))
+    }
+
+    "insert new answers" in {
+      when(mockClock.instant()).thenReturn(testInstant)
+
+      val ctx     = JourneyContext(testTaxYear, testBusinessId, testMtdItId, TravelExpenses)
+      val answers = TravelExpensesDb(allowablePublicTransportExpenses = Some(BigDecimal("1")))
+      val update  = Json.toJson(answers).as[JsObject]
+
+      val result = await(repository.upsertJourneyAnswers(ctx, update))
+
+      result shouldBe Some(update)
+      DbHelper.get[TravelExpensesDb](TravelExpenses) shouldBe Some(answers)
+    }
+  }
+
+  "deleteJourneyAnswers" should {
+    "delete answers and return true" in {
+      val ctx     = JourneyContext(testTaxYear, testBusinessId, testMtdItId, TravelExpenses)
+      val answers = TravelExpensesDb(allowablePublicTransportExpenses = Some(BigDecimal("1")))
+      DbHelper.insertOne(TravelExpenses, answers)
+
+      val result = await(repository.deleteJourneyAnswers(ctx, TravelExpenses))
+
+      result shouldBe true
+      DbHelper.get[TravelExpensesDb](TravelExpenses) shouldBe None
+    }
+
+    "return false if answers don't exist" in {
+      val ctx = JourneyContext(testTaxYear, testBusinessId, testMtdItId, TravelExpenses)
+      DbHelper.get[TravelExpensesDb](TravelExpenses) shouldBe None
+
+      val result = await(repository.deleteJourneyAnswers(ctx, TravelExpenses))
+
+      result shouldBe false
+    }
   }
 
   "setStatus" should {

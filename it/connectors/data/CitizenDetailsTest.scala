@@ -18,10 +18,10 @@ package connectors.data
 
 import models.connector.citizen_details._
 import play.api.libs.json.Json
-import utils.BaseSpec._
+import testdata.CommonTestData
 
-trait CitizenDetailsTest {
-  val downstreamUrl = s"/citizen-details/nino/$nino"
+trait CitizenDetailsTest extends CommonTestData {
+  val downstreamUrl = s"/citizen-details/nino/$testNino"
 
   val successResponseRaw: String =
     s"""{

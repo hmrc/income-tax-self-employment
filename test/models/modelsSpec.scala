@@ -18,10 +18,10 @@ package models
 
 import cats.implicits._
 import models.error.ServiceError.InvalidJsonFormatError
+import models.modelsSpec._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{Json, JsonValidationError, OFormat, __}
-import models.modelsSpec._
 
 class modelsSpec extends AnyWordSpecLike with Matchers {
 

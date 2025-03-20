@@ -17,13 +17,12 @@
 package controllers
 
 import base.IntegrationBaseSpec
-import helpers.WiremockSpec
 import models.connector.api_1803.{AnnualAllowancesType, SuccessResponseSchema}
 import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhichYearIsLossReported}
 import play.api.http.Status.NO_CONTENT
 import play.api.libs.json.{JsValue, Json}
 
-class JourneyAnswersControllerISpec extends WiremockSpec with IntegrationBaseSpec {
+class JourneyAnswersControllerISpec extends IntegrationBaseSpec {
 
   // TODO ticket - create new tests and required stubbing for integration controller
   "POST /:taxYear/:businessId/profit-or-loss/:nino/answers" should {
@@ -52,13 +51,13 @@ class JourneyAnswersControllerISpec extends WiremockSpec with IntegrationBaseSpe
         ))
 
       stubPostWithResponseBody(
-        url = s"/income-tax-self-employment/$taxYear/$businessId/profit-or-loss/$nino/answers",
+        url = s"/income-tax-self-employment/$testTaxYear/$testBusinessId/profit-or-loss/$testNino/answers",
         expectedResponse = api1803Response.toString(),
         expectedStatus = NO_CONTENT
       )
 
-      buildClient(s"/income-tax-self-employment/$taxYear/$businessId/profit-or-loss/$nino/answers")
-        .withHttpHeaders(("MTDITID", mtditid.value))
+      buildClient(s"/income-tax-self-employment/$testTaxYear/$testBusinessId/profit-or-loss/$testNino/answers")
+        .withHttpHeaders(("MTDITID", testMtdItId.value))
         .post(answers)
         .futureValue
         .status mustBe NO_CONTENT

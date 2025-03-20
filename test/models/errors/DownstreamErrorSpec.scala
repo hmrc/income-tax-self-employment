@@ -17,13 +17,13 @@
 package models.errors
 
 import models.error.DownstreamError
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpec
-import play.api.libs.json.{JsError, JsSuccess, Json}
 import models.error.DownstreamError._
 import models.error.DownstreamErrorBody.{MultipleDownstreamErrorBody, SingleDownstreamErrorBody}
-import play.api.http.Status.INTERNAL_SERVER_ERROR
 import models.error.ErrorType.DownstreamErrorCode
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.http.Status.INTERNAL_SERVER_ERROR
+import play.api.libs.json.{JsError, JsSuccess, Json}
 
 class DownstreamErrorSpec extends AnyWordSpec with Matchers {
 

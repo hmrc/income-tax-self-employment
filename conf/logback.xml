@@ -3,7 +3,7 @@
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%date{ISO8601} level=[%level] logger=[%logger] thread=[%thread] rid=[%X{X-Request-ID}] user=[%X{Authorization}] status=[%X{httpStatus}] responseTime=[%X{responseTime}ms] message=[%message] %replace(exception=[%xException]){'^exception=\[\]$',''}%n</pattern>
+            <pattern>[%highlight(%-5level) %date{ISO8601}]    %boldWhite(%-40.40logger{0})    %highlight(%message)\n%ex{2}%n</pattern>
         </encoder>
     </appender>
 

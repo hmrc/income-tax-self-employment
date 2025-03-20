@@ -21,7 +21,8 @@ import models.connector.api_1171._
 import play.api.libs.json.Json
 
 trait Api1171Test extends IntegrationBaseSpec {
-  val downstreamUrl = s"/registration/business-details/nino/$nino"
+
+  val downstreamUrl = s"/registration/business-details/nino/$testNino"
 
   val successResponseRaw: String =
     """

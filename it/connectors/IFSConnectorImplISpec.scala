@@ -19,7 +19,6 @@ package connectors
 import base.IntegrationBaseSpec
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.data.{Api1505Test, Api1786Test, Api1803Test}
-import helpers.WiremockSpec
 import models.common.JourneyContextWithNino
 import models.common.TaxYear.{asTys, endDate, startDate}
 import models.connector.api_1505.ClaimId
@@ -36,13 +35,13 @@ import models.error.ErrorType.DownstreamErrorCode
 import models.error.ServiceError
 import org.scalatest.EitherValues._
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
-import play.api.http.Status.{BAD_REQUEST, CONFLICT, CREATED, NOT_FOUND, OK, UNPROCESSABLE_ENTITY}
+import play.api.http.Status._
 import play.api.libs.json.Json
 
-class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
+class IFSConnectorImplISpec extends IntegrationBaseSpec {
 
   val connector: IFSConnectorImpl = new IFSConnectorImpl(httpClient, appConfig)
-  val ctx: JourneyContextWithNino = JourneyContextWithNino(taxYear, businessId, mtditid, nino)
+  val ctx: JourneyContextWithNino = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
 
   "getPeriodicSummaryDetail" must {
     "return successful response" in new Api1786Test {
@@ -91,7 +90,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
   "deleteSEAnnualSummaries" must {
     "return unit" in {
-      val downstreamUrl = s"/income-tax/${asTys(taxYear)}/${nino.value}/self-employments/${businessId.value}/annual-summaries"
+      val downstreamUrl = s"/income-tax/${asTys(testTaxYear)}/${testNino.value}/self-employments/${testBusinessId.value}/annual-summaries"
       stubDelete(
         url = downstreamUrl,
         expectedResponse = "",
@@ -327,7 +326,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
     val downstreamSuccessResponse: String = Json.stringify(Json.obj("transactionReference" -> "someId"))
     val requestBody: CreateAmendSEAnnualSubmissionRequestBody =
       CreateAmendSEAnnualSubmissionRequestBody(AnnualAdjustments.empty.copy(goodsAndServicesOwnUse = Some(100)).some, None, None)
-    val data: CreateAmendSEAnnualSubmissionRequestData = CreateAmendSEAnnualSubmissionRequestData(taxYear, nino, businessId, requestBody)
+    val data: CreateAmendSEAnnualSubmissionRequestData = CreateAmendSEAnnualSubmissionRequestData(testTaxYear, testNino, testBusinessId, requestBody)
 
     val downstreamUrl =
       s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/annual-summaries"
@@ -361,7 +360,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         FinancialsType(None, Some(Deductions.empty.copy(costOfGoods = Some(SelfEmploymentDeductionsDetailPosNegType(Some(100.00), Some(100.00)))))))
     )
 
-    val data: CreateSEPeriodSummaryRequestData = CreateSEPeriodSummaryRequestData(taxYear, businessId, nino, requestBody)
+    val data: CreateSEPeriodSummaryRequestData = CreateSEPeriodSummaryRequestData(testTaxYear, testBusinessId, testNino, requestBody)
 
     val downstreamUrl =
       s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries"
@@ -372,7 +371,7 @@ class IFSConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
 
     val requestBody: AmendSEPeriodSummaryRequestBody = AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), None)
 
-    val data: AmendSEPeriodSummaryRequestData = AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, requestBody)
+    val data: AmendSEPeriodSummaryRequestData = AmendSEPeriodSummaryRequestData(testTaxYear, testNino, testBusinessId, requestBody)
 
     val downstreamUrl =
       s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries\\?from=${startDate(
