@@ -18,18 +18,18 @@ package connectors.data
 
 import models.connector.api_1870._
 import play.api.libs.json.Json
-import utils.BaseSpec._
+import testdata.CommonTestData
 
-trait Api1870Test {
-  val currentTaxYear: String = taxYear.toYYYY_YY
-  val downstreamUrl          = s"/individuals/losses/$nino/brought-forward-losses/tax-year/$currentTaxYear"
+trait Api1870Test extends CommonTestData {
+  val currentTaxYear: String = testTaxYear.toYYYY_YY
+  val downstreamUrl          = s"/individuals/losses/$testNino/brought-forward-losses/tax-year/$currentTaxYear"
 
   val successResponseRaw: String =
     s"""{
        |  "losses": [
        |   {
        |      "lossId": "1234568790ABCDE",
-       |      "businessId": "12345678912345",
+       |      "businessId": "${testBusinessId.value}",
        |      "typeOfLoss": "self-employment",
        |      "lossAmount": 260,
        |      "taxYearBroughtForwardFrom": "2020-21",

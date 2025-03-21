@@ -18,7 +18,6 @@ package connectors
 
 import base.IntegrationBaseSpec
 import com.github.tomakehurst.wiremock.client.WireMock._
-import helpers.WiremockSpec
 import models.common.TaxYear.asTys
 import models.connector.ReliefClaimType.{CF, CSGI}
 import models.connector._
@@ -30,16 +29,17 @@ import play.api.http.Status._
 import play.api.libs.json.Format.GenericFormat
 import play.api.libs.json.OFormat.oFormatFromReadsAndOWrites
 import play.api.libs.json.{JsObject, Json}
+import play.api.test.Helpers.await
 import testdata.CommonTestData
 import uk.gov.hmrc.http.HttpReads
 
 import java.time.LocalDateTime
 
-class ReliefClaimsConnectorISpec extends WiremockSpec with IntegrationBaseSpec with CommonTestData {
+class ReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestData {
 
   val connector: ReliefClaimsConnector = app.injector.instanceOf[ReliefClaimsConnector]
 
-  val api1505Url: String = s"/income-tax/claims-for-relief/${testNino.value}/${asTys(taxYear)}"
+  val api1505Url: String = s"/income-tax/claims-for-relief/${testNino.value}/${asTys(testTaxYear)}"
   val api1507Url: String = s"/income-tax/claims-for-relief/${testNino.value}"
   val api1867Url: String = s"/income-tax/${testTaxYear2024.endYear}/claims-for-relief/${testNino.value}"
 

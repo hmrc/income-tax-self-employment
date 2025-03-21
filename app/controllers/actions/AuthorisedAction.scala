@@ -56,8 +56,8 @@ class AuthorisedAction @Inject() ()(implicit
           case Some(AffinityGroup.Agent) => agentAuthentication(block, mtdItId)(request, headerCarrier)
           case _                         => individualAuthentication(block, mtdItId)(request, headerCarrier)
         } recover {
-          case _: NoActiveSession =>
-            logger.info(s"[AuthorisedAction][async] - No active session.")
+          case ex: NoActiveSession =>
+            logger.info(s"[AuthorisedAction][async] - No active session. Reason: ${ex.getMessage}")
             Unauthorized
           case _: AuthorisationException =>
             logger.info(s"[AuthorisedAction][async] - User failed to authenticate")

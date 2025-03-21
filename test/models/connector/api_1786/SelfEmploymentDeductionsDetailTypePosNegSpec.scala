@@ -16,9 +16,7 @@
 
 package models.connector.api_1786
 
-import models.connector.api_1895
-import models.connector.api_1894
-
+import models.connector.{api_1894, api_1895}
 import org.scalatest.wordspec.AnyWordSpecLike
 
 class SelfEmploymentDeductionsDetailTypePosNegSpec extends AnyWordSpecLike {

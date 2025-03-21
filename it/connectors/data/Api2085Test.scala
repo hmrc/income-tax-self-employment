@@ -18,10 +18,10 @@ package connectors.data
 
 import models.connector.api_2085.ListOfIncomeSources
 import play.api.libs.json.Json
-import utils.BaseSpec._
+import testdata.CommonTestData
 
-trait Api2085Test {
-  val downstreamUrl = s"/income-tax/income-sources/$nino\\?taxYear=${taxYear.toYYYY_YY}"
+trait Api2085Test extends CommonTestData {
+  val downstreamUrl = s"/income-tax/income-sources/$testNino\\?taxYear=${testTaxYear.toYYYY_YY}"
 
   val successResponseRaw: String =
     s"""{

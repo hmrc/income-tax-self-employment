@@ -18,6 +18,7 @@ package stubs.repositories
 
 import cats.data.EitherT
 import cats.implicits._
+import com.google.errorprone.annotations.DoNotCall
 import models.common._
 import models.database.JourneyAnswers
 import models.domain.{ApiResultT, Business}
@@ -42,27 +43,43 @@ case class StubJourneyAnswersRepository(
   implicit val ec: ExecutionContext       = ExecutionContext.global
   var lastUpsertedAnswer: Option[JsValue] = None
 
+  @DoNotCall("Only implemented to satisfy JourneyAnswersTrait. StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
+  def getJourneyAnswers(ctx: JourneyContext): Future[Option[JourneyAnswers]] = ???
+
+  @DoNotCall("Only implemented to satisfy JourneyAnswersTrait. StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
+  def upsertJourneyAnswers(ctx: JourneyContext, answerJson: JsValue): Future[Option[JsValue]] = ???
+
+  @DoNotCall("Only implemented to satisfy JourneyAnswersTrait. StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
+  def deleteJourneyAnswers(ctx: JourneyContext, journey: JourneyName): Future[Boolean] = ???
+
+  @deprecated("StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] = {
     lastUpsertedAnswer = Some(newData)
     EitherT.fromEither[Future](upsertDataField)
   }
 
+  @deprecated(message = "StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
   def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit] =
     EitherT.fromEither[Future](upsertStatusField)
 
+  @DoNotCall("Only implemented to satisfy JourneyAnswersTrait. StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
   def testOnlyClearAllData(): ApiResultT[Unit] = ???
 
+  @deprecated(message = "StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
   def deleteOneOrMoreJourneys(ctx: models.common.JourneyContext, multiplePrefix: Option[String]): ApiResultT[Unit] = {
     lastUpsertedAnswer = None
     EitherT.fromEither[Future](deleteOneOrMoreJourneys)
   }
 
+  @deprecated(message = "StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
   def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]] =
     EitherT.rightT[Future, ServiceError](getAnswer)
 
+  @deprecated(message = "StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
   def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): ApiResultT[TaskList] =
     EitherT.fromEither[Future](getAllResult)
 
+  @deprecated(message = "StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
   def getAnswers[A: Reads](ctx: JourneyContext)(implicit ct: ClassTag[A]): ApiResultT[Option[A]] =
     EitherT.fromEither(getAnswers.map(_.map(data => jsonAs[A](data.as[JsObject]).value)))
 }

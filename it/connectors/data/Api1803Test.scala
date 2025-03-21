@@ -19,10 +19,11 @@ package connectors.data
 import models.common.TaxYear.asTys
 import models.connector.api_1803._
 import play.api.libs.json.Json
-import utils.BaseSpec._
+import testdata.CommonTestData
 
-trait Api1803Test {
-  val downstreamUrl = s"/income-tax/${asTys(taxYear)}/$nino/self-employments/$businessId/annual-summaries"
+trait Api1803Test extends CommonTestData {
+
+  val downstreamUrl = s"/income-tax/${asTys(testTaxYear)}/$testNino/self-employments/$testBusinessId/annual-summaries"
 
   val successResponseRaw: String = """{
                                      |  "annualAdjustments": {
