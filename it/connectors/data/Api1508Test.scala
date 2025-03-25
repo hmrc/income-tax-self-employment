@@ -18,20 +18,18 @@ package connectors.data
 
 import models.connector.api_1508.GetLossClaimSuccessResponse
 import play.api.libs.json.Json
-import utils.BaseSpec.nino
+import testdata.CommonTestData
 
-trait Api1508Test {
+trait Api1508Test extends CommonTestData {
 
-  val claimId = "1234568790ABCDE"
-
-  val downstreamUrl: String = s"/income-tax/claims-for-relief/$nino/$claimId"
+  val downstreamUrl: String = s"/income-tax/claims-for-relief/$testNino/$testClaimId"
 
   val successResponseRaw: String =
     s"""{
-       | "incomeSourceId": "012345678912345",
+       | "incomeSourceId": "${testBusinessId.value}",
        |"reliefClaimed": "CF",
        |"taxYearClaimedFor": "2020",
-       |"claimId": "AAZZ1234567890A",
+       |"claimId": "$testClaimId",
        |"sequence": 2,
        |"submissionDate": "2020-07-13T12:13:48.763Z"
        |}
@@ -46,4 +44,5 @@ trait Api1508Test {
   """
 
   val successResponse: GetLossClaimSuccessResponse = Json.parse(successResponseRaw).as[GetLossClaimSuccessResponse]
+
 }

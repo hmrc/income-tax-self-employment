@@ -19,14 +19,14 @@ package connectors.data
 import models.common.TaxYear.asTys
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import play.api.libs.json.Json
-import utils.BaseSpec._
+import testdata.CommonTestData
 
-trait Api1871Test {
-  val downstreamUrl = s"/income-tax/income-sources/${asTys(taxYear)}/$nino/$businessId/self-employment/biss"
+trait Api1871Test extends CommonTestData {
+  val downstreamUrl = s"/income-tax/income-sources/${asTys(testTaxYear)}/$testNino/$testBusinessId/self-employment/biss"
 
   val successResponseRaw: String =
     s"""{
-      |   "incomeSourceId": "incomeSourceId",
+      |   "incomeSourceId": "${testBusinessId.value}",
       |   "totalIncome": 200,
       |   "totalExpenses": 200,
       |   "netProfit": 200,

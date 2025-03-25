@@ -19,7 +19,7 @@ package mocks.connectors
 import cats.data.EitherT
 import cats.implicits.catsStdInstancesForFuture
 import connectors.ReliefClaimsConnector
-import models.common.{BusinessId, JourneyContextWithNino, TaxYear}
+import models.common.JourneyContextWithNino
 import models.connector.ReliefClaimType
 import models.connector.api_1505.ClaimId
 import models.connector.common.ReliefClaim

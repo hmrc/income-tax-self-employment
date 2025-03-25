@@ -17,11 +17,11 @@
 package models.common.connector.citizen_details
 
 import bulders.BusinessDataBuilder.getCitizenDetailsResponse
+import org.scalatest.EitherValues._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
 import java.time.LocalDate
-import org.scalatest.EitherValues._
 
 class SuccessResponseSchemaSpec extends AnyWordSpec with Matchers {
 

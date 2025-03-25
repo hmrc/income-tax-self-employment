@@ -132,7 +132,7 @@ trait WiremockStubHelpers {
             .withHeader("Content-Type", "application/json; charset=utf-8")))
   }
 
-  def auditStubs(): Unit = {
+  def stubAudits(): Unit = {
     val auditResponseCode = 204
     stubPostWithoutResponseAndRequestBody("/write/audit", auditResponseCode)
     stubPostWithoutResponseAndRequestBody("/write/audit/merged", auditResponseCode)

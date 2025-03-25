@@ -19,11 +19,10 @@ package connectors
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
 import connectors.data.CitizenDetailsTest
-import helpers.WiremockSpec
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.OK
 
-class MDTPConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
+class MDTPConnectorImplISpec extends IntegrationBaseSpec {
   val connector = new MDTPConnectorImpl(httpClient, appConfig)
 
   "getCitizenDetails" must {
@@ -33,7 +32,7 @@ class MDTPConnectorImplISpec extends WiremockSpec with IntegrationBaseSpec {
         expectedResponse = successResponseRaw,
         expectedStatus = OK
       )
-      connector.getCitizenDetails(nino).value.futureValue shouldBe successResponse.asRight
+      connector.getCitizenDetails(testNino).value.futureValue shouldBe successResponse.asRight
     }
   }
 

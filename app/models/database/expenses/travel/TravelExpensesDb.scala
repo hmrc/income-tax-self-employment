@@ -13,3 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package models.database.expenses.travel
+
+import play.api.libs.json.{Format, Json}
+
+case class TravelExpensesDb(expensesToClaim: Option[Seq[TravelExpenseType]] = None,
+                            allowablePublicTransportExpenses: Option[BigDecimal] = None,
+                            disallowablePublicTransportExpenses: Option[BigDecimal] = None)
+
+object TravelExpensesDb {
+  implicit val format: Format[TravelExpensesDb] = Json.format[TravelExpensesDb]
+}

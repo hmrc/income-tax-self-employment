@@ -27,7 +27,7 @@ import models.connector.api_1786.SuccessResponseSchema
 import models.connector.api_1802.request._
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
-import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
+import models.connector.api_1965.ListSEPeriodSummariesResponse
 import models.database.income.IncomeStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError

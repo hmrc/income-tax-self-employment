@@ -16,13 +16,13 @@
 
 package connectors.data
 
-import models.connector.api_1505.{CreateLossClaimRequestBody, ClaimId}
+import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBody}
 import play.api.libs.json.Json
-import utils.BaseSpec.nino
+import testdata.CommonTestData
 
-trait Api1505Test {
+trait Api1505Test extends CommonTestData {
 
-  val downstreamUrl: String = s"/income-tax/claims-for-relief/$nino"
+  val downstreamUrl: String = s"/income-tax/claims-for-relief/$testNino"
 
   val successResponseRaw: String =
     s"""{

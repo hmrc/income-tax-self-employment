@@ -74,17 +74,18 @@ trait AuthStub {
       confidenceLevel.fold(Json.obj())(unwrappedConfidenceLevel => Json.obj("confidenceLevel" -> unwrappedConfidenceLevel)) ++
       Json.obj("allEnrolments" -> enrolments)
 
-  def authorised(
+  def stubAuthorisedIndividual(
       response: JsObject = successfulAuthResponse(Some(Individual), Some(ConfidenceLevel.L250), mtditEnrolment, ninoEnrolment)): StubMapping =
     stubFor(
       post(urlMatching(authoriseUri))
         .willReturn(
           aResponse()
             .withStatus(OK)
-            .withBody(response.toString())
-            .withHeader("Content-Type", "application/json; charset=utf-8")))
+            .withBody(response + Json.obj("nino" -> "AA123123A").toString())
+            .withHeader("Content-Type", "application/json; charset=utf-8")
+        ))
 
-  def agentAuthorised(): StubMapping =
+  def stubAuthorisedAgent(): StubMapping =
     stubFor(
       post(urlMatching(authoriseUri))
         .willReturn(

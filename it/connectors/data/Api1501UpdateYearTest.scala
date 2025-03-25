@@ -16,34 +16,35 @@
 
 package connectors.data
 
-import models.common.TaxYear
 import models.connector.api_1500.{CreateBroughtForwardLossRequestBody, LossType, SuccessResponseSchema}
 import models.connector.api_1501._
 import play.api.libs.json.Json
+import testdata.CommonTestData
 import utils.BaseSpec.{nino, _}
 
-trait Api1501UpdateYearTest {
+trait Api1501UpdateYearTest extends CommonTestData {
 
-  val lossId              = "1234568790ABCDE"
-  val taxYearStr          = TaxYear(2024).toYYYY_YY
-  val downstreamCreateUrl = s"/individuals/losses/$nino/brought-forward-losses/$taxYearStr"
-  val downstreamDeleteUrl = s"/individuals/losses/$nino/brought-forward-losses/$lossId"
+  val taxYearStr          = testTaxYear.toYYYY_YY
+  val downstreamCreateUrl = s"/individuals/losses/$testNino/brought-forward-losses/$taxYearStr"
+  val downstreamDeleteUrl = s"/individuals/losses/$testNino/brought-forward-losses/$businessId"
+
   val requestBody = CreateBroughtForwardLossRequestBody(
-    businessId = "SJPR05893938418",
+    businessId = testBusinessId.value,
     typeOfLoss = LossType.SelfEmployment,
     lossAmount = BigDecimal(250),
     taxYearBroughtForwardFrom = "2023-24"
   )
+
   val data = UpdateBroughtForwardLossYear(
     nino = nino,
-    lossId = lossId,
+    lossId = testBusinessId.value,
     taxYear = taxYear,
     body = requestBody
   )
 
   val successResponseRaw: String =
     s"""{
-       |   "lossId": "1234568790ABCDE"
+       |   "lossId": "${testBusinessId.value}"
        |}
        |""".stripMargin
 

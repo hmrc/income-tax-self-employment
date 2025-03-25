@@ -1,0 +1,5 @@
+## ANSWERS API
+
+GET             /users/:nino/businesses/:businessId/years/:taxYear/journeys/:journey          controllers.answers.AnswerController.getJourneyAnswers(nino: Nino, businessId: BusinessId, taxYear: TaxYear, journey: models.common.JourneyName)
+PUT             /users/:nino/businesses/:businessId/years/:taxYear/journeys/:journey          controllers.answers.AnswerController.replaceJourneyAnswers(nino: Nino, businessId: BusinessId, taxYear: TaxYear, journey: models.common.JourneyName)
+DELETE          /users/:nino/businesses/:businessId/years/:taxYear/journeys/:journey          controllers.answers.AnswerController.deleteJourneyAnswers(nino: Nino, businessId: BusinessId, taxYear: TaxYear, journey: models.common.JourneyName)
