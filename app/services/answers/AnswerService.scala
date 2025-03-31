@@ -18,8 +18,9 @@ package services.answers
 
 import jakarta.inject.Inject
 import models.common.{JourneyContextWithNino, JourneyName}
-import play.api.libs.json.{Format, Json, Reads}
+import play.api.libs.json.{Format, JsArray, JsObject, JsValue, Json, Reads}
 import repositories.JourneyAnswersRepository
+import services.answers.AnswerService.{entriesToReplace, indexOffset, valuesKey}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -38,6 +39,45 @@ class AnswerService @Inject() (repo: JourneyAnswersRepository)(implicit ec: Exec
     } yield optValidatedJson
 
   def deleteJourneyAnswers(ctx: JourneyContextWithNino, journey: JourneyName): Future[Boolean] =
-    repo.deleteJourneyAnswers(ctx.toJourneyContext(journey), journey)
+    repo.deleteJourneyAnswers(ctx.toJourneyContext(journey))
 
+  def getCollectionAnswer[T](ctx: JourneyContextWithNino, journey: JourneyName, index: Int)(implicit reads: Reads[T]): Future[Option[T]] =
+    for {
+      optOldAnswers <- getAnswerCollection(ctx, journey)
+      optIndexJson          = optOldAnswers.value.lift(index - indexOffset)
+      optValidatedIndexJson = optIndexJson.flatMap(_.validate[T].asOpt)
+    } yield optValidatedIndexJson
+
+  def upsertCollectionAnswer[T](ctx: JourneyContextWithNino, journey: JourneyName, data: T, index: Int)(implicit
+      format: Format[T]): Future[Option[T]] =
+    for {
+      optOldAnswers <- getAnswerCollection(ctx, journey)
+      optNewAnswers = JsArray(optOldAnswers.value.patch(index - indexOffset, Seq(Json.toJson(data)), entriesToReplace))
+      repoResponse <- repo.upsertJourneyAnswers(ctx.toJourneyContext(journey), Json.obj(valuesKey -> optNewAnswers))
+      result = repoResponse.map(_ => data)
+    } yield result
+
+  def deleteCollectionAnswer(ctx: JourneyContextWithNino, journey: JourneyName, index: Int): Future[Option[JsValue]] =
+    for {
+      optOldAnswers <- getAnswerCollection(ctx, journey)
+      optNewAnswers = JsArray(optOldAnswers.value.patch(index - indexOffset, Nil, entriesToReplace))
+      result <- {
+        if (optNewAnswers.value.isEmpty) repo.deleteJourneyAnswers(ctx.toJourneyContext(journey)).map(_ => None)
+        else repo.upsertJourneyAnswers(ctx.toJourneyContext(journey), Json.obj(valuesKey -> optNewAnswers))
+      }
+    } yield result
+
+  private def getAnswerCollection(ctx: JourneyContextWithNino, journey: JourneyName): Future[JsArray] =
+    for {
+      optOldAnswers <- getJourneyAnswers[JsObject](ctx, journey)
+      optValidatedJson = optOldAnswers.flatMap(_.value(valuesKey).validate[JsArray].asOpt)
+    } yield optValidatedJson.getOrElse(JsArray(Nil))
+
+}
+
+object AnswerService {
+  val indexOffset: Int = 1
+  val entriesToReplace = 1
+
+  val valuesKey = "values"
 }

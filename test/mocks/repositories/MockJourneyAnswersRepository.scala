@@ -37,15 +37,14 @@ object MockJourneyAnswersRepository {
 
   val mockInstance = mock[JourneyAnswersRepository]
 
-  def getJourneyAnswers(context: JourneyContext, journey: JourneyName)(
-      response: Future[Option[JourneyAnswers]]): ScalaOngoingStubbing[Future[Option[JourneyAnswers]]] =
+  def getJourneyAnswers(context: JourneyContext)(response: Future[Option[JourneyAnswers]]): ScalaOngoingStubbing[Future[Option[JourneyAnswers]]] =
     when(mockInstance.getJourneyAnswers(ArgumentMatchers.eq(context))).thenReturn(response)
 
   def upsertJourneyAnswers(context: JourneyContext, data: JsValue)(response: Future[Option[JsValue]]): ScalaOngoingStubbing[Future[Option[JsValue]]] =
     when(mockInstance.upsertJourneyAnswers(ArgumentMatchers.eq(context), ArgumentMatchers.eq(data))).thenReturn(response)
 
-  def deleteJourneyAnswers(context: JourneyContext, journey: JourneyName)(wasDeleted: Boolean): ScalaOngoingStubbing[Future[Boolean]] =
-    when(mockInstance.deleteJourneyAnswers(ArgumentMatchers.eq(context), ArgumentMatchers.eq(journey))).thenReturn(Future.successful(wasDeleted))
+  def deleteJourneyAnswers(context: JourneyContext)(wasDeleted: Boolean): ScalaOngoingStubbing[Future[Boolean]] =
+    when(mockInstance.deleteJourneyAnswers(ArgumentMatchers.eq(context))).thenReturn(Future.successful(wasDeleted))
 
   def get(context: JourneyContext)(returnValue: Option[JourneyAnswers]): ScalaOngoingStubbing[ApiResultT[Option[JourneyAnswers]]] =
     when(mockInstance.get(ArgumentMatchers.eq(context))).thenReturn(EitherT.pure(returnValue))
