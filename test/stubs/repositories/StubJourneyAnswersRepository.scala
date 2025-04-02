@@ -50,7 +50,7 @@ case class StubJourneyAnswersRepository(
   def upsertJourneyAnswers(ctx: JourneyContext, answerJson: JsValue): Future[Option[JsValue]] = ???
 
   @DoNotCall("Only implemented to satisfy JourneyAnswersTrait. StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
-  def deleteJourneyAnswers(ctx: JourneyContext, journey: JourneyName): Future[Boolean] = ???
+  def deleteJourneyAnswers(ctx: JourneyContext): Future[Boolean] = ???
 
   @deprecated("StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit] = {

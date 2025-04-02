@@ -55,15 +55,15 @@ class AnswerController @Inject() (answerService: AnswerService,
     implicit request =>
       answerService.getJourneyAnswers[JsValue](mkContext(nino, businessId, taxYear), journey).flatMap {
         case Some(sectionData) =>
-          sectionValidationService
-            .validate(journey, sectionData)
-            .map {
-              case Right(ValidSection(value)) =>
-                Ok(value)
-              case Left(response @ InvalidSection(_)) =>
-                logger.error(s"[Answers][getSection] Get answers section ${journey.entryName} errored with ${response.asString}")
-                InternalServerError(response.asString)
-            }
+          sectionValidationService.validate(journey, sectionData).map {
+            case Right(ValidSection(value)) =>
+              Ok(value)
+            case Left(response @ InvalidSection(_)) =>
+              logger.error(s"Answers for journey '${journey.entryName}'" +
+                s" for businessId '$businessId' failed to validate the following keys ${response.asString}")
+              InternalServerError(s"Answers for journey '${journey.entryName}'" +
+                s" for businessId '$businessId' failed to validate the following keys ${response.asString}")
+          }
         case _ =>
           Future.successful(NotFound)
       }
@@ -95,15 +95,15 @@ class AnswerController @Inject() (answerService: AnswerService,
                 case Some(updatedSectionJson) =>
                   Ok(updatedSectionJson)
                 case _ =>
-                  logger.error(s"[Answers][replaceSection] Unable to upsert answers for journey '${journey.entryName}' for businessId '$businessId'")
+                  logger.error(s"Unable to upsert answers for journey '${journey.entryName}' for businessId '$businessId'")
                   InternalServerError(s"Unable to upsert answers for journey '${journey.entryName}' for buisnessId '$businessId'")
               }
             case Left(response @ InvalidSection(_)) =>
-              logger.error(s"[Answers][replaceSection] Missing keys: ${response.asString} when upserting answers for journey ${journey.entryName}")
+              logger.error(s"Missing keys: ${response.asString} when upserting answers for journey '${journey.entryName}' for businessId $businessId")
               Future.successful(BadRequest(response.asString))
           }
         case _ =>
-          Future.successful(BadRequest(s"[Answers][replaceSection] Empty request body when updating answers for journey ${journey.entryName}"))
+          Future.successful(BadRequest(s"Empty request body when updating answers for journey '${journey.entryName}'"))
       }
   }
 

@@ -35,7 +35,7 @@ import play.api.Logger
 import play.api.libs.json.{JsValue, Json, Reads}
 import services.journeyAnswers.getPersistedAnswers
 import uk.gov.hmrc.mongo.MongoComponent
-import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
+import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
 import utils.Logging
 
 import java.time.{Clock, Instant, ZoneOffset}
@@ -48,7 +48,7 @@ trait JourneyAnswersRepository {
   // Answers API methods
   def getJourneyAnswers(ctx: JourneyContext): Future[Option[JourneyAnswers]]
   def upsertJourneyAnswers(ctx: JourneyContext, answerJson: JsValue): Future[Option[JsValue]]
-  def deleteJourneyAnswers(ctx: JourneyContext, journey: JourneyName): Future[Boolean]
+  def deleteJourneyAnswers(ctx: JourneyContext): Future[Boolean]
 
   // Legacy answers methods
   def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]]
@@ -94,7 +94,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
       .headOption()
 
   def upsertJourneyAnswers(ctx: JourneyContext, answerJson: JsValue): Future[Option[JsValue]] = {
-    val bson    = BsonDocument(Json.stringify(answerJson))
+    val bson    = Codecs.toBson(answerJson)
     val update  = createUpsert(ctx)("data", bson, JourneyStatus.NotStarted)
     val options = new UpdateOptions().upsert(true)
 
@@ -111,9 +111,9 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     }
   }
 
-  def deleteJourneyAnswers(ctx: JourneyContext, journey: JourneyName): Future[Boolean] =
+  def deleteJourneyAnswers(ctx: JourneyContext): Future[Boolean] =
     collection
-      .deleteOne(filterJourney(ctx, Some(journey.entryName)))
+      .deleteOne(filterJourney(ctx, Some(ctx.journey.entryName)))
       .toFuture()
       .map(_.getDeletedCount == 1)
 

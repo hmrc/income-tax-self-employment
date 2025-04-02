@@ -19,44 +19,47 @@ package models.common
 import enumeratum._
 import play.api.mvc.PathBindable
 
-sealed abstract class JourneyName(override val entryName: String) extends EnumEntry {
+sealed abstract class JourneyName(override val entryName: String, val collectionOptions: Option[CollectionOptions] = None) extends EnumEntry {
   override def toString: String = entryName
+
+  def isCollectionJourney: Boolean = collectionOptions.isDefined
 }
 
 object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName] {
 
   val values: IndexedSeq[JourneyName] = findValues
 
-  final case object TradeDetails                   extends JourneyName("trade-details")
-  final case object SelfEmploymentAbroad           extends JourneyName("self-employment-abroad")
-  final case object Income                         extends JourneyName("income")
-  final case object ExpensesTailoring              extends JourneyName("expenses-categories")
-  final case object GoodsToSellOrUse               extends JourneyName("expenses-goods-to-sell-or-use")
-  final case object WorkplaceRunningCosts          extends JourneyName("expenses-workplace-running-costs")
-  final case object RepairsAndMaintenanceCosts     extends JourneyName("expenses-repairs-and-maintenance")
-  final case object AdvertisingOrMarketing         extends JourneyName("expenses-advertising-marketing")
-  final case object OfficeSupplies                 extends JourneyName("expenses-office-supplies")
-  final case object Entertainment                  extends JourneyName("expenses-entertainment")
-  final case object StaffCosts                     extends JourneyName("expenses-staff-costs")
-  final case object Construction                   extends JourneyName("expenses-construction")
-  final case object ProfessionalFees               extends JourneyName("expenses-professional-fees")
-  final case object Interest                       extends JourneyName("expenses-interest")
-  final case object OtherExpenses                  extends JourneyName("expenses-other-expenses")
-  final case object FinancialCharges               extends JourneyName("expenses-financial-charges")
-  final case object IrrecoverableDebts             extends JourneyName("expenses-irrecoverable-debts")
-  final case object Depreciation                   extends JourneyName("expenses-depreciation")
-  final case object CapitalAllowancesTailoring     extends JourneyName("capital-allowances-tailoring")
-  final case object ZeroEmissionCars               extends JourneyName("capital-allowances-zero-emission-cars")
-  final case object ZeroEmissionGoodsVehicle       extends JourneyName("capital-allowances-zero-emission-goods-vehicle")
-  final case object BalancingAllowance             extends JourneyName("capital-allowances-balancing-allowance")
-  final case object BalancingCharge                extends JourneyName("capital-allowances-balancing-charge")
-  final case object WritingDownAllowance           extends JourneyName("capital-allowances-writing-down-allowance")
-  final case object AnnualInvestmentAllowance      extends JourneyName("capital-allowances-annual-investment-allowance")
-  final case object SpecialTaxSites                extends JourneyName("capital-allowances-special-tax-sites")
-  final case object StructuresBuildings            extends JourneyName("capital-allowances-structures-buildings")
-  final case object ProfitOrLoss                   extends JourneyName("profit-or-loss")
-  final case object NationalInsuranceContributions extends JourneyName("national-insurance-contributions")
-  final case object TravelExpenses                 extends JourneyName("travel-expenses")
+  final case object TradeDetails                   extends JourneyName("trade-details", None)
+  final case object SelfEmploymentAbroad           extends JourneyName("self-employment-abroad", None)
+  final case object Income                         extends JourneyName("income", None)
+  final case object ExpensesTailoring              extends JourneyName("expenses-categories", None)
+  final case object GoodsToSellOrUse               extends JourneyName("expenses-goods-to-sell-or-use", None)
+  final case object WorkplaceRunningCosts          extends JourneyName("expenses-workplace-running-costs", None)
+  final case object RepairsAndMaintenanceCosts     extends JourneyName("expenses-repairs-and-maintenance", None)
+  final case object AdvertisingOrMarketing         extends JourneyName("expenses-advertising-marketing", None)
+  final case object OfficeSupplies                 extends JourneyName("expenses-office-supplies", None)
+  final case object Entertainment                  extends JourneyName("expenses-entertainment", None)
+  final case object StaffCosts                     extends JourneyName("expenses-staff-costs", None)
+  final case object Construction                   extends JourneyName("expenses-construction", None)
+  final case object ProfessionalFees               extends JourneyName("expenses-professional-fees", None)
+  final case object Interest                       extends JourneyName("expenses-interest", None)
+  final case object OtherExpenses                  extends JourneyName("expenses-other-expenses", None)
+  final case object FinancialCharges               extends JourneyName("expenses-financial-charges", None)
+  final case object IrrecoverableDebts             extends JourneyName("expenses-irrecoverable-debts", None)
+  final case object Depreciation                   extends JourneyName("expenses-depreciation", None)
+  final case object CapitalAllowancesTailoring     extends JourneyName("capital-allowances-tailoring", None)
+  final case object ZeroEmissionCars               extends JourneyName("capital-allowances-zero-emission-cars", None)
+  final case object ZeroEmissionGoodsVehicle       extends JourneyName("capital-allowances-zero-emission-goods-vehicle", None)
+  final case object BalancingAllowance             extends JourneyName("capital-allowances-balancing-allowance", None)
+  final case object BalancingCharge                extends JourneyName("capital-allowances-balancing-charge", None)
+  final case object WritingDownAllowance           extends JourneyName("capital-allowances-writing-down-allowance", None)
+  final case object AnnualInvestmentAllowance      extends JourneyName("capital-allowances-annual-investment-allowance", None)
+  final case object SpecialTaxSites                extends JourneyName("capital-allowances-special-tax-sites", None)
+  final case object StructuresBuildings            extends JourneyName("capital-allowances-structures-buildings", None)
+  final case object ProfitOrLoss                   extends JourneyName("profit-or-loss", None)
+  final case object NationalInsuranceContributions extends JourneyName("national-insurance-contributions", None)
+  final case object TravelExpenses                 extends JourneyName("travel-expenses", None)
+  final case object VehicleDetails                 extends JourneyName("vehicle-details", Some(CollectionOptions(minItems = 1)))
 
   // Are we using this code? Should we be if not?
   implicit def pathBindable(implicit strBinder: PathBindable[String]): PathBindable[JourneyName] = new PathBindable[JourneyName] {
@@ -74,3 +77,5 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
   }
 
 }
+
+case class CollectionOptions(minItems: Int, maxItems: Option[Int] = None)

@@ -113,7 +113,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val answers = TravelExpensesDb(allowablePublicTransportExpenses = Some(BigDecimal("1")))
       DbHelper.insertOne(TravelExpenses, answers)
 
-      val result = await(repository.deleteJourneyAnswers(ctx, TravelExpenses))
+      val result = await(repository.deleteJourneyAnswers(ctx))
 
       result shouldBe true
       DbHelper.get[TravelExpensesDb](TravelExpenses) shouldBe None
@@ -123,7 +123,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       val ctx = JourneyContext(testTaxYear, testBusinessId, testMtdItId, TravelExpenses)
       DbHelper.get[TravelExpensesDb](TravelExpenses) shouldBe None
 
-      val result = await(repository.deleteJourneyAnswers(ctx, TravelExpenses))
+      val result = await(repository.deleteJourneyAnswers(ctx))
 
       result shouldBe false
     }

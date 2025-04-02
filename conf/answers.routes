@@ -3,3 +3,9 @@
 GET             /users/:nino/businesses/:businessId/years/:taxYear/journeys/:journey          controllers.answers.AnswerController.getJourneyAnswers(nino: Nino, businessId: BusinessId, taxYear: TaxYear, journey: models.common.JourneyName)
 PUT             /users/:nino/businesses/:businessId/years/:taxYear/journeys/:journey          controllers.answers.AnswerController.replaceJourneyAnswers(nino: Nino, businessId: BusinessId, taxYear: TaxYear, journey: models.common.JourneyName)
 DELETE          /users/:nino/businesses/:businessId/years/:taxYear/journeys/:journey          controllers.answers.AnswerController.deleteJourneyAnswers(nino: Nino, businessId: BusinessId, taxYear: TaxYear, journey: models.common.JourneyName)
+
+## COLLECTION API
+
+GET             /users/:nino/businesses/:businessId/years/:taxYear/journeys/:journey/:index   controllers.answers.CollectionAnswerController.getCollectionAnswer(nino: Nino, businessId: BusinessId, taxYear: TaxYear, journey: models.common.JourneyName, index: Int)
+PUT             /users/:nino/businesses/:businessId/years/:taxYear/journeys/:journey/:index   controllers.answers.CollectionAnswerController.replaceCollectionAnswer(nino: Nino, businessId: BusinessId, taxYear: TaxYear, journey: models.common.JourneyName, index: Int)
+DELETE          /users/:nino/businesses/:businessId/years/:taxYear/journeys/:journey/:index   controllers.answers.CollectionAnswerController.deleteCollectionAnswer(nino: Nino, businessId: BusinessId, taxYear: TaxYear, journey: models.common.JourneyName, index: Int)

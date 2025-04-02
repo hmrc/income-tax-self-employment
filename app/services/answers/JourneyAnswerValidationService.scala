@@ -16,9 +16,9 @@
 
 package services.answers
 
-import models.common.JourneyName
-import models.common.JourneyName.TravelExpenses
-import models.database.expenses.travel.TravelExpensesDb
+import models.common.JourneyName.{TravelExpenses, VehicleDetails}
+import models.common.{CollectionOptions, JourneyName}
+import models.database.expenses.travel.{TravelExpensesDb, VehicleDetailsDb}
 import play.api.Logging
 import play.api.libs.json._
 import uk.gov.hmrc.http.InternalServerException
@@ -33,9 +33,18 @@ class JourneyAnswerValidationService @Inject() (implicit ec: ExecutionContext) e
   def validate(section: JourneyName, json: JsValue): Future[Either[InvalidSection, ValidSection]] =
     section match {
       case TravelExpenses => Future(validate[TravelExpensesDb](json))
+      case VehicleDetails => Future(validate[CollectionSection[VehicleDetailsDb]](json))
       case unknown =>
         logger.error(s"Attempted to validate an unsupported section: ${unknown.toString}")
         throw new InternalServerException(s"Attempted to validate an unsupported section: ${unknown.toString}")
+    }
+
+  def validateIndex(section: JourneyName, json: JsValue): Future[Either[InvalidSection, ValidSection]] =
+    section match {
+      case VehicleDetails => Future(validate[VehicleDetailsDb](json))
+      case unknown =>
+        logger.error(s"Attempted to validate an unsupported collection section: ${unknown.toString}")
+        throw new InternalServerException(s"Attempted to validate an unsupported collection section: ${unknown.toString}")
     }
 
   private def validate[A](json: JsValue)(implicit format: Format[A]): Either[InvalidSection, ValidSection] =
@@ -63,6 +72,12 @@ class JourneyAnswerValidationService @Inject() (implicit ec: ExecutionContext) e
       case None => json
     }
 
+}
+
+case class CollectionSection[T](values: Seq[T])
+
+object CollectionSection {
+  implicit def format[T](implicit format: Format[T]): Format[CollectionSection[T]] = Json.format[CollectionSection[T]]
 }
 
 case class InvalidSection(errors: Seq[String]) {
