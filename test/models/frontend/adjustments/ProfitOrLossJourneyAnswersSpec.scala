@@ -18,14 +18,20 @@ package models.frontend.adjustments
 
 import data.TimeData
 import models.common.JourneyContextWithNino
+import models.connector.ReliefClaimType.{CF, CSGI}
 import models.connector.api_1500.{CreateBroughtForwardLossRequestData, LossType}
 import models.connector.api_1501.{UpdateBroughtForwardLossRequestData, UpdateBroughtForwardLossYear}
 import models.connector.api_1802.request.AnnualAdjustments
+import models.connector.api_1870.LossData
+import models.connector.common.ReliefClaim
 import models.database.adjustments.ProfitOrLossDb
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.{CarryItForward, DeductFromOtherTypes}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsValue, Json}
 import utils.BaseSpec._
+
+import java.time.LocalDateTime
 
 class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with TimeData {
 
@@ -36,13 +42,13 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
     "read and write successfully" in {
       val answers: ProfitOrLossJourneyAnswers = ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
-        goodsAndServicesAmount = Some(BigDecimal(100.00)),
-        claimLossRelief = Some(true),
-        whatDoYouWantToDoWithLoss = Some(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
-        carryLossForward = Some(true),
+        goodsAndServicesAmount = Option(BigDecimal(100.00)),
+        claimLossRelief = Option(true),
+        whatDoYouWantToDoWithLoss = Option(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
+        carryLossForward = Option(true),
         previousUnusedLosses = true,
-        unusedLossAmount = Some(BigDecimal(200.00)),
-        whichYearIsLossReported = Some(WhichYearIsLossReported.Year2022to2023)
+        unusedLossAmount = Option(BigDecimal(200.00)),
+        whichYearIsLossReported = Option(WhichYearIsLossReported.Year2022to2023)
       )
 
       val json: JsValue                           = Json.toJson(answers)
@@ -54,33 +60,96 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
     "convert to database model successfully" in {
       val answers: ProfitOrLossJourneyAnswers = ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
-        goodsAndServicesAmount = Some(BigDecimal(100.00)),
-        claimLossRelief = Some(true),
-        whatDoYouWantToDoWithLoss = Some(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
-        carryLossForward = Some(true),
+        goodsAndServicesAmount = Option(BigDecimal(100.00)),
+        claimLossRelief = Option(true),
+        whatDoYouWantToDoWithLoss = Option(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
+        carryLossForward = Option(true),
         previousUnusedLosses = true,
-        unusedLossAmount = Some(BigDecimal(200.00)),
-        whichYearIsLossReported = Some(WhichYearIsLossReported.Year2018to2019)
+        unusedLossAmount = Option(BigDecimal(200.00)),
+        whichYearIsLossReported = Option(WhichYearIsLossReported.Year2018to2019)
       )
 
       val dbModel: Option[ProfitOrLossDb] = answers.toDbModel
-      dbModel shouldEqual Some(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Some(true), previousUnusedLosses = true))
+      dbModel shouldEqual Option(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))
     }
 
     "convert to downstream annual adjustments successfully" in {
       val answers: ProfitOrLossJourneyAnswers = ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
-        goodsAndServicesAmount = Some(BigDecimal(100.00)),
-        claimLossRelief = Some(true),
-        whatDoYouWantToDoWithLoss = Some(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
-        carryLossForward = Some(true),
+        goodsAndServicesAmount = Option(BigDecimal(100.00)),
+        claimLossRelief = Option(true),
+        whatDoYouWantToDoWithLoss = Option(Seq(WhatDoYouWantToDoWithLoss.CarryItForward)),
+        carryLossForward = Option(true),
         previousUnusedLosses = true,
-        unusedLossAmount = Some(BigDecimal(200.00)),
-        whichYearIsLossReported = Some(WhichYearIsLossReported.Year2022to2023)
+        unusedLossAmount = Option(BigDecimal(200.00)),
+        whichYearIsLossReported = Option(WhichYearIsLossReported.Year2022to2023)
       )
 
       val annualAdjustments: AnnualAdjustments = answers.toDownStreamAnnualAdjustments(None)
-      annualAdjustments.goodsAndServicesOwnUse shouldEqual Some(BigDecimal(100.00))
+      annualAdjustments.goodsAndServicesOwnUse shouldEqual Option(BigDecimal(100.00))
+    }
+
+    "create ProfitOrLossJourneyAnswers from the input data as optLossData is None and reliefClaims is empty and goodsAndServicesOwnUse is None" in {
+
+      ProfitOrLossJourneyAnswers.apply(None, reliefClaims = Nil, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
+        goodsAndServicesForYourOwnUse = false,
+        None,
+        None,
+        Option(List()),
+        None,
+        previousUnusedLosses = false,
+        None,
+        None)
+    }
+
+    "create ProfitOrLossJourneyAnswers from the input data as optLossData is None and reliefClaims is empty" in {
+
+      ProfitOrLossJourneyAnswers.apply(Option(200), reliefClaims = Nil, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
+        goodsAndServicesForYourOwnUse = true,
+        Option(200),
+        None,
+        Option(List()),
+        None,
+        previousUnusedLosses = false,
+        None,
+        None)
+    }
+
+    "create ProfitOrLossJourneyAnswers from the valid inputData" in {
+      val claims: List[ReliefClaim] = List(
+        ReliefClaim("XAIS12345678900", None, CF, "2025", "12345", None, LocalDateTime.parse("2024-10-01T12:13:48.763"))
+      )
+
+      val lossData = Option(LossData("5678", "SJPR05893938418", LossType.SelfEmployment, 400, "2018-19", testDateTime))
+
+      ProfitOrLossJourneyAnswers.apply(Option(200), reliefClaims = claims, optLossData = lossData) shouldEqual ProfitOrLossJourneyAnswers(
+        goodsAndServicesForYourOwnUse = true,
+        Option(200),
+        None,
+        Option(List(CarryItForward)),
+        None,
+        previousUnusedLosses = true,
+        Option(400),
+        Option(WhichYearIsLossReported.Year2018to2019)
+      )
+    }
+
+    "create ProfitOrLossJourneyAnswers from the input data as optLossData is None" in {
+      val claims: List[ReliefClaim] = List(
+        ReliefClaim("XAIS12345678900", None, CF, "2025", "12345", None, LocalDateTime.parse("2024-10-01T12:13:48.763")),
+        ReliefClaim("XAIS12345678901", None, CSGI, "2024", "1234567890", None, LocalDateTime.parse("2024-10-01T12:13:48.763"))
+      )
+
+      ProfitOrLossJourneyAnswers.apply(Option(200), reliefClaims = claims, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
+        goodsAndServicesForYourOwnUse = true,
+        Option(200),
+        None,
+        Option(List(CarryItForward, DeductFromOtherTypes)),
+        None,
+        previousUnusedLosses = false,
+        None,
+        None)
+
     }
   }
 

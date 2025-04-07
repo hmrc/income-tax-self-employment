@@ -20,6 +20,7 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
 import connectors.HipConnector
 import mocks.services.MockReliefClaimsService
+import mocks.services.MockReliefClaimsService.mockInstance
 import models.common.{JourneyContextWithNino, Nino, TaxYear}
 import models.connector.ReliefClaimType
 import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
@@ -35,10 +36,10 @@ import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.{CarryItForward, De
 import models.frontend.adjustments._
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
 import org.mockito.MockitoSugar.{reset, times, verify, when}
-import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.{BeforeAndAfterEach, EitherValues}
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.libs.json.Json
@@ -50,11 +51,16 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.BaseSpec.{businessId, hc, journeyCtxWithNino}
 import utils.EitherTTestOps.convertScalaFuture
 
-import java.time.{LocalDate, LocalDateTime}
+import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrivenPropertyChecks with Matchers with BeforeAndAfterEach {
+class ProfitOrLossAnswersServiceImplSpec
+    extends AnyWordSpecLike
+    with TableDrivenPropertyChecks
+    with Matchers
+    with BeforeAndAfterEach
+    with EitherValues {
 
   val downstreamError: SingleDownstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
   val notFoundError: SingleDownstreamError   = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
@@ -302,8 +308,6 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
         )
       when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(EitherT.rightT(Right(())))
-      /* when(mockHipConnector.deleteBroughtForwardLoss(eqTo(nino), eqTo(taxYear), eqTo(lossId))(any(), any()))
-        .thenReturn(EitherT.rightT(Right(())))*/
 
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
 
@@ -355,6 +359,76 @@ class ProfitOrLossAnswersServiceImplSpec extends AnyWordSpecLike with TableDrive
       assert(result == downstreamError.asLeft)
       assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
       assert(repository.lastUpsertedAnswer === None)
+    }
+  }
+
+  "getProfitOrLoss" must {
+
+    "must return ProfitOrLossJourneyAnswers when the API's returns data" in new StubbedService {
+
+      override val ifsConnector: StubIFSConnector =
+        StubIFSConnector(
+          getAnnualSummariesResult = api1803SuccessResponseWithAAType.asRight
+        )
+
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(List(testReliefClaim(testClaimId1, ReliefClaimType.CF)))
+
+      val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] = service.getProfitOrLoss(journeyCtxWithNino).value.futureValue
+
+      val expectedResult: Option[ProfitOrLossJourneyAnswers] =
+        Option(
+          ProfitOrLossJourneyAnswers(
+            goodsAndServicesForYourOwnUse = true,
+            goodsAndServicesAmount = Option(200),
+            claimLossRelief = None,
+            whatDoYouWantToDoWithLoss = Option(List(CarryItForward)),
+            carryLossForward = None,
+            previousUnusedLosses = false,
+            unusedLossAmount = None,
+            whichYearIsLossReported = None
+          ))
+
+      assert(result.value === expectedResult)
+    }
+
+    "must return ProfitOrLossJourneyAnswers when the API's returns no data and no data exists in the database" in new StubbedService {
+
+      override val ifsConnector: StubIFSConnector =
+        StubIFSConnector(
+          getAnnualSummariesResult = api1803SuccessResponseWithAAType.asRight
+        )
+
+      override val repository: StubJourneyAnswersRepository                     = StubJourneyAnswersRepository(
+        getAnswer = None
+      )
+
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(Nil)
+
+      val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] = service.getProfitOrLoss(journeyCtxWithNino).value.futureValue
+
+      assert(result.value === None)
+    }
+
+    "must return error when the downstream api 'getAllReliefClaims' fails to get the data" in new StubbedService {
+
+      when(mockInstance.getAllReliefClaims(eqTo(journeyCtxWithNino))(any[HeaderCarrier])).thenReturn(EitherT.leftT(downstreamError))
+      val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] = service.getProfitOrLoss(journeyCtxWithNino).value.futureValue
+
+      assert(result === downstreamError.asLeft)
+    }
+
+    "must return error when the downstream api 'listBroughtForwardLossesResult' fails to get the data" in new StubbedService {
+
+      override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+        StubIFSBusinessDetailsConnector(
+          listBroughtForwardLossesResult = downstreamError.asLeft
+        )
+
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(List(testReliefClaim(testClaimId1, ReliefClaimType.CF)))
+
+      val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] = service.getProfitOrLoss(journeyCtxWithNino).value.futureValue
+
+      assert(result === downstreamError.asLeft)
     }
   }
 

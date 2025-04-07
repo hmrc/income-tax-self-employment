@@ -17,6 +17,7 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
+import cats.implicits._
 import connectors.{HipConnector, IFSBusinessDetailsConnector, IFSConnector}
 import models.common.{JourneyContextWithNino, JourneyName, Nino, TaxYear}
 import models.connector.api_1500.CreateBroughtForwardLossRequestData
@@ -60,7 +61,22 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
   def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
     for {
       optProfitOrLoss <- getDbAnswers(ctx)
-    } yield optProfitOrLoss
+      claims <- reliefClaimsService.getAllReliefClaims(ctx)
+      optLossData <- getBroughtForwardLossByBusinessId(ctx)
+      maybeAnnualSummaries <- getAnnualSummariesGoodsAndServicesOwnUse(ctx)
+    } yield {
+      (optProfitOrLoss, claims) match {
+        case (Some(_), Nil) => optProfitOrLoss
+        case (None, `claims`) if claims.nonEmpty => Option(ProfitOrLossJourneyAnswers.apply(maybeAnnualSummaries, claims, optLossData))
+        case _ => None
+      }
+    }
+
+  private def getAnnualSummariesGoodsAndServicesOwnUse[A](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BigDecimal]] =
+    EitherT.liftF(ifsConnector.getAnnualSummaries(ctx).map {
+      case Right(annualSummaries) => annualSummaries.annualAdjustments.flatMap(_.goodsAndServicesOwnUse)
+      case Left(_)                => None
+    })
 
   private def handleAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
