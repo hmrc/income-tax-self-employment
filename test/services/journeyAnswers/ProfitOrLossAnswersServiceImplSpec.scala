@@ -380,7 +380,7 @@ class ProfitOrLossAnswersServiceImplSpec
           ProfitOrLossJourneyAnswers(
             goodsAndServicesForYourOwnUse = true,
             goodsAndServicesAmount = Option(200),
-            claimLossRelief = None,
+            claimLossRelief = Option(true),
             whatDoYouWantToDoWithLoss = Option(List(CarryItForward)),
             carryLossForward = None,
             previousUnusedLosses = false,
@@ -391,7 +391,7 @@ class ProfitOrLossAnswersServiceImplSpec
       assert(result.value === expectedResult)
     }
 
-    "must return ProfitOrLossJourneyAnswers when the API's returns no data and no data exists in the database" in new StubbedService {
+    "must return None when the API's returns no data" in new StubbedService {
 
       override val ifsConnector: StubIFSConnector =
         StubIFSConnector(

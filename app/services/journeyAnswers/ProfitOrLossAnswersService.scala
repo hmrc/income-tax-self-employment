@@ -60,14 +60,12 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 
   def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
     for {
-      optProfitOrLoss <- getDbAnswers(ctx)
       claims <- reliefClaimsService.getAllReliefClaims(ctx)
       optLossData <- getBroughtForwardLossByBusinessId(ctx)
       maybeAnnualSummaries <- getAnnualSummariesGoodsAndServicesOwnUse(ctx)
     } yield {
-      (optProfitOrLoss, claims) match {
-        case (Some(_), Nil) => optProfitOrLoss
-        case (None, `claims`) if claims.nonEmpty => Option(ProfitOrLossJourneyAnswers.apply(maybeAnnualSummaries, claims, optLossData))
+      claims match {
+        case `claims` if claims.nonEmpty => Option(ProfitOrLossJourneyAnswers.apply(maybeAnnualSummaries, claims, optLossData))
         case _ => None
       }
     }

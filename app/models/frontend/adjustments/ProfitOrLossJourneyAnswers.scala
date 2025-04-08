@@ -59,7 +59,7 @@ object ProfitOrLossJourneyAnswers {
      ProfitOrLossJourneyAnswers(
       goodsAndServicesForYourOwnUse = goodsAndServicesOwnUse.isDefined,
       goodsAndServicesAmount = goodsAndServicesOwnUse,
-      claimLossRelief = None, // TODO
+      claimLossRelief = whatDoYouWantTodo.map(_.nonEmpty),
       whatDoYouWantToDoWithLoss = whatDoYouWantTodo,
       carryLossForward = None, // TODO
       previousUnusedLosses = unusedLossAmount.isDefined,

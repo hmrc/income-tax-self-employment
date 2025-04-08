@@ -94,7 +94,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
       ProfitOrLossJourneyAnswers.apply(None, reliefClaims = Nil, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = false,
         None,
-        None,
+        Option(false),
         Option(List()),
         None,
         previousUnusedLosses = false,
@@ -107,7 +107,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
       ProfitOrLossJourneyAnswers.apply(Option(200), reliefClaims = Nil, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
         Option(200),
-        None,
+        Option(false),
         Option(List()),
         None,
         previousUnusedLosses = false,
@@ -125,7 +125,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
       ProfitOrLossJourneyAnswers.apply(Option(200), reliefClaims = claims, optLossData = lossData) shouldEqual ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
         Option(200),
-        None,
+        Option(true),
         Option(List(CarryItForward)),
         None,
         previousUnusedLosses = true,
@@ -140,10 +140,10 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
         ReliefClaim("XAIS12345678901", None, CSGI, "2024", "1234567890", None, LocalDateTime.parse("2024-10-01T12:13:48.763"))
       )
 
-      ProfitOrLossJourneyAnswers.apply(Option(200), reliefClaims = claims, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
-        goodsAndServicesForYourOwnUse = true,
-        Option(200),
+      ProfitOrLossJourneyAnswers.apply(None, reliefClaims = claims, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
+        goodsAndServicesForYourOwnUse = false,
         None,
+        Option(true),
         Option(List(CarryItForward, DeductFromOtherTypes)),
         None,
         previousUnusedLosses = false,
