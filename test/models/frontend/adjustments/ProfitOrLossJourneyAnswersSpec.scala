@@ -96,7 +96,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
         None,
         Option(false),
         Option(List()),
-        None,
+        Option(false),
         previousUnusedLosses = false,
         None,
         None)
@@ -109,7 +109,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
         Option(200),
         Option(false),
         Option(List()),
-        None,
+        Option(false),
         previousUnusedLosses = false,
         None,
         None)
@@ -127,7 +127,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
         Option(200),
         Option(true),
         Option(List(CarryItForward)),
-        None,
+        Option(true),
         previousUnusedLosses = true,
         Option(400),
         Option(WhichYearIsLossReported.Year2018to2019)
@@ -145,7 +145,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
         None,
         Option(true),
         Option(List(CarryItForward, DeductFromOtherTypes)),
-        None,
+        Option(true),
         previousUnusedLosses = false,
         None,
         None)

@@ -64,10 +64,9 @@ class CommonDownstreamParserSpec extends AnyWordSpecLike with PagerDutyAware wit
 
     forAll(cases) { case (status, expectedKey, expectedStatus) =>
       s"return a pager duty $expectedKey and http status $expectedStatus for an error response with status=$status" in new PagerDutyAware {
-        val parser = DownstreamParser.CommonDownstreamParser("method", "url", HttpResponse(status, ""))
+        val parser: CommonDownstreamParser = DownstreamParser.CommonDownstreamParser("method", "url", HttpResponse(status, ""))
 
-        val result = parser.pagerDutyError(HttpResponse(status, ""))
-
+        val result: DownstreamError = parser.pagerDutyError(HttpResponse(status, ""))
         assert(result.status === expectedStatus)
         assert(loggedErrors.exists(_.contains(expectedKey.toString)) === true)
       }

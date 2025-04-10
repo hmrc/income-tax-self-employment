@@ -95,7 +95,7 @@ class ProfitOrLossAnswersServiceImplSpec
     goodsAndServicesAmount = Option(BigDecimal(100)),
     claimLossRelief = Option(true),
     whatDoYouWantToDoWithLoss = Option(doWithLoss),
-    carryLossForward = Option(true),
+    carryLossForward = None,
     previousUnusedLosses = true,
     unusedLossAmount = Option(BigDecimal(200)),
     whichYearIsLossReported = Option(WhichYearIsLossReported.Year2022to2023)
@@ -109,7 +109,7 @@ class ProfitOrLossAnswersServiceImplSpec
         Option(200),
         Option(true),
         None,
-        Option(true),
+        None,
         previousUnusedLosses = true,
         Option(unusedLossAmount),
         Option(WhichYearIsLossReported.Year2018to2019)
@@ -382,7 +382,7 @@ class ProfitOrLossAnswersServiceImplSpec
             goodsAndServicesAmount = Option(200),
             claimLossRelief = Option(true),
             whatDoYouWantToDoWithLoss = Option(List(CarryItForward)),
-            carryLossForward = None,
+            carryLossForward = Option(true),
             previousUnusedLosses = false,
             unusedLossAmount = None,
             whichYearIsLossReported = None
@@ -549,6 +549,7 @@ class ProfitOrLossAnswersServiceImplSpec
         verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(
           any[HeaderCarrier])
       }
+
       "Remove both options if the user deselects both" in new StubbedService {
         val oldAnswers: List[ReliefClaim] =
           List(testReliefClaim(testClaimId1, ReliefClaimType.CF), testReliefClaim(testClaimId2, ReliefClaimType.CSGI))

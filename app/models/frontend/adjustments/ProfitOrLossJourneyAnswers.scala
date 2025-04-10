@@ -24,6 +24,7 @@ import models.connector.common.ReliefClaim
 import models.connector.{api_1500, api_1501}
 import models.database.adjustments.ProfitOrLossDb
 import models.frontend.FrontendAnswers
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.CarryItForward
 import play.api.libs.json._
 
 case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,     // db
@@ -61,7 +62,7 @@ object ProfitOrLossJourneyAnswers {
       goodsAndServicesAmount = goodsAndServicesOwnUse,
       claimLossRelief = whatDoYouWantTodo.map(_.nonEmpty),
       whatDoYouWantToDoWithLoss = whatDoYouWantTodo,
-      carryLossForward = None, // TODO
+      carryLossForward = whatDoYouWantTodo.map(_.contains(CarryItForward)),
       previousUnusedLosses = unusedLossAmount.isDefined,
       unusedLossAmount = unusedLossAmount,
       whichYearIsLossReported = whichYearIsLossReported
