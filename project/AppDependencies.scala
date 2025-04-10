@@ -33,25 +33,25 @@ object AppDependencies {
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-30" % bootstrapVersion,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.14.2",
-    "org.typelevel"                %% "cats-core"                 % "2.9.0",
-    "com.beachape"                 %% "enumeratum"                % "1.7.3",
-    "com.beachape"                 %% "enumeratum-play-json"      % "1.7.3" excludeAll (jacksonAndPlayExclusions *),
-    "org.codehaus.janino"           % "janino"                    % "3.1.11" // it's required by logback for conditional logging
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.18.0",
+    "org.typelevel"                %% "cats-core"                 % "2.12.0",
+    "com.beachape"                 %% "enumeratum"                % "1.7.5",
+    "com.beachape"                 %% "enumeratum-play-json"      % "1.8.2" excludeAll (jacksonAndPlayExclusions *),
+    "org.codehaus.janino"           % "janino"                    % "3.1.12" // it's required by logback for conditional logging
   )
 
   val test: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"            %% "bootstrap-test-play-30"   % bootstrapVersion,
     "uk.gov.hmrc.mongo"      %% "hmrc-mongo-test-play-30"  % hmrcMongoVersion,
     "org.playframework"      %% "play-test"                % current,
-    "org.scalatest"          %% "scalatest"                % "3.2.15",
-    "org.scalatestplus"      %% "scalacheck-1-15"          % "3.2.10.0",
+    "org.scalatest"          %% "scalatest"                % "3.2.19",
+    "org.scalatestplus"      %% "scalacheck-1-15"          % "3.2.11.0",
     "org.mockito"            %% "mockito-scala-scalatest"  % "1.17.37",
-    "org.typelevel"          %% "cats-core"                % "2.9.0",
-    "com.vladsch.flexmark"    % "flexmark-all"             % "0.64.6",
+    "org.typelevel"          %% "cats-core"                % "2.12.0",
+    "com.vladsch.flexmark"    % "flexmark-all"             % "0.64.8",
     "org.scalatestplus.play" %% "scalatestplus-play"       % "7.0.1",
-    "com.github.tomakehurst"  % "wiremock-jre8-standalone" % "2.35.1",
-    "org.scalamock"          %% "scalamock"                % "5.2.0"
+    "com.github.tomakehurst"  % "wiremock-jre8-standalone" % "3.0.1",
+    "org.scalamock"          %% "scalamock"                % "6.0.0"
   ).map(_ % s"$Test, $IntegrationTest")
 
 }

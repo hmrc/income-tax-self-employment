@@ -51,7 +51,14 @@ class AuditTradingAllowanceSpec extends BaseSpec with Matchers with OptionValues
         incomeJourneyAnswersGen.sample.value.copy(tradingAllowance = UseTradingAllowance, howMuchTradingAllowance = Option(Maximum))
 
       val result = AuditTradingAllowance.apply(journeyCtxWithNino, None, incomeJourneyAnswers)
-      result shouldBe AuditTradingAllowance(nino, BusinessId("SJPR05893938418"), None, years, isTradingIncomeAllowanceBeingUsed = true, Option(true), None)
+      result shouldBe AuditTradingAllowance(
+        nino,
+        BusinessId("SJPR05893938418"),
+        None,
+        years,
+        isTradingIncomeAllowanceBeingUsed = true,
+        Option(true),
+        None)
     }
 
     "convert the user answers to Trading allowance  when UseTradingAllowance is selected and howMuchTradingAllowance is selected as 'LessThan'" in {
@@ -74,7 +81,14 @@ class AuditTradingAllowanceSpec extends BaseSpec with Matchers with OptionValues
     "serialise to json" in {
 
       val tradingAllowance =
-        AuditTradingAllowance(nino, BusinessId("SJPR05893938418"), Option("BusinessName"), years, isTradingIncomeAllowanceBeingUsed = true, Option(true), None)
+        AuditTradingAllowance(
+          nino,
+          BusinessId("SJPR05893938418"),
+          Option("BusinessName"),
+          years,
+          isTradingIncomeAllowanceBeingUsed = true,
+          Option(true),
+          None)
 
       Json
         .toJson(tradingAllowance) shouldBe Json.parse(

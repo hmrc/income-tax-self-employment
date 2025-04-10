@@ -42,8 +42,9 @@ object AuditTradingAllowance {
       case DeclareExpenses =>
         AuditTradingAllowance(ctx.nino, ctx.businessId, tradingName, asTys(ctx.taxYear), isTradingIncomeAllowanceBeingUsed = false, None, None)
       case UseTradingAllowance =>
-        val isMaximumTradingIncomeAllowanceBeingUsed: Boolean                      = answers.howMuchTradingAllowance.contains(Maximum)
-        val amountOfTradingIncomeAllowanceUsed: Option[BigDecimal] = if (isMaximumTradingIncomeAllowanceBeingUsed) None else answers.tradingAllowanceAmount
+        val isMaximumTradingIncomeAllowanceBeingUsed: Boolean = answers.howMuchTradingAllowance.contains(Maximum)
+        val amountOfTradingIncomeAllowanceUsed: Option[BigDecimal] =
+          if (isMaximumTradingIncomeAllowanceBeingUsed) None else answers.tradingAllowanceAmount
         AuditTradingAllowance(
           ctx.nino,
           ctx.businessId,
@@ -51,7 +52,8 @@ object AuditTradingAllowance {
           asTys(ctx.taxYear),
           isTradingIncomeAllowanceBeingUsed = true,
           Option(isMaximumTradingIncomeAllowanceBeingUsed),
-          amountOfTradingIncomeAllowanceUsed)
+          amountOfTradingIncomeAllowanceUsed
+        )
     }
 
 }
