@@ -61,14 +61,12 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 
   def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
     for {
-      claims <- reliefClaimsService.getAllReliefClaims(ctx)
-      optLossData <- getBroughtForwardLossByBusinessId(ctx)
+      claims               <- reliefClaimsService.getAllReliefClaims(ctx)
+      optLossData          <- getBroughtForwardLossByBusinessId(ctx)
       maybeAnnualSummaries <- getAnnualSummariesGoodsAndServicesOwnUse(ctx)
-    } yield {
-      claims match {
-        case `claims` if claims.nonEmpty => Option(ProfitOrLossJourneyAnswers.apply(maybeAnnualSummaries, claims, optLossData))
-        case _ => None
-      }
+    } yield claims match {
+      case `claims` if claims.nonEmpty => Option(ProfitOrLossJourneyAnswers.apply(maybeAnnualSummaries, claims, optLossData))
+      case _                           => None
     }
 
   private def getAnnualSummariesGoodsAndServicesOwnUse[A](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BigDecimal]] =
@@ -104,12 +102,11 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       }
     } yield result
 
-  private def getLossClaimData(submittedAnswers: ProfitOrLossJourneyAnswers): Option[Seq[WhatDoYouWantToDoWithLoss]] = {
+  private def getLossClaimData(submittedAnswers: ProfitOrLossJourneyAnswers): Option[Seq[WhatDoYouWantToDoWithLoss]] =
     submittedAnswers.carryLossForward match {
       case Some(carryLossFwd) if carryLossFwd => Option(Seq(CarryItForward))
-      case _ => submittedAnswers.whatDoYouWantToDoWithLoss
+      case _                                  => submittedAnswers.whatDoYouWantToDoWithLoss
     }
-  }
 
   private def getBroughtForwardLossByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[LossData]] = {
     val losses = ifsBusinessDetailsConnector.listBroughtForwardLosses(ctx.nino, ctx.taxYear)

@@ -199,11 +199,11 @@ object StubIFSConnector {
     None
   )
 
-
   val api1803EmptyResponse: SuccessResponseSchema = SuccessResponseSchema.empty
 
   val api1965MatchedResponse: Option[ListSEPeriodSummariesResponse] = Option(
-    ListSEPeriodSummariesResponse(Option(List(PeriodDetails(None, Option(s"${currTaxYear.endYear - 1}-04-06"), Option(s"${currTaxYear.endYear}-04-05"))))))
+    ListSEPeriodSummariesResponse(
+      Option(List(PeriodDetails(None, Option(s"${currTaxYear.endYear - 1}-04-06"), Option(s"${currTaxYear.endYear}-04-05"))))))
 
   val api1786EmptySuccessResponse: api_1786.SuccessResponseSchema =
     api_1786.SuccessResponseSchema(currTaxYearStart, currTaxYearEnd, api_1786.FinancialsType(None, None))

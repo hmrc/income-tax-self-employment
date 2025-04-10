@@ -148,7 +148,8 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
         Option(true),
         previousUnusedLosses = false,
         None,
-        None)
+        None
+      )
 
     }
   }

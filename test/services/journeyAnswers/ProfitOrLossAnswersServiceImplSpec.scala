@@ -398,7 +398,7 @@ class ProfitOrLossAnswersServiceImplSpec
           getAnnualSummariesResult = api1803SuccessResponseWithAAType.asRight
         )
 
-      override val repository: StubJourneyAnswersRepository                     = StubJourneyAnswersRepository(
+      override val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository(
         getAnswer = None
       )
 

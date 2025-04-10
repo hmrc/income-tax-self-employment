@@ -47,7 +47,9 @@ case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,   
 object ProfitOrLossJourneyAnswers {
   implicit val formats: OFormat[ProfitOrLossJourneyAnswers] = Json.format[ProfitOrLossJourneyAnswers]
 
-  def apply(goodsAndServicesOwnUse: Option[BigDecimal], reliefClaims: List[ReliefClaim], optLossData: Option[LossData]): ProfitOrLossJourneyAnswers = {
+  def apply(goodsAndServicesOwnUse: Option[BigDecimal],
+            reliefClaims: List[ReliefClaim],
+            optLossData: Option[LossData]): ProfitOrLossJourneyAnswers = {
 
     val whatDoYouWantTodo: Option[Seq[WhatDoYouWantToDoWithLoss]] = Option(
       reliefClaims.map(rc => WhatDoYouWantToDoWithLoss.fromReliefClaimType(rc.reliefClaimed)))
@@ -57,7 +59,7 @@ object ProfitOrLossJourneyAnswers {
 
     val unusedLossAmount: Option[BigDecimal] = optLossData map (lossData => lossData.lossAmount)
 
-     ProfitOrLossJourneyAnswers(
+    ProfitOrLossJourneyAnswers(
       goodsAndServicesForYourOwnUse = goodsAndServicesOwnUse.isDefined,
       goodsAndServicesAmount = goodsAndServicesOwnUse,
       claimLossRelief = whatDoYouWantTodo.map(_.nonEmpty),

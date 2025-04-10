@@ -51,15 +51,14 @@ object WhichYearIsLossReported extends Enumerable.Implicits {
   implicit val enumerable: Enumerable[WhichYearIsLossReported] =
     Enumerable(values.map(v => v.toString -> v): _*)
 
-   def convertToWhichYearIsLossReported(apiTaxYear: String): WithName with WhichYearIsLossReported = {
-     apiTaxYear match {
-       case "2018-19" => Year2018to2019
-       case "2019-20" => Year2019to2020
-       case "2020-21" => Year2020to2021
-       case "2021-22" => Year2021to2022
-       case "2022-23" => Year2022to2023
-       case _ => throw new Exception("Unsupported year")
-     }
+  def convertToWhichYearIsLossReported(apiTaxYear: String): WithName with WhichYearIsLossReported =
+    apiTaxYear match {
+      case "2018-19" => Year2018to2019
+      case "2019-20" => Year2019to2020
+      case "2020-21" => Year2020to2021
+      case "2021-22" => Year2021to2022
+      case "2022-23" => Year2022to2023
+      case _         => throw new Exception("Unsupported year")
+    }
 
-   }
 }
