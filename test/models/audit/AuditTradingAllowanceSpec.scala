@@ -41,7 +41,7 @@ class AuditTradingAllowanceSpec extends BaseSpec with Matchers with OptionValues
         BusinessId("SJPR05893938418"),
         Option("tradingName"),
         years,
-        useTradingAllowance = false,
+        isTradingIncomeAllowanceBeingUsed = false,
         None,
         None)
     }
@@ -51,14 +51,14 @@ class AuditTradingAllowanceSpec extends BaseSpec with Matchers with OptionValues
         incomeJourneyAnswersGen.sample.value.copy(tradingAllowance = UseTradingAllowance, howMuchTradingAllowance = Option(Maximum))
 
       val result = AuditTradingAllowance.apply(journeyCtxWithNino, None, incomeJourneyAnswers)
-      result shouldBe AuditTradingAllowance(nino, BusinessId("SJPR05893938418"), None, years, useTradingAllowance = true, Option(true), None)
+      result shouldBe AuditTradingAllowance(nino, BusinessId("SJPR05893938418"), None, years, isTradingIncomeAllowanceBeingUsed = true, Option(true), None)
     }
 
     "convert the user answers to Trading allowance  when UseTradingAllowance is selected and howMuchTradingAllowance is selected as 'LessThan'" in {
       val incomeJourneyAnswers = incomeJourneyAnswersGen.sample.value.copy(
         tradingAllowance = UseTradingAllowance,
         howMuchTradingAllowance = Option(LessThan),
-        tradingAllowanceAmount = Option(20.00))
+        tradingAllowanceAmount = Option(BigDecimal(20.00)))
 
       val result = AuditTradingAllowance.apply(journeyCtxWithNino, None, incomeJourneyAnswers)
       result shouldBe AuditTradingAllowance(
@@ -66,19 +66,19 @@ class AuditTradingAllowanceSpec extends BaseSpec with Matchers with OptionValues
         BusinessId("SJPR05893938418"),
         None,
         years,
-        useTradingAllowance = true,
+        isTradingIncomeAllowanceBeingUsed = true,
         Option(false),
-        Option(20.00))
+        Option(BigDecimal(20.00)))
     }
 
     "serialise to json" in {
 
       val tradingAllowance =
-        AuditTradingAllowance(nino, BusinessId("SJPR05893938418"), Option("BusinessName"), years, useTradingAllowance = true, Option(true), None)
+        AuditTradingAllowance(nino, BusinessId("SJPR05893938418"), Option("BusinessName"), years, isTradingIncomeAllowanceBeingUsed = true, Option(true), None)
 
       Json
         .toJson(tradingAllowance) shouldBe Json.parse(
-        """{"nino":"nino","businessId":"SJPR05893938418","businessName":"BusinessName","taxYear":"24-25","useTradingAllowance":true,"useMaximum":true}""")
+        """{"nino":"nino","businessId":"SJPR05893938418","businessName":"BusinessName","taxYear":"24-25","isTradingIncomeAllowanceBeingUsed":true,"isMaximumTradingIncomeAllowanceBeingUsed":true}""")
 
     }
   }

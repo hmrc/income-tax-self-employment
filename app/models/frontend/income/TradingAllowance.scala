@@ -22,7 +22,7 @@ sealed trait TradingAllowance
 
 object TradingAllowance extends Enumerable.Implicits {
 
-  case object UseTradingAllowance extends WithName("useTradingAllowance") with TradingAllowance
+  case object UseTradingAllowance extends WithName("isTradingIncomeAllowanceBeingUsed") with TradingAllowance
   case object DeclareExpenses     extends WithName("declareExpenses") with TradingAllowance
 
   val values: Seq[TradingAllowance] = Seq(
