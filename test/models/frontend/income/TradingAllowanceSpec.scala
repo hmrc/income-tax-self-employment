@@ -32,12 +32,12 @@ class TradingAllowanceSpec extends AnyWordSpec with Matchers {
     }
 
     "read from JSON correctly" in {
-      JsString("isTradingIncomeAllowanceBeingUsed").as[TradingAllowance] shouldBe TradingAllowance.UseTradingAllowance
+      JsString("useTradingAllowance").as[TradingAllowance] shouldBe TradingAllowance.UseTradingAllowance
       JsString("declareExpenses").as[TradingAllowance] shouldBe TradingAllowance.DeclareExpenses
     }
 
     "provide the correct enumerable instance" in {
-      TradingAllowance.enumerable.withName("isTradingIncomeAllowanceBeingUsed") shouldBe Some(TradingAllowance.UseTradingAllowance)
+      TradingAllowance.enumerable.withName("useTradingAllowance") shouldBe Some(TradingAllowance.UseTradingAllowance)
       TradingAllowance.enumerable.withName("declareExpenses") shouldBe Some(TradingAllowance.DeclareExpenses)
       TradingAllowance.enumerable.withName("invalid") shouldBe None
     }

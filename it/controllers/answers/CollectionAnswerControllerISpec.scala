@@ -1,9 +1,25 @@
+/*
+ * Copyright 2025 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package controllers.answers
 
 import base.IntegrationBaseSpec
 import helpers.AuthStub
 import models.common.JourneyName.VehicleDetails
-import models.database.expenses.travel.{CarOrGoodsVehicle, FlatRate, VehicleDetailsDb}
+import models.database.expenses.travel._
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
@@ -15,7 +31,7 @@ class CollectionAnswerControllerISpec extends IntegrationBaseSpec with AuthStub 
   def url(journey: String, idx: Int): String =
     s"/answers/users/$testNino/businesses/$testBusinessId/years/${testTaxYear.endYear}/journeys/$journey/${idx.toString}"
 
-  val testSection = VehicleDetailsDb(
+  val testSection: VehicleDetailsDb = VehicleDetailsDb(
     description = Some("test"),
     vehicleType = Some(CarOrGoodsVehicle),
     usedSimplifiedExpenses = Some(true),
@@ -25,8 +41,8 @@ class CollectionAnswerControllerISpec extends IntegrationBaseSpec with AuthStub 
     costsOutsideFlatRate = Some(BigDecimal("100.00"))
   )
 
-  val testSection2 = testSection.copy(description = Some("test2"))
-  val testSection3 = testSection.copy(description = Some("test3"))
+  val testSection2: VehicleDetailsDb = testSection.copy(description = Some("test2"))
+  val testSection3: VehicleDetailsDb = testSection.copy(description = Some("test3"))
 
   "GET /answers/users/:nino/businesses/:business/years/:taxYear/sections/:section/:idx" when {
     "data exists" should {
