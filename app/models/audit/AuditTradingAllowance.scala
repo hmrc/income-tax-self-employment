@@ -27,9 +27,9 @@ case class AuditTradingAllowance(nino: Nino,
                                  businessId: BusinessId,
                                  businessName: Option[String],
                                  taxYear: String,
-                                 useTradingAllowance: Boolean,
-                                 useMaximum: Option[Boolean],
-                                 tradingAllowanceUsed: Option[BigDecimal])
+                                 isTradingIncomeAllowanceBeingUsed: Boolean,
+                                 isMaximumTradingIncomeAllowanceBeingUsed: Option[Boolean],
+                                 amountOfTradingIncomeAllowanceUsed: Option[BigDecimal])
 
 object AuditTradingAllowance {
 
@@ -40,18 +40,20 @@ object AuditTradingAllowance {
   def apply(ctx: JourneyContextWithNino, tradingName: Option[String], answers: IncomeJourneyAnswers): AuditTradingAllowance =
     answers.tradingAllowance match {
       case DeclareExpenses =>
-        AuditTradingAllowance(ctx.nino, ctx.businessId, tradingName, asTys(ctx.taxYear), useTradingAllowance = false, None, None)
+        AuditTradingAllowance(ctx.nino, ctx.businessId, tradingName, asTys(ctx.taxYear), isTradingIncomeAllowanceBeingUsed = false, None, None)
       case UseTradingAllowance =>
-        val useMaximum: Boolean                      = answers.howMuchTradingAllowance.contains(Maximum)
-        val tradingAllowanceUsed: Option[BigDecimal] = if (useMaximum) None else answers.tradingAllowanceAmount
+        val isMaximumTradingIncomeAllowanceBeingUsed: Boolean = answers.howMuchTradingAllowance.contains(Maximum)
+        val amountOfTradingIncomeAllowanceUsed: Option[BigDecimal] =
+          if (isMaximumTradingIncomeAllowanceBeingUsed) None else answers.tradingAllowanceAmount
         AuditTradingAllowance(
           ctx.nino,
           ctx.businessId,
           tradingName,
           asTys(ctx.taxYear),
-          useTradingAllowance = true,
-          Option(useMaximum),
-          tradingAllowanceUsed)
+          isTradingIncomeAllowanceBeingUsed = true,
+          Option(isMaximumTradingIncomeAllowanceBeingUsed),
+          amountOfTradingIncomeAllowanceUsed
+        )
     }
 
 }
