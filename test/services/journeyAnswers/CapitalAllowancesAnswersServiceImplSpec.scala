@@ -63,8 +63,8 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
 
       service.saveAnswers[ZeroEmissionCarsDb, ZeroEmissionCarsAnswers](ZeroEmissionCars, taxYear, businessId, nino).map { result =>
         assert(result === ().asRight)
-        assert(connector.upsertAnnualSummariesSubmissionData === Some(answers))
-        assert(repository.lastUpsertedAnswer === Some(Json.toJson(answers.toDbModel)))
+        assert(connector.upsertAnnualSummariesSubmissionData === Option(answers))
+        assert(repository.lastUpsertedAnswer === Option(Json.toJson(answers.toDbModel)))
       }
     }
   }
@@ -74,7 +74,7 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       val answers = genOne(zeroEmissionCarsAnswersGen).toDbModel.get
       service.persistAnswers[ZeroEmissionCarsDb](businessId, currTaxYear, mtditid, ZeroEmissionCars, answers).value.map { result =>
         assert(result === ().asRight)
-        assert(repository.lastUpsertedAnswer === Some(Json.toJson(answers)))
+        assert(repository.lastUpsertedAnswer === Option(Json.toJson(answers)))
       }
     }
   }
@@ -94,10 +94,10 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       val service = new CapitalAllowancesAnswersServiceImpl(
         connector,
         StubJourneyAnswersRepository(
-          getAnswer = Some(journeyAnswers)
+          getAnswer = Option(journeyAnswers)
         ))
       val result = service.getCapitalAllowancesTailoring(journeyCtxWithNino).rightValue
-      assert(result === Some(tailoringAnswers))
+      assert(result === Option(tailoringAnswers))
     }
   }
 
@@ -114,12 +114,12 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       val services = new CapitalAllowancesAnswersServiceImpl(
         connector,
         StubJourneyAnswersRepository(
-          getAnswer = Some(journeyAnswers)
+          getAnswer = Option(journeyAnswers)
         ))
       val result          = services.getZeroEmissionCars(journeyCtxWithNino).rightValue
       val expectedAnswers = ZeroEmissionCarsAnswers(dbAnswers, api1803SuccessResponse)
 
-      result shouldBe Some(expectedAnswers)
+      result shouldBe Option(expectedAnswers)
     }
   }
 
@@ -136,12 +136,12 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       val services = new CapitalAllowancesAnswersServiceImpl(
         connector,
         StubJourneyAnswersRepository(
-          getAnswer = Some(journeyAnswers)
+          getAnswer = Option(journeyAnswers)
         ))
       val result          = services.getZeroEmissionGoodsVehicle(journeyCtxWithNino).rightValue
       val expectedAnswers = ZeroEmissionGoodsVehicleAnswers(dbAnswers, api1803SuccessResponse)
 
-      result shouldBe Some(expectedAnswers)
+      result shouldBe Option(expectedAnswers)
     }
   }
 
@@ -158,14 +158,14 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       val services = new CapitalAllowancesAnswersServiceImpl(
         connector,
         StubJourneyAnswersRepository(
-          getAnswer = Some(journeyAnswers)
+          getAnswer = Option(journeyAnswers)
         ))
       val result = services.getAnnualInvestmentAllowance(journeyCtxWithNino).rightValue
       val expectedAnswers = AnnualInvestmentAllowanceAnswers(
         dbAnswers.annualInvestmentAllowance,
         api1803SuccessResponse.annualAllowances.flatMap(_.annualInvestmentAllowance))
 
-      result shouldBe Some(expectedAnswers)
+      result shouldBe Option(expectedAnswers)
     }
   }
 

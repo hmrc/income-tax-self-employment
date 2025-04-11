@@ -17,6 +17,7 @@
 package services.journeyAnswers
 
 import cats.data.EitherT
+import cats.implicits._
 import connectors.{HipConnector, IFSBusinessDetailsConnector, IFSConnector}
 import models.common.{JourneyContextWithNino, JourneyName, Nino, TaxYear}
 import models.connector.api_1500.CreateBroughtForwardLossRequestData
@@ -25,7 +26,8 @@ import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
 import models.domain.ApiResultT
 import models.error.ServiceError
-import models.frontend.adjustments.ProfitOrLossJourneyAnswers
+import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhatDoYouWantToDoWithLoss}
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.CarryItForward
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
@@ -59,8 +61,19 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
 
   def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
     for {
-      optProfitOrLoss <- getDbAnswers(ctx)
-    } yield optProfitOrLoss
+      claims               <- reliefClaimsService.getAllReliefClaims(ctx)
+      optLossData          <- getBroughtForwardLossByBusinessId(ctx)
+      maybeAnnualSummaries <- getAnnualSummariesGoodsAndServicesOwnUse(ctx)
+    } yield claims match {
+      case `claims` if claims.nonEmpty => Option(ProfitOrLossJourneyAnswers.apply(maybeAnnualSummaries, claims, optLossData))
+      case _                           => None
+    }
+
+  private def getAnnualSummariesGoodsAndServicesOwnUse[A](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BigDecimal]] =
+    EitherT.liftF(ifsConnector.getAnnualSummaries(ctx).map {
+      case Right(annualSummaries) => annualSummaries.annualAdjustments.flatMap(_.goodsAndServicesOwnUse)
+      case Left(_)                => None
+    })
 
   private def handleAnnualSummaries(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
@@ -76,7 +89,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       reliefClaims <- reliefClaimsService.getAllReliefClaims(ctx)
-      optLossClaimAnswer = submittedAnswers.whatDoYouWantToDoWithLoss
+      optLossClaimAnswer: Option[Seq[WhatDoYouWantToDoWithLoss]] = getLossClaimData(submittedAnswers)
       result <- (reliefClaims, optLossClaimAnswer) match {
         case (Nil, Some(lossClaimAnswer)) if lossClaimAnswer.nonEmpty =>
           reliefClaimsService.createReliefClaims(ctx, lossClaimAnswer)
@@ -88,6 +101,12 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
           EitherT.rightT[Future, ServiceError](())
       }
     } yield result
+
+  private def getLossClaimData(submittedAnswers: ProfitOrLossJourneyAnswers): Option[Seq[WhatDoYouWantToDoWithLoss]] =
+    submittedAnswers.carryLossForward match {
+      case Some(carryLossFwd) if carryLossFwd => Option(Seq(CarryItForward))
+      case _                                  => submittedAnswers.whatDoYouWantToDoWithLoss
+    }
 
   private def getBroughtForwardLossByBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[LossData]] = {
     val losses = ifsBusinessDetailsConnector.listBroughtForwardLosses(ctx.nino, ctx.taxYear)

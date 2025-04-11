@@ -17,25 +17,26 @@
 package models.frontend.adjustments
 
 import models.common.{Enumerable, WithName}
+
 sealed trait WhichYearIsLossReported {
   val apiTaxYear: String
 }
 
 object WhichYearIsLossReported extends Enumerable.Implicits {
 
-  case object Year2018to2019 extends WithName("2018to2019") with WhichYearIsLossReported {
+  final case object Year2018to2019 extends WithName("2018to2019") with WhichYearIsLossReported {
     val apiTaxYear = "2018-19"
   }
-  case object Year2019to2020 extends WithName("2019to2020") with WhichYearIsLossReported {
+  final case object Year2019to2020 extends WithName("2019to2020") with WhichYearIsLossReported {
     val apiTaxYear = "2019-20"
   }
-  case object Year2020to2021 extends WithName("2020to2021") with WhichYearIsLossReported {
+  final case object Year2020to2021 extends WithName("2020to2021") with WhichYearIsLossReported {
     val apiTaxYear = "2020-21"
   }
-  case object Year2021to2022 extends WithName("2021to2022") with WhichYearIsLossReported {
+  final case object Year2021to2022 extends WithName("2021to2022") with WhichYearIsLossReported {
     val apiTaxYear = "2021-22"
   }
-  case object Year2022to2023 extends WithName("2022to2023") with WhichYearIsLossReported {
+  final case object Year2022to2023 extends WithName("2022to2023") with WhichYearIsLossReported {
     val apiTaxYear = "2022-23"
   }
 
@@ -49,4 +50,15 @@ object WhichYearIsLossReported extends Enumerable.Implicits {
 
   implicit val enumerable: Enumerable[WhichYearIsLossReported] =
     Enumerable(values.map(v => v.toString -> v): _*)
+
+  def convertToWhichYearIsLossReported(apiTaxYear: String): WithName with WhichYearIsLossReported =
+    apiTaxYear match {
+      case "2018-19" => Year2018to2019
+      case "2019-20" => Year2019to2020
+      case "2020-21" => Year2020to2021
+      case "2021-22" => Year2021to2022
+      case "2022-23" => Year2022to2023
+      case _         => throw new Exception("Unsupported year")
+    }
+
 }

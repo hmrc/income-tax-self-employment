@@ -41,7 +41,7 @@ object MockReliefClaimsService {
 
   def createReliefClaims(ctx: JourneyContextWithNino, answers: WhatDoYouWantToDoWithLoss*)(
       returnValue: List[ClaimId] = Nil): ScalaOngoingStubbing[ApiResultT[List[ClaimId]]] =
-    when(mockInstance.createReliefClaims(eqTo(ctx), eqTo(answers))(any(), any()))
+    when(mockInstance.createReliefClaims(eqTo(ctx), any())(any(), any()))
       .thenReturn(EitherT.pure(returnValue))
 
   def updateReliefClaims(ctx: JourneyContextWithNino, oldAnswers: List[ReliefClaim], newAnswers: WhatDoYouWantToDoWithLoss*)(

@@ -19,9 +19,12 @@ package models.frontend.adjustments
 import models.common.JourneyContextWithNino
 import models.connector.api_1500.LossType
 import models.connector.api_1802.request.AnnualAdjustments
+import models.connector.api_1870.LossData
+import models.connector.common.ReliefClaim
 import models.connector.{api_1500, api_1501}
 import models.database.adjustments.ProfitOrLossDb
 import models.frontend.FrontendAnswers
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.CarryItForward
 import play.api.libs.json._
 
 case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,     // db
@@ -34,7 +37,7 @@ case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,   
                                       whichYearIsLossReported: Option[WhichYearIsLossReported])
     extends FrontendAnswers[ProfitOrLossDb] {
 
-  def toDbModel: Option[ProfitOrLossDb] = Some(ProfitOrLossDb(goodsAndServicesForYourOwnUse, claimLossRelief, previousUnusedLosses))
+  def toDbModel: Option[ProfitOrLossDb] = Option(ProfitOrLossDb(goodsAndServicesForYourOwnUse, claimLossRelief, previousUnusedLosses))
   def toDbAnswers: ProfitOrLossDb       = ProfitOrLossDb(goodsAndServicesForYourOwnUse, claimLossRelief, previousUnusedLosses)
 
   override def toDownStreamAnnualAdjustments(current: Option[AnnualAdjustments]): AnnualAdjustments =
@@ -43,6 +46,31 @@ case class ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse: Boolean,   
 
 object ProfitOrLossJourneyAnswers {
   implicit val formats: OFormat[ProfitOrLossJourneyAnswers] = Json.format[ProfitOrLossJourneyAnswers]
+
+  def apply(goodsAndServicesOwnUse: Option[BigDecimal],
+            reliefClaims: List[ReliefClaim],
+            optLossData: Option[LossData]): ProfitOrLossJourneyAnswers = {
+
+    val whatDoYouWantTodo: Option[Seq[WhatDoYouWantToDoWithLoss]] = Option(
+      reliefClaims.map(rc => WhatDoYouWantToDoWithLoss.fromReliefClaimType(rc.reliefClaimed)))
+
+    val whichYearIsLossReported: Option[WhichYearIsLossReported] =
+      optLossData map (lossData => WhichYearIsLossReported.convertToWhichYearIsLossReported(lossData.taxYearBroughtForwardFrom))
+
+    val unusedLossAmount: Option[BigDecimal] = optLossData map (lossData => lossData.lossAmount)
+
+    ProfitOrLossJourneyAnswers(
+      goodsAndServicesForYourOwnUse = goodsAndServicesOwnUse.isDefined,
+      goodsAndServicesAmount = goodsAndServicesOwnUse,
+      claimLossRelief = whatDoYouWantTodo.map(_.nonEmpty),
+      whatDoYouWantToDoWithLoss = whatDoYouWantTodo,
+      carryLossForward = whatDoYouWantTodo.map(_.contains(CarryItForward)),
+      previousUnusedLosses = unusedLossAmount.isDefined,
+      unusedLossAmount = unusedLossAmount,
+      whichYearIsLossReported = whichYearIsLossReported
+    )
+
+  }
 
   def toCreateBroughtForwardLossData(ctx: JourneyContextWithNino,
                                      unusedLossAmount: BigDecimal,

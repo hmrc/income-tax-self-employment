@@ -26,13 +26,13 @@ import models.connector.ReliefClaimType.CF
 import models.connector._
 import models.connector.api_1171.{BusinessDataDetails, BusinessDataDetailsTestData}
 import models.connector.api_1500.LossType
-import models.connector.api_1505.{CreateLossClaimRequestBody, ClaimId}
+import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBody}
 import models.connector.api_1508.GetLossClaimSuccessResponse
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
 import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
-import models.connector.api_1803.{AnnualAllowancesType, SuccessResponseSchema}
+import models.connector.api_1803.{AnnualAdjustmentsType, AnnualAllowancesType, SuccessResponseSchema}
 import models.connector.api_1870.LossData
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
@@ -168,31 +168,42 @@ object StubIFSConnector {
   def api1171SingleBusinessResponse(businessId: BusinessId): api_1171.SuccessResponseSchema =
     api_1171.SuccessResponseSchema(
       OffsetDateTime.now().toString,
-      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Some(List(BusinessDataDetailsTestData.mkExample(businessId))))
+      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Option(List(BusinessDataDetailsTestData.mkExample(businessId))))
     )
 
   def api1171MultipleBusinessResponse(businessIds: List[BusinessId]): api_1171.SuccessResponseSchema = {
     val businessData: List[BusinessDataDetails] = businessIds.map(BusinessDataDetailsTestData.mkExample)
     api_1171.SuccessResponseSchema(
       OffsetDateTime.now().toString,
-      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Some(businessData))
+      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Option(businessData))
     )
   }
 
   val api1803SuccessResponse: SuccessResponseSchema = SuccessResponseSchema(
     None,
-    Some(
+    Option(
       AnnualAllowancesType.emptyAnnualAllowancesType.copy(
-        zeroEmissionsCarAllowance = Some(5000.00),
-        zeroEmissionGoodsVehicleAllowance = Some(5000.00)
+        zeroEmissionsCarAllowance = Option(5000.00),
+        zeroEmissionGoodsVehicleAllowance = Option(5000.00)
+      )),
+    None
+  )
+
+  val api1803SuccessResponseWithAAType: SuccessResponseSchema = SuccessResponseSchema(
+    Option(AnnualAdjustmentsType.empty.copy(goodsAndServicesOwnUse = Option(BigDecimal(200)))),
+    Option(
+      AnnualAllowancesType.emptyAnnualAllowancesType.copy(
+        zeroEmissionsCarAllowance = Option(5000.00),
+        zeroEmissionGoodsVehicleAllowance = Option(5000.00)
       )),
     None
   )
 
   val api1803EmptyResponse: SuccessResponseSchema = SuccessResponseSchema.empty
 
-  val api1965MatchedResponse: Option[ListSEPeriodSummariesResponse] = Some(
-    ListSEPeriodSummariesResponse(Some(List(PeriodDetails(None, Some(s"${currTaxYear.endYear - 1}-04-06"), Some(s"${currTaxYear.endYear}-04-05"))))))
+  val api1965MatchedResponse: Option[ListSEPeriodSummariesResponse] = Option(
+    ListSEPeriodSummariesResponse(
+      Option(List(PeriodDetails(None, Option(s"${currTaxYear.endYear - 1}-04-06"), Option(s"${currTaxYear.endYear}-04-05"))))))
 
   val api1786EmptySuccessResponse: api_1786.SuccessResponseSchema =
     api_1786.SuccessResponseSchema(currTaxYearStart, currTaxYearEnd, api_1786.FinancialsType(None, None))
@@ -202,7 +213,7 @@ object StubIFSConnector {
       currTaxYearStart,
       currTaxYearEnd,
       api_1786.FinancialsType(
-        Some(
+        Option(
           DeductionsType.empty.copy(
             costOfGoods =
               Some(SelfEmploymentDeductionsDetailTypePosNeg(amount = BigDecimal(100.00).some, disallowableAmount = BigDecimal(100.00).some)),
