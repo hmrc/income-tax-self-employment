@@ -26,8 +26,8 @@ import models.connector.api_1870.LossData
 import models.database.adjustments.ProfitOrLossDb
 import models.domain.ApiResultT
 import models.error.ServiceError
-import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhatDoYouWantToDoWithLoss}
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.CarryItForward
+import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhatDoYouWantToDoWithLoss}
 import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
@@ -64,9 +64,9 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       claims               <- reliefClaimsService.getAllReliefClaims(ctx)
       optLossData          <- getBroughtForwardLossByBusinessId(ctx)
       maybeAnnualSummaries <- getAnnualSummariesGoodsAndServicesOwnUse(ctx)
-    } yield claims match {
-      case `claims` if claims.nonEmpty => Option(ProfitOrLossJourneyAnswers.apply(maybeAnnualSummaries, claims, optLossData))
-      case _                           => None
+    } yield (claims, optLossData, maybeAnnualSummaries) match {
+      case (Nil, None, None) => None
+      case _                 => Option(ProfitOrLossJourneyAnswers.apply(maybeAnnualSummaries, claims, optLossData))
     }
 
   private def getAnnualSummariesGoodsAndServicesOwnUse[A](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BigDecimal]] =

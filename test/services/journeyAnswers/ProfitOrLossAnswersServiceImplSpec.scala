@@ -395,8 +395,11 @@ class ProfitOrLossAnswersServiceImplSpec
 
       override val ifsConnector: StubIFSConnector =
         StubIFSConnector(
-          getAnnualSummariesResult = api1803SuccessResponseWithAAType.asRight
+          getAnnualSummariesResult = notFoundError.asLeft
         )
+
+      override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+        StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = notFoundError.asLeft)
 
       override val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository(
         getAnswer = None
