@@ -51,8 +51,10 @@ object ProfitOrLossJourneyAnswers {
             reliefClaims: List[ReliefClaim],
             optLossData: Option[LossData]): ProfitOrLossJourneyAnswers = {
 
-    val whatDoYouWantTodo: Option[Seq[WhatDoYouWantToDoWithLoss]] = Option(
-      reliefClaims.map(rc => WhatDoYouWantToDoWithLoss.fromReliefClaimType(rc.reliefClaimed)))
+    val whatDoYouWantTodo = {
+      val data = reliefClaims.map(rc => WhatDoYouWantToDoWithLoss.fromReliefClaimType(rc.reliefClaimed))
+      Option.when(data.nonEmpty)(data)
+    }
 
     val whichYearIsLossReported: Option[WhichYearIsLossReported] =
       optLossData map (lossData => WhichYearIsLossReported.convertToWhichYearIsLossReported(lossData.taxYearBroughtForwardFrom))

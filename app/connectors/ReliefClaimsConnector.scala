@@ -54,13 +54,12 @@ class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppCon
       reliefClaimed = answer.toString,
       taxYear = ctx.taxYear.endYear.toString
     )
-
     EitherT(post[CreateLossClaimRequestBody, ApiResponse[ClaimId]](httpClient, context, body))
   }
 
   def deleteReliefClaim(ctx: JourneyContextWithNino, claimId: String)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
-    val context                                      = appConfig.mkMetadata(IFSApiName.Api1505, appConfig.api1509Url(ctx.nino, claimId))
+    val context                                      = appConfig.mkMetadata(IFSApiName.Api1509, appConfig.api1509Url(ctx.nino, claimId))
 
     EitherT(delete(httpClient, context))
   }

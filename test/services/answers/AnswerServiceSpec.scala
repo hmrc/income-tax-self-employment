@@ -39,19 +39,20 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
   val testVehicleDetailsContext: JourneyContext = testContext.toJourneyContext(VehicleDetails)
 
   val testTravelExpenses: TravelExpensesDb = TravelExpensesDb(
-    expensesToClaim = Some(Seq(OwnVehicles)),
-    allowablePublicTransportExpenses = Some(BigDecimal("100.00")),
-    disallowablePublicTransportExpenses = Some(BigDecimal("50.00"))
+    expensesToClaim = Option(Seq(OwnVehicles)),
+    allowablePublicTransportExpenses = Option(BigDecimal("100.00")),
+    disallowablePublicTransportExpenses = Option(BigDecimal("50.00"))
   )
 
   val testVehicleDetails: VehicleDetailsDb = VehicleDetailsDb(
-    description = Some("test"),
-    vehicleType = Some(CarOrGoodsVehicle),
-    usedSimplifiedExpenses = Some(true),
-    calculateFlatRate = Some(true),
-    workMileage = Some(100000),
-    expenseMethod = Some(FlatRate),
-    costsOutsideFlatRate = Some(BigDecimal("100.00"))
+    description = Option("test"),
+    vehicleType = Option(CarOrGoodsVehicle),
+    usedSimplifiedExpenses = Option(true),
+    calculateFlatRate = Option(true),
+    workMileage = Option(BigDecimal(100000)),
+    expenseMethod = Option(FlatRate),
+    costsOutsideFlatRate = Option(BigDecimal("100.00")),
+    vehicleExpenses = Option(BigDecimal("200.00"))
   )
 
   val testTravelExpensesJson: JsValue = Json.toJson(testTravelExpenses)

@@ -93,13 +93,14 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
 
       ProfitOrLossJourneyAnswers.apply(None, reliefClaims = Nil, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = false,
-        None,
-        Option(false),
-        Option(List()),
-        Option(false),
+        goodsAndServicesAmount = None,
+        claimLossRelief = None,
+        whatDoYouWantToDoWithLoss = None,
+        carryLossForward = None,
         previousUnusedLosses = false,
-        None,
-        None)
+        unusedLossAmount = None,
+        whichYearIsLossReported = None
+      )
     }
 
     "create ProfitOrLossJourneyAnswers from the input data as optLossData is None and reliefClaims is empty" in {
@@ -107,9 +108,9 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
       ProfitOrLossJourneyAnswers.apply(Option(200), reliefClaims = Nil, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
         Option(200),
-        Option(false),
-        Option(List()),
-        Option(false),
+        None,
+        None,
+        None,
         previousUnusedLosses = false,
         None,
         None)
