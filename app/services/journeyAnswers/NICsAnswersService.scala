@@ -23,6 +23,7 @@ import models.common.JourneyName.NationalInsuranceContributions
 import models.common._
 import models.connector._
 import models.connector.api_1638.RequestSchemaAPI1638
+import models.connector.businessDetailsConnector.SuccessResponseSchema
 import models.database.nics.NICsStorageAnswers
 import models.database.nics.NICsStorageAnswers.journeyIsYesButNoneAreExemptStorageAnswers
 import models.domain.ApiResultT
@@ -129,7 +130,7 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
 
   private def updateJourneyContextWithSingleBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[JourneyContextWithNino] =
     EitherT(businessConnector.getBusinesses(ctx.nino).value.map {
-      case Right(res: api_1171.SuccessResponseSchema) =>
+      case Right(res: SuccessResponseSchema) =>
         res.taxPayerDisplayResponse.getMaybeSingleBusinessId match {
           case Some(id) => Right(ctx(newId = id))
           case None     => Left(BusinessNotFoundError(ctx.businessId))

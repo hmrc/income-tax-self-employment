@@ -106,7 +106,7 @@ class ProfitOrLossAnswersServiceImplSpec
     val yesBroughtForwardLossAnswers =
       ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
-        Option(200),
+        Option(BigDecimal(200)),
         Option(true),
         None,
         None,
@@ -382,7 +382,7 @@ class ProfitOrLossAnswersServiceImplSpec
         Option(
           ProfitOrLossJourneyAnswers(
             goodsAndServicesForYourOwnUse = true,
-            goodsAndServicesAmount = Option(200),
+            goodsAndServicesAmount = Option(BigDecimal(200)),
             claimLossRelief = Option(true),
             whatDoYouWantToDoWithLoss = Option(List(CarryItForward)),
             carryLossForward = Option(true),
@@ -618,7 +618,7 @@ class ProfitOrLossAnswersServiceImplSpec
     val yesBroughtForwardLossAnswers =
       ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
-        Option(200),
+        Option(BigDecimal(200)),
         Option(true),
         None,
         Option(true),
@@ -628,7 +628,7 @@ class ProfitOrLossAnswersServiceImplSpec
       )
     val noBroughtForwardLossAnswers = ProfitOrLossJourneyAnswers(
       goodsAndServicesForYourOwnUse = true,
-      Option(200),
+      Option(BigDecimal(200)),
       Option(false),
       None,
       None,

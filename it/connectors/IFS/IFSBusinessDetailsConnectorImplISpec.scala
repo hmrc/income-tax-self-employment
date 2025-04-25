@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
 import connectors.data._
 import models.common.JourneyContextWithNino
-import models.connector.api_2085.ListOfIncomeSources
+import models.connector.common.api_2085.ListOfIncomeSources
 import models.error.DownstreamError.GenericDownstreamError
 import models.error.ServiceError
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper

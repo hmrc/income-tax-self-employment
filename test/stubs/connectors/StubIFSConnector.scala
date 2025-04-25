@@ -24,7 +24,7 @@ import IFSConnector._
 import models.common.{BusinessId, JourneyContextWithNino}
 import models.connector.ReliefClaimType.CF
 import models.connector._
-import models.connector.api_1171.{BusinessDataDetails, BusinessDataDetailsTestData}
+import models.connector.api_1171.BusinessDataDetailsTestData
 import models.connector.api_1500.LossType
 import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBody}
 import models.connector.api_1508.GetLossClaimSuccessResponse
@@ -37,6 +37,7 @@ import models.connector.api_1870.LossData
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
+import models.connector.businessDetailsConnector.{BusinessDataDetails, ResponseType}
 import models.connector.citizen_details.{Ids, LegalNames, Name}
 import models.domain.ApiResultT
 import models.error.{DownstreamError, ServiceError}
@@ -160,22 +161,22 @@ object StubIFSConnector {
       dateOfBirth = citizenDetailsDateOfBirth
     )
 
-  val api1171EmptyResponse: api_1171.SuccessResponseSchema =
-    api_1171.SuccessResponseSchema(
+  val api1171EmptyResponse: businessDetailsConnector.SuccessResponseSchema =
+    businessDetailsConnector.SuccessResponseSchema(
       OffsetDateTime.now().toString,
-      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, None))
+      ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, None))
 
-  def api1171SingleBusinessResponse(businessId: BusinessId): api_1171.SuccessResponseSchema =
-    api_1171.SuccessResponseSchema(
+  def api1171SingleBusinessResponse(businessId: BusinessId): businessDetailsConnector.SuccessResponseSchema =
+    businessDetailsConnector.SuccessResponseSchema(
       OffsetDateTime.now().toString,
-      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Option(List(BusinessDataDetailsTestData.mkExample(businessId))))
+      businessDetailsConnector.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Option(List(BusinessDataDetailsTestData.mkExample(businessId))))
     )
 
-  def api1171MultipleBusinessResponse(businessIds: List[BusinessId]): api_1171.SuccessResponseSchema = {
+  def api1171MultipleBusinessResponse(businessIds: List[BusinessId]): businessDetailsConnector.SuccessResponseSchema = {
     val businessData: List[BusinessDataDetails] = businessIds.map(BusinessDataDetailsTestData.mkExample)
-    api_1171.SuccessResponseSchema(
+    businessDetailsConnector.SuccessResponseSchema(
       OffsetDateTime.now().toString,
-      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Option(businessData))
+      businessDetailsConnector.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Option(businessData))
     )
   }
 

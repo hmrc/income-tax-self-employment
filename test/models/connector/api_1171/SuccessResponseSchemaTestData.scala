@@ -17,6 +17,7 @@
 package models.connector.api_1171
 
 import models.common.{Mtditid, Nino}
+import models.connector.businessDetailsConnector.{BusinessDataDetails, ResponseType, SuccessResponseSchema}
 
 import java.time.OffsetDateTime
 

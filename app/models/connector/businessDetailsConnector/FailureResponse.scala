@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.connector.api_1171
+package models.connector.businessDetailsConnector
 
 import play.api.libs.json._
 import scala.collection.immutable.Set
