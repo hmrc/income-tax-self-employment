@@ -16,7 +16,7 @@
 
 package services.journeyAnswers
 
-import bulders.NICsAnswersBuilder.{class4DiverAndTrusteeMultipleBusinessesAnswers, class4SingleBusinessAnswers}
+import builders.NICsAnswersBuilder.{class4DiverAndTrusteeMultipleBusinessesAnswers, class4SingleBusinessAnswers}
 import cats.implicits.catsSyntaxEitherId
 import models.common.BusinessId
 import models.connector.api_1638._

@@ -105,7 +105,7 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
 
     "create ProfitOrLossJourneyAnswers from the input data as optLossData is None and reliefClaims is empty" in {
 
-      ProfitOrLossJourneyAnswers.apply(Option(200), reliefClaims = Nil, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
+      ProfitOrLossJourneyAnswers.apply(Option(BigDecimal(200)), reliefClaims = Nil, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
         Option(200),
         None,

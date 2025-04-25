@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 package stubs.connectors
 
-import bulders.BusinessDataBuilder.citizenDetailsDateOfBirth
+import builders.BusinessDataBuilder.citizenDetailsDateOfBirth
 import cats.data.EitherT
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
-import connectors.IFSConnector
-import connectors.IFSConnector._
+import connectors.IFS.IFSConnector
+import IFSConnector._
 import models.common.{BusinessId, JourneyContextWithNino}
 import models.connector.ReliefClaimType.CF
 import models.connector._
@@ -44,7 +44,7 @@ import stubs.connectors.StubIFSConnector._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
-import java.time.{LocalDateTime, OffsetDateTime}
+import java.time.OffsetDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
 case class StubIFSConnector(
@@ -182,10 +182,8 @@ object StubIFSConnector {
   val api1803SuccessResponse: SuccessResponseSchema = SuccessResponseSchema(
     None,
     Option(
-      AnnualAllowancesType.emptyAnnualAllowancesType.copy(
-        zeroEmissionsCarAllowance = Option(5000.00),
-        zeroEmissionGoodsVehicleAllowance = Option(5000.00)
-      )),
+      AnnualAllowancesType.emptyAnnualAllowancesType
+        .copy(zeroEmissionsCarAllowance = Option(BigDecimal(5000.00)), zeroEmissionGoodsVehicleAllowance = Option(BigDecimal(5000.00)))),
     None
   )
 
@@ -193,8 +191,8 @@ object StubIFSConnector {
     Option(AnnualAdjustmentsType.empty.copy(goodsAndServicesOwnUse = Option(BigDecimal(200)))),
     Option(
       AnnualAllowancesType.emptyAnnualAllowancesType.copy(
-        zeroEmissionsCarAllowance = Option(5000.00),
-        zeroEmissionGoodsVehicleAllowance = Option(5000.00)
+        zeroEmissionsCarAllowance = Option(BigDecimal(5000.00)),
+        zeroEmissionGoodsVehicleAllowance = Option(BigDecimal(5000.00))
       )),
     None
   )

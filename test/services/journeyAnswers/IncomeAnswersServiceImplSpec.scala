@@ -16,10 +16,10 @@
 
 package services.journeyAnswers
 
-import bulders.BusinessDataBuilder
+import builders.BusinessDataBuilder
 import cats.data.EitherT
 import cats.implicits._
-import connectors.IFSConnector
+import connectors.IFS.IFSConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import models.common._
 import models.database.JourneyAnswers

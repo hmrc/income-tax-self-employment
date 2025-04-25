@@ -16,8 +16,8 @@
 
 package services.journeyAnswers
 
-import bulders.BusinessDataBuilder.aTradesJourneyStatusesSeq
-import bulders.JourneyNameAndStatusBuilder.{allCompetedJourneyStatuses, allCompletedTaskListSectionItems}
+import builders.BusinessDataBuilder.aTradesJourneyStatusesSeq
+import builders.JourneyNameAndStatusBuilder.{allCompetedJourneyStatuses, allCompletedTaskListSectionItems}
 import cats.implicits._
 import models.common.JourneyStatus._
 import models.common.{JourneyName, JourneyStatus}

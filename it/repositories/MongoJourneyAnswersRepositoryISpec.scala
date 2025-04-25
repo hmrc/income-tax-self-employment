@@ -16,7 +16,7 @@
 
 package repositories
 
-import bulders.BusinessDataBuilder.aBusiness
+import builders.BusinessDataBuilder.aBusiness
 import cats.data.EitherT
 import cats.implicits._
 import config.AppConfig

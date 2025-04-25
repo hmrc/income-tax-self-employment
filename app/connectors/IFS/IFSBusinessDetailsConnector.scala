@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
-package connectors
+package connectors.IFS
 
 import cats.data.EitherT
 import config.AppConfig
-import connectors.IFSBusinessDetailsConnector._
+import connectors.IFS.IFSBusinessDetailsConnector._
+import connectors._
 import models.common.TaxYear.asTys
 import models.common._
 import models.connector._

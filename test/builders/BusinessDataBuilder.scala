@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package bulders
+package builders
 
 import models.common._
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
