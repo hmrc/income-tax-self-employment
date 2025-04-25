@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package connectors
+package connectors.IFS
 
 import base.IntegrationBaseSpec
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}

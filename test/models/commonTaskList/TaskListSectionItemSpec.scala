@@ -16,7 +16,7 @@
 
 package models.commonTaskList
 
-import bulders.JourneyNameAndStatusBuilder._
+import builders.JourneyNameAndStatusBuilder._
 import org.scalatest.prop.TableDrivenPropertyChecks
 import utils.BaseSpec
 import utils.BaseSpec.{businessId, taxYear}

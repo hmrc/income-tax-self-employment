@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package connectors
+package connectors.HIP
 
 import base.IntegrationBaseSpec
 import connectors.data._
@@ -23,9 +23,9 @@ import models.error.DownstreamError.GenericDownstreamError
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status._
 
-class HipConnectorISpec extends IntegrationBaseSpec {
+class BroughtForwardLossConnectorISpec extends IntegrationBaseSpec {
 
-  val connector                   = new HipConnectorImpl(httpClient, appConfig)
+  val connector                   = new BroughtForwardLossConnectorImpl(httpClient, appConfig)
   val ctx: JourneyContextWithNino = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
 
   "deleteBroughtForwardLoss" must {

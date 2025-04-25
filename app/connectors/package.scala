@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,13 @@ package object connectors {
   def get[Resp: HttpReads](http: HttpClient, context: IntegrationContext)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Resp] = {
     val reads = implicitly[HttpReads[Resp]]
     http.GET[Resp](context.url)(reads, context.enrichedHeaderCarrier, ec)
+  }
+
+  def getWithHeaders[Resp: HttpReads](http: HttpClient, context: IntegrationContext, additionalHeaders: Seq[(String, String)])(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): Future[Resp] = {
+    val reads = implicitly[HttpReads[Resp]]
+    http.GET[Resp](context.url, additionalHeaders)(reads, context.enrichedHeaderCarrier, ec)
   }
 
   def post[Req: Writes, Resp: HttpReads](http: HttpClient, context: IntegrationContext, body: Req)(implicit

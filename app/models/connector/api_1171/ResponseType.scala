@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ package models.connector.api_1171
 import models.common.BusinessId
 import play.api.libs.json._
 
-/** Represents the Swagger definition for response_type.
-  */
 case class ResponseType(
     safeId: String,
     nino: String,

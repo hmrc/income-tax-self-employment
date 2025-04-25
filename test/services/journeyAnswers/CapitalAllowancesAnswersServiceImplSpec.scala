@@ -209,7 +209,7 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       val updatedResponse: SuccessResponseSchema =
         api1803SuccessResponse.copy(annualAdjustments = Option(
           AnnualAdjustmentsType.empty.copy(
-            balancingChargeOther = Option(500)
+            balancingChargeOther = Option(BigDecimal(500))
           )))
 
       val connector: StubIFSConnector =

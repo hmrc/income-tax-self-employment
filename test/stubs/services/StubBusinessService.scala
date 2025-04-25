@@ -16,7 +16,7 @@
 
 package stubs.services
 
-import bulders.BusinessDataBuilder.{aBusinessIncomeSourcesSummaryResponse, aNetBusinessProfitValues, aUserDateOfBirth}
+import builders.BusinessDataBuilder.{aBusinessIncomeSourcesSummaryResponse, aNetBusinessProfitValues, aUserDateOfBirth}
 import cats.data.EitherT
 import cats.implicits._
 import models.common._

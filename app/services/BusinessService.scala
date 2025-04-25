@@ -18,7 +18,8 @@ package services
 
 import cats.data.EitherT
 import cats.implicits.toTraverseOps
-import connectors.{IFSBusinessDetailsConnector, IFSConnector, MDTPConnector}
+import connectors.IFS.{IFSBusinessDetailsConnector, IFSConnector}
+import connectors.MDTP.MDTPConnector
 import models.common.{BusinessId, JourneyContextWithNino, Nino, TaxYear}
 import models.connector.api_1803
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse

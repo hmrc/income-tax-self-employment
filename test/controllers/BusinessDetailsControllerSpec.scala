@@ -16,7 +16,7 @@
 
 package controllers
 
-import bulders.BusinessDataBuilder._
+import builders.BusinessDataBuilder._
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status._
 import play.api.libs.json.Json
