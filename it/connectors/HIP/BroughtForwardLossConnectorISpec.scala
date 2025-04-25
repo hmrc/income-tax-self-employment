@@ -31,7 +31,7 @@ class BroughtForwardLossConnectorISpec extends IntegrationBaseSpec {
   "deleteBroughtForwardLoss" must {
     "return unit with NO_CONTENT status" in new Api1504Test {
       stubDelete(
-        url = hipDownstreamUrl,
+        url = deleteBroughtForwardLossDownstreamUrl,
         expectedResponse = "",
         expectedStatus = NO_CONTENT
       )
@@ -48,12 +48,12 @@ class BroughtForwardLossConnectorISpec extends IntegrationBaseSpec {
     ) foreach { case (statusStr, status) =>
       s"return failure when downstream fails with $statusStr" in new Api1504Test {
         stubDelete(
-          url = hipDownstreamUrl,
+          url = deleteBroughtForwardLossDownstreamUrl,
           expectedResponse = "",
           expectedStatus = status
         )
         connector.deleteBroughtForwardLoss(testNino, testTaxYear, testBusinessId.value).value.futureValue shouldBe Left(
-          GenericDownstreamError(status, s"Downstream error when calling DELETE http://localhost:11111$hipDownstreamUrl: status=$status, body:\n"))
+          GenericDownstreamError(status, s"Downstream error when calling DELETE http://localhost:11111$deleteBroughtForwardLossDownstreamUrl: status=$status, body:\n"))
       }
     }
   }

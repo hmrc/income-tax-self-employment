@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package models.connector.api_1171
+package models.connector.businessDetailsConnector
 
 import models.common.BusinessId
 import play.api.libs.json._

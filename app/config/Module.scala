@@ -42,7 +42,7 @@ class Module extends AbstractModule {
     bind(classOf[IFSBusinessDetailsConnector]).to(classOf[IFSBusinessDetailsConnectorImpl])
     bind(classOf[MDTPConnector]).to(classOf[MDTPConnectorImpl])
     bind(classOf[BroughtForwardLossConnector]).to(classOf[BroughtForwardLossConnectorImpl])
-    bind(classOf[BusinessesDetailsConnector]).to(classOf[BusinessesDetailsConnectorImpl])
+    bind(classOf[BusinessDetailsConnector]).to(classOf[BusinessDetailsConnectorImpl])
     bind(classOf[JourneyStatusService]).to(classOf[JourneyStatusServiceImpl])
     bind(classOf[ProfitOrLossAnswersService]).to(classOf[ProfitOrLossAnswersServiceImpl])
     bind(classOf[NICsAnswersService]).to(classOf[NICsAnswersServiceImpl])

@@ -23,7 +23,7 @@ import IFSBusinessDetailsConnector._
 import models.common.{BusinessId, Nino, TaxYear}
 import models.connector.api_1500.CreateBroughtForwardLossRequestData
 import models.connector.api_1501._
-import models.connector.{api_1171, api_1500, api_1501, api_1502, api_1870, api_1871, api_2085}
+import models.connector.{api_1171, api_1500, api_1501, api_1502, api_1870, api_1871, api_2085, businessDetailsConnector}
 import models.domain.ApiResultT
 import stubs.connectors.StubIFSConnector._
 import uk.gov.hmrc.http.HeaderCarrier
@@ -41,7 +41,7 @@ case class StubIFSBusinessDetailsConnector(
 ) extends IFSBusinessDetailsConnector {
   var updatedBroughtForwardLossData: Option[UpdateBroughtForwardLossRequestBody] = None
 
-  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] =
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[businessDetailsConnector.SuccessResponseSchema] =
     EitherT.fromEither[Future](getBusinessesResult)
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit

@@ -19,7 +19,8 @@ package connectors.HIP
 import cats.data.EitherT
 import config.AppConfig
 import models.common.{BusinessId, JourneyContextWithNino, Mtditid, Nino}
-import models.connector.{ApiResponse, HipApiName, IntegrationContext, api_1171, commonReads}
+import models.connector.businessDetailsConnector.SuccessResponseSchema
+import models.connector.{ApiResponse, HipApiName, IntegrationContext, commonReads}
 import models.domain.ApiResultT
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import utils.Logging
@@ -29,12 +30,12 @@ import java.time.temporal.ChronoUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
-trait BusinessesDetailsConnector {
-  def getBusinessDetails(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema]
+trait BusinessDetailsConnector {
+  def getBusinessDetails(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[SuccessResponseSchema]
 }
 
 @Singleton
-class BusinessesDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends BusinessesDetailsConnector with Logging {
+class BusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends BusinessDetailsConnector with Logging {
 
   private def getBusinessDetailsUrl(incomeSourceId: BusinessId, mtdReference: Mtditid, nino: Nino): String =
     s"${appConfig.hipBaseUrl}/etmp/RESTAdapter/itsa/taxpayer/business-details/$incomeSourceId/$mtdReference/$nino"
@@ -48,12 +49,12 @@ class BusinessesDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: App
   )
 
   def getBusinessDetails(
-      ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] = {
+      ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[SuccessResponseSchema] = {
     val url: String                                                            = getBusinessDetailsUrl(ctx.businessId, ctx.mtditid, ctx.nino)
     val context: IntegrationContext.IntegrationHeaderCarrier                   = appConfig.mkMetadata(HipApiName.Api1171, url)
-    implicit val reads: HttpReads[ApiResponse[api_1171.SuccessResponseSchema]] = commonReads[api_1171.SuccessResponseSchema]
+    implicit val reads: HttpReads[ApiResponse[SuccessResponseSchema]] = commonReads[SuccessResponseSchema]
 
-    EitherT(connectors.getWithHeaders[ApiResponse[api_1171.SuccessResponseSchema]](http, context, additionalHeaders))
+    EitherT(connectors.getWithHeaders[ApiResponse[SuccessResponseSchema]](http, context, additionalHeaders))
 
   }
 

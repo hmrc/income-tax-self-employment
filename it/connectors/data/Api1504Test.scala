@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,6 @@ import testdata.CommonTestData
 trait Api1504Test extends CommonTestData {
 
   val downstreamUrl    = s"/individuals/losses/$testNino/brought-forward-losses/$testBusinessId"
-  val hipDownstreamUrl = s"/income-tax/v1/brought-forward-losses/$testNino/${TaxYear.asTys(testTaxYear)}/$testBusinessId"
+  val deleteBroughtForwardLossDownstreamUrl = s"/income-tax/v1/brought-forward-losses/$testNino/${TaxYear.asTys(testTaxYear)}/$testBusinessId"
 
 }
