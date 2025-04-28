@@ -18,12 +18,14 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits.{toFunctorOps, toTraverseOps}
+import config.AppConfig
+import connectors.HIP.BusinessDetailsConnector
 import connectors.IFS.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common.JourneyName.NationalInsuranceContributions
 import models.common._
 import models.connector._
 import models.connector.api_1638.RequestSchemaAPI1638
-import models.connector.businessDetailsConnector.SuccessResponseSchema
+import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
 import models.database.nics.NICsStorageAnswers
 import models.database.nics.NICsStorageAnswers.journeyIsYesButNoneAreExemptStorageAnswers
 import models.domain.ApiResultT
@@ -49,9 +51,11 @@ trait NICsAnswersService {
 
 @Singleton
 class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
-                                        businessConnector: IFSBusinessDetailsConnector,
+                                        ifsBusinessDetailsConnector: IFSBusinessDetailsConnector,
+                                        hipBusinessDetailsConnector: BusinessDetailsConnector,
                                         repository: JourneyAnswersRepository,
-                                        businessService: BusinessService)(implicit ec: ExecutionContext)
+                                        businessService: BusinessService,
+                                        appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends NICsAnswersService {
 
   def saveClass2Answers(ctx: JourneyContextWithNino, answers: NICsClass2Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
@@ -103,10 +107,21 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
     repository.upsertAnswers(JourneyContext(ctx.taxYear, ctx.businessId, ctx.mtditid, NationalInsuranceContributions), Json.toJson(dbAnswers))
   }
 
+  private def getBusinessDetails(businessId: BusinessId,
+                                 mtditid: Mtditid,
+                                 nino: Nino)(
+                                  implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] = {
+    if (appConfig.hipMigration1171Enabled) {
+      hipBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)
+    } else {
+      ifsBusinessDetailsConnector.getBusinesses(nino)
+    }
+  }
+
   private def updateIdsToNoClass4Exemption(ctx: JourneyContextWithNino, idsWithExemption: List[String])(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      allUserBusinessIds <- businessConnector.getBusinesses(ctx.nino).map(_.taxPayerDisplayResponse.businessData.map(_.map(_.incomeSourceId)))
+      allUserBusinessIds <- getBusinessDetails(ctx.businessId, ctx.mtditid, ctx.nino).map(_.taxPayerDisplayResponse.businessData.map(_.map(_.incomeSourceId)))
       idsWithNoExemption      = allUserBusinessIds.map(_.filterNot(idsWithExemption.contains(_)))
       noClass4ExemptionAnswer = Class4ExemptionAnswers(ctx.businessId, class4Exempt = false, None)
       result <- idsWithNoExemption
@@ -129,8 +144,8 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
   }
 
   private def updateJourneyContextWithSingleBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[JourneyContextWithNino] =
-    EitherT(businessConnector.getBusinesses(ctx.nino).value.map {
-      case Right(res: SuccessResponseSchema) =>
+    EitherT(getBusinessDetails(ctx.businessId, ctx.mtditid, ctx.nino).value.map {
+      case Right(res: BusinessDetailsSuccessResponseSchema) =>
         res.taxPayerDisplayResponse.getMaybeSingleBusinessId match {
           case Some(id) => Right(ctx(newId = id))
           case None     => Left(BusinessNotFoundError(ctx.businessId))
@@ -147,7 +162,7 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
       }
 
     for {
-      allUserBusinessIds        <- businessService.getUserBusinessIds(ctx.nino)
+      allUserBusinessIds        <- businessService.getUserBusinessIds(ctx.businessId, ctx.mtditid, ctx.nino)
       allAnnualSummariesWithIds <- getAnnualSummariesWithIds(allUserBusinessIds)
       disclosures               <- connector.getDisclosuresSubmission(ctx)
       dbAnswers                 <- repository.getAnswers[NICsStorageAnswers](ctx.toJourneyContext(JourneyName.NationalInsuranceContributions))

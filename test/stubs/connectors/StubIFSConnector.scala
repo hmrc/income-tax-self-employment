@@ -161,20 +161,20 @@ object StubIFSConnector {
       dateOfBirth = citizenDetailsDateOfBirth
     )
 
-  val api1171EmptyResponse: businessDetailsConnector.SuccessResponseSchema =
-    businessDetailsConnector.SuccessResponseSchema(
+  val api1171EmptyResponse: businessDetailsConnector.BusinessDetailsSuccessResponseSchema =
+    businessDetailsConnector.BusinessDetailsSuccessResponseSchema(
       OffsetDateTime.now().toString,
       ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, None))
 
-  def api1171SingleBusinessResponse(businessId: BusinessId): businessDetailsConnector.SuccessResponseSchema =
-    businessDetailsConnector.SuccessResponseSchema(
+  def api1171SingleBusinessResponse(businessId: BusinessId): businessDetailsConnector.BusinessDetailsSuccessResponseSchema =
+    businessDetailsConnector.BusinessDetailsSuccessResponseSchema(
       OffsetDateTime.now().toString,
       businessDetailsConnector.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Option(List(BusinessDataDetailsTestData.mkExample(businessId))))
     )
 
-  def api1171MultipleBusinessResponse(businessIds: List[BusinessId]): businessDetailsConnector.SuccessResponseSchema = {
+  def api1171MultipleBusinessResponse(businessIds: List[BusinessId]): businessDetailsConnector.BusinessDetailsSuccessResponseSchema = {
     val businessData: List[BusinessDataDetails] = businessIds.map(BusinessDataDetailsTestData.mkExample)
-    businessDetailsConnector.SuccessResponseSchema(
+    businessDetailsConnector.BusinessDetailsSuccessResponseSchema(
       OffsetDateTime.now().toString,
       businessDetailsConnector.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Option(businessData))
     )

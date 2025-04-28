@@ -1,21 +1,21 @@
 # microservice specific routes
 
 # Common Task List
-GET         /:taxYear/common-task-list/:nino                                                             controllers.JourneyStatusController.getCommonTaskList(taxYear: TaxYear, nino: Nino)
+GET         /:taxYear/common-task-list/:nino                                                             controllers.JourneyStatusController.getCommonTaskList(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 # Business
-GET         /individuals/business/details/:nino/list                                                     controllers.BusinessDetailsController.getBusinesses(nino: Nino)
+GET         /individuals/business/details/:nino/list                                                     controllers.BusinessDetailsController.getBusinesses(nino: Nino, businessId: BusinessId)
 GET         /individuals/business/details/:nino/:businessId                                              controllers.BusinessDetailsController.getBusiness(nino: Nino, businessId: BusinessId)
 
 GET         /user-date-of-birth/:nino                                                                    controllers.BusinessDetailsController.getUserDateOfBirth(nino: Nino)
 
-GET         /:taxYear/business-income-sources-summaries/:nino                                            controllers.BusinessDetailsController.getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)
+GET         /:taxYear/business-income-sources-summaries/:nino                                            controllers.BusinessDetailsController.getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino, businessId: BusinessId)
 GET         /:taxYear/business-income-sources-summary/:nino/:businessId                                  controllers.BusinessDetailsController.getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)
 GET         /:taxYear/net-business-profit-or-loss-values/:nino/:businessId                               controllers.BusinessDetailsController.getNetBusinessProfitOrLossValues(taxYear: TaxYear, nino: Nino, businessId: BusinessId)
 GET         /:taxYear/check-for-other-income-source/:nino                                                controllers.BusinessDetailsController.hasOtherIncomeSources(taxYear: TaxYear, nino: Nino)
 
 # Journey Statuses
-GET         /:taxYear/:nino/task-list                                                                    controllers.JourneyStatusController.getTaskList(taxYear: TaxYear, nino: Nino)
+GET         /:taxYear/:nino/task-list                                                                    controllers.JourneyStatusController.getTaskList(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 GET         /completed-section/:businessId/:journey/:taxYear                                             controllers.JourneyStatusController.getStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear)
 PUT         /completed-section/:businessId/:journey/:taxYear                                             controllers.JourneyStatusController.setStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear)
 

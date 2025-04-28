@@ -18,9 +18,9 @@ package connectors.HIP
 
 import cats.data.EitherT
 import config.AppConfig
-import models.common.{BusinessId, JourneyContextWithNino, Mtditid, Nino}
-import models.connector.businessDetailsConnector.SuccessResponseSchema
-import models.connector.{ApiResponse, HipApiName, IntegrationContext, commonReads}
+import models.common.{BusinessId, Mtditid, Nino}
+import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
+import models.connector.{ApiResponse, HipApiName, IntegrationContext, businessDetailsReads}
 import models.domain.ApiResultT
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import utils.Logging
@@ -31,7 +31,9 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 trait BusinessDetailsConnector {
-  def getBusinessDetails(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[SuccessResponseSchema]
+  def getBusinessDetails(businessId: BusinessId,
+                         mtditid: Mtditid,
+                         nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema]
 }
 
 @Singleton
@@ -48,13 +50,14 @@ class BusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: AppCo
     "X-Transmitting-System" -> "HIP"
   )
 
-  def getBusinessDetails(
-      ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[SuccessResponseSchema] = {
-    val url: String                                                            = getBusinessDetailsUrl(ctx.businessId, ctx.mtditid, ctx.nino)
-    val context: IntegrationContext.IntegrationHeaderCarrier                   = appConfig.mkMetadata(HipApiName.Api1171, url)
-    implicit val reads: HttpReads[ApiResponse[SuccessResponseSchema]] = commonReads[SuccessResponseSchema]
+  def getBusinessDetails(businessId: BusinessId,
+                         mtditid: Mtditid,
+                         nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] = {
+    val url: String                                                     = getBusinessDetailsUrl(businessId, mtditid, nino)
+    val context: IntegrationContext.IntegrationHeaderCarrier            = appConfig.mkMetadata(HipApiName.Api1171, url)
+    implicit val reads: HttpReads[ApiResponse[BusinessDetailsSuccessResponseSchema]]   = businessDetailsReads[BusinessDetailsSuccessResponseSchema]
 
-    EitherT(connectors.getWithHeaders[ApiResponse[SuccessResponseSchema]](http, context, additionalHeaders))
+    EitherT(connectors.getWithHeaders[ApiResponse[BusinessDetailsSuccessResponseSchema]](http, context, additionalHeaders))
 
   }
 

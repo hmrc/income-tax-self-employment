@@ -44,20 +44,20 @@ package object connector {
     }
   }
 
-//  implicit def businessDetailsReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[A]] =
-//    (method: String,
-//     url: String,
-//     response: HttpResponse
-//    ) => {
-//    ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
-//
-//    response.status match {
-//      case OK => toA(response, method, url)
-//      case BAD_REQUEST | UNAUTHORIZED | FORBIDDEN | NOT_FOUND| UNSUPPORTED_MEDIA_TYPE | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE
-//      => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
-//      case _                       => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
-//    }
-//  }
+  def businessDetailsReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[A]] =
+    (method: String,
+     url: String,
+     response: HttpResponse
+    ) => {
+    ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
+
+    response.status match {
+      case OK => toA(response, method, url)
+      case BAD_REQUEST | UNAUTHORIZED | FORBIDDEN | NOT_FOUND| UNSUPPORTED_MEDIA_TYPE | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE
+      => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+      case _                       => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
+    }
+  }
 
   /** It treats any non OK / CREATED / NO_CONTENT / ACCEPTED as an error, and return Unit otherwise
     */

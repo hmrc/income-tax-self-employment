@@ -20,7 +20,7 @@ import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId
 import connectors.data._
 import models.common.JourneyContextWithNino
-import models.connector.common.api_2085.ListOfIncomeSources
+import models.connector.api_2085.ListOfIncomeSources
 import models.error.DownstreamError.GenericDownstreamError
 import models.error.ServiceError
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
