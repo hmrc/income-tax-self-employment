@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package services
 
 import builders.BusinessDataBuilder._
 import cats.implicits.catsSyntaxEitherId
+import config.AppConfig
 import models.common.BusinessId
 import models.connector.api_1171._
 import models.connector.api_1786.{FinancialsType, IncomeTypeTestData}
@@ -29,8 +30,10 @@ import models.error.{DownstreamErrorBody, ServiceError}
 import models.frontend.adjustments.NetBusinessProfitOrLossValues
 import org.scalatest.EitherValues._
 import org.scalatest.wordspec.AnyWordSpecLike
-import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
-import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector, StubMDTPConnector}
+import org.scalatestplus.mockito.MockitoSugar.mock
+import stubs.connectors.StubIFSConnector.{api1171EmptyResponse, api1786DeductionsSuccessResponse}
+import stubs.connectors.{StubBusinessDetailsConnector, StubIFSBusinessDetailsConnector, StubIFSConnector, StubMDTPConnector}
+import uk.gov.hmrc.http.HttpClient
 import utils.BaseSpec._
 import utils.EitherTTestOps.convertScalaFuture
 
@@ -39,16 +42,34 @@ import scala.concurrent.Future
 
 class BusinessServiceSpec extends AnyWordSpecLike {
 
+  val mockAppConfig: AppConfig                           = mock[AppConfig]
+  val mockHttpClient: HttpClient                         = mock[HttpClient]
+
   val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
   val mdtpConnector: StubMDTPConnector                             = StubMDTPConnector()
   val ifsConnector: StubIFSConnector                               = StubIFSConnector()
-  val testService                                                  = new BusinessServiceImpl(ifsBusinessDetailsConnector, mdtpConnector, ifsConnector)
+  val hipBusinessDetailsConnector: StubBusinessDetailsConnector    = StubBusinessDetailsConnector(mockHttpClient, mockAppConfig)
+
+  val testService =
+    new BusinessServiceImpl(
+      ifsBusinessDetailsConnector,
+      mdtpConnector,
+      hipBusinessDetailsConnector,
+      ifsConnector,
+      mockAppConfig
+    )
 
   private val error = SingleDownstreamError(400, DownstreamErrorBody.SingleDownstreamErrorBody.serverError)
 
+  val stubBusinessDetailsConnector: StubBusinessDetailsConnector = StubBusinessDetailsConnector(
+    mockHttpClient,
+    mockAppConfig,
+    getBusinessDetailsRes = aGetBusinessDataResponse.asRight
+  )
+
   "getBusinesses" should {
     "return an empty list" in {
-      val result = testService.getBusinesses(nino).value.futureValue.value
+      val result = testService.getBusinesses(businessId, mtditid, nino).value.futureValue.value
       assert(result === Nil)
     }
 
@@ -61,13 +82,19 @@ class BusinessServiceSpec extends AnyWordSpecLike {
           BusinessDataDetailsTestData.mkExample(BusinessId("id2"))
         )
       )
+
       val service = new BusinessServiceImpl(
         StubIFSBusinessDetailsConnector(getBusinessesResult = Right(businesses)),
         StubMDTPConnector(),
-        StubIFSConnector()
+        StubBusinessDetailsConnector(
+          httpClient = mockHttpClient,
+          appConfig = mockAppConfig,
+          getBusinessDetailsRes = Right(businesses)),
+        StubIFSConnector(),
+        mockAppConfig
       )
 
-      val result = service.getBusinesses(nino).value.futureValue.value
+      val result = service.getBusinesses(businessId, mtditid, nino).value.futureValue.value
 
       val expectedBusiness = List(
         BusinessTestData.mkExample(BusinessId("id1")),
@@ -81,7 +108,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
   "getBusiness" should {
     "return Not Found if no business exist" in {
       val id     = BusinessId("id")
-      val result = testService.getBusiness(nino, id).value.futureValue.left.value
+      val result = testService.getBusiness(id, mtditid, nino).value.futureValue.left.value
       assert(result === ServiceError.BusinessNotFoundError(id))
     }
 
@@ -90,16 +117,18 @@ class BusinessServiceSpec extends AnyWordSpecLike {
       val service = new BusinessServiceImpl(
         StubIFSBusinessDetailsConnector(getBusinessesResult = Right(business)),
         StubMDTPConnector(),
-        StubIFSConnector()
+        StubBusinessDetailsConnector(mockHttpClient, mockAppConfig, getBusinessDetailsRes = Right(business)),
+        StubIFSConnector(),
+        mockAppConfig
       )
-      val result = service.getBusiness(nino, businessId).value.futureValue.value
+      val result = service.getBusiness(businessId, mtditid, nino).value.futureValue.value
       assert(result === BusinessTestData.mkExample(businessId))
     }
   }
 
   "getUserBusinessIds" should {
     "return an empty list" in {
-      val result = testService.getUserBusinessIds(nino).value.futureValue.value
+      val result = testService.getUserBusinessIds(businessId, mtditid, nino).value.futureValue.value
       assert(result === Nil)
     }
 
@@ -115,10 +144,12 @@ class BusinessServiceSpec extends AnyWordSpecLike {
       val service = new BusinessServiceImpl(
         StubIFSBusinessDetailsConnector(getBusinessesResult = Right(businesses)),
         StubMDTPConnector(),
-        StubIFSConnector()
+        StubBusinessDetailsConnector(mockHttpClient, mockAppConfig, getBusinessDetailsRes = Right(businesses)),
+        StubIFSConnector(),
+        mockAppConfig
       )
 
-      val result = service.getUserBusinessIds(nino).value.futureValue.value
+      val result = service.getUserBusinessIds(businessId, mtditid, nino).value.futureValue.value
 
       val expectedBusiness = List(
         BusinessId("id1"),
@@ -132,14 +163,26 @@ class BusinessServiceSpec extends AnyWordSpecLike {
   "getUserDateOfBirth" should {
     "return a user's date of birth as a LocalDate" in {
       val expectedResult = Right(aUserDateOfBirth)
-      val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(), StubMDTPConnector(), StubIFSConnector())
+      val service        = new BusinessServiceImpl(
+        StubIFSBusinessDetailsConnector(),
+        StubMDTPConnector(),
+        stubBusinessDetailsConnector,
+        StubIFSConnector(),
+        mockAppConfig
+      )
       val result         = service.getUserDateOfBirth(nino).value.futureValue
       assert(result === expectedResult)
     }
 
     "return an error from downstream" in {
       val service =
-        new BusinessServiceImpl(StubIFSBusinessDetailsConnector(), StubMDTPConnector(getCitizenDetailsRes = error.asLeft), StubIFSConnector())
+        new BusinessServiceImpl(
+          StubIFSBusinessDetailsConnector(),
+          StubMDTPConnector(getCitizenDetailsRes = error.asLeft),
+          stubBusinessDetailsConnector,
+          StubIFSConnector(),
+          mockAppConfig
+        )
       val result = service.getUserDateOfBirth(nino).value.futureValue
       assert(result === error.asLeft)
     }
@@ -148,8 +191,14 @@ class BusinessServiceSpec extends AnyWordSpecLike {
   "getAllBusinessIncomeSourcesSummaries" should {
     "return an empty list if a user has no businesses" in {
       val expectedResult = Right(List.empty[BusinessIncomeSourcesSummaryResponse])
-      val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(), StubMDTPConnector(), StubIFSConnector())
-      val result         = service.getAllBusinessIncomeSourcesSummaries(taxYear, nino).value.futureValue
+      val service        = new BusinessServiceImpl(
+        StubIFSBusinessDetailsConnector(),
+        StubMDTPConnector(),
+        StubBusinessDetailsConnector(mockHttpClient, mockAppConfig, api1171EmptyResponse.asRight),
+        StubIFSConnector(),
+        mockAppConfig
+      )
+      val result         = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
       assert(result === expectedResult)
     }
 
@@ -159,8 +208,14 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         getBusinessesResult = aGetBusinessDataResponse.asRight,
         getBusinessIncomeSourcesSummaryResult = aBusinessIncomeSourcesSummaryResponse.asRight
       )
-      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), StubIFSConnector())
-      val result  = service.getAllBusinessIncomeSourcesSummaries(taxYear, nino).value.futureValue
+      val service = new BusinessServiceImpl(
+        stubIFSBusinessDetailsConnector,
+        StubMDTPConnector(),
+        stubBusinessDetailsConnector,
+        StubIFSConnector(),
+        mockAppConfig
+      )
+      val result  = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
       assert(result === expectedResult)
     }
 
@@ -169,8 +224,14 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         getBusinessesResult = aGetBusinessDataResponse.asRight,
         getBusinessIncomeSourcesSummaryResult = error.asLeft
       )
-      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), StubIFSConnector())
-      val result  = service.getAllBusinessIncomeSourcesSummaries(taxYear, nino).value.futureValue
+      val service = new BusinessServiceImpl(
+        stubIFSBusinessDetailsConnector,
+        StubMDTPConnector(),
+        stubBusinessDetailsConnector,
+        StubIFSConnector(),
+        mockAppConfig
+      )
+      val result  = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
       assert(result === error.asLeft)
     }
   }
@@ -182,7 +243,13 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         getBusinessesResult = aGetBusinessDataResponse.asRight,
         getBusinessIncomeSourcesSummaryResult = aBusinessIncomeSourcesSummaryResponse.asRight
       )
-      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), StubIFSConnector())
+      val service = new BusinessServiceImpl(
+        stubIFSBusinessDetailsConnector,
+        StubMDTPConnector(),
+        stubBusinessDetailsConnector,
+        StubIFSConnector(),
+        mockAppConfig
+      )
       val result  = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
       assert(result === expectedResult)
     }
@@ -192,7 +259,14 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         getBusinessesResult = aGetBusinessDataResponse.asRight,
         getBusinessIncomeSourcesSummaryResult = error.asLeft
       )
-      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), StubIFSConnector())
+
+      val service = new BusinessServiceImpl(
+        stubIFSBusinessDetailsConnector,
+        StubMDTPConnector(),
+        stubBusinessDetailsConnector,
+        StubIFSConnector(),
+        mockAppConfig
+      )
       val result  = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
       assert(result === error.asLeft)
     }
@@ -200,38 +274,39 @@ class BusinessServiceSpec extends AnyWordSpecLike {
 
   "getNetBusinessProfitOrLossValues" should {
     "return NetBusinessProfitValues for a business" in new Test {
-      override def stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+      override def stubIFSBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
         getBusinessIncomeSourcesSummaryResult = aBusinessIncomeSourcesSummaryResponse.asRight
       )
-      override def stubIFSConnector = StubIFSConnector(
+      override def stubIFSConnector: StubIFSConnector = StubIFSConnector(
         getPeriodicSummaryDetailResult =
           Future.successful(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Some(IncomeTypeTestData.sample))).asRight),
         getAnnualSummariesResult = Right(api_1803.SuccessResponseSchema(None, None, None))
       )
-      val result = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
+      val result: Either[ServiceError, NetBusinessProfitOrLossValues] = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
 
       assert(result === expectedSuccessResult.asRight)
     }
 
     "return an error from downstream" when {
       "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in new Test {
-        override def stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(getBusinessIncomeSourcesSummaryResult = error.asLeft)
+        override def stubIFSBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+          StubIFSBusinessDetailsConnector(getBusinessIncomeSourcesSummaryResult = error.asLeft)
 
-        val result = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
+        val result: Either[ServiceError, NetBusinessProfitOrLossValues] = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
 
         assert(result === error.asLeft)
       }
       "IFSConnector .getPeriodicSummaryDetail returns an error" in new Test {
-        override def stubIFSConnector = StubIFSConnector(getPeriodicSummaryDetailResult = Future(error.asLeft))
+        override def stubIFSConnector: StubIFSConnector = StubIFSConnector(getPeriodicSummaryDetailResult = Future(error.asLeft))
 
-        val result = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
+        val result: Either[ServiceError, NetBusinessProfitOrLossValues] = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
 
         assert(result === error.asLeft)
       }
       "IFSConnector .getAnnualSummaries returns an error" in new Test {
-        override def stubIFSConnector = StubIFSConnector(getAnnualSummariesResult = error.asLeft)
+        override def stubIFSConnector: StubIFSConnector = StubIFSConnector(getAnnualSummariesResult = error.asLeft)
 
-        val result = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
+        val result: Either[ServiceError, NetBusinessProfitOrLossValues] = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
 
         assert(result === error.asLeft)
       }
@@ -285,7 +360,14 @@ class BusinessServiceSpec extends AnyWordSpecLike {
 
     def stubIFSBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
     def stubIFSConnector: StubIFSConnector                               = StubIFSConnector()
+    def stubHipBusinessDetailsConnector: StubBusinessDetailsConnector    = StubBusinessDetailsConnector(mockHttpClient, mockAppConfig)
 
-    def service: BusinessServiceImpl = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), stubIFSConnector)
+    def service: BusinessServiceImpl = new BusinessServiceImpl(
+      stubIFSBusinessDetailsConnector,
+      StubMDTPConnector(),
+      stubHipBusinessDetailsConnector,
+      stubIFSConnector,
+      mockAppConfig
+    )
   }
 }

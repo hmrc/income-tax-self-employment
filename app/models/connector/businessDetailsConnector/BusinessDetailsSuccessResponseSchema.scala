@@ -18,11 +18,11 @@ package models.connector.businessDetailsConnector
 
 import play.api.libs.json._
 
-case class SuccessResponseSchema(
+case class BusinessDetailsSuccessResponseSchema(
     processingDate: String,
     taxPayerDisplayResponse: ResponseType
 )
 
-object SuccessResponseSchema {
-  implicit lazy val successResponseSchemaJsonFormat: Format[SuccessResponseSchema] = Json.format[SuccessResponseSchema]
+object BusinessDetailsSuccessResponseSchema {
+  implicit lazy val successResponseSchemaJsonFormat: Format[BusinessDetailsSuccessResponseSchema] = Json.format[BusinessDetailsSuccessResponseSchema]
 }

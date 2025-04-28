@@ -25,7 +25,7 @@ import models.common._
 import models.connector._
 import models.connector.api_1500.{CreateBroughtForwardLossRequestBody, CreateBroughtForwardLossRequestData}
 import models.connector.api_1501.{UpdateBroughtForwardLossRequestBody, UpdateBroughtForwardLossRequestData}
-import models.connector.businessDetailsConnector.SuccessResponseSchema
+import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
 import models.domain.ApiResultT
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
 import utils.Logging
@@ -34,7 +34,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 trait IFSBusinessDetailsConnector {
-  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[SuccessResponseSchema]
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema]
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[api_1871.BusinessIncomeSourcesSummaryResponse]
@@ -53,7 +53,7 @@ trait IFSBusinessDetailsConnector {
 }
 
 object IFSBusinessDetailsConnector {
-  type Api1171Response = ApiResponse[SuccessResponseSchema]
+  type Api1171Response = ApiResponse[BusinessDetailsSuccessResponseSchema]
   type Api1871Response = ApiResponse[api_1871.BusinessIncomeSourcesSummaryResponse]
   type Api1500Response = ApiResponse[api_1500.SuccessResponseSchema]
   type Api1501Response = ApiResponse[api_1501.SuccessResponseSchema]
@@ -85,10 +85,10 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
   private def listOfIncomeSources(taxYear: TaxYear, nino: Nino) =
     s"${appConfig.ifsBaseUrl}/income-tax/income-sources/$nino?taxYear=${taxYear.toYYYY_YY}"
 
-  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[SuccessResponseSchema] = {
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] = {
     val url                                                                    = api1171BusinessDetailsUrl(IdType.Nino, nino.value)
     val context                                                                = appConfig.mkMetadata(IFSApiName.Api1171, url)
-    implicit val reads: HttpReads[ApiResponse[SuccessResponseSchema]] = commonReads[SuccessResponseSchema]
+    implicit val reads: HttpReads[ApiResponse[BusinessDetailsSuccessResponseSchema]] = commonReads[BusinessDetailsSuccessResponseSchema]
 
     EitherT(get[Api1171Response](http, context))
   }

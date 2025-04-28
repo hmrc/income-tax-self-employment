@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import utils.TestUtils
 import utils.TestUtils._
 
 class BusinessDetailsControllerSpec extends AnyWordSpecLike {
+
   def mkUnderTest(businessService: StubBusinessService): BusinessDetailsController =
     new BusinessDetailsController(businessService, StubAuthorisedAction(), TestUtils.stubControllerComponents)
 
@@ -34,7 +35,7 @@ class BusinessDetailsControllerSpec extends AnyWordSpecLike {
     val underTest = mkUnderTest(StubBusinessService(getBusinessesResult = Right(aBusinesses)))
 
     "return businesses" in {
-      val result = underTest.getBusinesses(nino)(TestUtils.fakeRequest)
+      val result = underTest.getBusinesses(nino, businessId)(TestUtils.fakeRequest)
       assert(status(result) == OK)
       assert(bodyOf(result) == Json.toJson(aBusinesses).toString())
     }
@@ -64,7 +65,7 @@ class BusinessDetailsControllerSpec extends AnyWordSpecLike {
     val underTest = mkUnderTest(StubBusinessService(getAllBusinessIncomeSourcesSummariesRes = Right(List(aBusinessIncomeSourcesSummaryResponse))))
 
     "return a list of business income source summaries" in {
-      val result = underTest.getAllBusinessIncomeSourcesSummaries(taxYear, nino)(TestUtils.fakeRequest)
+      val result = underTest.getAllBusinessIncomeSourcesSummaries(taxYear, nino, businessId)(TestUtils.fakeRequest)
       assert(status(result) == OK)
       assert(bodyOf(result) == Json.toJson(List(aBusinessIncomeSourcesSummaryResponse)).toString())
     }

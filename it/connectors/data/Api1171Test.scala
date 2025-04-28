@@ -16,14 +16,14 @@
 
 package connectors.data
 
-import base.IntegrationBaseSpec
 import data.CommonTestData
-import models.connector.businessDetailsConnector.SuccessResponseSchema
+import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
 import play.api.libs.json.Json
 
-trait Api1171Test extends IntegrationBaseSpec with CommonTestData {
+trait Api1171Test extends CommonTestData {
 
-  val downstreamUrl = s"/etmp/RESTAdapter/itsa/taxpayer/business-details/$testBusinessId/$testMtdId/$testNino"
+  //val hipDownstreamUrl = s"/etmp/RESTAdapter/itsa/taxpayer/business-details/$testBusinessId/$testMtdId/$testNino"
+  val downstreamUrl = s"/registration/business-details/nino/$testNino"
 
   val successResponseRaw: String =
     """
@@ -77,5 +77,5 @@ trait Api1171Test extends IntegrationBaseSpec with CommonTestData {
       |}
       |""".stripMargin
 
-  val successResponse: SuccessResponseSchema = Json.parse(successResponseRaw).as[SuccessResponseSchema]
+  val successResponse: BusinessDetailsSuccessResponseSchema = Json.parse(successResponseRaw).as[BusinessDetailsSuccessResponseSchema]
 }

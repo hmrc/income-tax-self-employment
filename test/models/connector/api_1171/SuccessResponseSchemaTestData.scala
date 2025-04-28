@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,15 @@
 package models.connector.api_1171
 
 import models.common.{Mtditid, Nino}
-import models.connector.businessDetailsConnector.{BusinessDataDetails, ResponseType, SuccessResponseSchema}
+import models.connector.businessDetailsConnector.{BusinessDataDetails, ResponseType, BusinessDetailsSuccessResponseSchema}
 
 import java.time.OffsetDateTime
 
 object SuccessResponseSchemaTestData {
-  def mkExample(nino: Nino, mtditid: Mtditid, businesses: List[BusinessDataDetails]): SuccessResponseSchema = SuccessResponseSchema(
+  def mkExample(nino: Nino,
+                mtditid: Mtditid,
+                businesses: List[BusinessDataDetails]
+               ): BusinessDetailsSuccessResponseSchema = BusinessDetailsSuccessResponseSchema(
     OffsetDateTime.now().toString,
     ResponseType(
       "safeId",

@@ -64,8 +64,8 @@ object BusinessDataBuilder {
     outstandingBusinessIncome = 66
   )
 
-  lazy val aGetBusinessDataResponse: businessDetailsConnector.SuccessResponseSchema =
-    Json.parse(aGetBusinessDataResponseStr).as[businessDetailsConnector.SuccessResponseSchema]
+  lazy val aGetBusinessDataResponse: businessDetailsConnector.BusinessDetailsSuccessResponseSchema =
+    Json.parse(aGetBusinessDataResponseStr).as[businessDetailsConnector.BusinessDetailsSuccessResponseSchema]
   lazy val aBusinesses: List[Business] =
     aBusinessData.map(_.map(a => mkBusiness(a, aGetBusinessDataResponse.taxPayerDisplayResponse.yearOfMigration))).getOrElse(Nil)
 

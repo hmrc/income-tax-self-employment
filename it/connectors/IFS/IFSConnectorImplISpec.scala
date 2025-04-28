@@ -21,14 +21,14 @@ import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.data.{Api1505Test, Api1786Test, Api1803Test}
 import models.common.JourneyContextWithNino
 import models.common.TaxYear.{asTys, endDate, startDate}
-import models.connector.common.api_1505.ClaimId
-import models.connector.common.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics}
-import models.connector.common.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics}
-import models.connector.common.api_1802.request._
-import models.connector.common.api_1803.SuccessResponseSchema
-import models.connector.common.api_1894.request._
-import models.connector.common.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
-import models.connector.common.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
+import models.connector.api_1505.ClaimId
+import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics}
+import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics}
+import models.connector.api_1802.request._
+import models.connector.api_1803.SuccessResponseSchema
+import models.connector.api_1894.request._
+import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
+import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import models.error.DownstreamError.{GenericDownstreamError, SingleDownstreamError}
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ErrorType.DownstreamErrorCode

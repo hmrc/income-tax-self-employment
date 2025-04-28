@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import stubs.services.StubJourneyStatusService
 import utils.BaseSpec.{businessId, currTaxYear, nino}
 
 class JourneyStatusControllerSpec extends ControllerBehaviours {
+
   private val journeyStatusService = StubJourneyStatusService(
     getRes = Right(JourneyStatus.InProgress)
   )
@@ -66,7 +67,7 @@ class JourneyStatusControllerSpec extends ControllerBehaviours {
         expectedBody = Json
           .toJson(TaskList.empty)
           .toString(),
-        methodBlock = () => underTest.getTaskList(currTaxYear, nino)
+        methodBlock = () => underTest.getTaskList(currTaxYear, businessId, nino)
       )
     }
   }
