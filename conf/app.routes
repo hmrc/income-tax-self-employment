@@ -136,3 +136,6 @@ POST        /:taxYear/clear-expenses-other-expenses-answers/:nino/:businessId   
 POST        /:taxYear/clear-expenses-financial-charges-answers/:nino/:businessId                          controllers.JourneyAnswersController.clearFinancialChargeExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
 
 POST        /:taxYear/clear-expenses-interest-answers/:nino/:businessId                                   controllers.JourneyAnswersController.clearInterestOnBankAndOtherExpensesData(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
+# Common task list endpoints
+GET         /:taxYear/tasks/:nino                                                                         controllers.CommonTaskListController.getCommonTaskList(taxYear: TaxYear, nino: Nino)
