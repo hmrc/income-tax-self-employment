@@ -16,8 +16,9 @@
 
 package services.answers
 
-import models.common.JourneyName.{TravelExpenses, VehicleDetails}
-import models.common.{CollectionOptions, JourneyName}
+import models.common.JourneyName
+import models.common.JourneyName.{IndustrySectors, TravelExpenses, VehicleDetails}
+import models.database.IndustrySectorsDb
 import models.database.expenses.travel.{TravelExpensesDb, VehicleDetailsDb}
 import play.api.Logging
 import play.api.libs.json._
@@ -32,8 +33,9 @@ class JourneyAnswerValidationService @Inject() (implicit ec: ExecutionContext) e
 
   def validate(section: JourneyName, json: JsValue): Future[Either[InvalidSection, ValidSection]] =
     section match {
-      case TravelExpenses => Future(validate[TravelExpensesDb](json))
-      case VehicleDetails => Future(validate[CollectionSection[VehicleDetailsDb]](json))
+      case IndustrySectors => Future(validate[IndustrySectorsDb](json))
+      case TravelExpenses  => Future(validate[TravelExpensesDb](json))
+      case VehicleDetails  => Future(validate[CollectionSection[VehicleDetailsDb]](json))
       case unknown =>
         logger.error(s"Attempted to validate an unsupported section: ${unknown.toString}")
         throw new InternalServerException(s"Attempted to validate an unsupported section: ${unknown.toString}")

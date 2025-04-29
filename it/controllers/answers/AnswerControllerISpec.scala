@@ -3,62 +3,58 @@ package controllers.answers
 import base.IntegrationBaseSpec
 import helpers.AuthStub
 import models.common.JourneyName.TravelExpenses
-import models.database.expenses.travel.{OwnVehicles, TravelExpensesDb}
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK}
-import play.api.libs.json.{JsObject, JsValue, Json}
+import play.api.http.Status._
+import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.Helpers.await
+import testdata.AnswerApiTestData
 
-class AnswerControllerISpec extends IntegrationBaseSpec with AuthStub {
+class AnswerControllerISpec extends IntegrationBaseSpec with AuthStub with AnswerApiTestData {
 
   val url: String => String = journey => s"/answers/users/$testNino/businesses/$testBusinessId/years/${testTaxYear.endYear}/journeys/$journey"
 
   "GET /answers/users/:nino/businesses/:business/years/:taxYear/sections/:section" when {
     "data exists" should {
-      "Return OK with the named section" in {
-        val testSection = TravelExpensesDb(
-          expensesToClaim = Some(Seq(OwnVehicles)),
-          allowablePublicTransportExpenses = Some(100),
-          disallowablePublicTransportExpenses = Some(50))
+      validScenarios.foreach { case (journey, journeyJson) =>
+        s"Return OK with the named section for $journey" in {
+          stubAuthorisedIndividual()
+          stubAudits()
+          DbHelper.insertOne(journey, journeyJson)
 
-        stubAuthorisedIndividual()
-        stubAudits()
-        DbHelper.insertOne(TravelExpenses, testSection)
+          val response: WSResponse = await(buildClient(url(journey.entryName)).get())
 
-        val response: WSResponse = await(buildClient(url(TravelExpenses.entryName)).get())
-
-        response.status mustBe OK
-        response.json mustBe Json.toJson(testSection)
-        DbHelper.get[TravelExpensesDb](TravelExpenses) mustBe Some(testSection)
+          response.status mustBe OK
+          response.json mustBe Json.toJson(journeyJson)
+          DbHelper.getJson(journey) mustBe Some(journeyJson)
+        }
       }
     }
 
     "no data exists" should {
-      "Return NOT_FOUND" in {
-        stubAuthorisedIndividual()
-        stubAudits()
+      validScenarios.foreach { case (journey, _) =>
+        s"Return NOT_FOUND for journey $journey" in {
+          stubAuthorisedIndividual()
+          stubAudits()
 
-        val response: WSResponse = await(buildClient(url(TravelExpenses.entryName)).get())
+          val response: WSResponse = await(buildClient(url(TravelExpenses.entryName)).get())
 
-        response.status mustBe NOT_FOUND
-        DbHelper.getJson(TravelExpenses) mustBe None
+          response.status mustBe NOT_FOUND
+          DbHelper.getJson(TravelExpenses) mustBe None
+        }
       }
     }
 
     "data exists, but it's corrupted" should {
-      "Return NOT_FOUND" in {
-        val testSection = TravelExpensesDb(
-          expensesToClaim = Some(Seq(OwnVehicles)),
-          allowablePublicTransportExpenses = Some(100),
-          disallowablePublicTransportExpenses = Some(50))
+      invalidScenarios.foreach { case (journey, journeyJson) =>
+        s"Return INTERNAL_SERVER_ERROR for $journey" in {
+          stubAuthorisedIndividual()
+          stubAudits()
+          DbHelper.insertOne(journey, journeyJson)
 
-        stubAuthorisedIndividual()
-        stubAudits()
-        DbHelper.insertOne(TravelExpenses, Json.obj("expensesToClaim" -> "invalid"))
+          val response: WSResponse = await(buildClient(url(journey.entryName)).get())
 
-        val response: WSResponse = await(buildClient(url(TravelExpenses.entryName)).get())
-
-        response.status mustBe INTERNAL_SERVER_ERROR
+          response.status mustBe INTERNAL_SERVER_ERROR
+        }
       }
     }
 
@@ -77,78 +73,75 @@ class AnswerControllerISpec extends IntegrationBaseSpec with AuthStub {
 
   "PUT /answers/users/:nino/businesses/:business/years/:taxYear/sections/:section" when {
     "the JSON content is valid" should {
-      "Replace the named section with the given JSON" in {
-        val testSection: JsValue = Json.toJson(
-          TravelExpensesDb(
-            expensesToClaim = Some(Seq()),
-            allowablePublicTransportExpenses = Some(100),
-            disallowablePublicTransportExpenses = Some(50)))
+      replaceScenarios.foreach { case (journey, (testSection, expectedUpdate)) =>
+        s"Replace the named section with the given JSON for $journey" in {
+          stubAuthorisedIndividual()
+          stubAudits()
+          DbHelper.insertOne(journey, testSection)
 
-        val expectedUpdate: JsObject = testSection.as[JsObject] - "expensesToClaim" ++ Json.obj("expensesToClaim" -> Json.arr("OwnVehicles"))
+          val response: WSResponse = await(buildClient(url(journey.entryName)).put(expectedUpdate))
 
-        stubAuthorisedIndividual()
-        stubAudits()
-        DbHelper.insertOne(TravelExpenses, testSection)
-
-        val response: WSResponse = await(buildClient(url(TravelExpenses.entryName)).put(expectedUpdate))
-
-        response.status mustBe OK
-        response.json mustBe Json.toJson(expectedUpdate)
-        DbHelper.getJson(TravelExpenses) mustBe Some(expectedUpdate)
+          response.status mustBe OK
+          response.json mustBe Json.toJson(expectedUpdate)
+          DbHelper.getJson(journey) mustBe Some(expectedUpdate)
+        }
       }
     }
 
     "the JSON content is invalid" should {
-      "return BAD_REQUEST" in {
-        stubAuthorisedIndividual()
-        stubAudits()
+      invalidScenarios.foreach { case (journey, journeyJson) =>
+        s"return BAD_REQUEST for $journey" in {
+          stubAuthorisedIndividual()
+          stubAudits()
 
-        val response: WSResponse = await(buildClient(url(TravelExpenses.entryName)).put(Json.obj("expensesToClaim" -> "invalid")))
+          val response: WSResponse = await(buildClient(url(journey.entryName)).put(journeyJson))
 
-        response.status mustBe BAD_REQUEST
+          response.status mustBe BAD_REQUEST
+        }
       }
     }
 
     "the body isn't valid JSON" should {
-      "return BAD_REQUEST" in {
-        stubAuthorisedIndividual()
-        stubAudits()
+      validScenarios.foreach { case (journey, _) =>
+        s"return BAD_REQUEST for $journey" in {
+          stubAuthorisedIndividual()
+          stubAudits()
 
-        val response: WSResponse = await(buildClient(url(TravelExpenses.entryName)).put("Not JSON"))
+          val response: WSResponse = await(buildClient(url(journey.entryName)).put("Not JSON"))
 
-        response.status mustBe BAD_REQUEST
+          response.status mustBe BAD_REQUEST
+        }
       }
     }
   }
 
   "DELETE /answers/users/:nino/businesses/:business/years/:taxYear/sections/:section" when {
     "data exists for the given section" should {
-      "delete the data and return NO_CONTENT" in {
-        val testSection = TravelExpensesDb(
-          expensesToClaim = Some(Seq(OwnVehicles)),
-          allowablePublicTransportExpenses = Some(100),
-          disallowablePublicTransportExpenses = Some(50))
+      validScenarios.foreach { case (journey, journeyJson) =>
+        s"delete the data and return NO_CONTENT for $journey" in {
+          stubAuthorisedIndividual()
+          stubAudits()
+          DbHelper.insertOne(journey, journeyJson)
 
-        stubAuthorisedIndividual()
-        stubAudits()
-        DbHelper.insertOne(TravelExpenses, testSection)
+          val response: WSResponse = await(buildClient(url(journey.entryName)).delete())
 
-        val response: WSResponse = await(buildClient(url(TravelExpenses.entryName)).delete())
-
-        response.status mustBe NO_CONTENT
-        DbHelper.getJson(TravelExpenses) mustBe None
+          response.status mustBe NO_CONTENT
+          DbHelper.getJson(journey) mustBe None
+        }
       }
     }
 
     "data doesn't exist for the given section" should {
-      "just return NO_CONTENT" in {
-        stubAuthorisedIndividual()
-        stubAudits()
+      validScenarios.foreach { case (journey, _) =>
+        s"return NO_CONTENT for $journey" in {
+          stubAuthorisedIndividual()
+          stubAudits()
 
-        val response: WSResponse = await(buildClient(url(TravelExpenses.entryName)).delete())
+          val response: WSResponse = await(buildClient(url(journey.entryName)).delete())
 
-        response.status mustBe NO_CONTENT
-        DbHelper.getJson(TravelExpenses) mustBe None
+          response.status mustBe NO_CONTENT
+          DbHelper.getJson(journey) mustBe None
+        }
       }
     }
   }
