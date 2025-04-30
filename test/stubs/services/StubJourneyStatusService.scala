@@ -40,15 +40,10 @@ case class StubJourneyStatusService(
 
   def get(ctx: JourneyContext): ApiResultT[JourneyStatus] = EitherT.fromEither[Future](getRes)
 
-  def getTaskList(taxYear: TaxYear,
-                  businessId: BusinessId,
-                  mtditid: Mtditid,
-                  nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
+  def getTaskList(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
     EitherT.fromEither[Future](getTaskListRes)
 
-  def getCommonTaskList(taxYear: TaxYear,
-                        businessId: BusinessId,
-                        mtditid: Mtditid,
-                        nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskListModel] =
+  def getCommonTaskList(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+      hc: HeaderCarrier): ApiResultT[TaskListModel] =
     EitherT.fromEither[Future](getCommonTaskListRes)
 }

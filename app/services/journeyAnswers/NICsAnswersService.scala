@@ -107,21 +107,20 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
     repository.upsertAnswers(JourneyContext(ctx.taxYear, ctx.businessId, ctx.mtditid, NationalInsuranceContributions), Json.toJson(dbAnswers))
   }
 
-  private def getBusinessDetails(businessId: BusinessId,
-                                 mtditid: Mtditid,
-                                 nino: Nino)(
-                                  implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] = {
+  private def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] =
     if (appConfig.hipMigration1171Enabled) {
       hipBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)
     } else {
       ifsBusinessDetailsConnector.getBusinesses(nino)
     }
-  }
 
   private def updateIdsToNoClass4Exemption(ctx: JourneyContextWithNino, idsWithExemption: List[String])(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      allUserBusinessIds <- getBusinessDetails(ctx.businessId, ctx.mtditid, ctx.nino).map(_.taxPayerDisplayResponse.businessData.map(_.map(_.incomeSourceId)))
+      allUserBusinessIds <- getBusinessDetails(ctx.businessId, ctx.mtditid, ctx.nino).map(
+        _.taxPayerDisplayResponse.businessData.map(_.map(_.incomeSourceId)))
       idsWithNoExemption      = allUserBusinessIds.map(_.filterNot(idsWithExemption.contains(_)))
       noClass4ExemptionAnswer = Class4ExemptionAnswers(ctx.businessId, class4Exempt = false, None)
       result <- idsWithNoExemption

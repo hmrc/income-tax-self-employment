@@ -97,7 +97,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
   }
 
   "saving income answers" when {
-    "no period summary or annual submission data exists" must {//businessId, mtditid, nino
+    "no period summary or annual submission data exists" must { // businessId, mtditid, nino
       "successfully store data and create the period summary" in new TestCase(connector = mock[IFSConnector]) {
         when(mockBusinessService.getBusiness(any[BusinessId], any[Mtditid], any[Nino])(any[HeaderCarrier]))
           .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
@@ -160,10 +160,8 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 
   "saveAnswers" should {
     "save data in the repository" in new TestCase() {
-      when(mockBusinessService.getBusiness(
-        any[BusinessId],
-        any[Mtditid],
-        any[Nino])(any[HeaderCarrier])).thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
+      when(mockBusinessService.getBusiness(any[BusinessId], any[Mtditid], any[Nino])(any[HeaderCarrier]))
+        .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
 
       service
         .saveAnswers(journeyCtxWithNino, sampleIncomeJourneyAnswersData)

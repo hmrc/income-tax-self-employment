@@ -169,7 +169,13 @@ object StubIFSConnector {
   def api1171SingleBusinessResponse(businessId: BusinessId): businessDetailsConnector.BusinessDetailsSuccessResponseSchema =
     businessDetailsConnector.BusinessDetailsSuccessResponseSchema(
       OffsetDateTime.now().toString,
-      businessDetailsConnector.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Option(List(BusinessDataDetailsTestData.mkExample(businessId))))
+      businessDetailsConnector.ResponseType(
+        "safeId",
+        "nino",
+        "mtdid",
+        None,
+        propertyIncome = false,
+        Option(List(BusinessDataDetailsTestData.mkExample(businessId))))
     )
 
   def api1171MultipleBusinessResponse(businessIds: List[BusinessId]): businessDetailsConnector.BusinessDetailsSuccessResponseSchema = {

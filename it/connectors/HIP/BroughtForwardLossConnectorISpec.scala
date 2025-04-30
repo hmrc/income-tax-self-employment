@@ -53,7 +53,9 @@ class BroughtForwardLossConnectorISpec extends IntegrationBaseSpec {
           expectedStatus = status
         )
         connector.deleteBroughtForwardLoss(testNino, testTaxYear, testBusinessId.value).value.futureValue shouldBe Left(
-          GenericDownstreamError(status, s"Downstream error when calling DELETE http://localhost:11111$deleteBroughtForwardLossDownstreamUrl: status=$status, body:\n"))
+          GenericDownstreamError(
+            status,
+            s"Downstream error when calling DELETE http://localhost:11111$deleteBroughtForwardLossDownstreamUrl: status=$status, body:\n"))
       }
     }
   }

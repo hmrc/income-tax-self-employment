@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-package connectors.data
+package utils
 
-import models.common.TaxYear
-import testdata.CommonTestData
+import org.mockito.MockitoSugar
+import org.mockito.stubbing.ScalaOngoingStubbing
 
-trait Api1504Test extends CommonTestData {
+import java.time.{OffsetDateTime, ZonedDateTime}
+import java.time.temporal.ChronoUnit
 
-  val downstreamUrl                         = s"/individuals/losses/$testNino/brought-forward-losses/$testBusinessId"
-  val deleteBroughtForwardLossDownstreamUrl = s"/income-tax/v1/brought-forward-losses/$testNino/${TaxYear.asTys(testTaxYear)}/$testBusinessId"
+trait MockTimeMachine extends MockitoSugar {
 
+  val mockTimeMachine: ZonedDateTimeMachine = mock[ZonedDateTimeMachine]
+
+  def mockNow(setNow: OffsetDateTime): ScalaOngoingStubbing[ZonedDateTime] =
+    when(mockTimeMachine.now).thenReturn(setNow.toZonedDateTime.truncatedTo(ChronoUnit.SECONDS))
 }

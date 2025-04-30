@@ -86,8 +86,8 @@ class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: Ap
     s"${appConfig.ifsBaseUrl}/income-tax/income-sources/$nino?taxYear=${taxYear.toYYYY_YY}"
 
   def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] = {
-    val url                                                                    = api1171BusinessDetailsUrl(IdType.Nino, nino.value)
-    val context                                                                = appConfig.mkMetadata(IFSApiName.Api1171, url)
+    val url                                                                          = api1171BusinessDetailsUrl(IdType.Nino, nino.value)
+    val context                                                                      = appConfig.mkMetadata(IFSApiName.Api1171, url)
     implicit val reads: HttpReads[ApiResponse[BusinessDetailsSuccessResponseSchema]] = commonReads[BusinessDetailsSuccessResponseSchema]
 
     EitherT(get[Api1171Response](http, context))

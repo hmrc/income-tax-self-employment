@@ -42,8 +42,8 @@ import scala.concurrent.Future
 
 class BusinessServiceSpec extends AnyWordSpecLike {
 
-  val mockAppConfig: AppConfig                           = mock[AppConfig]
-  val mockHttpClient: HttpClient                         = mock[HttpClient]
+  val mockAppConfig: AppConfig   = mock[AppConfig]
+  val mockHttpClient: HttpClient = mock[HttpClient]
 
   val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
   val mdtpConnector: StubMDTPConnector                             = StubMDTPConnector()
@@ -86,10 +86,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
       val service = new BusinessServiceImpl(
         StubIFSBusinessDetailsConnector(getBusinessesResult = Right(businesses)),
         StubMDTPConnector(),
-        StubBusinessDetailsConnector(
-          httpClient = mockHttpClient,
-          appConfig = mockAppConfig,
-          getBusinessDetailsRes = Right(businesses)),
+        StubBusinessDetailsConnector(httpClient = mockHttpClient, appConfig = mockAppConfig, getBusinessDetailsRes = Right(businesses)),
         StubIFSConnector(),
         mockAppConfig
       )
@@ -163,14 +160,14 @@ class BusinessServiceSpec extends AnyWordSpecLike {
   "getUserDateOfBirth" should {
     "return a user's date of birth as a LocalDate" in {
       val expectedResult = Right(aUserDateOfBirth)
-      val service        = new BusinessServiceImpl(
+      val service = new BusinessServiceImpl(
         StubIFSBusinessDetailsConnector(),
         StubMDTPConnector(),
         stubBusinessDetailsConnector,
         StubIFSConnector(),
         mockAppConfig
       )
-      val result         = service.getUserDateOfBirth(nino).value.futureValue
+      val result = service.getUserDateOfBirth(nino).value.futureValue
       assert(result === expectedResult)
     }
 
@@ -191,14 +188,14 @@ class BusinessServiceSpec extends AnyWordSpecLike {
   "getAllBusinessIncomeSourcesSummaries" should {
     "return an empty list if a user has no businesses" in {
       val expectedResult = Right(List.empty[BusinessIncomeSourcesSummaryResponse])
-      val service        = new BusinessServiceImpl(
+      val service = new BusinessServiceImpl(
         StubIFSBusinessDetailsConnector(),
         StubMDTPConnector(),
         StubBusinessDetailsConnector(mockHttpClient, mockAppConfig, api1171EmptyResponse.asRight),
         StubIFSConnector(),
         mockAppConfig
       )
-      val result         = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
+      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
       assert(result === expectedResult)
     }
 
@@ -215,7 +212,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         StubIFSConnector(),
         mockAppConfig
       )
-      val result  = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
+      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
       assert(result === expectedResult)
     }
 
@@ -231,7 +228,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         StubIFSConnector(),
         mockAppConfig
       )
-      val result  = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
+      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
       assert(result === error.asLeft)
     }
   }
@@ -250,7 +247,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         StubIFSConnector(),
         mockAppConfig
       )
-      val result  = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
+      val result = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
       assert(result === expectedResult)
     }
 
@@ -267,7 +264,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         StubIFSConnector(),
         mockAppConfig
       )
-      val result  = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
+      val result = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
       assert(result === error.asLeft)
     }
   }
@@ -292,21 +289,24 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         override def stubIFSBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
           StubIFSBusinessDetailsConnector(getBusinessIncomeSourcesSummaryResult = error.asLeft)
 
-        val result: Either[ServiceError, NetBusinessProfitOrLossValues] = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
+        val result: Either[ServiceError, NetBusinessProfitOrLossValues] =
+          service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
 
         assert(result === error.asLeft)
       }
       "IFSConnector .getPeriodicSummaryDetail returns an error" in new Test {
         override def stubIFSConnector: StubIFSConnector = StubIFSConnector(getPeriodicSummaryDetailResult = Future(error.asLeft))
 
-        val result: Either[ServiceError, NetBusinessProfitOrLossValues] = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
+        val result: Either[ServiceError, NetBusinessProfitOrLossValues] =
+          service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
 
         assert(result === error.asLeft)
       }
       "IFSConnector .getAnnualSummaries returns an error" in new Test {
         override def stubIFSConnector: StubIFSConnector = StubIFSConnector(getAnnualSummariesResult = error.asLeft)
 
-        val result: Either[ServiceError, NetBusinessProfitOrLossValues] = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
+        val result: Either[ServiceError, NetBusinessProfitOrLossValues] =
+          service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
 
         assert(result === error.asLeft)
       }

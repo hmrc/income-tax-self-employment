@@ -44,28 +44,19 @@ final case class StubBusinessService(
     hasOtherIncomeSources: Either[ServiceError, Boolean] = Right(true)
 ) extends BusinessService {
 
-  def getBusinesses(businessId: BusinessId,
-                    mtditid: Mtditid,
-                    nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
+  def getBusinesses(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
     EitherT.fromEither[Future](getBusinessesResult)
 
-  def getBusiness(businessId: BusinessId,
-                  mtditid: Mtditid,
-                  nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[Business] =
+  def getBusiness(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[Business] =
     EitherT.fromEither[Future](getBusinessResult)
 
-  def getUserBusinessIds(businessId: BusinessId,
-                         mtditid: Mtditid,
-                         nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[BusinessId]] =
+  def getUserBusinessIds(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[BusinessId]] =
     EitherT.fromEither[Future](getUserBusinessIdsResult)
 
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
     EitherT.fromEither[Future](getUserDateOfBirthRes)
 
-  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear,
-                                           businessId: BusinessId,
-                                           mtditid: Mtditid,
-                                           nino: Nino)(implicit
+  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]] =
     EitherT.fromEither[Future](getAllBusinessIncomeSourcesSummariesRes)
 

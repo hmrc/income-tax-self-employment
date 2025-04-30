@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package connectors.data
+package utils
 
-import models.common.TaxYear
-import testdata.CommonTestData
+import com.google.inject.Singleton
 
-trait Api1504Test extends CommonTestData {
+import java.time.{Clock, ZonedDateTime}
+import java.time.temporal.ChronoUnit
+import javax.inject.Inject
 
-  val downstreamUrl                         = s"/individuals/losses/$testNino/brought-forward-losses/$testBusinessId"
-  val deleteBroughtForwardLossDownstreamUrl = s"/income-tax/v1/brought-forward-losses/$testNino/${TaxYear.asTys(testTaxYear)}/$testBusinessId"
-
+@Singleton
+class ZonedDateTimeMachine @Inject() (clock: Clock = Clock.systemUTC()) {
+  def now: ZonedDateTime = ZonedDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS)
 }
