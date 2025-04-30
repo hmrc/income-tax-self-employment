@@ -23,39 +23,39 @@ import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseS
 import models.connector.{ApiResponse, HipApiName, IntegrationContext, businessDetailsReads}
 import models.domain.ApiResultT
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
-import utils.Logging
+import utils.{Logging, ZonedDateTimeMachine}
 
-import java.time.{ZoneOffset, ZonedDateTime}
-import java.time.temporal.ChronoUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 trait BusinessDetailsConnector {
-  def getBusinessDetails(businessId: BusinessId,
-                         mtditid: Mtditid,
-                         nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema]
+  def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema]
 }
 
 @Singleton
-class BusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends BusinessDetailsConnector with Logging {
+class BusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig, timeMachine: ZonedDateTimeMachine)
+    extends BusinessDetailsConnector
+    with Logging {
 
   private def getBusinessDetailsUrl(incomeSourceId: BusinessId, mtdReference: Mtditid, nino: Nino): String =
-    s"${appConfig.hipBaseUrl}/etmp/RESTAdapter/itsa/taxpayer/business-details/$incomeSourceId/$mtdReference/$nino"
+    s"${appConfig.hipBaseUrl}/etmp/RESTAdapter/itsa/taxpayer/business-details?incomeSourceId=$incomeSourceId&mtdReference=$mtdReference&nino=$nino"
 
   private val additionalHeaders: Seq[(String, String)] = Seq(
     "X-Message-Type"        -> "TaxpayerDisplay",
     "X-Originating-System"  -> "MDTP",
-    "X-Receipt-Date"        -> ZonedDateTime.now(ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS).toString,
+    "X-Receipt-Date"        -> timeMachine.now.toString,
     "X-Regime-Type"         -> "ITSA",
     "X-Transmitting-System" -> "HIP"
   )
 
-  def getBusinessDetails(businessId: BusinessId,
-                         mtditid: Mtditid,
-                         nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] = {
-    val url: String                                                     = getBusinessDetailsUrl(businessId, mtditid, nino)
-    val context: IntegrationContext.IntegrationHeaderCarrier            = appConfig.mkMetadata(HipApiName.Api1171, url)
-    implicit val reads: HttpReads[ApiResponse[BusinessDetailsSuccessResponseSchema]]   = businessDetailsReads[BusinessDetailsSuccessResponseSchema]
+  def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] = {
+    val url: String                                                                  = getBusinessDetailsUrl(businessId, mtditid, nino)
+    val context: IntegrationContext.IntegrationHeaderCarrier                         = appConfig.mkMetadata(HipApiName.Api1171, url)
+    implicit val reads: HttpReads[ApiResponse[BusinessDetailsSuccessResponseSchema]] = businessDetailsReads[BusinessDetailsSuccessResponseSchema]
 
     EitherT(connectors.getWithHeaders[ApiResponse[BusinessDetailsSuccessResponseSchema]](http, context, additionalHeaders))
 

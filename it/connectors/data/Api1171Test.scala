@@ -16,14 +16,13 @@
 
 package connectors.data
 
-import data.CommonTestData
+import testdata.CommonTestData
 import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
 import play.api.libs.json.Json
 
 trait Api1171Test extends CommonTestData {
 
-  //val hipDownstreamUrl = s"/etmp/RESTAdapter/itsa/taxpayer/business-details/$testBusinessId/$testMtdId/$testNino"
-  val downstreamUrl = s"/registration/business-details/nino/$testNino"
+  val downstreamUrl: String = s"/registration/business-details/nino/$testNino"
 
   val successResponseRaw: String =
     """

@@ -46,7 +46,7 @@ import utils.EitherTTestOps.convertScalaFuture
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordSpecLike  {
+class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordSpecLike {
 
   "saveClass2Answers" should {
     val disclosuresWithOtherFields =
@@ -109,13 +109,17 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
 
   val saveClass4DataCases: TableFor3[String, Class4ExemptionAnswers, AnnualNonFinancials] = Table(
     ("testDescription", "answer", "expectedApiData"),
-    ("save 'No Class 4 exemption'", Class4ExemptionAnswers(businessId, class4Exempt = false, None),
+    (
+      "save 'No Class 4 exemption'",
+      Class4ExemptionAnswers(businessId, class4Exempt = false, None),
       AnnualNonFinancials(exemptFromPayingClass4Nics = false, None)),
     (
       "save a Trustee related exemption",
       Class4ExemptionAnswers(businessId, class4Exempt = true, Some(TrusteeExecutorAdmin)),
       AnnualNonFinancials(exemptFromPayingClass4Nics = true, Some("002"))),
-    ("save a Diver related exemption", Class4ExemptionAnswers(businessId, class4Exempt = true, Some(DiverDivingInstructor)),
+    (
+      "save a Diver related exemption",
+      Class4ExemptionAnswers(businessId, class4Exempt = true, Some(DiverDivingInstructor)),
       AnnualNonFinancials(exemptFromPayingClass4Nics = true, Some("003")))
   )
 
@@ -192,11 +196,17 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       )
 
       val expectedResultId1: Option[CreateAmendSEAnnualSubmissionRequestData] = // Replace empty answers
-        buildExpectedRequestResult(AnnualNonFinancials(exemptFromPayingClass4Nics = true, Some(DiverDivingInstructor.exemptionCode)), BusinessId("BusinessId1"))
+        buildExpectedRequestResult(
+          AnnualNonFinancials(exemptFromPayingClass4Nics = true, Some(DiverDivingInstructor.exemptionCode)),
+          BusinessId("BusinessId1"))
       val expectedResultId2: Option[CreateAmendSEAnnualSubmissionRequestData] = // Persist original answers
-        buildExpectedRequestResult(AnnualNonFinancials(exemptFromPayingClass4Nics = true, Some(DiverDivingInstructor.exemptionCode)), BusinessId("BusinessId2"))
+        buildExpectedRequestResult(
+          AnnualNonFinancials(exemptFromPayingClass4Nics = true, Some(DiverDivingInstructor.exemptionCode)),
+          BusinessId("BusinessId2"))
       val expectedResultId3: Option[CreateAmendSEAnnualSubmissionRequestData] = // Replace existing answers
-        buildExpectedRequestResult(AnnualNonFinancials(exemptFromPayingClass4Nics = true, Some(TrusteeExecutorAdmin.exemptionCode)), BusinessId("BusinessId3"))
+        buildExpectedRequestResult(
+          AnnualNonFinancials(exemptFromPayingClass4Nics = true, Some(TrusteeExecutorAdmin.exemptionCode)),
+          BusinessId("BusinessId3"))
       val expectedResultId4: Option[CreateAmendSEAnnualSubmissionRequestData] = // Clear existing answers
         buildExpectedRequestResult(AnnualNonFinancials(exemptFromPayingClass4Nics = false, None), BusinessId("BusinessId4"))
 
@@ -260,13 +270,13 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
   }
 
   trait StubbedService {
-    val connector                                          = new StubIFSConnector()
-    val mockAppConfig: AppConfig                           = mock[AppConfig]
-    val mockhttpClient: HttpClient                         = mock[HttpClient]
+    val connector                  = new StubIFSConnector()
+    val mockAppConfig: AppConfig   = mock[AppConfig]
+    val mockhttpClient: HttpClient = mock[HttpClient]
     val ifsBusinessConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
       getBusinessesResult = api1171SingleBusinessResponse(businessId).asRight)
-    val repository: StubJourneyAnswersRepository           = StubJourneyAnswersRepository()
-    val businessService: StubBusinessService               = StubBusinessService()
+    val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository()
+    val businessService: StubBusinessService     = StubBusinessService()
 
     val hipBusinessConnector: StubBusinessDetailsConnector = StubBusinessDetailsConnector(
       httpClient = mockhttpClient,
@@ -274,13 +284,8 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       getBusinessDetailsRes = api1171SingleBusinessResponse(businessId).asRight
     )
 
-    def service: NICsAnswersServiceImpl = new NICsAnswersServiceImpl(connector,
-      ifsBusinessConnector,
-      hipBusinessConnector,
-      repository,
-      businessService,
-      mockAppConfig
-    )
+    def service: NICsAnswersServiceImpl =
+      new NICsAnswersServiceImpl(connector, ifsBusinessConnector, hipBusinessConnector, repository, businessService, mockAppConfig)
 
     def buildDataResponse(annualNonFinancialsData: AnnualNonFinancialsType): Right[Nothing, SuccessResponseSchema] =
       Right(api_1803.SuccessResponseSchema(None, None, Some(annualNonFinancialsData)))

@@ -56,7 +56,8 @@ class JourneyStatusServiceImpl @Inject() (businessService: BusinessService, repo
       taskList   <- repository.getAll(taxYear, mtditid, businesses)
     } yield taskList
 
-  def getCommonTaskList(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskListModel] =
+  def getCommonTaskList(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+      hc: HeaderCarrier): ApiResultT[TaskListModel] =
     getTaskList(taxYear, businessId, mtditid, nino).map { data =>
       val selfEmploymentJourneyItems: Seq[TaskListSectionItem] = // This combines lists of journeys for all business IDs
         data.businesses.flatMap(journeyList => TaskListSectionItem.fromJourneys(taxYear, journeyList.businessId, journeyList.journeyStatuses))

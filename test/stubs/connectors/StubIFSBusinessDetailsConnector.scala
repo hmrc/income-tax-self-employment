@@ -41,7 +41,8 @@ case class StubIFSBusinessDetailsConnector(
 ) extends IFSBusinessDetailsConnector {
   var updatedBroughtForwardLossData: Option[UpdateBroughtForwardLossRequestBody] = None
 
-  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[businessDetailsConnector.BusinessDetailsSuccessResponseSchema] =
+  def getBusinesses(
+      nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[businessDetailsConnector.BusinessDetailsSuccessResponseSchema] =
     EitherT.fromEither[Future](getBusinessesResult)
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit

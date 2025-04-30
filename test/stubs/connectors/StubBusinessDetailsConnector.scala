@@ -30,16 +30,15 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-
 final case class StubBusinessDetailsConnector @Inject() (httpClient: HttpClient,
                                                          appConfig: AppConfig,
-                                                         getBusinessDetailsRes: StubBusinessDetailsConnector.Api1171Response = api1171EmptyResponse.asRight
-                                                        ) extends BusinessDetailsConnector {
+                                                         getBusinessDetailsRes: StubBusinessDetailsConnector.Api1171Response =
+                                                           api1171EmptyResponse.asRight)
+    extends BusinessDetailsConnector {
 
-  def getBusinessDetails(businessId: BusinessId,
-                         mtditid: Mtditid,
-                         nino: Nino)(
-    implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] =
+  def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+      hc: HeaderCarrier,
+      ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] =
     EitherT.fromEither[Future](getBusinessDetailsRes)
 }
 
