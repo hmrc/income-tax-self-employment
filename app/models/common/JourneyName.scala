@@ -30,6 +30,7 @@ object JourneyName extends Enum[JourneyName] with utils.PlayJsonEnum[JourneyName
   val values: IndexedSeq[JourneyName] = findValues
 
   final case object TradeDetails                   extends JourneyName("trade-details", None)
+  final case object IndustrySectors                extends JourneyName("industry-sectors", None)
   final case object SelfEmploymentAbroad           extends JourneyName("self-employment-abroad", None)
   final case object Income                         extends JourneyName("income", None)
   final case object ExpensesTailoring              extends JourneyName("expenses-categories", None)
