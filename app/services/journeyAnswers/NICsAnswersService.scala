@@ -107,11 +107,11 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
     repository.upsertAnswers(JourneyContext(ctx.taxYear, ctx.businessId, ctx.mtditid, NationalInsuranceContributions), Json.toJson(dbAnswers))
   }
 
-  private def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+  private def getBusinessDetails(mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] =
     if (appConfig.hipMigration1171Enabled) {
-      hipBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)
+      hipBusinessDetailsConnector.getBusinessDetails(mtditid, nino)
     } else {
       ifsBusinessDetailsConnector.getBusinesses(nino)
     }
@@ -119,7 +119,7 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
   private def updateIdsToNoClass4Exemption(ctx: JourneyContextWithNino, idsWithExemption: List[String])(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      allUserBusinessIds <- getBusinessDetails(ctx.businessId, ctx.mtditid, ctx.nino).map(
+      allUserBusinessIds <- getBusinessDetails(ctx.mtditid, ctx.nino).map(
         _.taxPayerDisplayResponse.businessData.map(_.map(_.incomeSourceId)))
       idsWithNoExemption      = allUserBusinessIds.map(_.filterNot(idsWithExemption.contains(_)))
       noClass4ExemptionAnswer = Class4ExemptionAnswers(ctx.businessId, class4Exempt = false, None)
@@ -143,7 +143,7 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
   }
 
   private def updateJourneyContextWithSingleBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[JourneyContextWithNino] =
-    EitherT(getBusinessDetails(ctx.businessId, ctx.mtditid, ctx.nino).value.map {
+    EitherT(getBusinessDetails(ctx.mtditid, ctx.nino).value.map {
       case Right(res: BusinessDetailsSuccessResponseSchema) =>
         res.taxPayerDisplayResponse.getMaybeSingleBusinessId match {
           case Some(id) => Right(ctx(newId = id))
@@ -161,7 +161,7 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
       }
 
     for {
-      allUserBusinessIds        <- businessService.getUserBusinessIds(ctx.businessId, ctx.mtditid, ctx.nino)
+      allUserBusinessIds        <- businessService.getUserBusinessIds(ctx.mtditid, ctx.nino)
       allAnnualSummariesWithIds <- getAnnualSummariesWithIds(allUserBusinessIds)
       disclosures               <- connector.getDisclosuresSubmission(ctx)
       dbAnswers                 <- repository.getAnswers[NICsStorageAnswers](ctx.toJourneyContext(JourneyName.NationalInsuranceContributions))

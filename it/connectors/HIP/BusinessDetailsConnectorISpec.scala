@@ -43,7 +43,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
   )
 
   val api1171Url: String =
-    s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?incomeSourceId=$testBusinessId&mtdReference=$testMtdItId&nino=$testNino"
+    s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?mtdReference=$testMtdItId&nino=$testNino"
 
   val additionalHeaders: Seq[HttpHeader] = Seq(
     new HttpHeader("X-Message-Type", "TaxpayerDisplay"),
@@ -63,7 +63,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
       )
 
       val result: Either[ServiceError, BusinessDetailsSuccessResponseSchema] =
-        connector.getBusinessDetails(testBusinessId, testMtdItId, testNino).value.futureValue
+        connector.getBusinessDetails(testMtdItId, testNino).value.futureValue
 
       result mustBe Right(successResponse)
     }
@@ -85,7 +85,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
           expectedResponse = "",
           requestHeaders = additionalHeaders
         )
-        connector.getBusinessDetails(testBusinessId, testMtdItId, testNino).value.futureValue shouldBe Left(
+        connector.getBusinessDetails(testMtdItId, testNino).value.futureValue shouldBe Left(
           GenericDownstreamError(status, s"Downstream error when calling GET http://localhost:11111$api1171Url: status=$status, body:\n"))
       }
     }

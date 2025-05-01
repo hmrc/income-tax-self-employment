@@ -69,7 +69,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
 
   "getBusinesses" should {
     "return an empty list" in {
-      val result = testService.getBusinesses(businessId, mtditid, nino).value.futureValue.value
+      val result = testService.getBusinesses(mtditid, nino).value.futureValue.value
       assert(result === Nil)
     }
 
@@ -91,7 +91,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         mockAppConfig
       )
 
-      val result = service.getBusinesses(businessId, mtditid, nino).value.futureValue.value
+      val result = service.getBusinesses(mtditid, nino).value.futureValue.value
 
       val expectedBusiness = List(
         BusinessTestData.mkExample(BusinessId("id1")),
@@ -125,7 +125,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
 
   "getUserBusinessIds" should {
     "return an empty list" in {
-      val result = testService.getUserBusinessIds(businessId, mtditid, nino).value.futureValue.value
+      val result = testService.getUserBusinessIds(mtditid, nino).value.futureValue.value
       assert(result === Nil)
     }
 
@@ -146,7 +146,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         mockAppConfig
       )
 
-      val result = service.getUserBusinessIds(businessId, mtditid, nino).value.futureValue.value
+      val result = service.getUserBusinessIds(mtditid, nino).value.futureValue.value
 
       val expectedBusiness = List(
         BusinessId("id1"),
@@ -195,7 +195,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         StubIFSConnector(),
         mockAppConfig
       )
-      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
+      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value.futureValue
       assert(result === expectedResult)
     }
 
@@ -212,7 +212,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         StubIFSConnector(),
         mockAppConfig
       )
-      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
+      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value.futureValue
       assert(result === expectedResult)
     }
 
@@ -228,7 +228,7 @@ class BusinessServiceSpec extends AnyWordSpecLike {
         StubIFSConnector(),
         mockAppConfig
       )
-      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
+      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value.futureValue
       assert(result === error.asLeft)
     }
   }

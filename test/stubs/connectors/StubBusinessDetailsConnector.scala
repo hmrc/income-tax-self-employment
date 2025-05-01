@@ -20,7 +20,7 @@ import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
 import connectors.HIP.BusinessDetailsConnector
-import models.common.{BusinessId, Mtditid, Nino}
+import models.common.{Mtditid, Nino}
 import models.connector.ApiResponse
 import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
 import models.domain.ApiResultT
@@ -33,10 +33,10 @@ import scala.concurrent.{ExecutionContext, Future}
 final case class StubBusinessDetailsConnector @Inject() (httpClient: HttpClient,
                                                          appConfig: AppConfig,
                                                          getBusinessDetailsRes: StubBusinessDetailsConnector.Api1171Response =
-                                                           api1171EmptyResponse.asRight)
+                                                         api1171EmptyResponse.asRight)
     extends BusinessDetailsConnector {
 
-  def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+  def getBusinessDetails(mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] =
     EitherT.fromEither[Future](getBusinessDetailsRes)
