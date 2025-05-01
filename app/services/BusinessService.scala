@@ -38,15 +38,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait BusinessService {
-  def getBusinesses(mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]]
+  def getBusinesses(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]]
 
   def getBusiness(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[Business]
 
-  def getUserBusinessIds(mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[BusinessId]]
+  def getUserBusinessIds(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[BusinessId]]
 
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate]
 
-  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit
+  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]]
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
@@ -66,31 +66,31 @@ class BusinessServiceImpl @Inject() (ifsBusinessDetailsConnector: IFSBusinessDet
                                      appConfig: AppConfig)(implicit ec: ExecutionContext)
     extends BusinessService {
 
-  private def getBusinessDetails(mtditid: Mtditid, nino: Nino)(implicit
+  private def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] =
     if (appConfig.hipMigration1171Enabled) {
-      hipBusinessDetailsConnector.getBusinessDetails(mtditid, nino)
+      hipBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)
     } else {
       ifsBusinessDetailsConnector.getBusinesses(nino)
     }
 
-  def getBusinesses(mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
+  def getBusinesses(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
     for {
-      maybeBusinesses <- getBusinessDetails(mtditid, nino)
+      maybeBusinesses <- getBusinessDetails(businessId, mtditid, nino)
       maybeYearOfMigration = maybeBusinesses.taxPayerDisplayResponse.yearOfMigration
       businesses           = maybeBusinesses.taxPayerDisplayResponse.businessData.getOrElse(Nil)
     } yield businesses.map(b => Business.mkBusiness(b, maybeYearOfMigration))
 
   def getBusiness(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[Business] =
     for {
-      businesses <- getBusinesses(mtditid, nino)
+      businesses <- getBusinesses(businessId, mtditid, nino)
       maybeBusiness = businesses.find(_.businessId == businessId.value)
       business <- EitherT.fromOption[Future](maybeBusiness, BusinessNotFoundError(businessId)).leftAs[ServiceError]
     } yield business
 
-  def getUserBusinessIds(mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[BusinessId]] =
-    getBusinesses(mtditid, nino).map(_.map(business => BusinessId(business.businessId)))
+  def getUserBusinessIds(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[BusinessId]] =
+    getBusinesses(businessId, mtditid, nino).map(_.map(business => BusinessId(business.businessId)))
 
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
     for {
@@ -98,10 +98,10 @@ class BusinessServiceImpl @Inject() (ifsBusinessDetailsConnector: IFSBusinessDet
       dateOfBirth    <- EitherT.fromEither[Future](citizenDetails.parseDoBToLocalDate)
     } yield dateOfBirth
 
-  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit
+  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]] =
     for {
-      businesses <- getBusinesses(mtditid, nino)
+      businesses <- getBusinesses(businessId, mtditid, nino)
       businessIds = businesses.map(business => BusinessId(business.businessId))
       summaryList <- businessIds.traverse { businessId =>
         ifsBusinessDetailsConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)

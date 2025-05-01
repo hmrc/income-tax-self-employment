@@ -33,8 +33,8 @@ import scala.concurrent.{ExecutionContext, Future}
 trait JourneyStatusService {
   def set(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit]
   def get(ctx: JourneyContext): ApiResultT[JourneyStatus]
-  def getTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList]
-  def getCommonTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskListModel]
+  def getTaskList(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList]
+  def getCommonTaskList(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskListModel]
 }
 
 @Singleton
@@ -50,15 +50,15 @@ class JourneyStatusServiceImpl @Inject() (businessService: BusinessService, repo
       status = answer.map(_.status).getOrElse(JourneyStatus.CheckOurRecords)
     } yield status
 
-  def getTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
+  def getTaskList(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
     for {
-      businesses <- businessService.getBusinesses(mtditid, nino)
+      businesses <- businessService.getBusinesses(businessId, mtditid, nino)
       taskList   <- repository.getAll(taxYear, mtditid, businesses)
     } yield taskList
 
-  def getCommonTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit
+  def getCommonTaskList(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier): ApiResultT[TaskListModel] =
-    getTaskList(taxYear, mtditid, nino).map { data =>
+    getTaskList(taxYear, businessId, mtditid, nino).map { data =>
       val selfEmploymentJourneyItems: Seq[TaskListSectionItem] = // This combines lists of journeys for all business IDs
         data.businesses.flatMap(journeyList => TaskListSectionItem.fromJourneys(taxYear, journeyList.businessId, journeyList.journeyStatuses))
       val selfEmploymentSections

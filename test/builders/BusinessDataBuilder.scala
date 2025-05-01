@@ -19,7 +19,7 @@ package builders
 import models.common._
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.connector.api_2085.{IncomeSource, ListOfIncomeSources}
-import models.connector.businessDetailsConnector.BusinessDataDetails
+import models.connector.businessDetailsConnector.{BusinessDataDetails, BusinessDetailsSuccessResponseSchema}
 import models.connector.citizen_details.SuccessResponseSchema
 import models.connector.{businessDetailsConnector, citizen_details}
 import models.domain.Business.mkBusiness
@@ -159,4 +159,7 @@ object BusinessDataBuilder {
      |   },
      |   "dateOfBirth": "30071997"
      |}""".stripMargin
+
+  val businessDetailsSuccessResponse: BusinessDetailsSuccessResponseSchema = Json.parse(aGetBusinessDataResponseStr).as[BusinessDetailsSuccessResponseSchema]
+
 }

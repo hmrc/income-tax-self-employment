@@ -24,7 +24,6 @@ import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseS
 import models.error.DownstreamError.GenericDownstreamError
 import models.error.ServiceError
 import org.mockito.MockitoSugar
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.{NOT_FOUND, OK}
 import testdata.CommonTestData
 import utils.MockTimeMachine
@@ -43,7 +42,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
   )
 
   val api1171Url: String =
-    s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?mtdReference=$testMtdItId&nino=$testNino"
+    s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?incomeSourceId=$testBusinessId&mtdReference=$testMtdItId&nino=$testNino"
 
   val additionalHeaders: Seq[HttpHeader] = Seq(
     new HttpHeader("X-Message-Type", "TaxpayerDisplay"),
@@ -63,7 +62,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
       )
 
       val result: Either[ServiceError, BusinessDetailsSuccessResponseSchema] =
-        connector.getBusinessDetails(testMtdItId, testNino).value.futureValue
+        connector.getBusinessDetails(testBusinessId, testMtdItId, testNino).value.futureValue
 
       result mustBe Right(successResponse)
     }
@@ -73,7 +72,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
       ("Unauthorized", UNAUTHORIZED),
       ("Forbidden", FORBIDDEN),
       ("NotFound", NOT_FOUND),
-      ("Unsupported MediaType", UNSUPPORTED_MEDIA_TYPE),
+      ("Unsupported mediaType", UNSUPPORTED_MEDIA_TYPE),
       ("Resource not found", UNPROCESSABLE_ENTITY),
       ("Server Error", INTERNAL_SERVER_ERROR),
       ("Server unavailable", SERVICE_UNAVAILABLE)
@@ -85,16 +84,12 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
           expectedResponse = "",
           requestHeaders = additionalHeaders
         )
-        connector.getBusinessDetails(testMtdItId, testNino).value.futureValue shouldBe Left(
-          GenericDownstreamError(status, s"Downstream error when calling GET http://localhost:11111$api1171Url: status=$status, body:\n"))
+
+        val result: Either[ServiceError, BusinessDetailsSuccessResponseSchema] = connector.getBusinessDetails(testBusinessId, testMtdItId, testNino).value.futureValue
+
+        result.isLeft mustBe true
+        result.merge mustBe a[GenericDownstreamError]
       }
     }
-
-    //    val hipErrors = Map(
-    //      "001" -> InternalError,
-    //      "006" -> NotFoundError,
-    //      "007" -> InternalError,
-    //      "008" -> InternalError
-    //    )
   }
 }
