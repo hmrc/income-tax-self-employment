@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,19 +43,6 @@ package object connector {
       case _                       => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
     }
   }
-
-  def businessDetailsReads[A: Reads](implicit logger: Logger): HttpReads[ApiResponse[A]] =
-    (method: String, url: String, response: HttpResponse) => {
-      ConnectorResponseInfo(method, url, response).logResponseWarnOn4xx(logger)
-
-      response.status match {
-        case OK => toA(response, method, url)
-        case BAD_REQUEST | UNAUTHORIZED | FORBIDDEN | NOT_FOUND | UNSUPPORTED_MEDIA_TYPE | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR |
-            SERVICE_UNAVAILABLE =>
-          Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
-        case _ => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
-      }
-    }
 
   /** It treats any non OK / CREATED / NO_CONTENT / ACCEPTED as an error, and return Unit otherwise
     */
@@ -132,6 +119,6 @@ package object connector {
         parsedModel => Right(parsedModel)
       )
 
-  private def createCommonErrorParser(method: String, url: String, response: HttpResponse): DownstreamParser =
+  def createCommonErrorParser(method: String, url: String, response: HttpResponse): DownstreamParser =
     CommonDownstreamParser(method, url, response)
 }

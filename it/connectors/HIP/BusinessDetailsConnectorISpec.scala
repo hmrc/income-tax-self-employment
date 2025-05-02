@@ -25,26 +25,32 @@ import models.error.DownstreamError.GenericDownstreamError
 import models.error.ServiceError
 import org.mockito.MockitoSugar
 import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.test.Helpers.await
 import testdata.CommonTestData
-import utils.MockTimeMachine
+import utils.{MockIdGenerator, MockTimeMachine}
 
 import java.time.OffsetDateTime
 
-class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestData with MockitoSugar with MockTimeMachine {
+class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestData with MockitoSugar with MockTimeMachine with MockIdGenerator {
+
+  protected val correlationId = "X-123"
 
   val fixedTime: OffsetDateTime = OffsetDateTime.parse("2025-04-30T15:00:00+01:00")
   mockNow(fixedTime)
+  mockCorrelationId(correlationId)
 
   val connector = new BusinessDetailsConnectorImpl(
-    httpClient,
+    httpClientV2,
     appConfig,
-    mockTimeMachine
+    mockTimeMachine,
+    mockIdGenerator
   )
 
   val api1171Url: String =
     s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?incomeSourceId=$testBusinessId&mtdReference=$testMtdItId&nino=$testNino"
 
   val additionalHeaders: Seq[HttpHeader] = Seq(
+    new HttpHeader("correlationid", correlationId),
     new HttpHeader("X-Message-Type", "TaxpayerDisplay"),
     new HttpHeader("X-Originating-System", "MDTP"),
     new HttpHeader("X-Receipt-Date", fixedTime.toString),
@@ -62,7 +68,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
       )
 
       val result: Either[ServiceError, BusinessDetailsSuccessResponseSchema] =
-        connector.getBusinessDetails(testBusinessId, testMtdItId, testNino).value.futureValue
+        await(connector.getBusinessDetails(testBusinessId, testMtdItId, testNino).value)
 
       result mustBe Right(successResponse)
     }
@@ -86,7 +92,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
         )
 
         val result: Either[ServiceError, BusinessDetailsSuccessResponseSchema] =
-          connector.getBusinessDetails(testBusinessId, testMtdItId, testNino).value.futureValue
+          await(connector.getBusinessDetails(testBusinessId, testMtdItId, testNino).value)
 
         result.isLeft mustBe true
         result.merge mustBe a[GenericDownstreamError]
