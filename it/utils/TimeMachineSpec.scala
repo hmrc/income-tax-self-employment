@@ -22,7 +22,7 @@ import org.scalatest.matchers.should.Matchers
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 
-class ZonedDateTimeMachineSpec extends AnyFlatSpec with Matchers with MockTimeMachine {
+class TimeMachineSpec extends AnyFlatSpec with Matchers with MockTimeMachine {
 
   "ZonedDateTimeMachine" should
     "return the mocked current time" in {

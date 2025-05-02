@@ -23,6 +23,6 @@ import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 @Singleton
-class ZonedDateTimeMachine @Inject() (clock: Clock = Clock.systemUTC()) {
+class TimeMachine @Inject()(clock: Clock = Clock.systemUTC()) {
   def now: ZonedDateTime = ZonedDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS)
 }

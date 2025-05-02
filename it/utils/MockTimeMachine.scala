@@ -24,7 +24,7 @@ import java.time.temporal.ChronoUnit
 
 trait MockTimeMachine extends MockitoSugar {
 
-  val mockTimeMachine: ZonedDateTimeMachine = mock[ZonedDateTimeMachine]
+  val mockTimeMachine: TimeMachine = mock[TimeMachine]
 
   def mockNow(setNow: OffsetDateTime): ScalaOngoingStubbing[ZonedDateTime] =
     when(mockTimeMachine.now).thenReturn(setNow.toZonedDateTime.truncatedTo(ChronoUnit.SECONDS))
