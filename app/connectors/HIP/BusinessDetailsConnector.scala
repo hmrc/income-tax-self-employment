@@ -39,10 +39,7 @@ trait BusinessDetailsConnector {
 }
 
 @Singleton
-class BusinessDetailsConnectorImpl @Inject() (httpClientV2: HttpClientV2,
-                                              appConfig: AppConfig,
-                                              timeMachine: TimeMachine,
-                                              idGenerator: IdGenerator)
+class BusinessDetailsConnectorImpl @Inject() (httpClientV2: HttpClientV2, appConfig: AppConfig, timeMachine: TimeMachine, idGenerator: IdGenerator)
     extends BusinessDetailsConnector
     with Logging {
 
