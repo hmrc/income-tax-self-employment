@@ -27,16 +27,6 @@ package object connectors {
     http.GET[Resp](context.url)(reads, context.enrichedHeaderCarrier, ec)
   }
 
-  def getWithHeaders[Resp: HttpReads](http: HttpClient, context: IntegrationContext, additionalHeaders: Seq[(String, String)])(implicit
-      hc: HeaderCarrier,
-      ec: ExecutionContext): Future[Resp] = {
-
-    val headersWithExtras = hc.withExtraHeaders(additionalHeaders: _*)
-
-    val reads = implicitly[HttpReads[Resp]]
-    http.GET[Resp](context.url)(reads, headersWithExtras, ec)
-  }
-
   def post[Req: Writes, Resp: HttpReads](http: HttpClient, context: IntegrationContext, body: Req)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): Future[Resp] = {
