@@ -160,6 +160,7 @@ object BusinessDataBuilder {
      |   "dateOfBirth": "30071997"
      |}""".stripMargin
 
-  val businessDetailsSuccessResponse: BusinessDetailsSuccessResponseSchema = Json.parse(aGetBusinessDataResponseStr).as[BusinessDetailsSuccessResponseSchema]
+  val businessDetailsSuccessResponse: BusinessDetailsSuccessResponseSchema =
+    Json.parse(aGetBusinessDataResponseStr).as[BusinessDetailsSuccessResponseSchema]
 
 }

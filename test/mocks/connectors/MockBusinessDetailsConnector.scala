@@ -21,7 +21,7 @@ import cats.implicits.catsStdInstancesForFuture
 import connectors.HIP.BusinessDetailsConnector
 import models.common.{BusinessId, Mtditid, Nino}
 import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
-import org.mockito.ArgumentMatchers
+import models.domain.ApiResultT
 import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.MockitoSugar.when
@@ -29,18 +29,16 @@ import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object MockBusinessDetailsConnector {
 
   val mockInstance: BusinessDetailsConnector = mock[BusinessDetailsConnector]
 
-  def getBusinessDetails(businessId: BusinessId,
-                         mtditid: Mtditid,
-                         nino: Nino)
-                        (returnValue: BusinessDetailsSuccessResponseSchema):ScalaOngoingStubbing[EitherT[Future, Error, BusinessDetailsSuccessResponseSchema]] =
-
-    when(mockInstance.getBusinessDetails(eqTo(businessId), eqTo[mtditid], eqTo[nino])(any[HeaderCarrier], any[ExecutionContext])).thenReturn(EitherT.rightT(returnValue))
+  def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(
+      returnValue: BusinessDetailsSuccessResponseSchema): ScalaOngoingStubbing[ApiResultT[BusinessDetailsSuccessResponseSchema]] =
+    when(mockInstance.getBusinessDetails(eqTo(businessId), eqTo(mtditid), eqTo(nino))(any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(EitherT.rightT(returnValue))
 
 }

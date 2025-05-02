@@ -16,9 +16,11 @@
 
 package services.journeyAnswers
 
+import builders.BusinessDataBuilder.businessDetailsSuccessResponse
 import builders.NICsAnswersBuilder.{class4DiverAndTrusteeMultipleBusinessesAnswers, class4SingleBusinessAnswers}
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
+import mocks.connectors.MockBusinessDetailsConnector
 import models.common.BusinessId
 import models.connector.api_1638._
 import models.connector.api_1639._
@@ -31,6 +33,7 @@ import models.error.ServiceError
 import models.frontend.nics.ExemptionReason.{DiverDivingInstructor, TrusteeExecutorAdmin}
 import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
 import models.frontend.nics.{ExemptionReason, NICsAnswers, NICsClass2Answers, NICsClass4Answers}
+import org.mockito.MockitoSugar.when
 import org.scalatest.EitherValues._
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor3}
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -41,7 +44,7 @@ import stubs.connectors.{StubBusinessDetailsConnector, StubIFSBusinessDetailsCon
 import stubs.repositories.StubJourneyAnswersRepository
 import stubs.services.StubBusinessService
 import uk.gov.hmrc.http.HttpClient
-import utils.BaseSpec.{businessId, currTaxYear, currTaxYearEnd, hc, journeyCtxWithNino, nino}
+import utils.BaseSpec.{businessId, currTaxYear, currTaxYearEnd, hc, journeyCtxWithNino, mtditid, nino}
 import utils.EitherTTestOps.convertScalaFuture
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -170,6 +173,24 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       assert(result.isRight)
       assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
     }
+
+    "save Class 4 journey answers when user has a single business when hipMigration1171Enabled is true" in new StubbedService {
+      when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
+      MockBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)(businessDetailsSuccessResponse)
+
+      override val ifsBusinessConnector: StubIFSBusinessDetailsConnector =
+        StubIFSBusinessDetailsConnector(getBusinessesResult = api1171MultipleBusinessResponse(List(businessId)).asRight)
+
+      override val connector: StubIFSConnector = StubIFSConnector(getAnnualSummariesResult = Right(api_1803.SuccessResponseSchema(None, None, None)))
+
+      val expectedApiData: AnnualNonFinancials = AnnualNonFinancials(exemptFromPayingClass4Nics = true, Some(TrusteeExecutorAdmin.exemptionCode))
+      val expectedResult: Option[CreateAmendSEAnnualSubmissionRequestData] = buildExpectedRequestResult(expectedApiData)
+
+      val result: Either[ServiceError, Unit] = service.saveClass4SingleBusiness(journeyCtxWithNino, class4SingleBusinessAnswers).value.futureValue
+
+      assert(result.isRight)
+      assert(connector.upsertAnnualSummariesSubmissionData === expectedResult)
+    }
   }
 
   "saveClass4MultipleBusinesses" should {
@@ -273,8 +294,10 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
     val connector                  = new StubIFSConnector()
     val mockAppConfig: AppConfig   = mock[AppConfig]
     val mockhttpClient: HttpClient = mock[HttpClient]
+
     val ifsBusinessConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
       getBusinessesResult = api1171SingleBusinessResponse(businessId).asRight)
+
     val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository()
     val businessService: StubBusinessService     = StubBusinessService()
 
