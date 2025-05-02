@@ -26,7 +26,7 @@ import models.error.DownstreamError
 import play.api.http.Status._
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
-import utils.{IdGenerator, Logging, ZonedDateTimeMachine}
+import utils.{IdGenerator, Logging, TimeMachine}
 
 import java.net.URI
 import javax.inject.{Inject, Singleton}
@@ -41,7 +41,7 @@ trait BusinessDetailsConnector {
 @Singleton
 class BusinessDetailsConnectorImpl @Inject() (httpClientV2: HttpClientV2,
                                               appConfig: AppConfig,
-                                              timeMachine: ZonedDateTimeMachine,
+                                              timeMachine: TimeMachine,
                                               idGenerator: IdGenerator)
     extends BusinessDetailsConnector
     with Logging {
