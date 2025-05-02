@@ -33,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 final case class StubBusinessDetailsConnector @Inject() (httpClient: HttpClient,
                                                          appConfig: AppConfig,
                                                          getBusinessDetailsRes: StubBusinessDetailsConnector.Api1171Response =
-                                                         api1171EmptyResponse.asRight)
+                                                           api1171EmptyResponse.asRight)
     extends BusinessDetailsConnector {
 
   def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit

@@ -85,7 +85,8 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
           requestHeaders = additionalHeaders
         )
 
-        val result: Either[ServiceError, BusinessDetailsSuccessResponseSchema] = connector.getBusinessDetails(testBusinessId, testMtdItId, testNino).value.futureValue
+        val result: Either[ServiceError, BusinessDetailsSuccessResponseSchema] =
+          connector.getBusinessDetails(testBusinessId, testMtdItId, testNino).value.futureValue
 
         result.isLeft mustBe true
         result.merge mustBe a[GenericDownstreamError]
