@@ -67,7 +67,7 @@ class JourneyStatusControllerSpec extends ControllerBehaviours {
         expectedBody = Json
           .toJson(TaskList.empty)
           .toString(),
-        methodBlock = () => underTest.getTaskList(currTaxYear, businessId, nino)
+        methodBlock = () => underTest.getTaskList(currTaxYear, nino)
       )
     }
   }
