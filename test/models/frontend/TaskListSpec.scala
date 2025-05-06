@@ -18,6 +18,8 @@ package models.frontend
 
 import bulders.BusinessDataBuilder
 import cats.implicits._
+import models.common.JourneyName.TradeDetails
+import models.common.JourneyStatus.InProgress
 import models.common._
 import models.database.JourneyAnswers
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
@@ -28,7 +30,7 @@ import utils.BaseSpec._
 import java.time.Instant
 
 class TaskListSpec extends AnyWordSpecLike {
-  val now = Instant.now()
+  val now: Instant = Instant.now()
 
   "fromJourneyAnswers" should {
     "return an empty task list when there are no answers" in {
@@ -42,7 +44,7 @@ class TaskListSpec extends AnyWordSpecLike {
       val answers = List(
         JourneyAnswers(
           mtditid,
-          BusinessId.tradeDetailsId,
+          businessId1,
           currTaxYear,
           JourneyName.TradeDetails,
           JourneyStatus.InProgress,
@@ -61,14 +63,13 @@ class TaskListSpec extends AnyWordSpecLike {
 
       assert(
         result === TaskList(
-          JourneyNameAndStatus(JourneyName.TradeDetails, JourneyStatus.InProgress).some,
           List(
             TradesJourneyStatuses(
               businessId1,
               BusinessDataBuilder.aBusiness.tradingName.map(TradingName(_)),
               TypeOfBusiness(BusinessDataBuilder.aBusiness.typeOfBusiness),
               AccountingType(BusinessDataBuilder.aBusiness.accountingType.getOrElse("")),
-              Nil
+              List(JourneyNameAndStatus(TradeDetails, InProgress))
             ),
             TradesJourneyStatuses(
               businessId2,

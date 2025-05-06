@@ -140,7 +140,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
 
       result.value shouldBe JourneyAnswers(
         tradeDetailsCtx.mtditid,
-        BusinessId("trade-details"),
+        tradeDetailsCtx.businessId,
         tradeDetailsCtx.taxYear,
         TradeDetails,
         NotStarted,
@@ -176,17 +176,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
     "return an empty task list" in {
       when(mockClock.instant()).thenReturn(testInstant)
       val result = repository.getAll(currTaxYear, mtditid, List.empty).value.futureValue.value
-      result shouldBe TaskList(None, Nil, None)
-    }
-
-    "return trade details without businesses" in {
-      when(mockClock.instant()).thenReturn(testInstant)
-      val result = (for {
-        _        <- repository.setStatus(tradeDetailsCtx, NotStarted)
-        taskList <- repository.getAll(tradeDetailsCtx.taxYear, tradeDetailsCtx.mtditid, Nil)
-      } yield taskList).value.futureValue.value
-
-      result shouldBe TaskList(JourneyNameAndStatus(TradeDetails, NotStarted).some, Nil, None)
+      result shouldBe TaskList(Nil, None)
     }
 
     "return task list with businesses" in {
@@ -204,14 +194,13 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
       } yield taskList).rightValue
 
       result shouldBe TaskList(
-        JourneyNameAndStatus(TradeDetails, CheckOurRecords).some,
         List(
           TradesJourneyStatuses(
             BusinessId(incomeCtx.businessId.value),
             TradingName("string").some,
             TypeOfBusiness("self-employment"),
             AccountingType("ACCRUAL"),
-            List(JourneyNameAndStatus(Income, Completed))
+            List(JourneyNameAndStatus(TradeDetails, CheckOurRecords), JourneyNameAndStatus(Income, Completed))
           ),
           TradesJourneyStatuses(
             BusinessId("business2"),
