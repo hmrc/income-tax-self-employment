@@ -21,14 +21,12 @@ import models.database.JourneyAnswers
 import models.domain.{Business, JourneyNameAndStatus, TradesJourneyStatuses}
 import play.api.libs.json.{Json, OFormat}
 
-final case class TaskList(tradeDetails: Option[JourneyNameAndStatus],
-                          businesses: List[TradesJourneyStatuses],
-                          nationalInsuranceContributions: Option[JourneyNameAndStatus])
+final case class TaskList(businesses: List[TradesJourneyStatuses], nationalInsuranceContributions: Option[JourneyNameAndStatus])
 
 object TaskList {
   implicit val format: OFormat[TaskList] = Json.format[TaskList]
 
-  val empty: TaskList = TaskList(None, Nil, None)
+  val empty: TaskList = TaskList(Nil, None)
 
   def fromJourneyAnswers(userJourneyAnswers: List[JourneyAnswers], businesses: List[Business]): TaskList = {
     def getStatusWithoutBusinessId(journeyName: JourneyName): Option[JourneyNameAndStatus] = {
@@ -38,7 +36,6 @@ object TaskList {
         .flatMap(_.headOption.map(a => JourneyNameAndStatus(a.journey, a.status)))
     }
 
-    val tradingDetailsStatus    = getStatusWithoutBusinessId(JourneyName.TradeDetails)
     val nationalInsuranceStatus = getStatusWithoutBusinessId(JourneyName.NationalInsuranceContributions)
 
     val journeyStatusesPerBusiness = businesses.map { business =>
@@ -54,6 +51,6 @@ object TaskList {
       )
     }
 
-    TaskList(tradingDetailsStatus, journeyStatusesPerBusiness, nationalInsuranceStatus)
+    TaskList(journeyStatusesPerBusiness, nationalInsuranceStatus)
   }
 }

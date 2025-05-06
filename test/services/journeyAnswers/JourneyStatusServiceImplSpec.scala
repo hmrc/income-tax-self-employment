@@ -43,9 +43,9 @@ import java.time.Instant
 class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  val businessConnector = StubIFSBusinessDetailsConnector()
-  val repository        = StubJourneyAnswersRepository()
-  val now               = Instant.now()
+  val businessConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
+  val repository: StubJourneyAnswersRepository           = StubJourneyAnswersRepository()
+  val now: Instant                                       = Instant.now()
 
   val underTest = new JourneyStatusServiceImpl(StubBusinessService(), repository)
 
@@ -81,7 +81,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
     }
 
     "return a task list" in {
-      val taskList = TaskList(Some(JourneyNameAndStatus(JourneyName.Income, JourneyStatus.NotStarted)), Nil, None)
+      val taskList = TaskList(Nil, None)
       val underTest = new JourneyStatusServiceImpl(
         StubBusinessService(),
         repository.copy(
@@ -97,9 +97,8 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
   "getCommonTaskList" should {
     "create TaskListModel from saved journey statuses" in {
       val taskList = TaskList(
-        Some(JourneyNameAndStatus(JourneyName.TradeDetails, JourneyStatus.Completed)),
         aTradesJourneyStatusesSeq.map(_.copy(journeyStatuses = allCompetedJourneyStatuses.toList)),
-        Some(JourneyNameAndStatus(JourneyName.NationalInsuranceContributions, JourneyStatus.Completed))
+        Option(JourneyNameAndStatus(JourneyName.NationalInsuranceContributions, JourneyStatus.Completed))
       )
       val underTest = new JourneyStatusServiceImpl(
         StubBusinessService(),
@@ -108,7 +107,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
         )
       )
       val result = underTest.getCommonTaskList(taxYear, mtditid, nino)
-      result.value.futureValue shouldBe TaskListModel(List(TaskListSection(SelfEmploymentTitle(), Some(allCompletedTaskListSectionItems)))).asRight
+      result.value.futureValue shouldBe TaskListModel(List(TaskListSection(SelfEmploymentTitle(), Option(allCompletedTaskListSectionItems)))).asRight
     }
 
     "return an error from downstream" in {
