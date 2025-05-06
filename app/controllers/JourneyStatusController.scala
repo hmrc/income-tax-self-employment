@@ -49,8 +49,9 @@ class JourneyStatusController @Inject() (journeyStatusService: JourneyStatusServ
     }
   }
 
-  def getTaskList(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
-    val result = journeyStatusService.getTaskList(taxYear, businessId, request.getMtditid, nino)
+  def getTaskList(taxYear: TaxYear, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
+    val businessId = request.getQueryString("businessId").map(BusinessId(_))
+    val result     = journeyStatusService.getTaskList(taxYear, businessId, request.getMtditid, nino)
     handleApiResultT(result)
   }
 
