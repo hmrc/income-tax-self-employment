@@ -31,6 +31,6 @@ case class JourneyContextWithNino(taxYear: TaxYear, businessId: BusinessId, mtdi
   */
 case class JourneyContext(taxYear: TaxYear, _businessId: BusinessId, mtditid: Mtditid, journey: JourneyName) {
   val businessId: BusinessId = journey match {
-    case _            => _businessId
+    case _ => _businessId
   }
 }

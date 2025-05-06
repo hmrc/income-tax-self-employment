@@ -44,8 +44,8 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
   import scala.concurrent.ExecutionContext.Implicits.global
 
   val businessConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
-  val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository()
-  val now: Instant = Instant.now()
+  val repository: StubJourneyAnswersRepository           = StubJourneyAnswersRepository()
+  val now: Instant                                       = Instant.now()
 
   val underTest = new JourneyStatusServiceImpl(StubBusinessService(), repository)
 

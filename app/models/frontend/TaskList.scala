@@ -21,8 +21,7 @@ import models.database.JourneyAnswers
 import models.domain.{Business, JourneyNameAndStatus, TradesJourneyStatuses}
 import play.api.libs.json.{Json, OFormat}
 
-final case class TaskList(businesses: List[TradesJourneyStatuses],
-                          nationalInsuranceContributions: Option[JourneyNameAndStatus])
+final case class TaskList(businesses: List[TradesJourneyStatuses], nationalInsuranceContributions: Option[JourneyNameAndStatus])
 
 object TaskList {
   implicit val format: OFormat[TaskList] = Json.format[TaskList]

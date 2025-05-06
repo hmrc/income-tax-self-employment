@@ -213,7 +213,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
     )
     ctx.journey match {
       case NationalInsuranceContributions => baseFilters
-      case _                                             => Filters.and(baseFilters, Filters.eq("businessId", ctx.businessId.value))
+      case _                              => Filters.and(baseFilters, Filters.eq("businessId", ctx.businessId.value))
     }
   }
 
