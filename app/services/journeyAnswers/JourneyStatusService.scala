@@ -52,7 +52,7 @@ class JourneyStatusServiceImpl @Inject() (businessService: BusinessService, repo
 
   def getTaskList(taxYear: TaxYear, businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
     for {
-      businesses <- businessService.getBusinesses(businessId.get, mtditid, nino)
+      businesses <- businessService.getBusinesses(businessId, mtditid, nino)
       taskList   <- repository.getAll(taxYear, mtditid, businesses)
     } yield taskList
 

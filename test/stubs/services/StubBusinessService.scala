@@ -44,7 +44,7 @@ final case class StubBusinessService(
     hasOtherIncomeSources: Either[ServiceError, Boolean] = Right(true)
 ) extends BusinessService {
 
-  def getBusinesses(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
+  def getBusinesses(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
     EitherT.fromEither[Future](getBusinessesResult)
 
   def getBusiness(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[Business] =
