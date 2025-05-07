@@ -76,7 +76,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "getTaskList" should {
     "return empty task list if no answers" in {
-      val result = underTest.getTaskList(taxYear, mtditid, nino)
+      val result = underTest.getTaskList(taxYear, Some(businessId), mtditid, nino)
       result.value.futureValue shouldBe TaskList.empty.asRight
     }
 
@@ -89,7 +89,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
         )
       )
 
-      val result = underTest.getTaskList(taxYear, mtditid, nino)
+      val result = underTest.getTaskList(taxYear, Some(businessId), mtditid, nino)
       result.value.futureValue shouldBe taskList.asRight
     }
   }
@@ -119,7 +119,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
         )
       )
 
-      val result = underTest.getTaskList(taxYear, mtditid, nino)
+      val result = underTest.getTaskList(taxYear, Some(businessId), mtditid, nino)
       result.value.futureValue shouldBe downstreamError.asLeft
     }
   }
