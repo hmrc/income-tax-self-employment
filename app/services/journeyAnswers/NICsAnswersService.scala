@@ -111,7 +111,7 @@ class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] =
     if (appConfig.hipMigration1171Enabled) {
-      hipBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)
+      hipBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)
     } else {
       ifsBusinessDetailsConnector.getBusinesses(nino)
     }

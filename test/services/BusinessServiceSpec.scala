@@ -81,7 +81,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "return an empty when hipMigration1171Enabled is true" in {
       when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-      MockBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)(businessDetailsSuccessResponse)
+      MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(businessDetailsSuccessResponse)
 
       val result = testService.getBusinesses(businessId, mtditid, nino).value.futureValue.value
       assert(result === Nil)
@@ -120,7 +120,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "return a list of businesses when hipMigration1171Enabled is true" in {
       when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-      MockBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)(businessDetailsSuccessResponse)
+      MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(businessDetailsSuccessResponse)
 
       val businesses = SuccessResponseSchemaTestData.mkExample(
         nino,
@@ -163,7 +163,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "return Not Found if no business exist when hipMigration1171Enabled is true" in {
       when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-      MockBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)(businessDetailsSuccessResponse)
+      MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(businessDetailsSuccessResponse)
 
       val id     = BusinessId("id")
       val result = testService.getBusiness(id, mtditid, nino).value.futureValue.left.value
@@ -190,7 +190,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "return a business when hipMigration1171Enabled is true" in {
       when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-      MockBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)(businessDetailsSuccessResponse)
+      MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(businessDetailsSuccessResponse)
 
       val business = SuccessResponseSchemaTestData.mkExample(nino, mtditid, List(BusinessDataDetailsTestData.mkExample(businessId)))
 
@@ -217,7 +217,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "return an empty list when hipMigration1171Enabled is true" in {
       when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-      MockBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)(businessDetailsSuccessResponse)
+      MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(businessDetailsSuccessResponse)
 
       val result = testService.getUserBusinessIds(businessId, mtditid, nino).value.futureValue.value
       assert(result === Nil)
@@ -329,7 +329,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "return an empty list if a user has no businesses when hipMigration1171Enabled is true" in {
       when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-      MockBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)(businessDetailsSuccessResponse)
+      MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(businessDetailsSuccessResponse)
 
       val expectedResult = Right(List.empty[BusinessIncomeSourcesSummaryResponse])
       val service = new BusinessServiceImpl(
@@ -364,7 +364,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "return an IncomeSourcesSummary for each business when hipMigration1171Enabled is true" in {
       when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-      MockBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)(businessDetailsSuccessResponse)
+      MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(businessDetailsSuccessResponse)
 
       val expectedResult = Right(List(aBusinessIncomeSourcesSummaryResponse))
       val stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
@@ -402,7 +402,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "return an error from downstream when hipMigration1171Enabled is true" in {
       when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-      MockBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)(businessDetailsSuccessResponse)
+      MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(businessDetailsSuccessResponse)
 
       val stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
         getBusinessesResult = aGetBusinessDataResponse.asRight,

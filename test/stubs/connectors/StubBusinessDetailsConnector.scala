@@ -36,7 +36,7 @@ final case class StubBusinessDetailsConnector @Inject() (httpClient: HttpClient,
                                                            api1171EmptyResponse.asRight)
     extends BusinessDetailsConnector {
 
-  def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+  def getBusinessDetails(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] =
     EitherT.fromEither[Future](getBusinessDetailsRes)
