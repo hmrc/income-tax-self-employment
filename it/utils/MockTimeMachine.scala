@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package models.connector.api_1171
+package utils
 
-import models.common.{Mtditid, Nino}
-import models.connector.businessDetailsConnector.{BusinessDataDetails, ResponseType}
+import org.mockito.MockitoSugar
+import org.mockito.stubbing.ScalaOngoingStubbing
 
-object ResponseTypeTestData {
-  def mkExample(nino: Nino, mtditid: Mtditid, businesses: List[BusinessDataDetails]): ResponseType = ResponseType(
-    "safeId",
-    nino.value,
-    mtditid.value,
-    None,
-    propertyIncome = false,
-    Some(businesses)
-  )
+import java.time.{OffsetDateTime, ZonedDateTime}
+import java.time.temporal.ChronoUnit
+
+trait MockTimeMachine extends MockitoSugar {
+
+  val mockTimeMachine: TimeMachine = mock[TimeMachine]
+
+  def mockNow(setNow: OffsetDateTime): ScalaOngoingStubbing[ZonedDateTime] =
+    when(mockTimeMachine.now).thenReturn(setNow.toZonedDateTime.truncatedTo(ChronoUnit.SECONDS))
 }

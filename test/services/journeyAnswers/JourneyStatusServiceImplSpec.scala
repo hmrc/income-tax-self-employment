@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package services.journeyAnswers
 
-import bulders.BusinessDataBuilder.aTradesJourneyStatusesSeq
-import bulders.JourneyNameAndStatusBuilder.{allCompetedJourneyStatuses, allCompletedTaskListSectionItems}
+import builders.BusinessDataBuilder.aTradesJourneyStatusesSeq
+import builders.JourneyNameAndStatusBuilder.{allCompetedJourneyStatuses, allCompletedTaskListSectionItems}
 import cats.implicits._
 import models.common.JourneyStatus._
 import models.common.{JourneyName, JourneyStatus}
@@ -76,7 +76,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "getTaskList" should {
     "return empty task list if no answers" in {
-      val result = underTest.getTaskList(taxYear, mtditid, nino)
+      val result = underTest.getTaskList(taxYear, Some(businessId), mtditid, nino)
       result.value.futureValue shouldBe TaskList.empty.asRight
     }
 
@@ -89,7 +89,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
         )
       )
 
-      val result = underTest.getTaskList(taxYear, mtditid, nino)
+      val result = underTest.getTaskList(taxYear, Some(businessId), mtditid, nino)
       result.value.futureValue shouldBe taskList.asRight
     }
   }
@@ -106,7 +106,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
           getAllResult = Right(taskList)
         )
       )
-      val result = underTest.getCommonTaskList(taxYear, mtditid, nino)
+      val result = underTest.getCommonTaskList(taxYear, businessId, mtditid, nino)
       result.value.futureValue shouldBe TaskListModel(List(TaskListSection(SelfEmploymentTitle(), Option(allCompletedTaskListSectionItems)))).asRight
     }
 
@@ -119,7 +119,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
         )
       )
 
-      val result = underTest.getTaskList(taxYear, mtditid, nino)
+      val result = underTest.getTaskList(taxYear, Some(businessId), mtditid, nino)
       result.value.futureValue shouldBe downstreamError.asLeft
     }
   }

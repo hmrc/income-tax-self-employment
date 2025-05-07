@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,15 @@
  * limitations under the License.
  */
 
-package models.connector.api_1171
+package utils
 
-import play.api.libs.json._
+import com.google.inject.Singleton
 
-/** Represents the Swagger definition for contact_details_type.
-  * @param email
-  *   email id
-  */
-case class ContactDetailsType(
-    telephone: Option[String],
-    mobileNo: Option[String],
-    faxNo: Option[String],
-    email: Option[String]
-)
+import java.time.{Clock, ZonedDateTime}
+import java.time.temporal.ChronoUnit
+import javax.inject.Inject
 
-object ContactDetailsType {
-  implicit lazy val contactDetailsTypeJsonFormat: Format[ContactDetailsType] = Json.format[ContactDetailsType]
+@Singleton
+class TimeMachine @Inject() (clock: Clock = Clock.systemUTC()) {
+  def now: ZonedDateTime = ZonedDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS)
 }

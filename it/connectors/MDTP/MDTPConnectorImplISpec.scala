@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package connectors
+package connectors.MDTP
 
 import base.IntegrationBaseSpec
 import cats.implicits.catsSyntaxEitherId

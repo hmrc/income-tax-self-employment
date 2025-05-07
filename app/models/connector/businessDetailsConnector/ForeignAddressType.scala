@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package models.connector.api_1171
+package models.connector.businessDetailsConnector
 
 import play.api.libs.json._
 
-/** Represents the Swagger definition for ukAddressType.
+/** Represents the Swagger definition for foreignAddressType.
   * @param addressLine1
   *   Address line 1
   * @param addressLine2
@@ -29,26 +29,16 @@ import play.api.libs.json._
   *   Address line 4
   * @param postalCode
   *   Postal code
-  * @param countryCode
-  *   List of ISO Country Codes
   */
-case class UkAddressType(
+case class ForeignAddressType(
     addressLine1: String,
     addressLine2: Option[String],
     addressLine3: Option[String],
     addressLine4: Option[String],
-    postalCode: String,
-    countryCode: UkAddressType.CountryCode.Value
+    postalCode: Option[String],
+    countryCode: String
 )
 
-object UkAddressType {
-  implicit lazy val ukAddressTypeJsonFormat: Format[UkAddressType] = Json.format[UkAddressType]
-
-  // noinspection TypeAnnotation
-  object CountryCode extends Enumeration {
-    val GB = Value("GB")
-
-    type CountryCode = Value
-    implicit lazy val CountryCodeJsonFormat: Format[Value] = Format(Reads.enumNameReads(this), Writes.enumNameWrites[this.type])
-  }
+object ForeignAddressType {
+  implicit lazy val foreignAddressTypeJsonFormat: Format[ForeignAddressType] = Json.format[ForeignAddressType]
 }

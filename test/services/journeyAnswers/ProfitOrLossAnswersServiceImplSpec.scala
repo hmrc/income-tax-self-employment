@@ -18,7 +18,7 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
-import connectors.HipConnector
+import connectors.HIP.BroughtForwardLossConnector
 import mocks.services.MockReliefClaimsService
 import mocks.services.MockReliefClaimsService.mockInstance
 import models.common.{JourneyContextWithNino, Nino, TaxYear}
@@ -106,7 +106,7 @@ class ProfitOrLossAnswersServiceImplSpec
     val yesBroughtForwardLossAnswers =
       ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
-        Option(200),
+        Option(BigDecimal(200)),
         Option(true),
         None,
         None,
@@ -129,7 +129,8 @@ class ProfitOrLossAnswersServiceImplSpec
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
 
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val allowancesData: AnnualAllowances = AnnualAllowances(None, None, None, Option(5000), None, None, None, None, None, None, Option(5000), None)
+      val allowancesData: AnnualAllowances =
+        AnnualAllowances(None, None, None, Option(BigDecimal(5000)), None, None, None, None, None, None, Option(BigDecimal(5000)), None)
       val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
         expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(Option(AnnualAdjustments.empty))), Option(allowancesData))
       val result: Either[ServiceError, Unit] = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
@@ -151,7 +152,8 @@ class ProfitOrLossAnswersServiceImplSpec
       MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(List(testClaimId1))
 
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers.copy(whatDoYouWantToDoWithLoss = Option(Seq(CarryItForward)))
-      val allowancesData: AnnualAllowances = AnnualAllowances(None, None, None, Option(5000), None, None, None, None, None, None, Option(5000), None)
+      val allowancesData: AnnualAllowances =
+        AnnualAllowances(None, None, None, Option(BigDecimal(5000)), None, None, None, None, None, None, Option(BigDecimal(5000)), None)
       val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
         expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(Option(AnnualAdjustments.empty))), Option(allowancesData))
 
@@ -172,7 +174,8 @@ class ProfitOrLossAnswersServiceImplSpec
 
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       val answers: ProfitOrLossJourneyAnswers = noBroughtForwardLossAnswers
-      val allowancesData: AnnualAllowances = AnnualAllowances(None, None, None, Option(5000), None, None, None, None, None, None, Option(5000), None)
+      val allowancesData: AnnualAllowances =
+        AnnualAllowances(None, None, None, Option(BigDecimal(5000)), None, None, None, None, None, None, Option(BigDecimal(5000)), None)
       val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData = expectedAnnualSummariesData(None, Option(allowancesData))
 
       val result: Either[ServiceError, Unit] = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
@@ -306,7 +309,7 @@ class ProfitOrLossAnswersServiceImplSpec
         StubIFSBusinessDetailsConnector(
           getBroughtForwardLossResult = api1502SuccessResponse.asRight
         )
-      when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+      when(mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(EitherT.rightT(Right(())))
 
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
@@ -379,7 +382,7 @@ class ProfitOrLossAnswersServiceImplSpec
         Option(
           ProfitOrLossJourneyAnswers(
             goodsAndServicesForYourOwnUse = true,
-            goodsAndServicesAmount = Option(200),
+            goodsAndServicesAmount = Option(BigDecimal(200)),
             claimLossRelief = Option(true),
             whatDoYouWantToDoWithLoss = Option(List(CarryItForward)),
             carryLossForward = Option(true),
@@ -615,7 +618,7 @@ class ProfitOrLossAnswersServiceImplSpec
     val yesBroughtForwardLossAnswers =
       ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
-        Option(200),
+        Option(BigDecimal(200)),
         Option(true),
         None,
         Option(true),
@@ -625,7 +628,7 @@ class ProfitOrLossAnswersServiceImplSpec
       )
     val noBroughtForwardLossAnswers = ProfitOrLossJourneyAnswers(
       goodsAndServicesForYourOwnUse = true,
-      Option(200),
+      Option(BigDecimal(200)),
       Option(false),
       None,
       None,
@@ -657,7 +660,8 @@ class ProfitOrLossAnswersServiceImplSpec
         override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
           StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
 
-        when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        when(
+          mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(EitherT.rightT(Right(())))
 
         val result: Either[ServiceError, Unit] = service
@@ -675,7 +679,8 @@ class ProfitOrLossAnswersServiceImplSpec
         override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
           StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
 
-        when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        when(
+          mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(EitherT.rightT(()))
 
         val result: Either[ServiceError, Unit] =
@@ -688,7 +693,8 @@ class ProfitOrLossAnswersServiceImplSpec
       "given a valid submissions to delete existing BroughtForwardLoss data when user submits 'No' answers" when {
         "hip integration feature flag is enabled" in new StubbedService {
 
-          when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+          when(
+            mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(EitherT.rightT(()))
 
           override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
@@ -699,7 +705,9 @@ class ProfitOrLossAnswersServiceImplSpec
 
           assert(result == ().asRight)
           assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-          verify(mockHipConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext])
+          verify(mockBroughtForwardLossConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(
+            any[HeaderCarrier],
+            any[ExecutionContext])
         }
       }
 
@@ -751,7 +759,8 @@ class ProfitOrLossAnswersServiceImplSpec
         override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
           StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
 
-        when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        when(
+          mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(EitherT.leftT(downstreamError))
 
         val result: Either[ServiceError, Unit] = service
@@ -769,7 +778,8 @@ class ProfitOrLossAnswersServiceImplSpec
         override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
           StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
 
-        when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+        when(
+          mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(EitherT.leftT(downstreamError))
 
         val res: ApiResultT[Unit] =
@@ -783,7 +793,8 @@ class ProfitOrLossAnswersServiceImplSpec
       "the BusinessDetailsConnector .deleteBroughtForwardLoss returns an error from downstream" when {
         "hip integration feature switch is enabled" in new StubbedService {
 
-          when(mockHipConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
+          when(
+            mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
             .thenReturn(EitherT.leftT(downstreamError))
 
           override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
@@ -795,7 +806,9 @@ class ProfitOrLossAnswersServiceImplSpec
           assert(result === downstreamError.asLeft)
           assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
 
-          verify(mockHipConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext])
+          verify(mockBroughtForwardLossConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(
+            any[HeaderCarrier],
+            any[ExecutionContext])
         }
       }
 
@@ -818,14 +831,14 @@ trait StubbedService {
 
   val ifsConnector: StubIFSConnector                               = new StubIFSConnector()
   val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
-  val mockHipConnector: HipConnector                               = mock[HipConnector]
+  val mockBroughtForwardLossConnector: BroughtForwardLossConnector = mock[BroughtForwardLossConnector]
   val repository: StubJourneyAnswersRepository                     = StubJourneyAnswersRepository()
 
   def service: ProfitOrLossAnswersServiceImpl =
     new ProfitOrLossAnswersServiceImpl(
       ifsConnector = ifsConnector,
       ifsBusinessDetailsConnector = ifsBusinessDetailsConnector,
-      hipConnector = mockHipConnector,
+      broughtForwardLossConnector = mockBroughtForwardLossConnector,
       MockReliefClaimsService.mockInstance,
       repository = repository
     )

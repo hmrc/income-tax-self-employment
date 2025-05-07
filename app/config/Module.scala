@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,9 @@
 package config
 
 import com.google.inject.AbstractModule
-import connectors._
+import connectors.HIP._
+import connectors.IFS._
+import connectors.MDTP._
 import repositories.{JourneyAnswersRepository, MongoJourneyAnswersRepository}
 import services.journeyAnswers._
 import services.{BusinessService, BusinessServiceImpl}
@@ -39,7 +41,8 @@ class Module extends AbstractModule {
     bind(classOf[IFSConnector]).to(classOf[IFSConnectorImpl])
     bind(classOf[IFSBusinessDetailsConnector]).to(classOf[IFSBusinessDetailsConnectorImpl])
     bind(classOf[MDTPConnector]).to(classOf[MDTPConnectorImpl])
-    bind(classOf[HipConnector]).to(classOf[HipConnectorImpl])
+    bind(classOf[BroughtForwardLossConnector]).to(classOf[BroughtForwardLossConnectorImpl])
+    bind(classOf[BusinessDetailsConnector]).to(classOf[BusinessDetailsConnectorImpl])
     bind(classOf[JourneyStatusService]).to(classOf[JourneyStatusServiceImpl])
     bind(classOf[ProfitOrLossAnswersService]).to(classOf[ProfitOrLossAnswersServiceImpl])
     bind(classOf[NICsAnswersService]).to(classOf[NICsAnswersServiceImpl])

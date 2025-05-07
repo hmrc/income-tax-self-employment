@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package bulders
+package builders
 
 import models.common._
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.connector.api_2085.{IncomeSource, ListOfIncomeSources}
+import models.connector.businessDetailsConnector.{BusinessDataDetails, BusinessDetailsSuccessResponseSchema}
 import models.connector.citizen_details.SuccessResponseSchema
-import models.connector.{api_1171, citizen_details}
+import models.connector.{businessDetailsConnector, citizen_details}
 import models.domain.Business.mkBusiness
-import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
+import models.domain.{Business, JourneyNameAndStatus, TradesJourneyStatuses}
 import models.frontend.adjustments.NetBusinessProfitOrLossValues
 import play.api.libs.json.Json
 
@@ -40,9 +41,9 @@ object BusinessDataBuilder {
     totalExpenses = 200,
     netProfit = 200,
     netLoss = 200,
-    totalAdditions = Option(200),
-    totalDeductions = Option(200),
-    accountingAdjustments = Option(200),
+    totalAdditions = Option(BigDecimal(200)),
+    totalDeductions = Option(BigDecimal(200)),
+    accountingAdjustments = Option(BigDecimal(200)),
     taxableProfit = 200,
     taxableLoss = 200
   )
@@ -63,12 +64,16 @@ object BusinessDataBuilder {
     outstandingBusinessIncome = 66
   )
 
-  lazy val aGetBusinessDataResponse = Json.parse(aGetBusinessDataResponseStr).as[api_1171.SuccessResponseSchema]
-  lazy val aBusinessData            = aGetBusinessDataResponse.taxPayerDisplayResponse.businessData
-  lazy val aBusinesses = aBusinessData.map(_.map(a => mkBusiness(a, aGetBusinessDataResponse.taxPayerDisplayResponse.yearOfMigration))).getOrElse(Nil)
-  lazy val aBusiness   = aBusinesses.head
-  lazy val aBusinessId = BusinessId(aBusiness.businessId)
-  lazy val aTradesJourneyStatusesSeq = List(
+  lazy val aGetBusinessDataResponse: businessDetailsConnector.BusinessDetailsSuccessResponseSchema =
+    Json.parse(aGetBusinessDataResponseStr).as[businessDetailsConnector.BusinessDetailsSuccessResponseSchema]
+  lazy val aBusinesses: List[Business] =
+    aBusinessData.map(_.map(a => mkBusiness(a, aGetBusinessDataResponse.taxPayerDisplayResponse.yearOfMigration))).getOrElse(Nil)
+
+  lazy val aBusinessData: Option[List[BusinessDataDetails]] = aGetBusinessDataResponse.taxPayerDisplayResponse.businessData
+  lazy val aBusiness: Business                              = aBusinesses.head
+  lazy val aBusinessId: BusinessId                          = BusinessId(aBusiness.businessId)
+
+  lazy val aTradesJourneyStatusesSeq: List[TradesJourneyStatuses] = List(
     TradesJourneyStatuses(
       aBusinessId,
       aBusiness.tradingName.map(TradingName(_)),
@@ -88,7 +93,6 @@ object BusinessDataBuilder {
         IncomeSource(BusinessId("FHL000000000101"), LocalDate.parse("2024-04-10"), LocalDate.parse("2025-04-14"), AccountingType("CASH"))
       ))
 
-  // Note our models use a subset of all the data pulled back by the API which is included here
   lazy val aGetBusinessDataResponseStr: String =
     """
       |{
@@ -136,33 +140,6 @@ object BusinessDataBuilder {
       |          "latencyIndicator2": "A"
       |        }
       |      }
-      |    ],
-      |    "propertyData": [
-      |      {
-      |        "incomeSourceType": "uk-property",
-      |        "incomeSourceId": "KKKG12126914990",
-      |        "accountingPeriodStartDate": "2021-03-11",
-      |        "accountingPeriodEndDate": "2022-04-10",
-      |        "tradingStartDate": "2022-02-29",
-      |        "cashOrAccruals": true,
-      |        "numPropRented": "7",
-      |        "numPropRentedUK": "42",
-      |        "numPropRentedEEA": "922",
-      |        "numPropRentedNONEEA": "732",
-      |        "email": "user@example.com",
-      |        "cessationDate": "2022-02-29",
-      |        "paperLess": true,
-      |        "incomeSourceStartDate": "2022-02-29",
-      |        "firstAccountingPeriodStartDate": "2021-02-29",
-      |        "firstAccountingPeriodEndDate": "2022-11-30",
-      |        "latencyDetails": {
-      |          "latencyEndDate": "2021-11-29",
-      |          "taxYear1": "2021",
-      |          "latencyIndicator1": "A",
-      |          "taxYear2": "2022",
-      |          "latencyIndicator2": "A"
-      |        }
-      |      }
       |    ]
       |  }
       |}
@@ -182,4 +159,8 @@ object BusinessDataBuilder {
      |   },
      |   "dateOfBirth": "30071997"
      |}""".stripMargin
+
+  val businessDetailsSuccessResponse: BusinessDetailsSuccessResponseSchema =
+    Json.parse(aGetBusinessDataResponseStr).as[BusinessDetailsSuccessResponseSchema]
+
 }

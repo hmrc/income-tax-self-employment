@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,12 +32,12 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
     extends BackendController(cc)
     with Logging {
 
-  def getBusinesses(nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResultT(businessService.getBusinesses(nino))
+  def getBusinesses(nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResultT(businessService.getBusinesses(Some(businessId), user.getMtditid, nino))
   }
 
   def getBusiness(nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResultT(businessService.getBusiness(nino, businessId))
+    handleApiResultT(businessService.getBusiness(businessId, user.getMtditid, nino))
   }
 
   def getUserDateOfBirth(nino: Nino): Action[AnyContent] = auth.async { implicit user =>
@@ -45,7 +45,7 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
   }
 
   def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResultT(businessService.getAllBusinessIncomeSourcesSummaries(taxYear, nino))
+    handleApiResultT(businessService.getAllBusinessIncomeSourcesSummaries(taxYear, user.getMtditid, nino))
   }
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>

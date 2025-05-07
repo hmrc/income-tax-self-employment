@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,11 +50,12 @@ class JourneyStatusController @Inject() (journeyStatusService: JourneyStatusServ
   }
 
   def getTaskList(taxYear: TaxYear, nino: Nino): Action[AnyContent] = auth.async { implicit request =>
-    val result = journeyStatusService.getTaskList(taxYear, request.getMtditid, nino)
+    val businessId = request.getQueryString("businessId").map(BusinessId(_))
+    val result     = journeyStatusService.getTaskList(taxYear, businessId, request.getMtditid, nino)
     handleApiResultT(result)
   }
 
-  def getCommonTaskList(taxYear: TaxYear, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResultT(journeyStatusService.getCommonTaskList(taxYear, user.getMtditid, nino))
+  def getCommonTaskList(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResultT(journeyStatusService.getCommonTaskList(taxYear, businessId, user.getMtditid, nino))
   }
 }
