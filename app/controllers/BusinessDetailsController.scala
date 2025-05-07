@@ -33,7 +33,7 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
     with Logging {
 
   def getBusinesses(nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResultT(businessService.getBusinesses(businessId, user.getMtditid, nino))
+    handleApiResultT(businessService.getBusinesses(Some(businessId), user.getMtditid, nino))
   }
 
   def getBusiness(nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>

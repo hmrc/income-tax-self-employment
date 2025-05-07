@@ -75,7 +75,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
     "return an empty list" in {
       when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
 
-      val result = testService.getBusinesses(businessId, mtditid, nino).value.futureValue.value
+      val result = testService.getBusinesses(Some(businessId), mtditid, nino).value.futureValue.value
       assert(result === Nil)
     }
 
@@ -83,7 +83,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
       when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
       MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(businessDetailsSuccessResponse)
 
-      val result = testService.getBusinesses(businessId, mtditid, nino).value.futureValue.value
+      val result = testService.getBusinesses(Some(businessId), mtditid, nino).value.futureValue.value
       assert(result === Nil)
 
     }
@@ -108,7 +108,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
         mockAppConfig
       )
 
-      val result = service.getBusinesses(businessId, mtditid, nino).value.futureValue.value
+      val result = service.getBusinesses(Some(businessId), mtditid, nino).value.futureValue.value
 
       val expectedBusiness = List(
         BusinessTestData.mkExample(BusinessId("id1")),
@@ -139,7 +139,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
         mockAppConfig
       )
 
-      val result = service.getBusinesses(businessId, mtditid, nino).value.futureValue.value
+      val result = service.getBusinesses(Some(businessId), mtditid, nino).value.futureValue.value
 
       val expectedBusiness = List(
         BusinessTestData.mkExample(BusinessId("id1")),
