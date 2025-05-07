@@ -56,7 +56,7 @@ final case class StubBusinessService(
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
     EitherT.fromEither[Future](getUserDateOfBirthRes)
 
-  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]] =
     EitherT.fromEither[Future](getAllBusinessIncomeSourcesSummariesRes)
 

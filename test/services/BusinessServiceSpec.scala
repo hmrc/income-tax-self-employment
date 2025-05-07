@@ -323,7 +323,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
         StubIFSConnector(),
         mockAppConfig
       )
-      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
+      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value.futureValue
       assert(result === expectedResult)
     }
 
@@ -339,7 +339,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
         StubIFSConnector(),
         mockAppConfig
       )
-      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
+      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value.futureValue
       assert(result === expectedResult)
     }
 
@@ -358,7 +358,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
         StubIFSConnector(),
         mockAppConfig
       )
-      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
+      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value.futureValue
       assert(result === expectedResult)
     }
 
@@ -378,7 +378,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
         StubIFSConnector(),
         mockAppConfig
       )
-      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
+      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value.futureValue
       assert(result === expectedResult)
     }
 
@@ -396,7 +396,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
         StubIFSConnector(),
         mockAppConfig
       )
-      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
+      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value.futureValue
       assert(result === error.asLeft)
     }
 
@@ -415,7 +415,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
         StubIFSConnector(),
         mockAppConfig
       )
-      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, businessId, mtditid, nino).value.futureValue
+      val result = service.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value.futureValue
       assert(result === error.asLeft)
     }
   }

@@ -46,7 +46,7 @@ trait BusinessService {
 
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate]
 
-  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]]
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
@@ -98,7 +98,7 @@ class BusinessServiceImpl @Inject() (ifsBusinessDetailsConnector: IFSBusinessDet
       dateOfBirth    <- EitherT.fromEither[Future](citizenDetails.parseDoBToLocalDate)
     } yield dateOfBirth
 
-  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]] =
     for {
       businesses <- getBusinesses(None, mtditid, nino)
