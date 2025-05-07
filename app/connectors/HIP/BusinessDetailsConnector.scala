@@ -33,7 +33,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 trait BusinessDetailsConnector {
-  def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+  def getBusinessDetails(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema]
 }
@@ -43,7 +43,7 @@ class BusinessDetailsConnectorImpl @Inject() (httpClientV2: HttpClientV2, appCon
     extends BusinessDetailsConnector
     with Logging {
 
-  private def getBusinessDetailsUrl(incomeSourceId: BusinessId, mtdReference: Mtditid, nino: Nino): URI = new URI(
+  private def getBusinessDetailsUrl(incomeSourceId: Option[BusinessId], mtdReference: Mtditid, nino: Nino): URI = new URI(
     s"${appConfig.hipBaseUrl}/etmp/RESTAdapter/itsa/taxpayer/business-details?incomeSourceId=$incomeSourceId&mtdReference=$mtdReference&nino=$nino")
 
   private val additionalHeaders: Seq[(String, String)] = Seq(
@@ -55,7 +55,7 @@ class BusinessDetailsConnectorImpl @Inject() (httpClientV2: HttpClientV2, appCon
     "X-Transmitting-System" -> "HIP"
   )
 
-  def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
+  def getBusinessDetails(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[BusinessDetailsSuccessResponseSchema] = {
 

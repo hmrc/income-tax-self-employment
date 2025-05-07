@@ -36,7 +36,7 @@ object MockBusinessDetailsConnector {
 
   val mockInstance: BusinessDetailsConnector = mock[BusinessDetailsConnector]
 
-  def getBusinessDetails(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(
+  def getBusinessDetails(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)(
       returnValue: BusinessDetailsSuccessResponseSchema): ScalaOngoingStubbing[ApiResultT[BusinessDetailsSuccessResponseSchema]] =
     when(mockInstance.getBusinessDetails(eqTo(businessId), eqTo(mtditid), eqTo(nino))(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(EitherT.rightT(returnValue))

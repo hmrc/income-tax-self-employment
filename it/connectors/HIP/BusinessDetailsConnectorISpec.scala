@@ -47,7 +47,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
   )
 
   val api1171Url: String =
-    s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?incomeSourceId=$testBusinessId&mtdReference=$testMtdItId&nino=$testNino"
+    s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?incomeSourceId=Some\\(SJPR05893938418\\)&mtdReference=555555555&nino=AA123123A"
 
   val additionalHeaders: Seq[HttpHeader] = Seq(
     new HttpHeader("correlationid", correlationId),
@@ -68,7 +68,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
       )
 
       val result: Either[ServiceError, BusinessDetailsSuccessResponseSchema] =
-        await(connector.getBusinessDetails(testBusinessId, testMtdItId, testNino).value)
+        await(connector.getBusinessDetails(Some(testBusinessId), testMtdItId, testNino).value)
 
       result mustBe Right(successResponse)
     }
@@ -92,7 +92,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
         )
 
         val result: Either[ServiceError, BusinessDetailsSuccessResponseSchema] =
-          await(connector.getBusinessDetails(testBusinessId, testMtdItId, testNino).value)
+          await(connector.getBusinessDetails(Some(testBusinessId), testMtdItId, testNino).value)
 
         result.isLeft mustBe true
         result.merge mustBe a[GenericDownstreamError]

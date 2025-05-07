@@ -176,7 +176,7 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
 
     "save Class 4 journey answers when user has a single business when hipMigration1171Enabled is true" in new StubbedService {
       when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-      MockBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)(businessDetailsSuccessResponse)
+      MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(businessDetailsSuccessResponse)
 
       override val ifsBusinessConnector: StubIFSBusinessDetailsConnector =
         StubIFSBusinessDetailsConnector(getBusinessesResult = api1171MultipleBusinessResponse(List(businessId)).asRight)
