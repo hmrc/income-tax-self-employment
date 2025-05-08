@@ -35,7 +35,7 @@ class BusinessDetailsControllerSpec extends AnyWordSpecLike {
     val underTest = mkUnderTest(StubBusinessService(getBusinessesResult = Right(aBusinesses)))
 
     "return businesses" in {
-      val result = underTest.getBusinesses(nino, businessId)(TestUtils.fakeRequest)
+      val result = underTest.getBusinesses(nino)(TestUtils.fakeRequest)
       assert(status(result) == OK)
       assert(bodyOf(result) == Json.toJson(aBusinesses).toString())
     }

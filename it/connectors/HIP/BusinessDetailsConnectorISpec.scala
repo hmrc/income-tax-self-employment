@@ -46,8 +46,10 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
     mockIdGenerator
   )
 
-  val api1171Url: String =
-    s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?incomeSourceId=Some\\(SJPR05893938418\\)&mtdReference=555555555&nino=AA123123A"
+  val baseUrl = s"/RESTAdapter/itsa/taxpayer/business-details"
+
+  val api1171Url = s"$baseUrl\\?incomeSourceId=$testBusinessId&mtdReference=$testMtdItId&nino=$testNino"
+
 
   val additionalHeaders: Seq[HttpHeader] = Seq(
     new HttpHeader("correlationid", correlationId),

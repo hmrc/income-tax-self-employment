@@ -43,8 +43,16 @@ class BusinessDetailsConnectorImpl @Inject() (httpClientV2: HttpClientV2, appCon
     extends BusinessDetailsConnector
     with Logging {
 
-  private def getBusinessDetailsUrl(incomeSourceId: Option[BusinessId], mtdReference: Mtditid, nino: Nino): URI = new URI(
-    s"${appConfig.hipBaseUrl}/etmp/RESTAdapter/itsa/taxpayer/business-details?incomeSourceId=$incomeSourceId&mtdReference=$mtdReference&nino=$nino")
+  private def getBusinessDetailsUrl(incomeSourceId: Option[BusinessId], mtdReference: Mtditid, nino: Nino): URI = {
+    val baseUrl = s"${appConfig.hipBaseUrl}/RESTAdapter/itsa/taxpayer/business-details"
+    val queryParams = Seq(
+      incomeSourceId.map(id => s"incomeSourceId=$id").getOrElse(""),
+      s"mtdReference=$mtdReference",
+      s"nino=$nino"
+    ).filter(_.nonEmpty).mkString("&")
+
+    new URI(s"$baseUrl?$queryParams")
+  }
 
   private val additionalHeaders: Seq[(String, String)] = Seq(
     "correlationid"         -> idGenerator.generateCorrelationId(),
