@@ -71,28 +71,20 @@ class BusinessDetailsConnectorImpl @Inject() (httpClientV2: HttpClientV2, appCon
     val enrichedHeaderCarrier: HeaderCarrier = appConfig.mkMetadata(HipApiName.Api1171, url.toString).enrichedHeaderCarrier
 
     implicit object BusinessDetailsHttpReads extends HttpReads[ApiResponse[BusinessDetailsSuccessResponseSchema]] {
-      override def read(method: String, url: String, response: HttpResponse): ApiResponse[BusinessDetailsSuccessResponseSchema] = {
-
-        val validatedResponse: Either[DownstreamError, BusinessDetailsSuccessResponseSchema] =
-          if (response.body.isEmpty) {
-            Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
-          } else {
+      override def read(method: String, url: String, response: HttpResponse): ApiResponse[BusinessDetailsSuccessResponseSchema] =
+        response.status match {
+          case OK =>
             response.json
               .validate[BusinessDetailsSuccessResponseSchema]
               .fold[Either[DownstreamError, BusinessDetailsSuccessResponseSchema]](
                 errors => Left(createCommonErrorParser(method, url, response).reportInvalidJsonError(errors.toList)),
                 parsedModel => Right(parsedModel)
               )
-          }
-
-        response.status match {
-          case OK => validatedResponse
           case BAD_REQUEST | UNAUTHORIZED | FORBIDDEN | NOT_FOUND | UNSUPPORTED_MEDIA_TYPE | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR |
               SERVICE_UNAVAILABLE =>
             Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
           case _ => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
         }
-      }
     }
 
     EitherT {

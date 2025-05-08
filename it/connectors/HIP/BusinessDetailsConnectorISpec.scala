@@ -50,7 +50,6 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
 
   val api1171Url = s"$baseUrl\\?incomeSourceId=$testBusinessId&mtdReference=$testMtdItId&nino=$testNino"
 
-
   val additionalHeaders: Seq[HttpHeader] = Seq(
     new HttpHeader("correlationid", correlationId),
     new HttpHeader("X-Message-Type", "TaxpayerDisplay"),
