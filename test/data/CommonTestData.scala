@@ -22,6 +22,7 @@ import models.error.ServiceError
 import play.api.libs.json.{JsObject, JsValue}
 import uk.gov.hmrc.http.HeaderCarrier
 
+import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 trait CommonTestData extends TimeData {
@@ -34,7 +35,7 @@ trait CommonTestData extends TimeData {
 
   val testCurrentTaxYear: TaxYear = TaxYear(2025)
   val testPrevTaxYear: TaxYear    = TaxYear(2024)
-  val testTaxYear: TaxYear        = testCurrentTaxYear
+  val testTaxYear                 = testCurrentTaxYear
 
   val testContextCurrentYear: JourneyContextWithNino = JourneyContextWithNino(testCurrentTaxYear, testBusinessId, testMtdId, testNino)
   val testContextPrevYear: JourneyContextWithNino    = JourneyContextWithNino(testPrevTaxYear, testBusinessId, testMtdId, testNino)

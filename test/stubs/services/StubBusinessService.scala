@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package stubs.services
 
-import builders.BusinessDataBuilder.{aBusinessIncomeSourcesSummaryResponse, aNetBusinessProfitValues, aUserDateOfBirth}
+import bulders.BusinessDataBuilder.{aBusinessIncomeSourcesSummaryResponse, aNetBusinessProfitValues, aUserDateOfBirth}
 import cats.data.EitherT
 import cats.implicits._
 import models.common._
@@ -44,19 +44,19 @@ final case class StubBusinessService(
     hasOtherIncomeSources: Either[ServiceError, Boolean] = Right(true)
 ) extends BusinessService {
 
-  def getBusinesses(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[Business]] =
     EitherT.fromEither[Future](getBusinessesResult)
 
-  def getBusiness(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[Business] =
+  def getBusiness(nino: Nino, businessId: BusinessId)(implicit hc: HeaderCarrier): ApiResultT[Business] =
     EitherT.fromEither[Future](getBusinessResult)
 
-  def getUserBusinessIds(businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[BusinessId]] =
+  def getUserBusinessIds(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[List[BusinessId]] =
     EitherT.fromEither[Future](getUserBusinessIdsResult)
 
   def getUserDateOfBirth(nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[LocalDate] =
     EitherT.fromEither[Future](getUserDateOfBirthRes)
 
-  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit
+  def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino)(implicit
       hc: HeaderCarrier): ApiResultT[List[BusinessIncomeSourcesSummaryResponse]] =
     EitherT.fromEither[Future](getAllBusinessIncomeSourcesSummariesRes)
 

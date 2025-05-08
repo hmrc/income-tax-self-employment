@@ -17,7 +17,6 @@
 package models.connector.api_1171
 
 import models.common.BusinessId
-import models.connector.businessDetailsConnector.BusinessDataDetails
 
 object BusinessDataDetailsTestData {
   def mkExample(id: BusinessId): BusinessDataDetails = BusinessDataDetails(

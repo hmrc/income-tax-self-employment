@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package connectors.HIP
+package connectors
 
 import base.IntegrationBaseSpec
 import connectors.data._
@@ -23,15 +23,15 @@ import models.error.DownstreamError.GenericDownstreamError
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status._
 
-class BroughtForwardLossConnectorISpec extends IntegrationBaseSpec {
+class HipConnectorISpec extends IntegrationBaseSpec {
 
-  val connector                   = new BroughtForwardLossConnectorImpl(httpClient, appConfig)
+  val connector                   = new HipConnectorImpl(httpClient, appConfig)
   val ctx: JourneyContextWithNino = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
 
   "deleteBroughtForwardLoss" must {
     "return unit with NO_CONTENT status" in new Api1504Test {
       stubDelete(
-        url = deleteBroughtForwardLossDownstreamUrl,
+        url = hipDownstreamUrl,
         expectedResponse = "",
         expectedStatus = NO_CONTENT
       )
@@ -48,14 +48,12 @@ class BroughtForwardLossConnectorISpec extends IntegrationBaseSpec {
     ) foreach { case (statusStr, status) =>
       s"return failure when downstream fails with $statusStr" in new Api1504Test {
         stubDelete(
-          url = deleteBroughtForwardLossDownstreamUrl,
+          url = hipDownstreamUrl,
           expectedResponse = "",
           expectedStatus = status
         )
         connector.deleteBroughtForwardLoss(testNino, testTaxYear, testBusinessId.value).value.futureValue shouldBe Left(
-          GenericDownstreamError(
-            status,
-            s"Downstream error when calling DELETE http://localhost:11111$deleteBroughtForwardLossDownstreamUrl: status=$status, body:\n"))
+          GenericDownstreamError(status, s"Downstream error when calling DELETE http://localhost:11111$hipDownstreamUrl: status=$status, body:\n"))
       }
     }
   }

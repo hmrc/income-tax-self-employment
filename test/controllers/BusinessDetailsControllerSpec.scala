@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package controllers
 
-import builders.BusinessDataBuilder._
+import bulders.BusinessDataBuilder._
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status._
 import play.api.libs.json.Json
@@ -27,7 +27,6 @@ import utils.TestUtils
 import utils.TestUtils._
 
 class BusinessDetailsControllerSpec extends AnyWordSpecLike {
-
   def mkUnderTest(businessService: StubBusinessService): BusinessDetailsController =
     new BusinessDetailsController(businessService, StubAuthorisedAction(), TestUtils.stubControllerComponents)
 
@@ -35,7 +34,7 @@ class BusinessDetailsControllerSpec extends AnyWordSpecLike {
     val underTest = mkUnderTest(StubBusinessService(getBusinessesResult = Right(aBusinesses)))
 
     "return businesses" in {
-      val result = underTest.getBusinesses(nino, businessId)(TestUtils.fakeRequest)
+      val result = underTest.getBusinesses(nino)(TestUtils.fakeRequest)
       assert(status(result) == OK)
       assert(bodyOf(result) == Json.toJson(aBusinesses).toString())
     }

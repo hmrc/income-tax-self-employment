@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package models.connector.businessDetailsConnector
+package models.connector.api_1171
 
 import play.api.libs.json._
 
-case class BusinessDetailsSuccessResponseSchema(
-    processingDate: String,
-    taxPayerDisplayResponse: ResponseType
+/** Represents the Swagger definition for failureResponse_failures_inner.
+  * @param code
+  *   Keys for all the errors returned
+  * @param reason
+  *   A simple description for the failure
+  */
+case class FailureResponseFailuresInner(
+    code: String,
+    reason: String
 )
 
-object BusinessDetailsSuccessResponseSchema {
-  implicit lazy val successResponseSchemaJsonFormat: Format[BusinessDetailsSuccessResponseSchema] = Json.format[BusinessDetailsSuccessResponseSchema]
+object FailureResponseFailuresInner {
+  implicit lazy val failureResponseFailuresInnerJsonFormat: Format[FailureResponseFailuresInner] = Json.format[FailureResponseFailuresInner]
 }

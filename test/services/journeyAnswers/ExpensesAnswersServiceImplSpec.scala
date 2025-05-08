@@ -25,10 +25,30 @@ import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne
-import models.common.JourneyName._
+import models.common.JourneyName.{
+  AdvertisingOrMarketing,
+  Construction,
+  ExpensesTailoring,
+  FinancialCharges,
+  GoodsToSellOrUse,
+  Interest,
+  IrrecoverableDebts,
+  OfficeSupplies,
+  OtherExpenses,
+  ProfessionalFees,
+  ProfitOrLoss,
+  RepairsAndMaintenanceCosts,
+  StaffCosts,
+  WorkplaceRunningCosts
+}
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
-import models.connector.api_1802.request._
+import models.connector.api_1802.request.{
+  AnnualAllowances,
+  AnnualNonFinancials,
+  CreateAmendSEAnnualSubmissionRequestBody,
+  CreateAmendSEAnnualSubmissionRequestData
+}
 import models.connector.api_1895.request._
 import models.database.JourneyAnswers
 import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageDb, WorkplaceRunningCostsDb}
@@ -240,7 +260,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     val result: Either[ServiceError, GoodsToSellOrUseJourneyAnswers] =
       underTest.getAnswers(journeyCtxWithNino)(goodsToSellOrUseParser, hc).value.futureValue
 
-    val expectedResult: GoodsToSellOrUseJourneyAnswers = GoodsToSellOrUseJourneyAnswers(100.0, Option(BigDecimal(100.0)))
+    val expectedResult: GoodsToSellOrUseJourneyAnswers = GoodsToSellOrUseJourneyAnswers(100.0, Option(100.0))
 
     result shouldBe expectedResult.asRight
   }
@@ -760,5 +780,5 @@ object ExpensesAnswersServiceImplSpec {
       taxYear,
       nino,
       businessId,
-      AmendSEPeriodSummaryRequestBody(Option(Incomes(Option(BigDecimal(100.00)), None, None)), deductions))
+      AmendSEPeriodSummaryRequestBody(Option(Incomes(Option(100.00), None, None)), deductions))
 }

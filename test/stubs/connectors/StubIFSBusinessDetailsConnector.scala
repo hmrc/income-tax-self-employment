@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,14 @@ package stubs.connectors
 
 import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
-import connectors.IFS.IFSBusinessDetailsConnector
-import IFSBusinessDetailsConnector._
+import connectors.IFSBusinessDetailsConnector
+import connectors.IFSBusinessDetailsConnector._
 import models.common.{BusinessId, Nino, TaxYear}
 import models.connector.api_1500.CreateBroughtForwardLossRequestData
-import models.connector.api_1501._
-import models.connector.{api_1500, api_1501, api_1502, api_1870, api_1871, api_2085, businessDetailsConnector}
+import models.connector.api_1501.{UpdateBroughtForwardLossRequestBody, UpdateBroughtForwardLossRequestData, UpdateBroughtForwardLossYear}
+import models.connector.{api_1171, api_1500, api_1501, api_1502, api_1870, api_1871, api_2085}
 import models.domain.ApiResultT
+import models.error.ServiceError
 import stubs.connectors.StubIFSConnector._
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -41,8 +42,7 @@ case class StubIFSBusinessDetailsConnector(
 ) extends IFSBusinessDetailsConnector {
   var updatedBroughtForwardLossData: Option[UpdateBroughtForwardLossRequestBody] = None
 
-  def getBusinesses(
-      nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[businessDetailsConnector.BusinessDetailsSuccessResponseSchema] =
+  def getBusinesses(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[api_1171.SuccessResponseSchema] =
     EitherT.fromEither[Future](getBusinessesResult)
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId)(implicit
