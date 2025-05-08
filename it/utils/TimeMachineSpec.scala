@@ -14,24 +14,22 @@
  * limitations under the License.
  */
 
-package models.connector.api_1171
+package utils
 
-import models.common.{Mtditid, Nino}
-import models.connector.businessDetailsConnector.{BusinessDataDetails, ResponseType, BusinessDetailsSuccessResponseSchema}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 
-object SuccessResponseSchemaTestData {
-  def mkExample(nino: Nino, mtditid: Mtditid, businesses: List[BusinessDataDetails]): BusinessDetailsSuccessResponseSchema =
-    BusinessDetailsSuccessResponseSchema(
-      OffsetDateTime.now().toString,
-      ResponseType(
-        "safeId",
-        nino.value,
-        mtditid.value,
-        None,
-        propertyIncome = false,
-        Some(businesses)
-      )
-    )
+class TimeMachineSpec extends AnyFlatSpec with Matchers with MockTimeMachine {
+
+  "ZonedDateTimeMachine" should
+    "return the mocked current time" in {
+      val fixedTime = OffsetDateTime.parse("2024-04-30T15:00:00+01:00")
+      mockNow(fixedTime)
+
+      val result = mockTimeMachine.now
+      result shouldEqual fixedTime.toZonedDateTime.truncatedTo(ChronoUnit.SECONDS)
+    }
 }

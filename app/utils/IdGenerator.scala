@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package models.connector.api_1171
+package utils
 
-import models.common.{Mtditid, Nino}
-import models.connector.businessDetailsConnector.{BusinessDataDetails, ResponseType}
+import java.util.UUID
+import javax.inject.{Inject, Singleton}
 
-object ResponseTypeTestData {
-  def mkExample(nino: Nino, mtditid: Mtditid, businesses: List[BusinessDataDetails]): ResponseType = ResponseType(
-    "safeId",
-    nino.value,
-    mtditid.value,
-    None,
-    propertyIncome = false,
-    Some(businesses)
-  )
+@Singleton
+class IdGenerator @Inject() {
+
+  def generateCorrelationId(): String = UUID.randomUUID().toString
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 
 package connectors.data
 
-import base.IntegrationBaseSpec
-import models.connector.api_1171._
+import testdata.CommonTestData
+import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
 import play.api.libs.json.Json
 
-trait Api1171Test extends IntegrationBaseSpec {
+trait Api1171Test extends CommonTestData {
 
-  val downstreamUrl = s"/registration/business-details/nino/$testNino"
+  val downstreamUrl: String = s"/registration/business-details/nino/$testNino"
 
   val successResponseRaw: String =
     """
@@ -71,37 +71,10 @@ trait Api1171Test extends IntegrationBaseSpec {
       |          "latencyIndicator2": "A"
       |        }
       |      }
-      |    ],
-      |    "propertyData": [
-      |      {
-      |        "incomeSourceType": "uk-property",
-      |        "incomeSourceId": "KKKG12126914990",
-      |        "accountingPeriodStartDate": "2021-03-11",
-      |        "accountingPeriodEndDate": "2022-04-10",
-      |        "tradingStartDate": "2022-02-29",
-      |        "cashOrAccruals": true,
-      |        "numPropRented": "7",
-      |        "numPropRentedUK": "42",
-      |        "numPropRentedEEA": "922",
-      |        "numPropRentedNONEEA": "732",
-      |        "email": "user@example.com",
-      |        "cessationDate": "2022-02-29",
-      |        "paperLess": true,
-      |        "incomeSourceStartDate": "2022-02-29",
-      |        "firstAccountingPeriodStartDate": "2021-02-29",
-      |        "firstAccountingPeriodEndDate": "2022-11-30",
-      |        "latencyDetails": {
-      |          "latencyEndDate": "2021-11-29",
-      |          "taxYear1": "2021",
-      |          "latencyIndicator1": "A",
-      |          "taxYear2": "2022",
-      |          "latencyIndicator2": "A"
-      |        }
-      |      }
       |    ]
       |  }
       |}
       |""".stripMargin
 
-  val successResponse: SuccessResponseSchema = Json.parse(successResponseRaw).as[SuccessResponseSchema]
+  val successResponse: BusinessDetailsSuccessResponseSchema = Json.parse(successResponseRaw).as[BusinessDetailsSuccessResponseSchema]
 }

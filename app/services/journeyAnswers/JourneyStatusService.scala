@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ class JourneyStatusServiceImpl @Inject() (businessService: BusinessService, repo
 
   def getTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
     for {
-      businesses <- businessService.getBusinesses(nino)
+      businesses <- businessService.getBusinesses(mtditid, nino)
       taskList   <- repository.getAll(taxYear, mtditid, businesses)
     } yield taskList
 

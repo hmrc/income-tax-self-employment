@@ -105,9 +105,9 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
 
     "create ProfitOrLossJourneyAnswers from the input data as optLossData is None and reliefClaims is empty" in {
 
-      ProfitOrLossJourneyAnswers.apply(Option(200), reliefClaims = Nil, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
+      ProfitOrLossJourneyAnswers.apply(Option(BigDecimal(200)), reliefClaims = Nil, optLossData = None) shouldEqual ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
-        Option(200),
+        Option(BigDecimal(200)),
         None,
         None,
         None,
@@ -123,14 +123,14 @@ class ProfitOrLossJourneyAnswersSpec extends AnyWordSpecLike with Matchers with 
 
       val lossData = Option(LossData("5678", "SJPR05893938418", LossType.SelfEmployment, 400, "2018-19", testDateTime))
 
-      ProfitOrLossJourneyAnswers.apply(Option(200), reliefClaims = claims, optLossData = lossData) shouldEqual ProfitOrLossJourneyAnswers(
+      ProfitOrLossJourneyAnswers.apply(Option(BigDecimal(200)), reliefClaims = claims, optLossData = lossData) shouldEqual ProfitOrLossJourneyAnswers(
         goodsAndServicesForYourOwnUse = true,
-        Option(200),
+        Option(BigDecimal(200)),
         Option(true),
         Option(List(CarryItForward)),
         Option(true),
         previousUnusedLosses = true,
-        Option(400),
+        Option(BigDecimal(400)),
         Option(WhichYearIsLossReported.Year2018to2019)
       )
     }

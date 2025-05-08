@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package services.journeyAnswers
 
-import bulders.BusinessDataBuilder.aTradesJourneyStatusesSeq
-import bulders.JourneyNameAndStatusBuilder.{allCompetedJourneyStatuses, allCompletedTaskListSectionItems}
+import builders.BusinessDataBuilder.aTradesJourneyStatusesSeq
+import builders.JourneyNameAndStatusBuilder.{allCompetedJourneyStatuses, allCompletedTaskListSectionItems}
 import cats.implicits._
 import models.common.JourneyStatus._
 import models.common.{JourneyName, JourneyStatus}

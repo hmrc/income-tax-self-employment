@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package models.connector.api_1171
+package models.connector.businessDetailsConnector
 
-import models.common.{Mtditid, Nino}
-import models.connector.businessDetailsConnector.{BusinessDataDetails, ResponseType}
+import play.api.libs.json._
 
-object ResponseTypeTestData {
-  def mkExample(nino: Nino, mtditid: Mtditid, businesses: List[BusinessDataDetails]): ResponseType = ResponseType(
-    "safeId",
-    nino.value,
-    mtditid.value,
-    None,
-    propertyIncome = false,
-    Some(businesses)
-  )
+/** Represents the Swagger definition for contact_details_type.
+  * @param email
+  *   email id
+  */
+case class ContactDetailsType(
+    telephone: Option[String],
+    mobileNo: Option[String],
+    faxNo: Option[String],
+    email: Option[String]
+)
+
+object ContactDetailsType {
+  implicit lazy val contactDetailsTypeJsonFormat: Format[ContactDetailsType] = Json.format[ContactDetailsType]
 }

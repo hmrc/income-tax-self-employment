@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package bulders
+package builders
 
 import models.common.BusinessId
 import models.frontend.nics.{ExemptionReason, NICsClass4Answers}

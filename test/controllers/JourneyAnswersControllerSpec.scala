@@ -16,7 +16,7 @@
 
 package controllers
 
-import bulders.NICsAnswersBuilder._
+import builders.NICsAnswersBuilder._
 import cats.data.EitherT
 import cats.implicits._
 import controllers.ControllerBehaviours.{buildRequest, buildRequestNoContent}

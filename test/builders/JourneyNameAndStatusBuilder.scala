@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package bulders
+package builders
 
 import cats.implicits.catsSyntaxOptionId
 import models.common.JourneyName._
