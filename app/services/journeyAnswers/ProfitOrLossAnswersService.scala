@@ -18,8 +18,7 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
-import connectors.HIP.BroughtForwardLossConnector
-import connectors.IFS.{IFSBusinessDetailsConnector, IFSConnector}
+import connectors.{HipConnector, IFSBusinessDetailsConnector, IFSConnector}
 import models.common.{JourneyContextWithNino, JourneyName, Nino, TaxYear}
 import models.connector.api_1500.CreateBroughtForwardLossRequestData
 import models.connector.api_1501.UpdateBroughtForwardLossYear
@@ -47,7 +46,7 @@ trait ProfitOrLossAnswersService {
 @Singleton
 class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
                                                 ifsBusinessDetailsConnector: IFSBusinessDetailsConnector,
-                                                broughtForwardLossConnector: BroughtForwardLossConnector,
+                                                hipConnector: HipConnector,
                                                 reliefClaimsService: ReliefClaimsService,
                                                 repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
     extends ProfitOrLossAnswersService {
@@ -153,7 +152,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
   private def deleteBroughtForwardLoss(nino: Nino, taxYear: TaxYear, lossId: String)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[Unit] =
-    broughtForwardLossConnector.deleteBroughtForwardLoss(nino = nino, taxYear = taxYear, lossId = lossId)
+    hipConnector.deleteBroughtForwardLoss(nino = nino, taxYear = taxYear, lossId = lossId)
 
   private def updateBroughtForwardLossYear(data: UpdateBroughtForwardLossYear)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] =
     deleteBroughtForwardLoss(data.nino, data.taxYear, data.lossId).map(_ =>
@@ -172,5 +171,11 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       // No previous data, no data to submit -> do nothing
       case _ => EitherT.rightT[Future, ServiceError](())
     }
+
+  private def getDbAnswers(ctx: JourneyContextWithNino): EitherT[Future, ServiceError, Option[ProfitOrLossJourneyAnswers]] =
+    for {
+      row            <- repository.get(ctx.toJourneyContext(JourneyName.ProfitOrLoss))
+      maybeDbAnswers <- getPersistedAnswers[ProfitOrLossJourneyAnswers](row)
+    } yield maybeDbAnswers
 
 }

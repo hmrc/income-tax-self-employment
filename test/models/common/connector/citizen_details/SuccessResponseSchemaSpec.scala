@@ -16,7 +16,7 @@
 
 package models.common.connector.citizen_details
 
-import builders.BusinessDataBuilder.getCitizenDetailsResponse
+import bulders.BusinessDataBuilder.getCitizenDetailsResponse
 import org.scalatest.EitherValues._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec

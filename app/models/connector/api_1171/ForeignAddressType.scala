@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package models.connector.businessDetailsConnector
+package models.connector.api_1171
 
 import play.api.libs.json._
 
-/** Represents the Swagger definition for business_data_details_businessAddressDetails.
+/** Represents the Swagger definition for foreignAddressType.
   * @param addressLine1
   *   Address line 1
   * @param addressLine2
@@ -30,16 +30,15 @@ import play.api.libs.json._
   * @param postalCode
   *   Postal code
   */
-case class BusinessDataDetailsBusinessAddressDetails(
+case class ForeignAddressType(
     addressLine1: String,
     addressLine2: Option[String],
     addressLine3: Option[String],
     addressLine4: Option[String],
-    postalCode: String,
+    postalCode: Option[String],
     countryCode: String
 )
 
-object BusinessDataDetailsBusinessAddressDetails {
-  implicit lazy val businessDataDetailsBusinessAddressDetailsJsonFormat: Format[BusinessDataDetailsBusinessAddressDetails] =
-    Json.format[BusinessDataDetailsBusinessAddressDetails]
+object ForeignAddressType {
+  implicit lazy val foreignAddressTypeJsonFormat: Format[ForeignAddressType] = Json.format[ForeignAddressType]
 }

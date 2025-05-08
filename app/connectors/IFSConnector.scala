@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package connectors.IFS
+package connectors
 
 import cats.data.EitherT
 import config.AppConfig
-import connectors.IFS.IFSConnector._
-import connectors._
+import connectors.IFSConnector._
 import models.common.TaxYear.{asTys, endDate, startDate}
 import models.common._
 import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBody}

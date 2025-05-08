@@ -18,7 +18,7 @@ package services
 
 import cats.data.EitherT
 import cats.implicits._
-import connectors.IFS.IFSConnector.Api1803Response
+import connectors.IFSConnector.Api1803Response
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestBody
 import models.connector.{ApiResponse, api_1803}
 import models.database.JourneyAnswers

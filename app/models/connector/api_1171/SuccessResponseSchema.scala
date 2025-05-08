@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-package models.connector.businessDetailsConnector
+package models.connector.api_1171
 
 import play.api.libs.json._
 
-/** Represents the Swagger definition for failureResponse_failures_inner.
-  * @param code
-  *   Keys for all the errors returned
-  * @param reason
-  *   A simple description for the failure
+/** Represents the Swagger definition for successResponseSchema.
   */
-case class FailureResponseFailuresInner(
-    code: String,
-    reason: String
+case class SuccessResponseSchema(
+    processingDate: String,
+    taxPayerDisplayResponse: ResponseType
 )
 
-object FailureResponseFailuresInner {
-  implicit lazy val failureResponseFailuresInnerJsonFormat: Format[FailureResponseFailuresInner] = Json.format[FailureResponseFailuresInner]
+object SuccessResponseSchema {
+  implicit lazy val successResponseSchemaJsonFormat: Format[SuccessResponseSchema] = Json.format[SuccessResponseSchema]
 }

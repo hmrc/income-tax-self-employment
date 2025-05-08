@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,6 @@ object HipApiName extends Enum[HipApiName] {
   val values: IndexedSeq[HipApiName] = IndexedSeq[HipApiName]()
 
   final case object Api1504 extends HipApiName("1504")
-  final case object Api1171 extends HipApiName("1171")
 }
 
 sealed abstract class MDTPApiName(override val entryName: String) extends EnumEntry with ApiName

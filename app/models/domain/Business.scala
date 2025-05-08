@@ -16,7 +16,7 @@
 
 package models.domain
 
-import models.connector.businessDetailsConnector.BusinessDataDetails
+import models.connector.api_1171.BusinessDataDetails
 import models.domain.Business.{AccountingPeriod, LatencyDetails}
 import play.api.libs.json.{Json, OFormat}
 

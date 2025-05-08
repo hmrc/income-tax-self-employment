@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,10 +40,9 @@ case class StubJourneyStatusService(
 
   def get(ctx: JourneyContext): ApiResultT[JourneyStatus] = EitherT.fromEither[Future](getRes)
 
-  def getTaskList(taxYear: TaxYear, businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
+  def getTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
     EitherT.fromEither[Future](getTaskListRes)
 
-  def getCommonTaskList(taxYear: TaxYear, businessId: BusinessId, mtditid: Mtditid, nino: Nino)(implicit
-      hc: HeaderCarrier): ApiResultT[TaskListModel] =
+  def getCommonTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskListModel] =
     EitherT.fromEither[Future](getCommonTaskListRes)
 }

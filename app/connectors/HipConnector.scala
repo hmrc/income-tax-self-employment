@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package connectors.HIP
+package connectors
 
 import cats.data.EitherT
 import config.AppConfig
-import connectors.delete
 import models.common._
 import models.connector._
 import models.domain.ApiResultT
@@ -28,12 +27,12 @@ import utils.Logging
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
-trait BroughtForwardLossConnector {
+trait HipConnector {
   def deleteBroughtForwardLoss(nino: Nino, taxYear: TaxYear, lossId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit]
 }
 
 @Singleton
-class BroughtForwardLossConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends BroughtForwardLossConnector with Logging {
+class HipConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends HipConnector with Logging {
 
   private def deleteBroughtForwardLossUrl(nino: Nino, taxYear: TaxYear, lossId: String) =
     s"${appConfig.hipBaseUrl}/income-tax/v1/brought-forward-losses/$nino/${TaxYear.asTys(taxYear)}/$lossId"
