@@ -78,6 +78,8 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.{JsObject, Json}
+import play.api.test.DefaultAwaitTimeout
+import play.api.test.Helpers.await
 import repositories.MongoJourneyAnswersRepository
 import stubs.connectors.StubIFSConnector
 import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
@@ -91,7 +93,7 @@ import java.time.Clock
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with MongoSupport with TimeData {
+class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with MongoSupport with TimeData with DefaultAwaitTimeout {
 
   val clock: Clock             = mock[Clock]
   val mockAppConfig: AppConfig = mock[AppConfig]
@@ -660,7 +662,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     def prepareData(): Either[ServiceError, Unit] = {
       preparePeriodData()
       prepareAnnualSummariesData()
-      prepareDatabase().value.futureValue
+      await(prepareDatabase().value)
     }
 
     lazy val periodicApiResult: Option[Deductions]     = connector.amendSEPeriodSummaryResultData.flatMap(_.body.deductions)

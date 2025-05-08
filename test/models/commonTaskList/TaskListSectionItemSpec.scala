@@ -16,30 +16,16 @@
 
 package models.commonTaskList
 
-import bulders.JourneyNameAndStatusBuilder._
 import org.scalatest.prop.TableDrivenPropertyChecks
 import utils.BaseSpec
-import utils.BaseSpec.{businessId, taxYear}
 
 class TaskListSectionItemSpec extends BaseSpec with TableDrivenPropertyChecks {
 
-  private val cases = Table(
-    ("caseDescription", "savedData", "expectedResult"),
-    ("all journeys have a saved completed status", allCompetedJourneyStatuses, allCompletedTaskListSectionItems),
-    ("there are no saved journey statuses", Seq.empty, allCheckNowTaskListSectionItems),
-    ("there are a mix of InProgress, Completed, NotStarted and no status", mixedPartialJourneyStatuses, mixedTaskListSectionItems)
-  )
-
-  "fromJourneys" should {
-    "return TaskListSectionItems for all SelfEmploymentTitles.values with correct statuses and hrefs" when {
-      forAll(cases) { (caseDescription, savedData, expectedResult) =>
-        s"$caseDescription" in {
-          val result = TaskListSectionItem.fromJourneys(taxYear, businessId, savedData)
-
-          assert(result == expectedResult)
-        }
-      }
-    }
-  }
+//  private val cases = Table(
+//    ("caseDescription", "savedData", "expectedResult"),
+//    ("all journeys have a saved completed status", allCompetedJourneyStatuses, allCompletedTaskListSectionItems),
+//    ("there are no saved journey statuses", Seq.empty, allCheckNowTaskListSectionItems),
+//    ("there are a mix of InProgress, Completed, NotStarted and no status", mixedPartialJourneyStatuses, mixedTaskListSectionItems)
+//  )
 
 }

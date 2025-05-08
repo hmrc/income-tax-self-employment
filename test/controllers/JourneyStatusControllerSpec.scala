@@ -30,7 +30,11 @@ class JourneyStatusControllerSpec extends ControllerBehaviours {
     getRes = Right(JourneyStatus.InProgress)
   )
 
-  private val underTest = new JourneyStatusController(journeyStatusService, mockAuthorisedAction, stubControllerComponents)
+  private val underTest = new JourneyStatusController(
+    journeyStatusService,
+    mockAuthorisedAction,
+    stubControllerComponents
+  )
 
   "getStatus" should {
     "return journey name with status" in {

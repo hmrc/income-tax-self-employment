@@ -19,15 +19,22 @@ package data
 import models.common._
 import models.database.JourneyAnswers
 import models.error.ServiceError
+import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.ExpensesTailoringIndividualCategoriesAnswers
+import models.frontend.expenses.tailoring.individualCategories.{
+  AdvertisingOrMarketing => AdvertisingOrMarketingAnswer,
+  GoodsToSellOrUse => GoodsToSellOrUseAnswer,
+  OfficeSupplies => OfficeSuppliesAnswer,
+  OtherExpenses => OtherExpensesAnswer,
+  RepairsAndMaintenance => RepairsAndMaintenanceAnswer,
+  TravelForWork => TravelForWorkAnswer,
+  WorkFromBusinessPremises => WorkFromBusinessPremisesAnswer
+}
 import play.api.libs.json.{JsObject, JsValue}
-import uk.gov.hmrc.http.HeaderCarrier
 
-import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 trait CommonTestData extends TimeData {
-
-  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val testBusinessId: BusinessId = BusinessId("XH1234567890")
   val testMtdId: Mtditid         = Mtditid("12345")
@@ -36,6 +43,7 @@ trait CommonTestData extends TimeData {
   val testCurrentTaxYear: TaxYear = TaxYear(2025)
   val testPrevTaxYear: TaxYear    = TaxYear(2024)
   val testTaxYear                 = testCurrentTaxYear
+  val testTradingName: String     = "Test Trading Name"
 
   val testContextCurrentYear: JourneyContextWithNino = JourneyContextWithNino(testCurrentTaxYear, testBusinessId, testMtdId, testNino)
   val testContextPrevYear: JourneyContextWithNino    = JourneyContextWithNino(testPrevTaxYear, testBusinessId, testMtdId, testNino)
@@ -56,5 +64,31 @@ trait CommonTestData extends TimeData {
       createdAt = testInstant,
       updatedAt = testInstant
     )
+
+  val testExpensesTailoring: ExpensesTailoringIndividualCategoriesAnswers = ExpensesTailoringIndividualCategoriesAnswers(
+    officeSupplies = OfficeSuppliesAnswer.No,
+    goodsToSellOrUse = GoodsToSellOrUseAnswer.No,
+    repairsAndMaintenance = RepairsAndMaintenanceAnswer.No,
+    workFromHome = false,
+    workFromBusinessPremises = WorkFromBusinessPremisesAnswer.No,
+    travelForWork = TravelForWorkAnswer.No,
+    advertisingOrMarketing = AdvertisingOrMarketingAnswer.No,
+    entertainmentCosts = None,
+    professionalServiceExpenses = Nil,
+    financialExpenses = Nil,
+    depreciation = false,
+    otherExpenses = OtherExpensesAnswer.No,
+    disallowableInterest = None,
+    disallowableOtherFinancialCharges = None,
+    disallowableIrrecoverableDebts = None,
+    disallowableStaffCosts = None,
+    disallowableSubcontractorCosts = None,
+    disallowableProfessionalFees = None
+  )
+
+  val testCapitalAllowancesTailoring: CapitalAllowancesTailoringAnswers = CapitalAllowancesTailoringAnswers(
+    claimCapitalAllowances = false,
+    selectCapitalAllowances = Nil
+  )
 
 }
