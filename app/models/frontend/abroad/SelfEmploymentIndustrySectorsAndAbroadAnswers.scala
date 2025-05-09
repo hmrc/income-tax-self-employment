@@ -18,8 +18,10 @@ package models.frontend.abroad
 
 import play.api.libs.json.{Json, OFormat}
 
-final case class SelfEmploymentAbroadAnswers(selfEmploymentAbroad: Boolean)
+final case class SelfEmploymentIndustrySectorsAndAbroadAnswers(isFarmerOrMarketGardener: Boolean,
+                                                               hasProfitFromCreativeWorks: Boolean,
+                                                               selfEmploymentAbroad: Boolean)
 
-object SelfEmploymentAbroadAnswers {
-  implicit val format: OFormat[SelfEmploymentAbroadAnswers] = Json.format[SelfEmploymentAbroadAnswers]
+object SelfEmploymentIndustrySectorsAndAbroadAnswers {
+  implicit val format: OFormat[SelfEmploymentIndustrySectorsAndAbroadAnswers] = Json.format[SelfEmploymentIndustrySectorsAndAbroadAnswers]
 }

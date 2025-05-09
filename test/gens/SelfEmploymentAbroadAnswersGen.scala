@@ -16,13 +16,15 @@
 
 package gens
 
-import models.frontend.abroad.SelfEmploymentAbroadAnswers
+import models.frontend.abroad.SelfEmploymentIndustrySectorsAndAbroadAnswers
 import org.scalacheck.Gen
 
 object SelfEmploymentAbroadAnswersGen {
 
-  val selfEmploymentAbroadAnswersGen: Gen[SelfEmploymentAbroadAnswers] = for {
+  val selfEmploymentAbroadAnswersGen: Gen[SelfEmploymentIndustrySectorsAndAbroadAnswers] = for {
+    isFarmerOrMarketGardener <- booleanGen
+    hasProfitFromCreativeWorks <- booleanGen
     selfEmploymentAbroad <- booleanGen
-  } yield SelfEmploymentAbroadAnswers(selfEmploymentAbroad)
+  } yield SelfEmploymentIndustrySectorsAndAbroadAnswers(isFarmerOrMarketGardener, hasProfitFromCreativeWorks,selfEmploymentAbroad)
 
 }

@@ -18,7 +18,7 @@ package services.journeyAnswers
 
 import models.common.{JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
-import models.frontend.abroad.SelfEmploymentAbroadAnswers
+import models.frontend.abroad.SelfEmploymentIndustrySectorsAndAbroadAnswers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
 import stubs.repositories.StubJourneyAnswersRepository
@@ -27,7 +27,7 @@ import utils.EitherTTestOps._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class AbroadAnswersServiceImplSpec extends AnyWordSpecLike {
+class IndustrySectorsAndAbroadAnswersServiceImplSpec extends AnyWordSpecLike {
   val service = new IndustrySectorsAndAbroadAnswersServiceImpl(StubJourneyAnswersRepository())
 
   "getAnswers" should {
@@ -40,22 +40,31 @@ class AbroadAnswersServiceImplSpec extends AnyWordSpecLike {
       val journeyAnswers: JourneyAnswers = mkJourneyAnswers(
         JourneyName.ExpensesTailoring,
         JourneyStatus.Completed,
-        Json.obj("selfEmploymentAbroad" -> true)
+        Json.obj("selfEmploymentAbroad" -> true, "isFarmerOrMarketGardener" -> true,
+          "hasProfitFromCreativeWorks" -> true)
       )
 
       val service = new IndustrySectorsAndAbroadAnswersServiceImpl(
         StubJourneyAnswersRepository(
-          getAnswer = Some(journeyAnswers)
+          getAnswer = Option(journeyAnswers)
         ))
       val result = service.getAnswers(journeyCtxWithNino).rightValue
-      assert(result === Some(SelfEmploymentAbroadAnswers(true)))
+      assert(
+        result === Option(
+          SelfEmploymentIndustrySectorsAndAbroadAnswers(
+            isFarmerOrMarketGardener = true,
+            hasProfitFromCreativeWorks = true,
+            selfEmploymentAbroad = true)))
     }
   }
 
   "persistAnswers" should {
     "persist answers successfully" in {
-      val answers = SelfEmploymentAbroadAnswers(true)
-      val result  = service.persistAnswers(journeyCtxWithNino, answers).rightValue
+      val answers = SelfEmploymentIndustrySectorsAndAbroadAnswers(
+        isFarmerOrMarketGardener = false,
+        hasProfitFromCreativeWorks = false,
+        selfEmploymentAbroad = true)
+      val result: Unit = service.persistAnswers(journeyCtxWithNino, answers).rightValue
       assert(result === ())
     }
   }

@@ -25,7 +25,7 @@ import models.database.capitalAllowances._
 import models.database.expenses.TaxiMinicabOrRoadHaulageDb
 import models.domain.ApiResultT
 import models.error.ServiceError.InvalidNICsAnswer
-import models.frontend.abroad.SelfEmploymentAbroadAnswers
+import models.frontend.abroad.SelfEmploymentIndustrySectorsAndAbroadAnswers
 import models.frontend.adjustments.ProfitOrLossJourneyAnswers
 import models.frontend.capitalAllowances.CapitalAllowancesTailoringAnswers
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
@@ -81,7 +81,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
   }
 
   def saveSelfEmploymentAbroad(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    getBodyWithCtx[SelfEmploymentAbroadAnswers](taxYear, businessId, nino) { (ctx, value) =>
+    getBodyWithCtx[SelfEmploymentIndustrySectorsAndAbroadAnswers](taxYear, businessId, nino) { (ctx, value) =>
       abroadAnswersService.persistAnswers(ctx, value).map(_ => NoContent)
     }
   }

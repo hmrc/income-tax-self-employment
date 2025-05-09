@@ -20,20 +20,20 @@ import cats.data.EitherT
 import models.common.JourneyContextWithNino
 import models.domain.ApiResultT
 import models.error.ServiceError
-import models.frontend.abroad.SelfEmploymentAbroadAnswers
+import models.frontend.abroad.SelfEmploymentIndustrySectorsAndAbroadAnswers
 import services.journeyAnswers.IndustrySectorsAndAbroadAnswersService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
 case class StubIndustrySectorsAndAbroadAnswersService(saveAnswersRes: Either[ServiceError, Unit] = Right(()),
-                                                      getAnswersRes: Either[ServiceError, Option[SelfEmploymentAbroadAnswers]] = Right(None))
+                                                      getAnswersRes: Either[ServiceError, Option[SelfEmploymentIndustrySectorsAndAbroadAnswers]] = Right(None))
     extends IndustrySectorsAndAbroadAnswersService {
   implicit val ec: ExecutionContext = ExecutionContext.global
 
-  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SelfEmploymentAbroadAnswers]] =
+  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SelfEmploymentIndustrySectorsAndAbroadAnswers]] =
     EitherT.fromEither[Future](getAnswersRes)
 
-  def persistAnswers(ctx: JourneyContextWithNino, answers: SelfEmploymentAbroadAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def persistAnswers(ctx: JourneyContextWithNino, answers: SelfEmploymentIndustrySectorsAndAbroadAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     EitherT.fromEither[Future](saveAnswersRes)
 }
