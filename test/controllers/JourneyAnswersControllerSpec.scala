@@ -69,7 +69,7 @@ import scala.concurrent.Future
 
 class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckPropertyChecks with TableDrivenPropertyChecks with OptionValues {
 
-  private def mkUnderTest(abroadAnswersService: StubAbroadAnswersService = StubAbroadAnswersService(),
+  private def mkUnderTest(abroadAnswersService: StubIndustrySectorsAndAbroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(),
                           incomeService: StubIncomeAnswersService = StubIncomeAnswersService(),
                           expensesService: StubExpensesAnswersService = StubExpensesAnswersService(),
                           capitalAllowancesService: StubCapitalAllowancesAnswersAnswersService = StubCapitalAllowancesAnswersAnswersService(),
@@ -102,7 +102,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     new JourneyAnswersController(
       auth = mockAuthorisedAction,
       cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
+      abroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(),
       incomeService = StubIncomeAnswersService(),
       expensesService = StubExpensesAnswersService(),
       capitalAllowancesService = capitalAllowancesService,
@@ -168,7 +168,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       val underTest = new JourneyAnswersController(
         auth = mockAuthorisedAction,
         cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(getAnswersRes = Some(answers).asRight),
+        abroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(getAnswersRes = Some(answers).asRight),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
         capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
@@ -205,7 +205,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       val underTest = new JourneyAnswersController(
         auth = mockAuthorisedAction,
         cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
+        abroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(getAnswersRes = Option(answers).asRight),
         expensesService = StubExpensesAnswersService(),
         capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
@@ -238,7 +238,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       val underTest = new JourneyAnswersController(
         auth = mockAuthorisedAction,
         cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
+        abroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(incomeJourneyAnswersRes = EitherT.leftT(downstreamError)),
         expensesService = StubExpensesAnswersService(),
         capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
@@ -261,7 +261,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     val prepopStubbedUnderTest = new JourneyAnswersController(
       auth = mockAuthorisedAction,
       cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
+      abroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(),
       incomeService = StubIncomeAnswersService(),
       expensesService = StubExpensesAnswersService(),
       capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
@@ -304,7 +304,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         val controller: JourneyAnswersController = new JourneyAnswersController(
           auth = mockAuthorisedAction,
           cc = stubControllerComponents,
-          abroadAnswersService = StubAbroadAnswersService(),
+          abroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(),
           incomeService = StubIncomeAnswersService(),
           expensesService = StubExpensesAnswersService(getTailoringJourneyAnswers = journeyAnswers),
           capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
@@ -497,7 +497,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     val controller: JourneyAnswersController = new JourneyAnswersController(
       auth = mockAuthorisedAction,
       cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
+      abroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(),
       incomeService = StubIncomeAnswersService(),
       expensesService = StubExpensesAnswersService(),
       capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
@@ -517,7 +517,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     val controller: JourneyAnswersController = new JourneyAnswersController(
       auth = mockAuthorisedAction,
       cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
+      abroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(),
       incomeService = StubIncomeAnswersService(),
       expensesService = StubExpensesAnswersService(),
       capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
@@ -879,7 +879,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       val underTest = new JourneyAnswersController(
         auth = mockAuthorisedAction,
         cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
+        abroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
         capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getCapitalAllowancesTailoring = Some(answers).asRight),
@@ -919,7 +919,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       val underTest = new JourneyAnswersController(
         auth = mockAuthorisedAction,
         cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
+        abroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
         capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getZeroEmissionCars = Some(answers).asRight),
@@ -960,7 +960,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       val underTest = new JourneyAnswersController(
         auth = mockAuthorisedAction,
         cc = stubControllerComponents,
-        abroadAnswersService = StubAbroadAnswersService(),
+        abroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(),
         incomeService = StubIncomeAnswersService(),
         expensesService = StubExpensesAnswersService(),
         capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(getZeroEmissionGoodsVehicleCars = Some(answers).asRight),
@@ -1112,7 +1112,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     val controller = new JourneyAnswersController(
       auth = mockAuthorisedAction,
       cc = stubControllerComponents,
-      abroadAnswersService = StubAbroadAnswersService(),
+      abroadAnswersService = StubIndustrySectorsAndAbroadAnswersService(),
       incomeService = StubIncomeAnswersService(),
       expensesService = expensesService,
       capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),

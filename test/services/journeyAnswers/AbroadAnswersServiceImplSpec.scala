@@ -28,7 +28,7 @@ import utils.EitherTTestOps._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class AbroadAnswersServiceImplSpec extends AnyWordSpecLike {
-  val service = new AbroadAnswersServiceImpl(StubJourneyAnswersRepository())
+  val service = new IndustrySectorsAndAbroadAnswersServiceImpl(StubJourneyAnswersRepository())
 
   "getAnswers" should {
     "return empty if no answers" in {
@@ -43,7 +43,7 @@ class AbroadAnswersServiceImplSpec extends AnyWordSpecLike {
         Json.obj("selfEmploymentAbroad" -> true)
       )
 
-      val service = new AbroadAnswersServiceImpl(
+      val service = new IndustrySectorsAndAbroadAnswersServiceImpl(
         StubJourneyAnswersRepository(
           getAnswer = Some(journeyAnswers)
         ))

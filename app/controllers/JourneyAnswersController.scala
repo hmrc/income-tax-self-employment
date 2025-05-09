@@ -66,7 +66,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class JourneyAnswersController @Inject() (auth: AuthorisedAction,
                                           cc: ControllerComponents,
                                           prepopAnswersService: PrepopAnswersService,
-                                          abroadAnswersService: AbroadAnswersService,
+                                          abroadAnswersService: IndustrySectorsAndAbroadAnswersService,
                                           incomeService: IncomeAnswersService,
                                           expensesService: ExpensesAnswersService,
                                           capitalAllowancesService: CapitalAllowancesAnswersService,
