@@ -24,12 +24,34 @@ trait SectionTitle extends Enumerable.Implicits
 object SectionTitle extends SectionTitle {
 
   case class SelfEmploymentTitle() extends WithName("SelfEmployment") with SectionTitle
+
   object SelfEmploymentTitle {
     implicit val nonStrictReads: Reads[SelfEmploymentTitle] = Reads.pure(SelfEmploymentTitle())
     implicit val writes: OWrites[SelfEmploymentTitle]       = OWrites[SelfEmploymentTitle](_ => Json.obj())
   }
 
-  val values: Seq[SectionTitle] = Seq(SelfEmploymentTitle())
+  case class ExpensesTitle() extends WithName("Expenses") with SectionTitle
+
+  object ExpensesTitle {
+    implicit val nonStrictReads: Reads[ExpensesTitle] = Reads.pure(ExpensesTitle())
+    implicit val writes: OWrites[ExpensesTitle]       = OWrites[ExpensesTitle](_ => Json.obj())
+  }
+
+  case class CapitalAllowancesTitle() extends WithName("CapitalAllowances") with SectionTitle
+
+  object CapitalAllowancesTitle {
+    implicit val nonStrictReads: Reads[CapitalAllowancesTitle] = Reads.pure(CapitalAllowancesTitle())
+    implicit val writes: OWrites[CapitalAllowancesTitle]       = OWrites[CapitalAllowancesTitle](_ => Json.obj())
+  }
+
+  case class AdjustmentsTitle() extends WithName("Adjustments") with SectionTitle
+
+  val values: Seq[SectionTitle] = Seq(
+    SelfEmploymentTitle(),
+    ExpensesTitle(),
+    CapitalAllowancesTitle(),
+    AdjustmentsTitle()
+  )
 
   implicit val enumerable: Enumerable[SectionTitle] =
     Enumerable(values.map(v => v.toString -> v): _*)

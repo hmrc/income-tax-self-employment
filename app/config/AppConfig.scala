@@ -40,8 +40,9 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
     logger.info(s"Test Scenarios activated: ${testMode.mkString(",")}")
   }
 
-  val ifsEnvironment: String = config.get[String]("microservice.services.integration-framework.environment")
-  val hipEnvironment: String = config.get[String]("microservice.services.hip-integration-framework.environment")
+  val ifsEnvironment: String             = config.get[String]("microservice.services.integration-framework.environment")
+  val hipEnvironment: String             = config.get[String]("microservice.services.hip-integration-framework.environment")
+  val selfEmploymentFrontendHost: String = servicesConfig.baseUrl("income-tax-self-employment-frontend")
 
   // TODO This is not good. It means that the app will fail on missing config only on first request, not on bootstrap
   def ifsAuthorisationToken(api: String): String = config.get[String](s"microservice.services.integration-framework.authorisation-token.$api")

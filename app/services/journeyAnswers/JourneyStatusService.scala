@@ -19,12 +19,13 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import models.common._
-import models.commonTaskList.{SectionTitle, TaskListModel, TaskListSection, TaskListSectionItem}
-import models.domain.ApiResultT
+import models.commonTaskList.{SectionTitle, TaskListModel, TaskListRows, TaskListSection, TaskListSectionItem}
+import models.domain.{ApiResultT, JourneyNameAndStatus, TradesJourneyStatuses}
 import models.error.ServiceError
 import models.frontend.TaskList
+import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
-import services.BusinessService
+import services.{BusinessService, TaskListService}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -33,8 +34,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait JourneyStatusService {
   def set(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit]
   def get(ctx: JourneyContext): ApiResultT[JourneyStatus]
-  def getTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList]
-  def getCommonTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskListModel]
+  def getLegacyTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList]
 }
 
 @Singleton
@@ -50,20 +50,10 @@ class JourneyStatusServiceImpl @Inject() (businessService: BusinessService, repo
       status = answer.map(_.status).getOrElse(JourneyStatus.CheckOurRecords)
     } yield status
 
-  def getTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
+  def getLegacyTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
     for {
       businesses <- businessService.getBusinesses(nino)
       taskList   <- repository.getAll(taxYear, mtditid, businesses)
     } yield taskList
-
-  def getCommonTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskListModel] =
-    getTaskList(taxYear, mtditid, nino).map { data =>
-      val selfEmploymentJourneyItems: Seq[TaskListSectionItem] = // This combines lists of journeys for all business IDs
-        data.businesses.flatMap(journeyList => TaskListSectionItem.fromJourneys(taxYear, journeyList.businessId, journeyList.journeyStatuses))
-      val selfEmploymentSections
-          : Seq[TaskListSection] = // Until business finishes mapping self employment to common TL, all are returned in one section
-        Seq(TaskListSection(SectionTitle.SelfEmploymentTitle(), selfEmploymentJourneyItems.some))
-      TaskListModel(selfEmploymentSections)
-    }
 
 }

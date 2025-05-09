@@ -1,7 +1,7 @@
 # microservice specific routes
 
 # Common Task List
-GET         /:taxYear/common-task-list/:nino                                                             controllers.JourneyStatusController.getCommonTaskList(taxYear: TaxYear, nino: Nino)
+GET         /:taxYear/tasks/:nino                                                                         controllers.TaskListController.getTaskList(taxYear: TaxYear, nino: Nino)
 
 # Business
 GET         /individuals/business/details/:nino/list                                                     controllers.BusinessDetailsController.getBusinesses(nino: Nino)

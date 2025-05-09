@@ -32,6 +32,7 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTTestOps.whenReady
 
 import java.time.LocalDateTime
@@ -39,6 +40,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonTestData with BeforeAndAfterEach {
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   override def afterEach(): Unit = {
     super.afterEach()
