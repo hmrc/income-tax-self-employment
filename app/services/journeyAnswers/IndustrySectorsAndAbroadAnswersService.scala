@@ -20,7 +20,7 @@ import cats.implicits._
 import models.common.JourneyName._
 import models.common._
 import models.domain.ApiResultT
-import models.frontend.abroad.SelfEmploymentAbroadAnswers
+import models.frontend.abroad.SelfEmploymentIndustrySectorsAndAbroadAnswers
 import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,21 +28,22 @@ import uk.gov.hmrc.http.HeaderCarrier
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
-trait AbroadAnswersService {
-  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SelfEmploymentAbroadAnswers]]
-  def persistAnswers(ctx: JourneyContextWithNino, answers: SelfEmploymentAbroadAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+trait IndustrySectorsAndAbroadAnswersService {
+  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SelfEmploymentIndustrySectorsAndAbroadAnswers]]
+  def persistAnswers(ctx: JourneyContextWithNino, answers: SelfEmploymentIndustrySectorsAndAbroadAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
 }
 
 @Singleton
-class AbroadAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository)(implicit ec: ExecutionContext) extends AbroadAnswersService {
+class IndustrySectorsAndAbroadAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository)(implicit ec: ExecutionContext)
+    extends IndustrySectorsAndAbroadAnswersService {
 
-  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SelfEmploymentAbroadAnswers]] =
+  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[SelfEmploymentIndustrySectorsAndAbroadAnswers]] =
     for {
       row    <- repository.get(ctx.toJourneyContext(SelfEmploymentAbroad))
-      result <- getPersistedAnswers[SelfEmploymentAbroadAnswers](row)
+      result <- getPersistedAnswers[SelfEmploymentIndustrySectorsAndAbroadAnswers](row)
     } yield result
 
-  def persistAnswers(ctx: JourneyContextWithNino, answers: SelfEmploymentAbroadAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def persistAnswers(ctx: JourneyContextWithNino, answers: SelfEmploymentIndustrySectorsAndAbroadAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     repository.upsertAnswers(ctx.toJourneyContext(SelfEmploymentAbroad), Json.toJson(answers))
 
 }
