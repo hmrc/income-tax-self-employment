@@ -16,22 +16,15 @@
 
 package services.journeyAnswers
 
-import bulders.BusinessDataBuilder.aTradesJourneyStatusesSeq
-import bulders.JourneyNameAndStatusBuilder.{allCompetedJourneyStatuses, allCompletedTaskListSectionItems}
 import cats.implicits._
 import models.common.JourneyStatus._
 import models.common.{JourneyName, JourneyStatus}
-import models.commonTaskList.SectionTitle.SelfEmploymentTitle
-import models.commonTaskList.{TaskListModel, TaskListSection}
 import models.database.JourneyAnswers
 import models.domain.JourneyNameAndStatus
-import models.error.DownstreamError.SingleDownstreamError
-import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.frontend.TaskList
 import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import play.api.http.Status.INTERNAL_SERVER_ERROR
 import play.api.libs.json.JsObject
 import stubs.connectors.StubIFSBusinessDetailsConnector
 import stubs.repositories.StubJourneyAnswersRepository
@@ -76,7 +69,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
 
   "getTaskList" should {
     "return empty task list if no answers" in {
-      val result = underTest.getTaskList(taxYear, mtditid, nino)
+      val result = underTest.getLegacyTaskList(taxYear, mtditid, nino)
       result.value.futureValue shouldBe TaskList.empty.asRight
     }
 
@@ -89,38 +82,9 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
         )
       )
 
-      val result = underTest.getTaskList(taxYear, mtditid, nino)
+      val result = underTest.getLegacyTaskList(taxYear, mtditid, nino)
       result.value.futureValue shouldBe taskList.asRight
     }
   }
 
-  "getCommonTaskList" should {
-    "create TaskListModel from saved journey statuses" in {
-      val taskList = TaskList(
-        aTradesJourneyStatusesSeq.map(_.copy(journeyStatuses = allCompetedJourneyStatuses.toList)),
-        Option(JourneyNameAndStatus(JourneyName.NationalInsuranceContributions, JourneyStatus.Completed))
-      )
-      val underTest = new JourneyStatusServiceImpl(
-        StubBusinessService(),
-        repository.copy(
-          getAllResult = Right(taskList)
-        )
-      )
-      val result = underTest.getCommonTaskList(taxYear, mtditid, nino)
-      result.value.futureValue shouldBe TaskListModel(List(TaskListSection(SelfEmploymentTitle(), Option(allCompletedTaskListSectionItems)))).asRight
-    }
-
-    "return an error from downstream" in {
-      val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
-      val underTest = new JourneyStatusServiceImpl(
-        StubBusinessService(),
-        repository.copy(
-          getAllResult = downstreamError.asLeft
-        )
-      )
-
-      val result = underTest.getTaskList(taxYear, mtditid, nino)
-      result.value.futureValue shouldBe downstreamError.asLeft
-    }
-  }
 }
