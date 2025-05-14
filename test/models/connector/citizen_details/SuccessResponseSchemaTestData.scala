@@ -16,7 +16,7 @@
 
 package models.connector.citizen_details
 
-import bulders.BusinessDataBuilder.citizenDetailsDateOfBirth
+import builders.BusinessDataBuilder.citizenDetailsDateOfBirth
 import utils.BaseSpec.nino
 
 object SuccessResponseSchemaTestData {

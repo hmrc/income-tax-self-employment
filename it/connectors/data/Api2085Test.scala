@@ -23,7 +23,7 @@ import testdata.CommonTestData
 trait Api2085Test extends CommonTestData {
   val downstreamUrl = s"/income-tax/income-sources/$testNino\\?taxYear=${testTaxYear.toYYYY_YY}"
 
-  val successResponseRaw: String =
+  val api1171ResponseJson: String =
     s"""{
        |  "selfEmployments": [
        |    {
@@ -50,5 +50,5 @@ trait Api2085Test extends CommonTestData {
       | "message":"Submission has not passed validation. Invalid parameter taxableEntityId."
       |""".stripMargin
 
-  val successResponse: ListOfIncomeSources = Json.parse(successResponseRaw).as[ListOfIncomeSources]
+  val api1171Response: ListOfIncomeSources = Json.parse(api1171ResponseJson).as[ListOfIncomeSources]
 }

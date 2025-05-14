@@ -2,9 +2,8 @@ package controllers
 
 import base.IntegrationBaseSpec
 import helpers.AuthStub
-import models.common.IdType
 import models.common.JourneyName.{CapitalAllowancesTailoring, ExpensesTailoring, Income, ProfitOrLoss, SelfEmploymentAbroad, TradeDetails}
-import models.commonTaskList.TaskStatus.{CannotStartYet, InProgress, NotStarted}
+import models.commonTaskList.TaskStatus.{CannotStartYet, NotStarted}
 import models.commonTaskList.{SectionTitle, TaskListSection, TaskListSectionItem, TaskStatus}
 import org.scalatest.Assertion
 import play.api.http.Status.OK
@@ -34,12 +33,13 @@ class TaskListControllerISpec extends IntegrationBaseSpec with CommonTestData wi
       tasks.exists(task => task.title == title && task.status == status)
   }
 
+
   "GET /tasks/:nino" when {
     "minimal data is present" must {
       "return task list sections for each business, displaying all static rows" in {
         stubAuthorisedIndividual()
         stubGetWithResponseBody(
-          url = s"/registration/business-details/${IdType.Nino}/$testNino",
+          url = s"/RESTAdapter/itsa/taxpayer/business-details\\?mtdReference=$testMtdItId&nino=$testNino",
           expectedResponse = Json.toJson(test1171Response).toString(),
           expectedStatus = OK
         )

@@ -19,7 +19,7 @@ package repositories
 import cats.data.EitherT
 import cats.implicits._
 import config.AppConfig
-import models.common.JourneyName.{NationalInsuranceContributions, TradeDetails}
+import models.common.JourneyName.NationalInsuranceContributions
 import models.common._
 import models.database.JourneyAnswers
 import models.domain.{ApiResultT, Business}
@@ -42,7 +42,6 @@ import java.time.{Clock, Instant, ZoneOffset}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.reflect.ClassTag
 
 trait JourneyAnswersRepository {
   // Answers API methods
@@ -52,7 +51,7 @@ trait JourneyAnswersRepository {
 
   // Legacy answers methods
   def get(ctx: JourneyContext): ApiResultT[Option[JourneyAnswers]]
-  def getAnswers[A: Reads](ctx: JourneyContext)(implicit ct: ClassTag[A]): ApiResultT[Option[A]]
+  def getAnswers[A: Reads](ctx: JourneyContext): ApiResultT[Option[A]]
   def getAll(taxYear: TaxYear, mtditid: Mtditid, businesses: List[Business]): ApiResultT[TaskList]
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ApiResultT[Unit]
   def setStatus(ctx: JourneyContext, status: JourneyStatus): ApiResultT[Unit]
@@ -140,7 +139,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
         .headOption())
   }
 
-  def getAnswers[A: Reads](ctx: JourneyContext)(implicit ct: ClassTag[A]): ApiResultT[Option[A]] =
+  def getAnswers[A: Reads](ctx: JourneyContext): ApiResultT[Option[A]] =
     for {
       row            <- get(ctx)
       maybeDbAnswers <- getPersistedAnswers[A](row)

@@ -1,8 +1,8 @@
+
 package testdata
 
 import models.common._
-import models.connector.api_1171.{BusinessDataDetails, ResponseType, SuccessResponseSchema => Api1171ResponseSchema}
-import models.domain.Business
+import models.connector.businessDetailsConnector.{BusinessDetailsSuccessResponseSchema,BusinessDataDetails, ResponseType}
 
 trait CommonTestData extends IntegrationTimeData {
 
@@ -60,7 +60,7 @@ trait CommonTestData extends IntegrationTimeData {
     latencyDetails = None
   )
 
-  val test1171Response = Api1171ResponseSchema(
+  val test1171Response = BusinessDetailsSuccessResponseSchema(
     processingDate = "2023-10-01T12:00:00Z",
     taxPayerDisplayResponse = ResponseType(
       safeId = "1",

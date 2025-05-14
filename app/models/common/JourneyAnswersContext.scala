@@ -16,8 +16,6 @@
 
 package models.common
 
-import models.common.JourneyName.TradeDetails
-
 /** @param businessId
   *   also called incomeSourceId
   */

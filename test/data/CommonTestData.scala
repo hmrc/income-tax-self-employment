@@ -42,7 +42,7 @@ trait CommonTestData extends TimeData {
 
   val testCurrentTaxYear: TaxYear = TaxYear(2025)
   val testPrevTaxYear: TaxYear    = TaxYear(2024)
-  val testTaxYear                 = testCurrentTaxYear
+  val testTaxYear: TaxYear        = testCurrentTaxYear
   val testTradingName: String     = "Test Trading Name"
 
   val testContextCurrentYear: JourneyContextWithNino = JourneyContextWithNino(testCurrentTaxYear, testBusinessId, testMtdId, testNino)

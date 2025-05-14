@@ -16,10 +16,10 @@
 
 package services.journeyAnswers
 
-import bulders.BusinessDataBuilder
+import builders.BusinessDataBuilder
 import cats.data.EitherT
 import cats.implicits._
-import connectors.IFSConnector
+import connectors.IFS.IFSConnector
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import models.common._
 import models.database.JourneyAnswers
@@ -97,9 +97,9 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
   }
 
   "saving income answers" when {
-    "no period summary or annual submission data exists" must {
+    "no period summary or annual submission data exists" must { // businessId, mtditid, nino
       "successfully store data and create the period summary" in new TestCase(connector = mock[IFSConnector]) {
-        when(mockBusinessService.getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier]))
+        when(mockBusinessService.getBusiness(any[BusinessId], any[Mtditid], any[Nino])(any[HeaderCarrier]))
           .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
 
         connector.listSEPeriodSummary(*)(*, *) returns
@@ -121,14 +121,14 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 
         verify(connector, times(1)).createSEPeriodSummary(*)(*, *)
         verify(auditService, times(1)).sendAuditEvent(*, *)(*, *)
-        verify(mockBusinessService, times(1)).getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier])
+        verify(mockBusinessService, times(1)).getBusiness(any[BusinessId], any[Mtditid], any[Nino])(any[HeaderCarrier])
         verify(connector, never).amendSEPeriodSummary(*)(*, *)
       }
     }
 
     "prior submission data exists" must {
       "successfully store data and amend the period summary" in new TestCase(connector = mock[IFSConnector]) {
-        when(mockBusinessService.getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier]))
+        when(mockBusinessService.getBusiness(any[BusinessId], any[Mtditid], any[Nino])(any[HeaderCarrier]))
           .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
 
         connector.listSEPeriodSummary(*)(*, *) returns
@@ -152,7 +152,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 
         verify(connector, times(1)).amendSEPeriodSummary(*)(*, *)
         verify(auditService, times(1)).sendAuditEvent(*, *)(*, *)
-        verify(mockBusinessService, times(1)).getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier])
+        verify(mockBusinessService, times(1)).getBusiness(any[BusinessId], any[Mtditid], any[Nino])(any[HeaderCarrier])
         verify(connector, never).createSEPeriodSummary(*)(*, *)
       }
     }
@@ -160,7 +160,8 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 
   "saveAnswers" should {
     "save data in the repository" in new TestCase() {
-      when(mockBusinessService.getBusiness(any[Nino], any[BusinessId])(any[HeaderCarrier])).thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
+      when(mockBusinessService.getBusiness(any[BusinessId], any[Mtditid], any[Nino])(any[HeaderCarrier]))
+        .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
 
       service
         .saveAnswers(journeyCtxWithNino, sampleIncomeJourneyAnswersData)

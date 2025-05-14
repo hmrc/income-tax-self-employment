@@ -31,6 +31,7 @@ import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.MockitoSugar.when
 import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -51,7 +52,7 @@ object MockReliefClaimsConnector {
       .thenReturn(EitherT.pure(()))
 
   def getAllReliefClaims(ctx: JourneyContextWithNino)(returnValue: List[ReliefClaim]): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
-    when(mockInstance.getAllReliefClaims(eqTo(ctx))(any()))
+    when(mockInstance.getAllReliefClaims(eqTo(ctx))(any[HeaderCarrier]))
       .thenReturn(EitherT.pure(returnValue))
 
   def getAllReliefClaimsError(ctx: JourneyContextWithNino)(returnValue: ServiceError): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
