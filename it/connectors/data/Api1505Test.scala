@@ -24,7 +24,7 @@ trait Api1505Test extends CommonTestData {
 
   val downstreamUrl: String = s"/income-tax/claims-for-relief/$testNino"
 
-  val successResponseRaw: String =
+  val api1171ResponseJson: String =
     s"""{
        |   "claimId": "1234568790ABCDE"
        |}
@@ -46,5 +46,5 @@ trait Api1505Test extends CommonTestData {
   }
   """
 
-  val successResponse: ClaimId = Json.parse(successResponseRaw).as[ClaimId]
+  val api1171Response: ClaimId = Json.parse(api1171ResponseJson).as[ClaimId]
 }

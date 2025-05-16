@@ -32,5 +32,5 @@ case class BusinessIncomeSourcesSummaryResponse(incomeSourceId: String,
 object BusinessIncomeSourcesSummaryResponse {
   implicit val businessFormat: OFormat[BusinessIncomeSourcesSummaryResponse] = Json.format[BusinessIncomeSourcesSummaryResponse]
 
-  val empty = BusinessIncomeSourcesSummaryResponse("", 0, 0, 0, 0, None, None, None, 0, 0)
+  val empty: BusinessIncomeSourcesSummaryResponse = BusinessIncomeSourcesSummaryResponse("", 0, 0, 0, 0, None, None, None, 0, 0)
 }

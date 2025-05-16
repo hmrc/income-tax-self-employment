@@ -42,11 +42,11 @@ trait Api1501UpdateYearTest extends CommonTestData {
     body = requestBody
   )
 
-  val successResponseRaw: String =
+  val api1171ResponseJson: String =
     s"""{
        |   "lossId": "${testBusinessId.value}"
        |}
        |""".stripMargin
 
-  val successResponse = Json.parse(successResponseRaw).as[SuccessResponseSchema]
+  val api1171Response = Json.parse(api1171ResponseJson).as[SuccessResponseSchema]
 }
