@@ -35,10 +35,10 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
     "return successful response" in new Api1171Test {
       stubGetWithResponseBody(
         url = downstreamUrl,
-        expectedResponse = api1171ResponseJson,
+        expectedResponse = api1171IfsResponseJson,
         expectedStatus = OK
       )
-      connector.getBusinesses(testNino).value.futureValue shouldBe Right(api1171Response)
+      connector.getBusinesses(testNino).value.futureValue shouldBe Right(api1171IfsResponse)
     }
   }
 

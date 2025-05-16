@@ -17,7 +17,7 @@
 package connectors.data
 
 import testdata.CommonTestData
-import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
+import models.connector.businessDetailsConnector.{BusinessDetailsHipSuccessWrapper, BusinessDetailsSuccessResponseSchema}
 import play.api.libs.json.Json
 
 trait Api1171Test extends CommonTestData {
@@ -25,6 +25,62 @@ trait Api1171Test extends CommonTestData {
   val downstreamUrl: String = s"/registration/business-details/nino/$testNino"
 
   val api1171ResponseJson: String =
+    """
+      |{
+      |  "success": {
+      |    "processingDate": "2023-07-05T09:16:58",
+      |    "taxPayerDisplayResponse": {
+      |      "safeId": "EK3074559847852",
+      |      "nino": "FI290077A",
+      |      "mtdId": "NIUT24195581820",
+      |      "yearOfMigration": "2022",
+      |      "propertyIncome": true,
+      |      "businessData": [
+      |       {
+      |          "incomeSourceId": "SJPR05893938418",
+      |          "incomeSource": "string",
+      |          "accountingPeriodStartDate": "2023-02-29",
+      |          "accountingPeriodEndDate": "2024-02-29",
+      |          "tradingName": "string",
+      |          "businessAddressDetails": {
+      |            "addressLine1": "string",
+      |            "addressLine2": "string",
+      |            "addressLine3": "string",
+      |            "addressLine4": "string",
+      |            "postalCode": "string",
+      |            "countryCode": "GB"
+      |          },
+      |          "businessContactDetails": {
+      |            "telephone": "string",
+      |            "mobileNo": "string",
+      |            "faxNo": "string",
+      |            "email": "user@example.com"
+      |          },
+      |          "tradingStartDate": "2023-04-06",
+      |          "cashOrAccruals": true,
+      |          "seasonal": true,
+      |          "cessationDate": "2024-04-05",
+      |          "paperLess": true,
+      |          "incomeSourceStartDate": "2020-08-13",
+      |          "firstAccountingPeriodStartDate": "2019-09-30",
+      |          "firstAccountingPeriodEndDate": "2020-02-29",
+      |          "latencyDetails": {
+      |            "latencyEndDate": "2020-02-27",
+      |            "taxYear1": "2019",
+      |            "latencyIndicator1": "A",
+      |            "taxYear2": "2020",
+      |            "latencyIndicator2": "A"
+      |          }
+      |        }
+      |      ]
+      |    }
+      |  }
+      |}
+      |""".stripMargin
+
+  val api1171Response: BusinessDetailsHipSuccessWrapper = Json.parse(api1171ResponseJson).as[BusinessDetailsHipSuccessWrapper]
+
+  val api1171IfsResponseJson: String =
     """
       |{
       |  "processingDate": "2023-07-05T09:16:58",
@@ -35,7 +91,7 @@ trait Api1171Test extends CommonTestData {
       |    "yearOfMigration": "2022",
       |    "propertyIncome": true,
       |    "businessData": [
-      |      {
+      |     {
       |        "incomeSourceId": "SJPR05893938418",
       |        "incomeSource": "string",
       |        "accountingPeriodStartDate": "2023-02-29",
@@ -76,6 +132,6 @@ trait Api1171Test extends CommonTestData {
       |}
       |""".stripMargin
 
-  val api1171Response: BusinessDetailsSuccessResponseSchema = Json.parse(api1171ResponseJson).as[BusinessDetailsSuccessResponseSchema]
+  val api1171IfsResponse: BusinessDetailsSuccessResponseSchema = Json.parse(api1171IfsResponseJson).as[BusinessDetailsSuccessResponseSchema]
 
 }

@@ -80,7 +80,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
       }
 
       "return a list of businesses" in {
-        val businesses = SuccessResponseSchemaTestData.mkExample(
+        val businesses = SuccessResponseSchemaTestData.mkBusinessDetailsHipExample(
           testNino,
           testMtdId,
           List(
@@ -145,7 +145,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
       }
 
       "return a business when hipMigration1171Enabled is true" in {
-        val businesses = SuccessResponseSchemaTestData.mkExample(
+        val businesses = SuccessResponseSchemaTestData.mkBusinessDetailsHipExample(
           nino,
           mtditid,
           List(
@@ -205,7 +205,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
       }
 
       "return a list of businesses when hipMigration1171Enabled is true" in {
-        val businesses = SuccessResponseSchemaTestData.mkExample(
+        val businesses = SuccessResponseSchemaTestData.mkBusinessDetailsHipExample(
           nino,
           mtditid,
           List(
@@ -303,7 +303,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
       "return an IncomeSourcesSummary for each business" in {
         when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, mtditid, nino)(Right(Some(businessDetailsSuccessResponse)))
+        MockBusinessDetailsConnector.getBusinessDetails(None, mtditid, nino)(Right(Some(businessDetailsHipSuccessResponse)))
         MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
 
         val result = await(testService.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value)

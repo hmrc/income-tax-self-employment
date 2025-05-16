@@ -2,7 +2,7 @@
 package testdata
 
 import models.common._
-import models.connector.businessDetailsConnector.{BusinessDetailsSuccessResponseSchema,BusinessDataDetails, ResponseType}
+import models.connector.businessDetailsConnector.{BusinessDataDetails, BusinessDetailsHipSuccessWrapper, BusinessDetailsSuccessResponseSchema, ResponseType}
 
 trait CommonTestData extends IntegrationTimeData {
 
@@ -74,6 +74,23 @@ trait CommonTestData extends IntegrationTimeData {
           testBusinessDetails2
         ))
     )
+  )
+
+  val test1171HipResponse: BusinessDetailsHipSuccessWrapper = BusinessDetailsHipSuccessWrapper(
+    BusinessDetailsSuccessResponseSchema(
+    processingDate = "2023-10-01T12:00:00Z",
+    taxPayerDisplayResponse = ResponseType(
+      safeId = "1",
+      nino = testNino.value,
+      mtdId = testMtdItId.value,
+      yearOfMigration = Some("2024"),
+      propertyIncome = false,
+      businessData = Some(
+        List(
+          testBusinessDetails1,
+          testBusinessDetails2
+        ))
+    ))
   )
 
 }

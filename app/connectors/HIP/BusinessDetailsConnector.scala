@@ -19,7 +19,7 @@ package connectors.HIP
 import cats.data.EitherT
 import config.AppConfig
 import models.common.{BusinessId, Mtditid, Nino}
-import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
+import models.connector.businessDetailsConnector.BusinessDetailsHipSuccessWrapper
 import models.connector.{ApiResponse, HipApiName, createCommonErrorParser}
 import models.domain.ApiResultT
 import models.error.DownstreamError
@@ -58,18 +58,18 @@ class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig:
 
   def getBusinessDetails(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier,
-      ec: ExecutionContext): ApiResultT[Option[BusinessDetailsSuccessResponseSchema]] = {
+      ec: ExecutionContext): ApiResultT[Option[BusinessDetailsHipSuccessWrapper]] = {
 
     val url: URI                             = getBusinessDetailsUrl(businessId, mtditid, nino)
     val enrichedHeaderCarrier: HeaderCarrier = appConfig.mkMetadata(HipApiName.Api1171, url.toString).enrichedHeaderCarrier
 
-    implicit object BusinessDetailsHttpReads extends HttpReads[ApiResponse[Option[BusinessDetailsSuccessResponseSchema]]] {
-      override def read(method: String, url: String, response: HttpResponse): ApiResponse[Option[BusinessDetailsSuccessResponseSchema]] =
+    implicit object BusinessDetailsHttpReads extends HttpReads[ApiResponse[Option[BusinessDetailsHipSuccessWrapper]]] {
+      override def read(method: String, url: String, response: HttpResponse): ApiResponse[Option[BusinessDetailsHipSuccessWrapper]] =
         response.status match {
           case OK =>
             response.json
-              .validate[BusinessDetailsSuccessResponseSchema]
-              .fold[Either[DownstreamError, Option[BusinessDetailsSuccessResponseSchema]]](
+              .validate[BusinessDetailsHipSuccessWrapper]
+              .fold[Either[DownstreamError, Option[BusinessDetailsHipSuccessWrapper]]](
                 errors => Left(createCommonErrorParser(method, url, response).reportInvalidJsonError(errors.toList)),
                 parsedModel => Right(Some(parsedModel))
               )

@@ -49,9 +49,12 @@ class BusinessService @Inject()(ifsBusinessDetailsConnector: IFSBusinessDetailsC
 
   def getBusinessDetails(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)
                         (implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Option[BusinessDetailsSuccessResponseSchema]] =
-    if (appConfig.hipMigration1171Enabled) {
-      hipBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino)
-    } else {
+    if (appConfig.hipMigration1171Enabled)
+      hipBusinessDetailsConnector.getBusinessDetails(businessId, mtditid, nino).map {
+        case Some(successWrapper) => Some(successWrapper.success)
+        case None => None
+      }
+    else {
       ifsBusinessDetailsConnector.getBusinesses(nino).bimap(
         error => {
           logger.warn(s"IFS Business Details Connector returned status ${error.status} with message '${error.errorMessage}'")

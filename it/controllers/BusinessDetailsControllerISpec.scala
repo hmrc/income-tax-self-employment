@@ -5,6 +5,7 @@ import base.IntegrationBaseSpec
 import connectors.data.Api1171Test
 import helpers.AuthStub
 import models.common.{BusinessId, Nino}
+import org.mockito.MockitoSugar.when
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.Json
 import play.api.test.Helpers.await
@@ -27,7 +28,7 @@ class BusinessDetailsControllerISpec extends IntegrationBaseSpec with AuthStub w
       val res = await(buildClient(getListUrl(testNino)).get())
 
       res.status mustBe OK
-      res.body mustBe Json.stringify(Json.toJson(api1171Response.toBusinesses))
+      res.body mustBe Json.stringify(Json.toJson(api1171Response))
     }
 
     "Return NOT FOUND when no businesses are found" in {
@@ -55,7 +56,7 @@ class BusinessDetailsControllerISpec extends IntegrationBaseSpec with AuthStub w
       val res = await(buildClient(getUrl(testNino, testBusinessId)).get())
 
       res.status mustBe OK
-      res.body mustBe Json.stringify(Json.toJson(api1171Response.toBusinesses.head))
+      res.body mustBe Json.stringify(Json.toJson(api1171Response))
     }
 
     "Return NO CONTENT when no business was found" in {

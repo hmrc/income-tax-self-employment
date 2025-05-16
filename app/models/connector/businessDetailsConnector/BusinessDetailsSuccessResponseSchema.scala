@@ -40,3 +40,13 @@ object BusinessDetailsSuccessResponseSchema {
     )(BusinessDetailsSuccessResponseSchema.apply _)
 
 }
+
+case class BusinessDetailsHipSuccessWrapper(success: BusinessDetailsSuccessResponseSchema)
+
+object BusinessDetailsHipSuccessWrapper {
+  implicit lazy val successResponseSchemaJsonFormat: Format[BusinessDetailsHipSuccessWrapper] = Json.format[BusinessDetailsHipSuccessWrapper]
+
+  implicit val reads: Reads[BusinessDetailsHipSuccessWrapper] =
+    (JsPath \ "success").read[BusinessDetailsSuccessResponseSchema].map(BusinessDetailsHipSuccessWrapper.apply)
+
+}

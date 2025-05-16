@@ -19,7 +19,7 @@ package mocks.connectors
 import cats.data.EitherT
 import connectors.HIP.BusinessDetailsConnector
 import models.common.{BusinessId, Mtditid, Nino}
-import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
+import models.connector.businessDetailsConnector.BusinessDetailsHipSuccessWrapper
 import models.domain.ApiResultT
 import models.error.ServiceError
 import org.mockito.ArgumentMatchersSugar.{any, eqTo}
@@ -35,7 +35,7 @@ object MockBusinessDetailsConnector {
   val mockInstance: BusinessDetailsConnector = mock[BusinessDetailsConnector]
 
   def getBusinessDetails(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)
-                        (returnValue: Either[ServiceError, Option[BusinessDetailsSuccessResponseSchema]]): ScalaOngoingStubbing[ApiResultT[Option[BusinessDetailsSuccessResponseSchema]]] =
+                        (returnValue: Either[ServiceError, Option[BusinessDetailsHipSuccessWrapper]]): ScalaOngoingStubbing[ApiResultT[Option[BusinessDetailsHipSuccessWrapper]]] =
     when(mockInstance.getBusinessDetails(eqTo(businessId), eqTo(mtditid), eqTo(nino))(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(EitherT.apply(Future.successful(returnValue)))
 

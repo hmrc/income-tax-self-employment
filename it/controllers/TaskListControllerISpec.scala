@@ -40,7 +40,7 @@ class TaskListControllerISpec extends IntegrationBaseSpec with CommonTestData wi
         stubAuthorisedIndividual()
         stubGetWithResponseBody(
           url = s"/RESTAdapter/itsa/taxpayer/business-details\\?mtdReference=$testMtdItId&nino=$testNino",
-          expectedResponse = Json.toJson(test1171Response).toString(),
+          expectedResponse = Json.toJson(test1171HipResponse).toString(),
           expectedStatus = OK
         )
 

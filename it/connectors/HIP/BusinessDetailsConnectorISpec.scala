@@ -19,7 +19,7 @@ package connectors.HIP
 import base.IntegrationBaseSpec
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import connectors.data.Api1171Test
-import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
+import models.connector.businessDetailsConnector.BusinessDetailsHipSuccessWrapper
 import models.error.DownstreamError.GenericDownstreamError
 import models.error.ServiceError
 import org.mockito.MockitoSugar
@@ -67,7 +67,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
         requestHeaders = additionalHeaders
       )
 
-      val result: Either[ServiceError, Option[BusinessDetailsSuccessResponseSchema]] =
+      val result: Either[ServiceError, Option[BusinessDetailsHipSuccessWrapper]] =
         await(connector.getBusinessDetails(Some(testBusinessId), testMtdItId, testNino).value)
 
       result mustBe Right(Some(api1171Response))
@@ -79,7 +79,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
         expectedStatus = NOT_FOUND
       )
 
-      val result: Either[ServiceError, Option[BusinessDetailsSuccessResponseSchema]] =
+      val result: Either[ServiceError, Option[BusinessDetailsHipSuccessWrapper]] =
         await(connector.getBusinessDetails(Some(testBusinessId), testMtdItId, testNino).value)
 
       result mustBe Right(None)
@@ -102,7 +102,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
           requestHeaders = additionalHeaders
         )
 
-        val result: Either[ServiceError, Option[BusinessDetailsSuccessResponseSchema]] =
+        val result: Either[ServiceError, Option[BusinessDetailsHipSuccessWrapper]] =
           await(connector.getBusinessDetails(Some(testBusinessId), testMtdItId, testNino).value)
 
         result.isLeft mustBe true

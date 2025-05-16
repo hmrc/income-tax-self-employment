@@ -17,7 +17,7 @@
 package models.connector.api_1171
 
 import models.common.{Mtditid, Nino}
-import models.connector.businessDetailsConnector.{BusinessDataDetails, ResponseType, BusinessDetailsSuccessResponseSchema}
+import models.connector.businessDetailsConnector.{BusinessDataDetails, BusinessDetailsHipSuccessWrapper, BusinessDetailsSuccessResponseSchema, ResponseType}
 
 import java.time.OffsetDateTime
 
@@ -34,4 +34,20 @@ object SuccessResponseSchemaTestData {
         Some(businesses)
       )
     )
+
+  def mkBusinessDetailsHipExample(nino: Nino, mtditid: Mtditid, businesses: List[BusinessDataDetails]): BusinessDetailsHipSuccessWrapper = {
+    BusinessDetailsHipSuccessWrapper(
+      BusinessDetailsSuccessResponseSchema(
+        OffsetDateTime.now().toString,
+        ResponseType(
+          "safeId",
+          nino.value,
+          mtditid.value,
+          None,
+          propertyIncome = false,
+          Some(businesses)
+        )
+      )
+    )
+  }
 }
