@@ -17,6 +17,7 @@
 package models.connector.businessDetailsConnector
 
 import models.domain.Business
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
 
 case class BusinessDetailsSuccessResponseSchema(processingDate: String,
@@ -32,4 +33,10 @@ case class BusinessDetailsSuccessResponseSchema(processingDate: String,
 
 object BusinessDetailsSuccessResponseSchema {
   implicit lazy val successResponseSchemaJsonFormat: Format[BusinessDetailsSuccessResponseSchema] = Json.format[BusinessDetailsSuccessResponseSchema]
+
+  implicit val reads: Reads[BusinessDetailsSuccessResponseSchema] = (
+    (JsPath \ "processingDate").read[String] and
+      (JsPath \ "taxPayerDisplayResponse").read[ResponseType]
+    )(BusinessDetailsSuccessResponseSchema.apply _)
+
 }

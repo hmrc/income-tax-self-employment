@@ -17,6 +17,7 @@
 package models.connector.businessDetailsConnector
 
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 /** Represents the Swagger definition for business_data_details_businessAddressDetails.
   * @param addressLine1
@@ -42,4 +43,14 @@ case class BusinessDataDetailsBusinessAddressDetails(
 object BusinessDataDetailsBusinessAddressDetails {
   implicit lazy val businessDataDetailsBusinessAddressDetailsJsonFormat: Format[BusinessDataDetailsBusinessAddressDetails] =
     Json.format[BusinessDataDetailsBusinessAddressDetails]
+
+  implicit val reads: Reads[BusinessDataDetailsBusinessAddressDetails] = (
+    (JsPath \ "addressLine1").read[String] and
+      (JsPath \ "addressLine2").readNullable[String] and
+      (JsPath \ "addressLine3").readNullable[String] and
+      (JsPath \ "addressLine4").readNullable[String] and
+      (JsPath \ "postalCode").read[String] and
+      (JsPath \ "countryCode").read[String]
+    )(BusinessDataDetailsBusinessAddressDetails.apply _)
+
 }

@@ -17,6 +17,8 @@
 package models.connector.businessDetailsConnector
 
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
+
 
 /** Represents the Swagger definition for contact_details_type.
   * @param email
@@ -31,4 +33,12 @@ case class ContactDetailsType(
 
 object ContactDetailsType {
   implicit lazy val contactDetailsTypeJsonFormat: Format[ContactDetailsType] = Json.format[ContactDetailsType]
+
+  implicit val reads: Reads[ContactDetailsType] = (
+    (JsPath \ "telephone").readNullable[String] and
+      (JsPath \ "mobileNo").readNullable[String] and
+      (JsPath \ "faxNo").readNullable[String] and
+      (JsPath \ "email").readNullable[String]
+    )(ContactDetailsType.apply _)
+
 }

@@ -17,6 +17,7 @@
 package models.connector.businessDetailsConnector
 
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 case class LatencyDetails(
     latencyEndDate: String,
@@ -28,6 +29,14 @@ case class LatencyDetails(
 
 object LatencyDetails {
   implicit lazy val latencyDetailsJsonFormat: Format[LatencyDetails] = Json.format[LatencyDetails]
+
+  implicit val reads: Reads[LatencyDetails] = (
+    (JsPath \ "latencyEndDate").read[String] and
+      (JsPath \ "taxYear1").read[String] and
+      (JsPath \ "latencyIndicator1").read[LatencyIndicator1.Value] and
+      (JsPath \ "taxYear2").read[String] and
+      (JsPath \ "latencyIndicator2").read[LatencyIndicator2.Value]
+    )(LatencyDetails.apply _)
 
   // noinspection TypeAnnotation
   object LatencyIndicator1 extends Enumeration {

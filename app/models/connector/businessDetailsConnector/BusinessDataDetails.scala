@@ -17,6 +17,8 @@
 package models.connector.businessDetailsConnector
 
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
+
 
 /** Represents the Swagger definition for business_data_details.
   * @param incomeSourceId
@@ -49,4 +51,24 @@ case class BusinessDataDetails(
 
 object BusinessDataDetails {
   implicit lazy val businessDataDetailsJsonFormat: Format[BusinessDataDetails] = Json.format[BusinessDataDetails]
+
+  implicit val reads: Reads[BusinessDataDetails] = (
+    (JsPath \ "incomeSourceId").read[String] and
+      (JsPath \ "incomeSource").readNullable[String] and
+      (JsPath \ "accPeriodSDate").read[String] and
+      (JsPath \ "accPeriodEDate").read[String] and
+      (JsPath \ "tradingName").readNullable[String] and
+      (JsPath \ "businessAddressDetails").readNullable[BusinessDataDetailsBusinessAddressDetails] and
+      (JsPath \ "businessContactDetails").readNullable[ContactDetailsType] and
+      (JsPath \ "tradingSDate").readNullable[String] and
+      (JsPath \ "cashOrAccrualsFlag").readNullable[Boolean] and
+      (JsPath \ "seasonalFlag").readNullable[Boolean] and
+      (JsPath \ "cessationDate").readNullable[String] and
+      (JsPath \ "paperLessFlag").readNullable[Boolean] and
+      (JsPath \ "incomeSourceStartDate").readNullable[String] and
+      (JsPath \ "firstAccountingPeriodStartDate").readNullable[String] and
+      (JsPath \ "firstAccountingPeriodEndDate").readNullable[String] and
+      (JsPath \ "latencyDetails").readNullable[LatencyDetails]
+    )(BusinessDataDetails.apply _)
+
 }

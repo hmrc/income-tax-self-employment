@@ -73,10 +73,8 @@ class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig:
                 errors => Left(createCommonErrorParser(method, url, response).reportInvalidJsonError(errors.toList)),
                 parsedModel => Right(Some(parsedModel))
               )
-          case NOT_FOUND =>
-            Right(None)
-          case BAD_REQUEST | UNAUTHORIZED | FORBIDDEN | NOT_FOUND | UNSUPPORTED_MEDIA_TYPE | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR |
-              SERVICE_UNAVAILABLE =>
+          case NOT_FOUND => Right(None)
+          case BAD_REQUEST | UNAUTHORIZED | FORBIDDEN | UNSUPPORTED_MEDIA_TYPE | UNPROCESSABLE_ENTITY | INTERNAL_SERVER_ERROR | SERVICE_UNAVAILABLE =>
             logger.error(s"HIP Business details API returned unexpected status '${response.status}'")
             Left(createCommonErrorParser(method, url, response).pagerDutyError(response))
           case _ => Left(createCommonErrorParser(method, url, response).pagerDutyError(response))

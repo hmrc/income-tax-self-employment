@@ -18,6 +18,7 @@ package models.connector.businessDetailsConnector
 
 import models.common.BusinessId
 import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 case class ResponseType(
     safeId: String,
@@ -38,4 +39,14 @@ case class ResponseType(
 
 object ResponseType {
   implicit lazy val responseTypeJsonFormat: Format[ResponseType] = Json.format[ResponseType]
+
+  implicit val reads: Reads[ResponseType] = (
+    (JsPath \ "safeId").read[String] and
+      (JsPath \ "nino").read[String] and
+      (JsPath \ "mtdId").read[String] and
+      (JsPath \ "yearOfMigration").readNullable[String] and
+      (JsPath \ "propertyIncomeFlag").read[Boolean] and
+      (JsPath \ "businessData").readNullable[List[BusinessDataDetails]]
+    )(ResponseType.apply _)
+
 }
