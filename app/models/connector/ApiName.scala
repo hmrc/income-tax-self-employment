@@ -64,6 +64,7 @@ object HipApiName extends Enum[HipApiName] {
 
   final case object Api1504 extends HipApiName("1504")
   final case object Api1171 extends HipApiName("1171")
+  final case object Api5190 extends HipApiName("5190")
 }
 
 sealed abstract class MDTPApiName(override val entryName: String) extends EnumEntry with ApiName

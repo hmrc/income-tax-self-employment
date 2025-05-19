@@ -33,11 +33,9 @@ import java.time.OffsetDateTime
 
 class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestData with MockitoSugar with MockTimeMachine with MockIdGenerator {
 
-  protected val correlationId = "X-123"
-
   val fixedTime: OffsetDateTime = OffsetDateTime.parse("2025-04-30T15:00:00+01:00")
   mockNow(fixedTime)
-  mockCorrelationId(correlationId)
+  mockCorrelationId(testCorrelationId)
 
   val connector = new BusinessDetailsConnector(
     httpClientV2,
@@ -51,7 +49,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
   val api1171Url = s"$baseUrl\\?incomeSourceId=$testBusinessId&mtdReference=$testMtdItId&nino=$testNino"
 
   val additionalHeaders: Seq[HttpHeader] = Seq(
-    new HttpHeader("correlationid", correlationId),
+    new HttpHeader("correlationid", testCorrelationId),
     new HttpHeader("X-Message-Type", "TaxpayerDisplay"),
     new HttpHeader("X-Originating-System", "MDTP"),
     new HttpHeader("X-Receipt-Date", fixedTime.toString),
