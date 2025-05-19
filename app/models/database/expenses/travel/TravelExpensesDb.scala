@@ -20,7 +20,9 @@ import play.api.libs.json.{Format, Json}
 
 case class TravelExpensesDb(expensesToClaim: Option[Seq[TravelExpenseType]] = None,
                             allowablePublicTransportExpenses: Option[BigDecimal] = None,
-                            disallowablePublicTransportExpenses: Option[BigDecimal] = None)
+                            disallowablePublicTransportExpenses: Option[BigDecimal] = None,
+                            totalTravelExpenses: Option[BigDecimal] = None,
+                            disallowableTravelExpenses: Option[BigDecimal] = None)
 
 object TravelExpensesDb {
   implicit val format: Format[TravelExpensesDb] = Json.format[TravelExpensesDb]
