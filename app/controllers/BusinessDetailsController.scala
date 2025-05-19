@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package controllers
 
 import controllers.actions.AuthorisedAction
 import models.common.{BusinessId, JourneyContextWithNino, Nino, TaxYear}
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.BusinessService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
@@ -33,11 +34,17 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
     with Logging {
 
   def getBusinesses(nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResultT(businessService.getBusinesses(nino))
+    businessService.getBusinesses(user.getMtditid, nino).value.map {
+      case Right(Nil) => NotFound
+      case Right(listOfBusinesses) => Ok(Json.toJson(listOfBusinesses))
+      case Left(error) =>
+        logger.error(s"Error encountered when retrieving businesses: ${error.errorMessage}")
+        InternalServerError(error.errorMessage)
+    }
   }
 
   def getBusiness(nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResultT(businessService.getBusiness(nino, businessId))
+    handleApiResultT(businessService.getBusiness(businessId, user.getMtditid, nino))
   }
 
   def getUserDateOfBirth(nino: Nino): Action[AnyContent] = auth.async { implicit user =>
@@ -45,7 +52,7 @@ class BusinessDetailsController @Inject() (businessService: BusinessService, aut
   }
 
   def getAllBusinessIncomeSourcesSummaries(taxYear: TaxYear, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
-    handleApiResultT(businessService.getAllBusinessIncomeSourcesSummaries(taxYear, nino))
+    handleApiResultT(businessService.getAllBusinessIncomeSourcesSummaries(taxYear, user.getMtditid, nino))
   }
 
   def getBusinessIncomeSourcesSummary(taxYear: TaxYear, nino: Nino, businessId: BusinessId): Action[AnyContent] = auth.async { implicit user =>

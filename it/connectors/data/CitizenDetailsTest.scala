@@ -23,7 +23,7 @@ import testdata.CommonTestData
 trait CitizenDetailsTest extends CommonTestData {
   val downstreamUrl = s"/citizen-details/nino/$testNino"
 
-  val successResponseRaw: String =
+  val api1171ResponseJson: String =
     s"""{
       |   "name": {
       |      "current": {
@@ -43,5 +43,5 @@ trait CitizenDetailsTest extends CommonTestData {
       |   "dateOfBirth": "30071997"
       |}""".stripMargin
 
-  val successResponse: SuccessResponseSchema = Json.parse(successResponseRaw).as[SuccessResponseSchema]
+  val api1171Response: SuccessResponseSchema = Json.parse(api1171ResponseJson).as[SuccessResponseSchema]
 }

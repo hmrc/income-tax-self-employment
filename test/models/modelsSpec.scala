@@ -32,8 +32,6 @@ class modelsSpec extends AnyWordSpecLike with Matchers {
 
     "return an error when json is invalid" in {
       jsonAs[Foo](Json.obj("foo" -> 1)) shouldBe InvalidJsonFormatError(
-        "models.modelsSpec$Foo",
-        """{"foo":1}""",
         List((__ \ "foo", List(JsonValidationError(List("error.expected.jsstring")))))).asLeft
     }
   }

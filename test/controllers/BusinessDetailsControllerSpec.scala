@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,90 +16,98 @@
 
 package controllers
 
-import bulders.BusinessDataBuilder._
+import builders.BusinessDataBuilder._
+import mocks.services.MockBusinessService
+import models.common.JourneyContextWithNino
+import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status._
 import play.api.libs.json.Json
 import stubs.controllers.actions.StubAuthorisedAction
-import stubs.services.StubBusinessService
-import utils.BaseSpec.{businessId, nino, taxYear}
+import data.CommonTestData
+import utils.BaseSpec.mtditid
 import utils.TestUtils
 import utils.TestUtils._
 
-class BusinessDetailsControllerSpec extends AnyWordSpecLike {
-  def mkUnderTest(businessService: StubBusinessService): BusinessDetailsController =
-    new BusinessDetailsController(businessService, StubAuthorisedAction(), TestUtils.stubControllerComponents)
+class BusinessDetailsControllerSpec extends AnyWordSpecLike with Matchers with CommonTestData {
+
+  private val mockBusinessService = MockBusinessService.mockInstance
+  private val authorisedAction = StubAuthorisedAction()
+  private val controllerComponents = TestUtils.stubControllerComponents
+
+  private val underTest = new BusinessDetailsController(mockBusinessService, authorisedAction, controllerComponents)
 
   s"getBusinesses" should {
-    val underTest = mkUnderTest(StubBusinessService(getBusinessesResult = Right(aBusinesses)))
-
     "return businesses" in {
-      val result = underTest.getBusinesses(nino)(TestUtils.fakeRequest)
-      assert(status(result) == OK)
-      assert(bodyOf(result) == Json.toJson(aBusinesses).toString())
+      MockBusinessService.getBusinesses(mtditid, testNino)(aBusinesses)
+
+      val result = underTest.getBusinesses(testNino)(TestUtils.fakeRequest.withHeaders("mtditid" -> mtditid.value))
+
+      status(result) shouldBe OK
+      bodyOf(result) shouldBe Json.toJson(aBusinesses).toString()
     }
   }
 
   s"getBusiness" should {
-    val underTest = mkUnderTest(StubBusinessService(getBusinessResult = Right(aBusiness)))
-
     "return businesses" in {
-      val result = underTest.getBusiness(nino, aBusinessId)(TestUtils.fakeRequest)
-      assert(status(result) == OK)
-      assert(bodyOf(result) == Json.toJson(aBusiness).toString())
+      MockBusinessService.getBusiness(testBusinessId, mtditid, testNino)(aBusiness)
+
+      val result = underTest.getBusiness(testNino, testBusinessId)(TestUtils.fakeRequest.withHeaders("mtditid" -> mtditid.value))
+
+      status(result) shouldBe OK
+      bodyOf(result) shouldBe Json.toJson(aBusiness).toString()
     }
   }
 
   s"getUserDateOfBirth" should {
-    val underTest = mkUnderTest(StubBusinessService(getUserDateOfBirthRes = Right(aUserDateOfBirth)))
-
     "return the date of birth" in {
-      val result = underTest.getUserDateOfBirth(nino)(TestUtils.fakeRequest)
-      assert(status(result) == OK)
-      assert(bodyOf(result) == Json.toJson(aUserDateOfBirth).toString())
+      MockBusinessService.getUserDateOfBirth(testNino)(aUserDateOfBirth)
+
+      val result = underTest.getUserDateOfBirth(testNino)(TestUtils.fakeRequest)
+      status(result) shouldBe OK
+      bodyOf(result) shouldBe Json.toJson(aUserDateOfBirth).toString()
     }
   }
 
   s"getAllBusinessIncomeSourcesSummaries" should {
-    val underTest = mkUnderTest(StubBusinessService(getAllBusinessIncomeSourcesSummariesRes = Right(List(aBusinessIncomeSourcesSummaryResponse))))
-
     "return a list of business income source summaries" in {
-      val result = underTest.getAllBusinessIncomeSourcesSummaries(taxYear, nino)(TestUtils.fakeRequest)
-      assert(status(result) == OK)
-      assert(bodyOf(result) == Json.toJson(List(aBusinessIncomeSourcesSummaryResponse)).toString())
+      MockBusinessService.getAllBusinessIncomeSourcesSummaries(testTaxYear, mtditid, testNino)(List(aBusinessIncomeSourcesSummaryResponse))
+
+      val result = underTest.getAllBusinessIncomeSourcesSummaries(testTaxYear, testNino)(TestUtils.fakeRequest.withHeaders("mtditid" -> mtditid.value))
+      status(result) shouldBe OK
+      bodyOf(result) shouldBe Json.toJson(List(aBusinessIncomeSourcesSummaryResponse)).toString()
     }
   }
 
   s"getBusinessIncomeSourcesSummary" should {
-    val underTest = mkUnderTest(StubBusinessService(getBusinessIncomeSourcesSummaryRes = Right(aBusinessIncomeSourcesSummaryResponse)))
-
     "return a business income source summary" in {
-      val result = underTest.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(TestUtils.fakeRequest)
-      assert(status(result) == OK)
-      assert(bodyOf(result) == Json.toJson(aBusinessIncomeSourcesSummaryResponse).toString())
+      MockBusinessService.getBusinessIncomeSourcesSummary(testTaxYear, testNino, testBusinessId)(aBusinessIncomeSourcesSummaryResponse)
+
+      val result = underTest.getBusinessIncomeSourcesSummary(testTaxYear, testNino, testBusinessId)(TestUtils.fakeRequest)
+      status(result) shouldBe OK
+      bodyOf(result) shouldBe Json.toJson(aBusinessIncomeSourcesSummaryResponse).toString()
     }
   }
 
   s"getNetBusinessProfitOrLossValues" should {
-    val underTest = mkUnderTest(
-      StubBusinessService(
-        getBusinessIncomeSourcesSummaryRes = Right(aBusinessIncomeSourcesSummaryResponse),
-        getNetBusinessProfitOrLossValuesRes = Right(aNetBusinessProfitValues)))
-
     "return net business profit values" in {
-      val result = underTest.getNetBusinessProfitOrLossValues(taxYear, nino, businessId)(TestUtils.fakeRequest)
-      assert(status(result) == OK)
-      assert(bodyOf(result) == Json.toJson(aNetBusinessProfitValues).toString())
+      val ctx = JourneyContextWithNino(testTaxYear, testBusinessId, mtditid, testNino)
+
+      MockBusinessService.getBusinessIncomeSourcesSummary(testTaxYear, testNino, testBusinessId)(aBusinessIncomeSourcesSummaryResponse)
+      MockBusinessService.getNetBusinessProfitOrLossValues(ctx)(aNetBusinessProfitValues)
+
+      val result = underTest.getNetBusinessProfitOrLossValues(testTaxYear, testNino, testBusinessId)(TestUtils.fakeRequest.withHeaders("mtditid" -> mtditid.value))
+      status(result) shouldBe OK
+      bodyOf(result) shouldBe Json.toJson(aNetBusinessProfitValues).toString()
     }
   }
 
   "hasOtherIncomeSource" should {
-    val underTest = mkUnderTest(StubBusinessService(hasOtherIncomeSources = Right(true)))
-
     "return has more then one income flag" in {
-      val result = underTest.hasOtherIncomeSources(taxYear, nino)(TestUtils.fakeRequest)
-      assert(status(result) == OK)
-      assert(bodyOf(result) == "true")
+      MockBusinessService.hasOtherIncomeSources(testTaxYear, testNino)(returnValue = true)
+      val result = underTest.hasOtherIncomeSources(testTaxYear, testNino)(TestUtils.fakeRequest)
+      status(result) shouldBe OK
+      bodyOf(result) shouldBe "true"
     }
   }
 }
