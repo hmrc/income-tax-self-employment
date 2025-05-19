@@ -59,7 +59,13 @@ trait IntegrationBaseSpec
   val headerCarrierConfig: Config = Config()
 
   lazy val connectedServices: Seq[String] =
-    Seq("auth", "integration-framework", "hip-integration-framework", "integration-framework-api1171", "citizen-details")
+    Seq(
+      "auth",
+      "integration-framework",
+      "hip-integration-framework",
+      "integration-framework-api1171",
+      "citizen-details"
+    )
 
   def servicesToUrlConfig: Seq[(String, String)] = connectedServices
     .flatMap(service => Seq(s"microservice.services.$service.host" -> s"localhost", s"microservice.services.$service.port" -> wireMockPort.toString))

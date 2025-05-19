@@ -19,7 +19,7 @@ package services
 import builders.BusinessDataBuilder._
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
-import mocks.connectors.{MockBusinessDetailsConnector, MockIFSBusinessDetailsConnector, MockIFSConnector}
+import mocks.connectors.{MockBusinessDetailsConnector, MockIFSBusinessDetailsConnector, MockIFSConnector, MockIncomeSourcesConnector}
 import models.common.{BusinessId, Mtditid, Nino}
 import models.connector.api_1171._
 import models.connector.api_1786.{FinancialsType, IncomeTypeTestData}
@@ -47,7 +47,6 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
   val mockAppConfig: AppConfig = mock[AppConfig]
 
   val mdtpConnector: StubMDTPConnector = StubMDTPConnector()
-  val ifsConnector: StubIFSConnector = StubIFSConnector()
 
   // TODO: Refactor to use CommonTestData
   val testMtdId = Mtditid("NIUT24195581820")
@@ -64,6 +63,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
       mdtpConnector,
       MockBusinessDetailsConnector.mockInstance,
       MockIFSConnector.mockInstance,
+      MockIncomeSourcesConnector.mockInstance,
       mockAppConfig
     )
 
@@ -267,6 +267,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
         StubMDTPConnector(),
         MockBusinessDetailsConnector.mockInstance,
         MockIFSConnector.mockInstance,
+        MockIncomeSourcesConnector.mockInstance,
         mockAppConfig
       )
 
@@ -281,6 +282,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
         StubMDTPConnector(getCitizenDetailsRes = error.asLeft),
         MockBusinessDetailsConnector.mockInstance,
         MockIFSConnector.mockInstance,
+        MockIncomeSourcesConnector.mockInstance,
         mockAppConfig
       )
 
@@ -428,28 +430,59 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
     }
   }
 
-  "hasOtherIncomeSources" should {
-    "return true if have more then one income sources" in {
-      MockIFSBusinessDetailsConnector.getListOfIncomeSources(taxYear, nino)(Right(listOfIncomeSources))
-      MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(
-        returnValue = Right(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Option(IncomeTypeTestData.sample))))
-      )
-      MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
-
-      val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
-
-      result shouldBe Right(true)
-    }
-
-    "return an error from downstream" when {
-      "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in {
-        MockIFSBusinessDetailsConnector.getListOfIncomeSources(taxYear, nino)(Left(error))
+  "hasOtherIncomeSources" when {
+    "the hipMigration2085 feature switch is enabled" must {
+      "return true if have more then one income sources" in {
+        when(mockAppConfig.hipMigration2085Enabled).thenReturn(true)
+        MockIncomeSourcesConnector.getIncomeSources(nino)(Right(listOfIncomeSources))
+        MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(
+          returnValue = Right(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Option(IncomeTypeTestData.sample))))
+        )
+        MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
 
         val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
 
-        result shouldBe Left(error)
+        result shouldBe Right(true)
+      }
+
+      "return an error from downstream" when {
+        "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in {
+          when(mockAppConfig.hipMigration2085Enabled).thenReturn(true)
+          MockIncomeSourcesConnector.getIncomeSources(nino)(Left(error))
+
+          val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
+
+          result shouldBe Left(error)
+        }
       }
     }
+
+    "the hipMigration2085 feature switch is disabled" must {
+      "return true if have more then one income sources" in {
+        when(mockAppConfig.hipMigration2085Enabled).thenReturn(false)
+        MockIFSBusinessDetailsConnector.getListOfIncomeSources(taxYear, nino)(Right(listOfIncomeSources))
+        MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(
+          returnValue = Right(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Option(IncomeTypeTestData.sample))))
+        )
+        MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
+
+        val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
+
+        result shouldBe Right(true)
+      }
+
+      "return an error from downstream" when {
+        "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in {
+          when(mockAppConfig.hipMigration2085Enabled).thenReturn(false)
+          MockIFSBusinessDetailsConnector.getListOfIncomeSources(taxYear, nino)(Left(error))
+
+          val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
+
+          result shouldBe Left(error)
+        }
+      }
+    }
+
   }
 
 }

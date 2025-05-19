@@ -2,7 +2,10 @@
 package testdata
 
 import models.common._
-import models.connector.businessDetailsConnector.{BusinessDetailsSuccessResponseSchema,BusinessDataDetails, ResponseType}
+import models.connector.api_2085.{IncomeSource, ListOfIncomeSources}
+import models.connector.businessDetailsConnector.{BusinessDataDetails, BusinessDetailsSuccessResponseSchema, ResponseType}
+
+import java.time.LocalDate
 
 trait CommonTestData extends IntegrationTimeData {
 
@@ -19,6 +22,7 @@ trait CommonTestData extends IntegrationTimeData {
   val testTaxYear: TaxYear  = TaxYear(2024)
   val testAuthToken: String = "Bearer 123"
   val testApiToken          = "testToken"
+  val testCorrelationId = "X-123"
 
   val testContextWithNino: JourneyContextWithNino = JourneyContextWithNino(testTaxYear2024, testBusinessId, testMtdItId, testNino)
 
@@ -73,6 +77,22 @@ trait CommonTestData extends IntegrationTimeData {
           testBusinessDetails1,
           testBusinessDetails2
         ))
+    )
+  )
+
+  val testIncomeSource1: IncomeSource = IncomeSource(
+    incomeSourceId = testBusinessId,
+    accountingPeriodStartDate = LocalDate.of(2022, 4, 6),
+    accountingPeriodEndDate = LocalDate.of(2023, 4, 5),
+    accountingType = AccountingType("CASH")
+  )
+
+  val testIncomeSource2: IncomeSource = testIncomeSource1.copy(incomeSourceId = testBusinessId2)
+
+  val testListOfIncomeSources: ListOfIncomeSources = ListOfIncomeSources(
+    selfEmployments = List(
+      testIncomeSource1,
+      testIncomeSource2
     )
   )
 
