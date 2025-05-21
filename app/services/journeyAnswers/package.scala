@@ -18,7 +18,7 @@ package services
 
 import cats.data.EitherT
 import cats.implicits._
-import connectors.IFSConnector.Api1803Response
+import connectors.IFS.IFSConnector.Api1803Response
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestBody
 import models.connector.{ApiResponse, api_1803}
 import models.database.JourneyAnswers
@@ -30,14 +30,13 @@ import play.api.libs.json.Reads
 import utils.EitherTOps._
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.reflect.ClassTag
 
 package object journeyAnswers {
 
-  def getPersistedAnswers[A: Reads](row: Option[JourneyAnswers])(implicit ec: ExecutionContext, ct: ClassTag[A]): ApiResultT[Option[A]] =
+  def getPersistedAnswers[A: Reads](row: Option[JourneyAnswers])(implicit ec: ExecutionContext): ApiResultT[Option[A]] =
     row.traverse(getPersistedAnswers[A])
 
-  def getPersistedAnswers[A: Reads](row: JourneyAnswers)(implicit ec: ExecutionContext, ct: ClassTag[A]): ApiResultT[A] =
+  def getPersistedAnswers[A: Reads](row: JourneyAnswers)(implicit ec: ExecutionContext): ApiResultT[A] =
     EitherT.fromEither[Future](row.validatedAs[A]).leftAs[ServiceError]
 
   def handleAnnualSummariesForResubmission[A](maybeAnnualSummaries: Api1803Response,

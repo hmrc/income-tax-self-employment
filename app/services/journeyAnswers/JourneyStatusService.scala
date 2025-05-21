@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,13 +19,11 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import models.common._
-import models.commonTaskList.{SectionTitle, TaskListModel, TaskListRows, TaskListSection, TaskListSectionItem}
-import models.domain.{ApiResultT, JourneyNameAndStatus, TradesJourneyStatuses}
+import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.TaskList
-import play.api.libs.json.Json
 import repositories.JourneyAnswersRepository
-import services.{BusinessService, TaskListService}
+import services.BusinessService
 import uk.gov.hmrc.http.HeaderCarrier
 
 import javax.inject.{Inject, Singleton}
@@ -52,7 +50,7 @@ class JourneyStatusServiceImpl @Inject() (businessService: BusinessService, repo
 
   def getLegacyTaskList(taxYear: TaxYear, mtditid: Mtditid, nino: Nino)(implicit hc: HeaderCarrier): ApiResultT[TaskList] =
     for {
-      businesses <- businessService.getBusinesses(nino)
+      businesses <- businessService.getBusinesses(mtditid, nino)
       taskList   <- repository.getAll(taxYear, mtditid, businesses)
     } yield taskList
 
