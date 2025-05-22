@@ -31,7 +31,6 @@ import play.api.test.DefaultAwaitTimeout
 import repositories.MongoJourneyAnswersRepository
 import testdata.CommonTestData
 import uk.gov.hmrc.http.HeaderCarrier.Config
-import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, SessionId}
 
 import scala.concurrent.ExecutionContext
@@ -54,7 +53,6 @@ trait IntegrationBaseSpec
   val mongo: MongoJourneyAnswersRepository = app.injector.instanceOf[MongoJourneyAnswersRepository]
   lazy val appConfig: AppConfig            = app.injector.instanceOf[AppConfig]
   lazy val httpClient: HttpClient          = app.injector.instanceOf[HttpClient]
-  lazy val httpClientV2: HttpClientV2      = app.injector.instanceOf[HttpClientV2]
 
   val headerCarrierConfig: Config = Config()
 

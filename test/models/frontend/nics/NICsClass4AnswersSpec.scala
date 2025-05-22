@@ -16,7 +16,7 @@
 
 package models.frontend.nics
 
-import builders.NICsAnswersBuilder._
+import bulders.NICsAnswersBuilder._
 import models.common.BusinessId
 import models.frontend.nics.ExemptionReason.{DiverDivingInstructor, TrusteeExecutorAdmin}
 import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers

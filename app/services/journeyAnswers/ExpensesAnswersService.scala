@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,23 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
-import connectors.IFS.IFSConnector
-import models.common.JourneyName.{AdvertisingOrMarketing, CapitalAllowancesTailoring, Construction, ExpensesTailoring, FinancialCharges, GoodsToSellOrUse, Interest, IrrecoverableDebts, OfficeSupplies, OtherExpenses, ProfessionalFees, RepairsAndMaintenanceCosts, StaffCosts, WorkplaceRunningCosts}
+import connectors.IFSConnector
+import models.common.JourneyName.{
+  AdvertisingOrMarketing,
+  CapitalAllowancesTailoring,
+  Construction,
+  ExpensesTailoring,
+  FinancialCharges,
+  GoodsToSellOrUse,
+  Interest,
+  IrrecoverableDebts,
+  OfficeSupplies,
+  OtherExpenses,
+  ProfessionalFees,
+  RepairsAndMaintenanceCosts,
+  StaffCosts,
+  WorkplaceRunningCosts
+}
 import models.common._
 import models.connector.api_1894.request.{Deductions, FinancialsType}
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}

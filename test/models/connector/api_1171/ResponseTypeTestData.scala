@@ -17,7 +17,6 @@
 package models.connector.api_1171
 
 import models.common.{Mtditid, Nino}
-import models.connector.businessDetailsConnector.{BusinessDataDetails, ResponseType}
 
 object ResponseTypeTestData {
   def mkExample(nino: Nino, mtditid: Mtditid, businesses: List[BusinessDataDetails]): ResponseType = ResponseType(

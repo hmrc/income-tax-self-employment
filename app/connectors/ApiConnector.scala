@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import connectors.HeaderCarrierSyntax.HeaderCarrierOps
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.HeaderCarrier.Config
 
-import java.net.URI
+import java.net.URL
 
 object ApiConnector {
 
@@ -29,7 +29,6 @@ object ApiConnector {
                        hc: HeaderCarrier,
                        testScenarios: List[String],
                        headers: (String, String)*): HeaderCarrier = {
-
     def maybeWithTestScenarios(headers: Seq[(String, String)]): Seq[(String, String)] =
       if (testScenarios.nonEmpty) {
         val updatedHeaders = headers ++ hc.otherHeaders.filter(_._1 == "ITSA_TEST_SCENARIO")
@@ -38,9 +37,7 @@ object ApiConnector {
         headers
       }
 
-    val stringToUrl = new URI(url)
-
-    val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(stringToUrl.toURL.getHost).matches())
+    val isInternalHost = headerCarrierConfig.internalHostPatterns.exists(_.pattern.matcher(new URL(url).getHost).matches())
     val updatedHeaders = if (isInternalHost) headers else headers ++ hc.toExplicitHeaders
 
     hc.withExtraHeaders(maybeWithTestScenarios(updatedHeaders): _*)

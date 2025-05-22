@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,440 +16,276 @@
 
 package services
 
-import builders.BusinessDataBuilder._
+import bulders.BusinessDataBuilder._
 import cats.implicits.catsSyntaxEitherId
-import config.AppConfig
-import mocks.connectors.{MockBusinessDetailsConnector, MockIFSBusinessDetailsConnector, MockIFSConnector}
-import models.common.{BusinessId, Mtditid, Nino}
+import models.common.BusinessId
 import models.connector.api_1171._
 import models.connector.api_1786.{FinancialsType, IncomeTypeTestData}
 import models.connector.api_1803
+import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.domain.BusinessTestData
 import models.error.DownstreamError.SingleDownstreamError
-import models.error.ServiceError.BusinessNotFoundError
 import models.error.{DownstreamErrorBody, ServiceError}
 import models.frontend.adjustments.NetBusinessProfitOrLossValues
-import org.mockito.MockitoSugar.when
-import org.scalatest.BeforeAndAfterEach
-import org.scalatest.matchers.should.Matchers
+import org.scalatest.EitherValues._
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatestplus.mockito.MockitoSugar.mock
-import play.api.test.DefaultAwaitTimeout
-import play.api.test.Helpers.await
 import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
-import stubs.connectors.{StubIFSConnector, StubMDTPConnector}
+import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector, StubMDTPConnector}
 import utils.BaseSpec._
+import utils.EitherTTestOps.convertScalaFuture
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAfterEach with DefaultAwaitTimeout {
+class BusinessServiceSpec extends AnyWordSpecLike {
 
-  val mockAppConfig: AppConfig = mock[AppConfig]
-
-  val mdtpConnector: StubMDTPConnector = StubMDTPConnector()
-  val ifsConnector: StubIFSConnector = StubIFSConnector()
-
-  // TODO: Refactor to use CommonTestData
-  val testMtdId = Mtditid("NIUT24195581820")
-  val testNino = Nino("FI290077A")
-  val testBusinessId1 = BusinessId("SJPR05893938418")
-  val testBusinessId2 = BusinessId("")
-  val taxpayer = businessDetailsSuccessResponse.taxPayerDisplayResponse.copy(businessData = None)
-  val emptyBusinessDetailsResponse = businessDetailsSuccessResponse.copy(taxPayerDisplayResponse = taxpayer)
-
-
-  val testService =
-    new BusinessService(
-      MockIFSBusinessDetailsConnector.mockInstance,
-      mdtpConnector,
-      MockBusinessDetailsConnector.mockInstance,
-      MockIFSConnector.mockInstance,
-      mockAppConfig
-    )
+  val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
+  val mdtpConnector: StubMDTPConnector                             = StubMDTPConnector()
+  val ifsConnector: StubIFSConnector                               = StubIFSConnector()
+  val testService                                                  = new BusinessServiceImpl(ifsBusinessDetailsConnector, mdtpConnector, ifsConnector)
 
   private val error = SingleDownstreamError(400, DownstreamErrorBody.SingleDownstreamErrorBody.serverError)
 
-  "getBusinesses" when {
-    "the hipMigration1171Enabled feature switch is enabled" should {
-      "return an empty list" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, testMtdId, testNino)(Right(None))
-
-        val result = await(testService.getBusinesses(testMtdId, testNino).value)
-        result shouldBe Right(Nil)
-      }
-
-      "return a list of businesses" in {
-        val businesses = SuccessResponseSchemaTestData.mkBusinessDetailsHipExample(
-          testNino,
-          testMtdId,
-          List(
-            BusinessDataDetailsTestData.mkExample(testBusinessId1),
-            BusinessDataDetailsTestData.mkExample(testBusinessId2)
-          )
-        )
-
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, testMtdId, testNino)(Right(Some(businesses)))
-
-        val result = await(testService.getBusinesses(testMtdId, testNino).value)
-
-        result shouldBe Right(List(
-          BusinessTestData.mkExample(testBusinessId1),
-          BusinessTestData.mkExample(testBusinessId2)
-        ))
-      }
+  "getBusinesses" should {
+    "return an empty list" in {
+      val result = testService.getBusinesses(nino).value.futureValue.value
+      assert(result === Nil)
     }
 
-    "the hipMigration1171Enabled feature switch is disabled" should {
-      "return an empty list" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(emptyBusinessDetailsResponse))
-
-        val result = await(testService.getBusinesses(mtditid, nino).value)
-        result shouldBe Right(Nil)
-      }
-
-      "return a list of businesses" in {
-        val businesses = SuccessResponseSchemaTestData.mkExample(
-          nino,
-          mtditid,
-          List(
-            BusinessDataDetailsTestData.mkExample(BusinessId("id1")),
-            BusinessDataDetailsTestData.mkExample(BusinessId("id2"))
-          )
+    "return a list of businesses" in {
+      val businesses = SuccessResponseSchemaTestData.mkExample(
+        nino,
+        mtditid,
+        List(
+          BusinessDataDetailsTestData.mkExample(BusinessId("id1")),
+          BusinessDataDetailsTestData.mkExample(BusinessId("id2"))
         )
+      )
+      val service = new BusinessServiceImpl(
+        StubIFSBusinessDetailsConnector(getBusinessesResult = Right(businesses)),
+        StubMDTPConnector(),
+        StubIFSConnector()
+      )
 
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(businesses))
+      val result = service.getBusinesses(nino).value.futureValue.value
 
-        val result = await(testService.getBusinesses(mtditid, nino).value)
+      val expectedBusiness = List(
+        BusinessTestData.mkExample(BusinessId("id1")),
+        BusinessTestData.mkExample(BusinessId("id2"))
+      )
 
-        result shouldBe Right(List(
-          BusinessTestData.mkExample(BusinessId("id1")),
-          BusinessTestData.mkExample(BusinessId("id2"))
-        ))
-      }
+      assert(result === expectedBusiness)
     }
   }
 
-  "getBusiness" when {
-    "the hipMigration1171Enabled feature switch is enabled" should {
-      "return Not Found if no business exist when hipMigration1171Enabled is true" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(Right(None))
-
-        val result = await(testService.getBusiness(businessId, mtditid, nino).value)
-
-        result shouldBe Left(ServiceError.BusinessNotFoundError(businessId))
-      }
-
-      "return a business when hipMigration1171Enabled is true" in {
-        val businesses = SuccessResponseSchemaTestData.mkBusinessDetailsHipExample(
-          nino,
-          mtditid,
-          List(
-            BusinessDataDetailsTestData.mkExample(businessId),
-            BusinessDataDetailsTestData.mkExample(BusinessId("id2"))
-          )
-        )
-
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(Right(Some(businesses)))
-
-        val result = await(testService.getBusiness(businessId, mtditid, nino).value)
-
-        result shouldBe Right(BusinessTestData.mkExample(businessId))
-      }
+  "getBusiness" should {
+    "return Not Found if no business exist" in {
+      val id     = BusinessId("id")
+      val result = testService.getBusiness(nino, id).value.futureValue.left.value
+      assert(result === ServiceError.BusinessNotFoundError(id))
     }
 
-    "the hipMigration1171Enabled feature switch is disabled" should {
-      "return Not Found if no business exist" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Left(BusinessNotFoundError(businessId)))
-
-        val result = await(testService.getBusiness(businessId, mtditid, nino).value)
-
-        result shouldBe Left(ServiceError.BusinessNotFoundError(businessId))
-      }
-
-      "return a business" in {
-        val businesses = SuccessResponseSchemaTestData.mkExample(
-          nino,
-          mtditid,
-          List(
-            BusinessDataDetailsTestData.mkExample(businessId),
-            BusinessDataDetailsTestData.mkExample(BusinessId("id2"))
-          )
-        )
-
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(businesses))
-
-        val result = await(testService.getBusiness(businessId, mtditid, nino).value)
-
-        result shouldBe Right(BusinessTestData.mkExample(businessId))
-      }
+    "return a business" in {
+      val business = SuccessResponseSchemaTestData.mkExample(nino, mtditid, List(BusinessDataDetailsTestData.mkExample(businessId)))
+      val service = new BusinessServiceImpl(
+        StubIFSBusinessDetailsConnector(getBusinessesResult = Right(business)),
+        StubMDTPConnector(),
+        StubIFSConnector()
+      )
+      val result = service.getBusiness(nino, businessId).value.futureValue.value
+      assert(result === BusinessTestData.mkExample(businessId))
     }
   }
 
-  "getUserBusinessIds" when {
-    "the hipMigration1171Enabled feature switch is enabled" should {
-      "return an empty list when hipMigration1171Enabled is true" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, mtditid, nino)(Right(None))
-
-        val result = await(testService.getUserBusinessIds(mtditid, nino).value)
-
-        result shouldBe Right(Nil)
-      }
-
-      "return a list of businesses when hipMigration1171Enabled is true" in {
-        val businesses = SuccessResponseSchemaTestData.mkBusinessDetailsHipExample(
-          nino,
-          mtditid,
-          List(
-            BusinessDataDetailsTestData.mkExample(BusinessId("id1")),
-            BusinessDataDetailsTestData.mkExample(BusinessId("id2"))
-          )
-        )
-
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, mtditid, nino)(Right(Some(businesses)))
-
-        val result = await(testService.getUserBusinessIds(mtditid, nino).value)
-
-        result shouldBe Right(List(
-          BusinessId("id1"),
-          BusinessId("id2")
-        ))
-      }
+  "getUserBusinessIds" should {
+    "return an empty list" in {
+      val result = testService.getUserBusinessIds(nino).value.futureValue.value
+      assert(result === Nil)
     }
 
-    "the hipMigration1171Enabled feature switch is disabled" should {
-      "return an empty list" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(emptyBusinessDetailsResponse))
-
-        val result = await(testService.getUserBusinessIds(mtditid, nino).value)
-
-        result shouldBe Right(Nil)
-      }
-
-      "return a list of businesses" in {
-        val businesses = SuccessResponseSchemaTestData.mkExample(
-          nino,
-          mtditid,
-          List(
-            BusinessDataDetailsTestData.mkExample(BusinessId("id1")),
-            BusinessDataDetailsTestData.mkExample(BusinessId("id2"))
-          )
+    "return a list of businesses" in {
+      val businesses = SuccessResponseSchemaTestData.mkExample(
+        nino,
+        mtditid,
+        List(
+          BusinessDataDetailsTestData.mkExample(BusinessId("id1")),
+          BusinessDataDetailsTestData.mkExample(BusinessId("id2"))
         )
+      )
+      val service = new BusinessServiceImpl(
+        StubIFSBusinessDetailsConnector(getBusinessesResult = Right(businesses)),
+        StubMDTPConnector(),
+        StubIFSConnector()
+      )
 
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(businesses))
+      val result = service.getUserBusinessIds(nino).value.futureValue.value
 
-        val result = await(testService.getUserBusinessIds(mtditid, nino).value)
+      val expectedBusiness = List(
+        BusinessId("id1"),
+        BusinessId("id2")
+      )
 
-        result shouldBe Right(List(
-          BusinessId("id1"),
-          BusinessId("id2")
-        ))
-      }
+      assert(result === expectedBusiness)
     }
   }
 
   "getUserDateOfBirth" should {
     "return a user's date of birth as a LocalDate" in {
       val expectedResult = Right(aUserDateOfBirth)
-      val service = new BusinessService(
-        MockIFSBusinessDetailsConnector.mockInstance,
-        StubMDTPConnector(),
-        MockBusinessDetailsConnector.mockInstance,
-        MockIFSConnector.mockInstance,
-        mockAppConfig
-      )
-
-      val result = await(service.getUserDateOfBirth(nino).value)
-
-      result shouldBe expectedResult
+      val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(), StubMDTPConnector(), StubIFSConnector())
+      val result         = service.getUserDateOfBirth(nino).value.futureValue
+      assert(result === expectedResult)
     }
 
     "return an error from downstream" in {
-      val service = new BusinessService(
-        MockIFSBusinessDetailsConnector.mockInstance,
-        StubMDTPConnector(getCitizenDetailsRes = error.asLeft),
-        MockBusinessDetailsConnector.mockInstance,
-        MockIFSConnector.mockInstance,
-        mockAppConfig
-      )
-
-      val result = await(service.getUserDateOfBirth(nino).value)
-
-      result shouldBe error.asLeft
+      val service =
+        new BusinessServiceImpl(StubIFSBusinessDetailsConnector(), StubMDTPConnector(getCitizenDetailsRes = error.asLeft), StubIFSConnector())
+      val result = service.getUserDateOfBirth(nino).value.futureValue
+      assert(result === error.asLeft)
     }
   }
 
-  "getAllBusinessIncomeSourcesSummaries" when {
-    "the hipMigration1171Enabled feature switch is enabled" should {
-      "return an empty list if a user has no businesses" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, mtditid, nino)(Right(None))
-
-        val result = await(testService.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value)
-
-        result shouldBe Right(Nil)
-      }
-
-      "return an IncomeSourcesSummary for each business" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, mtditid, nino)(Right(Some(businessDetailsHipSuccessResponse)))
-        MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
-
-        val result = await(testService.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value)
-
-        result shouldBe Right(List(aBusinessIncomeSourcesSummaryResponse))
-      }
-
-      "return an error from downstream" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, mtditid, nino)(Left(BusinessNotFoundError(businessId)))
-
-        val result = await(testService.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value)
-
-        result shouldBe Left(BusinessNotFoundError(businessId))
-      }
+  "getAllBusinessIncomeSourcesSummaries" should {
+    "return an empty list if a user has no businesses" in {
+      val expectedResult = Right(List.empty[BusinessIncomeSourcesSummaryResponse])
+      val service        = new BusinessServiceImpl(StubIFSBusinessDetailsConnector(), StubMDTPConnector(), StubIFSConnector())
+      val result         = service.getAllBusinessIncomeSourcesSummaries(taxYear, nino).value.futureValue
+      assert(result === expectedResult)
     }
 
-    "the hipMigration1171Enabled feature switch is disabled" should {
-      "return an empty list if a user has no businesses" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(emptyBusinessDetailsResponse))
+    "return an IncomeSourcesSummary for each business" in {
+      val expectedResult = Right(List(aBusinessIncomeSourcesSummaryResponse))
+      val stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+        getBusinessesResult = aGetBusinessDataResponse.asRight,
+        getBusinessIncomeSourcesSummaryResult = aBusinessIncomeSourcesSummaryResponse.asRight
+      )
+      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), StubIFSConnector())
+      val result  = service.getAllBusinessIncomeSourcesSummaries(taxYear, nino).value.futureValue
+      assert(result === expectedResult)
+    }
 
-        val result = await(testService.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value)
-
-        result shouldBe Right(Nil)
-      }
-
-      "return an IncomeSourcesSummary for each business" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(aGetBusinessDataResponse))
-        MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
-
-        val result = await(testService.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value)
-
-        result shouldBe Right(List(aBusinessIncomeSourcesSummaryResponse))
-      }
+    "return an error from downstream" in {
+      val stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+        getBusinessesResult = aGetBusinessDataResponse.asRight,
+        getBusinessIncomeSourcesSummaryResult = error.asLeft
+      )
+      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), StubIFSConnector())
+      val result  = service.getAllBusinessIncomeSourcesSummaries(taxYear, nino).value.futureValue
+      assert(result === error.asLeft)
     }
   }
 
   "getBusinessIncomeSourcesSummary" should {
     "return an IncomeSourcesSummary for a business" in {
-      MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
-
-      val result = await(testService.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value)
-
-      result shouldBe Right(aBusinessIncomeSourcesSummaryResponse)
+      val expectedResult = Right(aBusinessIncomeSourcesSummaryResponse)
+      val stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+        getBusinessesResult = aGetBusinessDataResponse.asRight,
+        getBusinessIncomeSourcesSummaryResult = aBusinessIncomeSourcesSummaryResponse.asRight
+      )
+      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), StubIFSConnector())
+      val result  = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
+      assert(result === expectedResult)
     }
 
     "return an error from downstream" in {
-      MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Left(BusinessNotFoundError(businessId)))
-
-      val result = await(testService.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value)
-
-      result shouldBe Left(BusinessNotFoundError(businessId))
+      val stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+        getBusinessesResult = aGetBusinessDataResponse.asRight,
+        getBusinessIncomeSourcesSummaryResult = error.asLeft
+      )
+      val service = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), StubIFSConnector())
+      val result  = service.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value.futureValue
+      assert(result === error.asLeft)
     }
   }
 
   "getNetBusinessProfitOrLossValues" should {
-    "return NetBusinessProfitValues for a business" in {
-      val expectedSuccessResult: NetBusinessProfitOrLossValues = NetBusinessProfitOrLossValues(
-        turnover = IncomeTypeTestData.sample.turnover.getOrElse(0),
-        incomeNotCountedAsTurnover = IncomeTypeTestData.sample.other.getOrElse(0),
-        totalExpenses = aBusinessIncomeSourcesSummaryResponse.totalExpenses,
-        netProfit = aBusinessIncomeSourcesSummaryResponse.netProfit,
-        netLoss = aBusinessIncomeSourcesSummaryResponse.netLoss,
-        balancingCharge = 0,
-        goodsAndServicesForOwnUse = 0,
-        disallowableExpenses = 0,
-        totalAdditions = aBusinessIncomeSourcesSummaryResponse.totalAdditions.getOrElse(0),
-        capitalAllowances = 0,
-        turnoverNotTaxableAsBusinessProfit = 0,
-        totalDeductions = aBusinessIncomeSourcesSummaryResponse.totalDeductions.getOrElse(0),
-        outstandingBusinessIncome = 0
+    "return NetBusinessProfitValues for a business" in new Test {
+      override def stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+        getBusinessIncomeSourcesSummaryResult = aBusinessIncomeSourcesSummaryResponse.asRight
       )
-
-      MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(currTaxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
-      MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(
-        returnValue = Right(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Some(IncomeTypeTestData.sample))))
+      override def stubIFSConnector = StubIFSConnector(
+        getPeriodicSummaryDetailResult =
+          Future.successful(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Some(IncomeTypeTestData.sample))).asRight),
+        getAnnualSummariesResult = Right(api_1803.SuccessResponseSchema(None, None, None))
       )
-      MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
+      val result = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
 
-      val result: Either[ServiceError, NetBusinessProfitOrLossValues] = await(testService.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value)
-
-      result shouldBe Right(expectedSuccessResult)
+      assert(result === expectedSuccessResult.asRight)
     }
 
     "return an error from downstream" when {
-      "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in {
-        MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(currTaxYear, nino, businessId)(Left(error))
+      "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in new Test {
+        override def stubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(getBusinessIncomeSourcesSummaryResult = error.asLeft)
 
-        val result: Either[ServiceError, NetBusinessProfitOrLossValues] = await(
-          testService.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value
-        )
+        val result = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
 
-        result shouldBe Left(error)
+        assert(result === error.asLeft)
       }
+      "IFSConnector .getPeriodicSummaryDetail returns an error" in new Test {
+        override def stubIFSConnector = StubIFSConnector(getPeriodicSummaryDetailResult = Future(error.asLeft))
 
-      "IFSConnector .getPeriodicSummaryDetail returns an error" in {
-        MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(currTaxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
-        MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(Left(error))
+        val result = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
 
-        val result: Either[ServiceError, NetBusinessProfitOrLossValues] = await(
-          testService.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value
-        )
-
-        result shouldBe Left(error)
+        assert(result === error.asLeft)
       }
+      "IFSConnector .getAnnualSummaries returns an error" in new Test {
+        override def stubIFSConnector = StubIFSConnector(getAnnualSummariesResult = error.asLeft)
 
-      "IFSConnector .getAnnualSummaries returns an error" in {
-        MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(currTaxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
-        MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(
-          returnValue = Right(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Some(IncomeTypeTestData.sample))))
-        )
-        MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Left(error))
+        val result = service.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value.futureValue
 
-        val result: Either[ServiceError, NetBusinessProfitOrLossValues] = await(
-          testService.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value
-        )
-
-        result shouldBe Left(error)
+        assert(result === error.asLeft)
       }
     }
   }
 
   "hasOtherIncomeSources" should {
-    "return true if have more then one income sources" in {
-      MockIFSBusinessDetailsConnector.getListOfIncomeSources(taxYear, nino)(Right(listOfIncomeSources))
-      MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(
-        returnValue = Right(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Option(IncomeTypeTestData.sample))))
+    "return true if have more then one income sources" in new Test {
+      override def stubIFSBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
+        listOfIncomeSources = listOfIncomeSources.asRight
       )
-      MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
+      override def stubIFSConnector: StubIFSConnector = StubIFSConnector(
+        getPeriodicSummaryDetailResult =
+          Future.successful(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Option(IncomeTypeTestData.sample))).asRight),
+        getAnnualSummariesResult = Right(api_1803.SuccessResponseSchema(None, None, None))
+      )
+      val result: Either[ServiceError, Boolean] = service.hasOtherIncomeSources(taxYear, nino).value.futureValue
 
-      val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
-
-      result shouldBe Right(true)
+      assert(result === Right(true))
     }
 
     "return an error from downstream" when {
-      "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in {
-        MockIFSBusinessDetailsConnector.getListOfIncomeSources(taxYear, nino)(Left(error))
+      "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in new Test {
+        override def stubIFSBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
+          StubIFSBusinessDetailsConnector(listOfIncomeSources = error.asLeft)
 
-        val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
+        val result: Either[ServiceError, Boolean] = service.hasOtherIncomeSources(taxYear, nino).value.futureValue
 
-        result shouldBe Left(error)
+        assert(result === error.asLeft)
       }
     }
   }
 
+  trait Test {
+
+    val expectedSuccessResult: NetBusinessProfitOrLossValues = NetBusinessProfitOrLossValues(
+      IncomeTypeTestData.sample.turnover.getOrElse(0),
+      IncomeTypeTestData.sample.other.getOrElse(0),
+      aBusinessIncomeSourcesSummaryResponse.totalExpenses,
+      aBusinessIncomeSourcesSummaryResponse.netProfit,
+      aBusinessIncomeSourcesSummaryResponse.netLoss,
+      0,
+      0,
+      0,
+      aBusinessIncomeSourcesSummaryResponse.totalAdditions.getOrElse(0),
+      0,
+      0,
+      aBusinessIncomeSourcesSummaryResponse.totalDeductions.getOrElse(0),
+      0
+    )
+
+    def stubIFSBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
+    def stubIFSConnector: StubIFSConnector                               = StubIFSConnector()
+
+    def service: BusinessServiceImpl = new BusinessServiceImpl(stubIFSBusinessDetailsConnector, StubMDTPConnector(), stubIFSConnector)
+  }
 }

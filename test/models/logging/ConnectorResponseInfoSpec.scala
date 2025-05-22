@@ -28,14 +28,14 @@ class ConnectorResponseInfoSpec extends AnyWordSpecLike {
       assert(connectorInfo.logResponseWarnOn4xx === Info("Connector: Response Received for GET /someurl. Response status: 200"))
     }
 
-    "return warn on 4xx error" in {
+    "return warn on 4xx error with body" in {
       val badRequest = connectorInfo.copy(response = HttpResponse(400, "some error"))
-      assert(badRequest.logResponseWarnOn4xx === Warn("Connector: Response Received for GET /someurl. Response status: 400"))
+      assert(badRequest.logResponseWarnOn4xx === Warn("Connector: Response Received for GET /someurl. Response status: 400 Body: some error"))
     }
 
-    "return error on 5xx error" in {
+    "return error on 5xx error with body" in {
       val errorRequest = connectorInfo.copy(response = HttpResponse(500, "some error"))
-      assert(errorRequest.logResponseWarnOn4xx === Error("Connector: Response Received for GET /someurl. Response status: 500"))
+      assert(errorRequest.logResponseWarnOn4xx === Error("Connector: Response Received for GET /someurl. Response status: 500 Body: some error"))
     }
   }
 
