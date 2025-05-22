@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,73 +16,74 @@
 
 package services.journeyAnswers
 
-import builders.BusinessDataBuilder.aBusiness
-import mocks.repositories.MockJourneyAnswersRepository
-import mocks.services.MockBusinessService
-import models.common.JourneyName
+import cats.implicits._
 import models.common.JourneyStatus._
+import models.common.{JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
+import models.domain.JourneyNameAndStatus
 import models.frontend.TaskList
+import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.JsObject
-import play.api.test.DefaultAwaitTimeout
-import play.api.test.Helpers.await
+import stubs.connectors.StubIFSBusinessDetailsConnector
+import stubs.repositories.StubJourneyAnswersRepository
+import stubs.services.StubBusinessService
 import utils.BaseSpec._
 
 import java.time.Instant
-import scala.concurrent.ExecutionContext.Implicits.global
 
-class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers with DefaultAwaitTimeout {
+class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers {
+  import scala.concurrent.ExecutionContext.Implicits.global
 
+  val businessConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
+  val repository: StubJourneyAnswersRepository           = StubJourneyAnswersRepository()
   val now: Instant                                       = Instant.now()
 
-  val testService: JourneyStatusServiceImpl = new JourneyStatusServiceImpl(MockBusinessService.mockInstance, MockJourneyAnswersRepository.mockInstance)
+  val underTest = new JourneyStatusServiceImpl(StubBusinessService(), repository)
 
   "set" should {
     "return unit" in {
-      val result = await(testService.set(incomeCtx, Completed).value)
-      result shouldBe Right(())
+      val result = underTest.set(incomeCtx, Completed)
+      result.value.futureValue shouldBe ().asRight
     }
   }
 
   "get" should {
     "return check our record status if no answers" in {
-      MockJourneyAnswersRepository.get(incomeCtx)(None)
-
-      val result = await(testService.get(incomeCtx).value)
-
-      result shouldBe Right(CheckOurRecords)
+      val result = underTest.get(incomeCtx)
+      result.value.futureValue shouldBe CheckOurRecords.asRight
     }
 
     "return status if the answer exist" in {
-      val journeyAnswers = Some(JourneyAnswers(mtditid, businessId, taxYear, JourneyName.ExpensesTailoring, Completed, JsObject.empty, now, now, now))
-      MockJourneyAnswersRepository.get(expensesTailoringCtx)(journeyAnswers)
-
-      val result = await(testService.get(expensesTailoringCtx).value)
-
-      result shouldBe Right(Completed)
+      val underTest = new JourneyStatusServiceImpl(
+        StubBusinessService(),
+        repository.copy(
+          getAnswer = Some(JourneyAnswers(mtditid, businessId, taxYear, JourneyName.ExpensesTailoring, Completed, JsObject.empty, now, now, now))
+        )
+      )
+      val result = underTest.get(expensesTailoringCtx)
+      result.value.futureValue shouldBe Completed.asRight
     }
   }
 
-  "getLegacyTaskList" should {
+  "getTaskList" should {
     "return empty task list if no answers" in {
-      MockBusinessService.getBusinesses(mtditid, nino)(List(aBusiness))
-      MockJourneyAnswersRepository.getAll(taxYear, mtditid, List(aBusiness))(TaskList.empty)
-
-      val result = await(testService.getLegacyTaskList(taxYear, mtditid, nino).value)
-
-      result shouldBe Right(TaskList.empty)
+      val result = underTest.getLegacyTaskList(taxYear, mtditid, nino)
+      result.value.futureValue shouldBe TaskList.empty.asRight
     }
 
     "return a task list" in {
       val taskList = TaskList(Nil, None)
-      MockBusinessService.getBusinesses(mtditid, nino)(List(aBusiness))
-      MockJourneyAnswersRepository.getAll(taxYear, mtditid, Nil)(taskList)
+      val underTest = new JourneyStatusServiceImpl(
+        StubBusinessService(),
+        repository.copy(
+          getAllResult = Right(taskList)
+        )
+      )
 
-      val result = await(testService.getLegacyTaskList(taxYear, mtditid, nino).value)
-
-      result shouldBe Right(taskList)
+      val result = underTest.getLegacyTaskList(taxYear, mtditid, nino)
+      result.value.futureValue shouldBe taskList.asRight
     }
   }
 

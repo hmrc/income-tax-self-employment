@@ -52,8 +52,8 @@ object ServiceError {
     override val status: Int = NOT_FOUND
   }
 
-  case class InvalidJsonFormatError(error: JsonErrorWithPath) extends ServiceError {
-    val errorMessage: String = s"Unable to parse JSON due to error: ${error.toString}"
+  case class InvalidJsonFormatError(expectedCaseClassName: String, rawJson: String, error: JsonErrorWithPath) extends ServiceError {
+    val errorMessage: String = s"Cannot convert JSON to a case class: $expectedCaseClassName. Error: ${error.toString}. JSON:\n$rawJson"
   }
 
   case class ServiceUnavailableError(error: String) extends ServiceError {

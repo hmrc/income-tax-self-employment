@@ -26,7 +26,7 @@ trait Api1786Test extends CommonTestData {
   val downstreamUrl =
     s"/income-tax/${asTys(testTaxYear)}/$testNino/self-employments/$testBusinessId/periodic-summary-detail\\?from=$taxYearStart&to=$taxYearEnd"
 
-  val api1171ResponseJson: String =
+  val successResponseRaw: String =
     """{
       |   "from": "2001-01-01",
       |   "to": "2001-01-01",
@@ -102,5 +102,5 @@ trait Api1786Test extends CommonTestData {
       |}
       |""".stripMargin
 
-  val api1171Response = Json.parse(api1171ResponseJson).as[SuccessResponseSchema]
+  val successResponse = Json.parse(successResponseRaw).as[SuccessResponseSchema]
 }

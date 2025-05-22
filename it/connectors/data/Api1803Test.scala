@@ -25,7 +25,7 @@ trait Api1803Test extends CommonTestData {
 
   val downstreamUrl = s"/income-tax/${asTys(testTaxYear)}/$testNino/self-employments/$testBusinessId/annual-summaries"
 
-  val api1171ResponseJson: String = """{
+  val successResponseRaw: String = """{
                                      |  "annualAdjustments": {
                                      |    "includedNonTaxableProfits": 210,
                                      |    "basisAdjustment": 178.23,
@@ -82,5 +82,5 @@ trait Api1803Test extends CommonTestData {
                                      |  }
                                      |}""".stripMargin
 
-  val api1171Response = Json.parse(api1171ResponseJson).as[SuccessResponseSchema]
+  val successResponse = Json.parse(successResponseRaw).as[SuccessResponseSchema]
 }

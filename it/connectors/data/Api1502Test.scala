@@ -23,7 +23,7 @@ import testdata.CommonTestData
 trait Api1502Test extends CommonTestData {
   val downstreamUrl = s"/individuals/losses/$testNino/brought-forward-losses/$testBusinessId"
 
-  val api1502ResponseJson: String =
+  val successResponseRaw: String =
     s"""{
       |   "businessId": "${testBusinessId.value}",
       |   "typeOfLoss": "self-employment",
@@ -40,5 +40,5 @@ trait Api1502Test extends CommonTestData {
       |}
       |""".stripMargin
 
-  val api1502Response = Json.parse(api1502ResponseJson).as[SuccessResponseSchema]
+  val successResponse = Json.parse(successResponseRaw).as[SuccessResponseSchema]
 }

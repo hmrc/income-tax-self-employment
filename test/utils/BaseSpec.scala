@@ -78,7 +78,6 @@ object BaseSpec extends TimeData {
   val financialChargesCtx: JourneyContext           = journeyCtxWithNino.toJourneyContext(JourneyName.FinancialCharges)
   val advertisingOrMarketingCtx: JourneyContext     = journeyCtxWithNino.toJourneyContext(JourneyName.AdvertisingOrMarketing)
   val interestCtx: JourneyContext                   = journeyCtxWithNino.toJourneyContext(JourneyName.Interest)
-  val nicsCtx: JourneyContext                       = journeyCtxWithNino.toJourneyContext(JourneyName.NationalInsuranceContributions)
 
   def mkJourneyAnswers(journey: JourneyName, status: JourneyStatus, data: JsObject): JourneyAnswers = JourneyAnswers(
     mtditid,

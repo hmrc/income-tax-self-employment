@@ -16,7 +16,6 @@
 
 package gens
 
-import data.TimeData
 import models.database.capitalAllowances._
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
@@ -28,6 +27,9 @@ import models.frontend.capitalAllowances.zeroEmissionCars._
 import models.frontend.capitalAllowances.zeroEmissionGoodsVehicle.{ZegvHowMuchDoYouWantToClaim, ZegvUseOutsideSE, ZeroEmissionGoodsVehicleAnswers}
 import models.frontend.capitalAllowances.{CapitalAllowances, CapitalAllowancesTailoringAnswers}
 import org.scalacheck.Gen
+import data.TimeData
+
+import java.time.LocalDate
 
 object CapitalAllowancesAnswersGen extends TimeData {
   val capitalAllowancesTailoringGen: Gen[CapitalAllowances] = Gen.oneOf(CapitalAllowances.accrualAllowances)

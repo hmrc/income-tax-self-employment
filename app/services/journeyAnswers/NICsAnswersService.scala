@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits.{toFunctorOps, toTraverseOps}
-import connectors.IFS.IFSConnector
+import connectors.{IFSBusinessDetailsConnector, IFSConnector}
 import models.common.JourneyName.NationalInsuranceContributions
 import models.common._
 import models.connector._
@@ -27,6 +27,7 @@ import models.database.nics.NICsStorageAnswers
 import models.database.nics.NICsStorageAnswers.journeyIsYesButNoneAreExemptStorageAnswers
 import models.domain.ApiResultT
 import models.error.ServiceError
+import models.error.ServiceError.BusinessNotFoundError
 import models.frontend.nics.NICsClass4Answers.Class4ExemptionAnswers
 import models.frontend.nics.{NICsAnswers, NICsClass2Answers, NICsClass4Answers}
 import play.api.libs.json.Json
@@ -38,26 +39,21 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 trait NICsAnswersService {
-  def saveClass2Answers(ctx: JourneyContextWithNino, answers: NICsClass2Answers)
-                       (implicit hc: HeaderCarrier): ApiResultT[Unit]
-
-  def saveClass4SingleBusiness(ctx: JourneyContextWithNino, answers: NICsClass4Answers)
-                              (implicit hc: HeaderCarrier): ApiResultT[Unit]
-
-  def saveClass4MultipleBusinessOrNoExemptionJourneys(ctx: JourneyContextWithNino, answers: NICsClass4Answers)
-                                                     (implicit hc: HeaderCarrier): ApiResultT[Unit]
-
-  def getAnswers(ctx: JourneyContextWithNino)
-                (implicit hc: HeaderCarrier): ApiResultT[Option[NICsAnswers]]
+  def saveClass2Answers(ctx: JourneyContextWithNino, answers: NICsClass2Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def saveClass4SingleBusiness(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit]
+  def saveClass4MultipleBusinessOrNoExemptionJourneys(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit]
+  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NICsAnswers]]
 }
 
 @Singleton
-class NICsAnswersServiceImpl @Inject()(connector: IFSConnector,
-                                       repository: JourneyAnswersRepository,
-                                       businessService: BusinessService)(implicit ec: ExecutionContext) extends NICsAnswersService {
+class NICsAnswersServiceImpl @Inject() (connector: IFSConnector,
+                                        businessConnector: IFSBusinessDetailsConnector,
+                                        repository: JourneyAnswersRepository,
+                                        businessService: BusinessService)(implicit ec: ExecutionContext)
+    extends NICsAnswersService {
 
-  def saveClass2Answers(ctx: JourneyContextWithNino, answers: NICsClass2Answers)
-                       (implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def saveClass2Answers(ctx: JourneyContextWithNino, answers: NICsClass2Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       existingAnswers <- connector.getDisclosuresSubmission(ctx)
       upsertRequest = RequestSchemaAPI1638.mkRequestBody(answers, existingAnswers)
@@ -66,26 +62,26 @@ class NICsAnswersServiceImpl @Inject()(connector: IFSConnector,
       result <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.NationalInsuranceContributions), Json.toJson(storageAnswers))
     } yield result
 
-  private def upsertOrDeleteClass2Data(maybeClass2Nics: Option[RequestSchemaAPI1638], ctx: JourneyContextWithNino)
-                                      (implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  private def upsertOrDeleteClass2Data(maybeClass2Nics: Option[RequestSchemaAPI1638], ctx: JourneyContextWithNino)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
     maybeClass2Nics match {
       case Some(data) => connector.upsertDisclosuresSubmission(ctx, data).void
-      case None => connector.deleteDisclosuresSubmission(ctx)
+      case None       => connector.deleteDisclosuresSubmission(ctx)
     }
 
-  def saveClass4SingleBusiness(ctx: JourneyContextWithNino, answers: NICsClass4Answers)
-                              (implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def saveClass4SingleBusiness(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      updatedContext <- businessService.getBusiness(ctx.businessId, ctx.mtditid, ctx.nino)
-      exemptionAnswer = Class4ExemptionAnswers(ctx.businessId, answers.class4NICs, answers.class4ExemptionReason)
-      result <- saveClass4BusinessData(ctx, exemptionAnswer)
+      updatedContext <- updateJourneyContextWithSingleBusinessId(ctx)
+      exemptionAnswer = Class4ExemptionAnswers(updatedContext.businessId, answers.class4NICs, answers.class4ExemptionReason)
+      result <- saveClass4BusinessData(updatedContext, exemptionAnswer)
     } yield result
 
-  def saveClass4MultipleBusinessOrNoExemptionJourneys(ctx: JourneyContextWithNino, answers: NICsClass4Answers)
-                                                     (implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+  def saveClass4MultipleBusinessOrNoExemptionJourneys(ctx: JourneyContextWithNino, answers: NICsClass4Answers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] = {
+    val journeyIsYesButNoneAreExempt     = answers.journeyIsYesButNoneAreExempt
     val multipleBusinessExemptionAnswers = answers.cleanUpExemptionListsFromFE.toMultipleBusinessesAnswers
-    val idsWithExemption = multipleBusinessExemptionAnswers.map(_.businessId)
-    val dbAnswers = if (answers.journeyIsYesButNoneAreExempt) journeyIsYesButNoneAreExemptStorageAnswers else NICsStorageAnswers(None, None)
+    val idsWithExemption                 = multipleBusinessExemptionAnswers.map(_.businessId.value)
+    val updateOtherIdsToNotExempt        = updateIdsToNoClass4Exemption(ctx, idsWithExemption = idsWithExemption)
 
     val saveAllNewExemptionAnswers: EitherT[Future, ServiceError, Unit] = multipleBusinessExemptionAnswers
       .traverse { answer =>
@@ -95,31 +91,34 @@ class NICsAnswersServiceImpl @Inject()(connector: IFSConnector,
       .map(_ => ())
 
     for {
-      _ <- repository.upsertAnswers(
-        ctx = JourneyContext(ctx.taxYear, ctx.businessId, ctx.mtditid, NationalInsuranceContributions),
-        newData = Json.toJson(dbAnswers)
-      )
-      _ <- updateIdsToNoClass4Exemption(ctx, idsWithExemption)
+      _      <- updateDatabaseAnswers(ctx, journeyIsYesButNoneAreExempt)
+      _      <- updateOtherIdsToNotExempt
       result <- saveAllNewExemptionAnswers
     } yield result
   }
 
-  private def updateIdsToNoClass4Exemption(ctx: JourneyContextWithNino, idsWithExemption: List[BusinessId])
-                                          (implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  private def updateDatabaseAnswers(ctx: JourneyContextWithNino, journeyIsYesButNoneAreExempt: Boolean): ApiResultT[Unit] = {
+    val dbAnswers = if (journeyIsYesButNoneAreExempt) journeyIsYesButNoneAreExemptStorageAnswers else NICsStorageAnswers(None, None)
+    repository.upsertAnswers(JourneyContext(ctx.taxYear, ctx.businessId, ctx.mtditid, NationalInsuranceContributions), Json.toJson(dbAnswers))
+  }
+
+  private def updateIdsToNoClass4Exemption(ctx: JourneyContextWithNino, idsWithExemption: List[String])(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      allUserBusinessIds <- businessService.getUserBusinessIds(ctx.mtditid, ctx.nino)
-      idsWithNoExemption = allUserBusinessIds.filterNot(idsWithExemption.contains(_))
+      allUserBusinessIds <- businessConnector.getBusinesses(ctx.nino).map(_.taxPayerDisplayResponse.businessData.map(_.map(_.incomeSourceId)))
+      idsWithNoExemption      = allUserBusinessIds.map(_.filterNot(idsWithExemption.contains(_)))
       noClass4ExemptionAnswer = Class4ExemptionAnswers(ctx.businessId, class4Exempt = false, None)
       result <- idsWithNoExemption
-        .traverse { id =>
-          val updatedCtx = ctx(newId = BusinessId(id.value))
-          saveClass4BusinessData(updatedCtx, noClass4ExemptionAnswer)
-        }
+        .traverse(ids =>
+          ids.traverse { id =>
+            val updatedCtx = ctx(newId = BusinessId(id))
+            saveClass4BusinessData(updatedCtx, noClass4ExemptionAnswer)
+          })
         .map(_ => ())
     } yield result
 
-  def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)
-                            (implicit hc: HeaderCarrier): ApiResultT[Unit] = {
+  def saveClass4BusinessData(ctx: JourneyContextWithNino, businessExemptionAnswer: Class4ExemptionAnswers)(implicit
+      hc: HeaderCarrier): ApiResultT[Unit] = {
     val submissionBody = for {
       maybeAnnualSummaries <- connector.getAnnualSummaries(ctx)
       updatedAnnualSubmissionBody = handleAnnualSummariesForResubmission[Unit](maybeAnnualSummaries, businessExemptionAnswer)
@@ -128,8 +127,18 @@ class NICsAnswersServiceImpl @Inject()(connector: IFSConnector,
     EitherT(submissionBody).flatMap(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
   }
 
-  def getAnswers(ctx: JourneyContextWithNino)
-                (implicit hc: HeaderCarrier): ApiResultT[Option[NICsAnswers]] = {
+  private def updateJourneyContextWithSingleBusinessId(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[JourneyContextWithNino] =
+    EitherT(businessConnector.getBusinesses(ctx.nino).value.map {
+      case Right(res: api_1171.SuccessResponseSchema) =>
+        res.taxPayerDisplayResponse.getMaybeSingleBusinessId match {
+          case Some(id) => Right(ctx(newId = id))
+          case None     => Left(BusinessNotFoundError(ctx.businessId))
+        }
+      case Left(error) => Left(error)
+    })
+
+  def getAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[NICsAnswers]] = {
+
     def getAnnualSummariesWithIds(businessIds: List[BusinessId]): ApiResultT[List[(api_1803.SuccessResponseSchema, BusinessId)]] =
       businessIds.traverse { id =>
         val updatedJourneyContext = ctx(newId = id)
@@ -137,11 +146,10 @@ class NICsAnswersServiceImpl @Inject()(connector: IFSConnector,
       }
 
     for {
-      allUserBusinessIds <- businessService.getUserBusinessIds(ctx.mtditid, ctx.nino)
+      allUserBusinessIds        <- businessService.getUserBusinessIds(ctx.nino)
       allAnnualSummariesWithIds <- getAnnualSummariesWithIds(allUserBusinessIds)
-      disclosures <- connector.getDisclosuresSubmission(ctx)
-      dbAnswers <- repository.getAnswers[NICsStorageAnswers](ctx.toJourneyContext(JourneyName.NationalInsuranceContributions))
+      disclosures               <- connector.getDisclosuresSubmission(ctx)
+      dbAnswers                 <- repository.getAnswers[NICsStorageAnswers](ctx.toJourneyContext(JourneyName.NationalInsuranceContributions))
     } yield NICsAnswers.mkPriorData(disclosures, allAnnualSummariesWithIds, dbAnswers)
   }
-
 }

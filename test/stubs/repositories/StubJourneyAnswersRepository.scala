@@ -30,6 +30,7 @@ import play.api.libs.json.{JsObject, JsValue, Reads}
 import repositories.JourneyAnswersRepository
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.reflect.ClassTag
 
 case class StubJourneyAnswersRepository(
     getAnswer: Option[JourneyAnswers] = None,
@@ -79,6 +80,6 @@ case class StubJourneyAnswersRepository(
     EitherT.fromEither[Future](getAllResult)
 
   @deprecated(message = "StubJourneyAnswersRepository is deprecated. Use MockJourneyAnswersRepository instead")
-  def getAnswers[A: Reads](ctx: JourneyContext): ApiResultT[Option[A]] =
+  def getAnswers[A: Reads](ctx: JourneyContext)(implicit ct: ClassTag[A]): ApiResultT[Option[A]] =
     EitherT.fromEither(getAnswers.map(_.map(data => jsonAs[A](data.as[JsObject]).value)))
 }
