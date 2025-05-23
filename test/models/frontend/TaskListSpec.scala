@@ -16,7 +16,7 @@
 
 package models.frontend
 
-import bulders.BusinessDataBuilder
+import builders.BusinessDataBuilder
 import cats.implicits._
 import models.common.JourneyName.TradeDetails
 import models.common.JourneyStatus.InProgress

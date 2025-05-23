@@ -17,7 +17,7 @@
 package services.journeyAnswers
 
 import cats.implicits._
-import connectors.IFSConnector
+import connectors.IFS.IFSConnector
 import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne
 import models.connector.api_1786.IncomesType

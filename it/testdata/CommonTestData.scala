@@ -1,8 +1,8 @@
+
 package testdata
 
 import models.common._
-import models.connector.api_1171.{BusinessDataDetails, ResponseType, SuccessResponseSchema => Api1171ResponseSchema}
-import models.domain.Business
+import models.connector.businessDetailsConnector.{BusinessDataDetails, BusinessDetailsHipSuccessWrapper, BusinessDetailsSuccessResponseSchema, ResponseType}
 
 trait CommonTestData extends IntegrationTimeData {
 
@@ -22,7 +22,7 @@ trait CommonTestData extends IntegrationTimeData {
 
   val testContextWithNino: JourneyContextWithNino = JourneyContextWithNino(testTaxYear2024, testBusinessId, testMtdItId, testNino)
 
-  val testBusinessDetails1 = BusinessDataDetails(
+  val testBusinessDetails1: BusinessDataDetails = BusinessDataDetails(
     incomeSourceId = testBusinessId.value,
     accountingPeriodStartDate = "2024-04-06",
     accountingPeriodEndDate = "2025-04-05",
@@ -41,7 +41,7 @@ trait CommonTestData extends IntegrationTimeData {
     latencyDetails = None
   )
 
-  val testBusinessDetails2 = BusinessDataDetails(
+  val testBusinessDetails2: BusinessDataDetails = BusinessDataDetails(
     incomeSourceId = testBusinessId2.value,
     accountingPeriodStartDate = "2024-04-06",
     accountingPeriodEndDate = "2025-04-05",
@@ -60,7 +60,7 @@ trait CommonTestData extends IntegrationTimeData {
     latencyDetails = None
   )
 
-  val test1171Response = Api1171ResponseSchema(
+  val test1171Response: BusinessDetailsSuccessResponseSchema = BusinessDetailsSuccessResponseSchema(
     processingDate = "2023-10-01T12:00:00Z",
     taxPayerDisplayResponse = ResponseType(
       safeId = "1",
@@ -74,6 +74,55 @@ trait CommonTestData extends IntegrationTimeData {
           testBusinessDetails2
         ))
     )
+  )
+
+  val test1171HipResponseJson: String =
+    s"""
+      |{
+      |  "success": {
+      |    "processingDate": "2023-10-01T12:00:00Z",
+      |    "taxPayerDisplayResponse": {
+      |      "safeId": "1",
+      |      "nino": "$testNino",
+      |      "mtdId": "$testMtdItId",
+      |      "yearOfMigration": "2024",
+      |      "propertyIncomeFlag": false,
+      |      "businessData": [
+      |       {
+      |          "incomeSourceId": "${testBusinessId.value}",
+      |          "incomeSource": "string",
+      |          "accPeriodSDate": "2024-04-06",
+      |          "accPeriodEDate": "2025-04-05",
+      |          "tradingName": "$testTradingName"
+      |        },
+      |        {
+      |          "incomeSourceId": "${testBusinessId2.value}",
+      |          "incomeSource": "string",
+      |          "accPeriodSDate": "2024-04-06",
+      |          "accPeriodEDate": "2025-04-05",
+      |          "tradingName": "$testTradingName"
+      |        }
+      |      ]
+      |    }
+      |  }
+      |}
+      |""".stripMargin
+
+  val test1171HipResponse: BusinessDetailsHipSuccessWrapper = BusinessDetailsHipSuccessWrapper(
+    BusinessDetailsSuccessResponseSchema(
+      processingDate = "2023-10-01T12:00:00Z",
+      taxPayerDisplayResponse = ResponseType(
+        safeId = "1",
+        nino = testNino.value,
+        mtdId = testMtdItId.value,
+        yearOfMigration = Some("2024"),
+        propertyIncome = false,
+        businessData = Some(
+          List(
+            testBusinessDetails1,
+            testBusinessDetails2
+          ))
+    ))
   )
 
 }

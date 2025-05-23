@@ -24,7 +24,7 @@ trait Api1870Test extends CommonTestData {
   val currentTaxYear: String = testTaxYear.toYYYY_YY
   val downstreamUrl          = s"/individuals/losses/$testNino/brought-forward-losses/tax-year/$currentTaxYear"
 
-  val successResponseRaw: String =
+  val api1870ResponseJson: String =
     s"""{
        |  "losses": [
        |   {
@@ -39,5 +39,5 @@ trait Api1870Test extends CommonTestData {
        |}
        |""".stripMargin
 
-  val successResponse = Json.parse(successResponseRaw).as[SuccessResponseSchema]
+  val api1870Response = Json.parse(api1870ResponseJson).as[SuccessResponseSchema]
 }
