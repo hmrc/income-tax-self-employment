@@ -18,7 +18,7 @@ package services
 
 import jakarta.inject.{Inject, Singleton}
 import models.common.JourneyName.{CapitalAllowancesTailoring, ExpensesTailoring}
-import models.common.{BusinessId, JourneyContext, Mtditid, TaxYear}
+import models.common.{BusinessId, JourneyContext, Mtditid, TaxYear, TradingName}
 import models.commonTaskList.{SectionTitle, TaskListModel, TaskListRows, TaskListSection}
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import models.frontend.TaskList
@@ -43,28 +43,31 @@ class TaskListService @Inject() (rows: TaskListRows, repo: JourneyAnswersReposit
                                 mtditid: Mtditid,
                                 journeyStatuses: Seq[JourneyNameAndStatus]): Future[Seq[TaskListSection]] =
     for {
-      expenses          <- buildExpensesSection(business.businessId, taxYear, mtditid, journeyStatuses)
-      capitalAllowances <- buildCapitalAllowancesSection(business.businessId, taxYear, mtditid, journeyStatuses)
+      expenses          <- buildExpensesSection(business.businessId, business.tradingName, taxYear, mtditid, journeyStatuses)
+      capitalAllowances <- buildCapitalAllowancesSection(business.businessId, business.tradingName, taxYear, mtditid, journeyStatuses)
       tradeDetails = buildBusinessDetailsSection(business, taxYear, journeyStatuses)
-      adjustments  = buildAdjustmentsSection(business.businessId, taxYear, journeyStatuses)
+      adjustments  = buildAdjustmentsSection(business.businessId, business.tradingName, taxYear, journeyStatuses)
     } yield Seq(tradeDetails, expenses, capitalAllowances, adjustments)
 
   private def buildBusinessDetailsSection(business: TradesJourneyStatuses,
                                           taxYear: TaxYear,
                                           journeyStatuses: Seq[JourneyNameAndStatus]): TaskListSection =
     TaskListSection(
-      sectionTitle = SectionTitle.SelfEmploymentTitle(),
-      caption = Some("SelfEmploymentCaption"),
-      titleParams = business.tradingName.map(_.value).toSeq,
-      taskItems = Some(
-        Seq(
-          rows.tradeDetailsRow.build(business.businessId, taxYear, journeyStatuses),
-          rows.industrySectorsRow.build(business.businessId, taxYear, journeyStatuses),
-          rows.incomeRow.build(business.businessId, taxYear, journeyStatuses)
-        ).flatten)
+      sectionTitle  = SectionTitle.SelfEmploymentTitle(),
+      caption       = Some("SelfEmploymentCaption"),
+      titleParams   = business.tradingName.map(_.value).toSeq,
+      taskItems     = Some(
+                        Seq(
+                          rows.tradeDetailsRow.build(business.businessId, taxYear, journeyStatuses),
+                          rows.industrySectorsRow.build(business.businessId, taxYear, journeyStatuses),
+                          rows.incomeRow.build(business.businessId, taxYear, journeyStatuses)
+                        ).flatten
+                      ),
+      isSubSection = None
     )
 
   private def buildExpensesSection(businessId: BusinessId,
+                                   traderName: Option[TradingName],
                                    taxYear: TaxYear,
                                    mtditid: Mtditid,
                                    journeyStatuses: Seq[JourneyNameAndStatus]): Future[TaskListSection] =
@@ -99,15 +102,19 @@ class TaskListService @Inject() (rows: TaskListRows, repo: JourneyAnswersReposit
     }).map { taskItems =>
       TaskListSection(
         sectionTitle = SectionTitle.ExpensesTitle(),
-        taskItems = Some(taskItems),
-        isSubSection = Some(true)
+        taskItems    = Some(taskItems),
+        isSubSection = Some(true),
+        titleParams  = traderName.toSeq.map(_.value),
+        caption = None
       )
     }
 
   private def buildCapitalAllowancesSection(businessId: BusinessId,
+                                            traderName: Option[TradingName],
                                             taxYear: TaxYear,
                                             mtditid: Mtditid,
-                                            journeyStatuses: Seq[JourneyNameAndStatus]): Future[TaskListSection] =
+                                            journeyStatuses: Seq[JourneyNameAndStatus]
+                                           ): Future[TaskListSection] =
     (for {
       optCapitalAllowancesTailoring <- repo
         .getAnswers[CapitalAllowancesTailoringAnswers](JourneyContext(taxYear, businessId, mtditid, CapitalAllowancesTailoring))
@@ -130,19 +137,28 @@ class TaskListService @Inject() (rows: TaskListRows, repo: JourneyAnswersReposit
     }).map { taskItems =>
       TaskListSection(
         sectionTitle = SectionTitle.CapitalAllowancesTitle(),
-        taskItems = Some(taskItems),
-        isSubSection = Some(true)
+        taskItems    = Some(taskItems),
+        isSubSection = Some(true),
+        titleParams  = traderName.toSeq.map(_.value),
+        caption = None
       )
     }
 
-  private def buildAdjustmentsSection(businessId: BusinessId, taxYear: TaxYear, journeyStatuses: Seq[JourneyNameAndStatus]): TaskListSection =
+  private def buildAdjustmentsSection(
+                                       businessId: BusinessId,
+                                       traderName: Option[TradingName],
+                                       taxYear: TaxYear,
+                                       journeyStatuses: Seq[JourneyNameAndStatus]
+                                     ): TaskListSection =
     TaskListSection(
-      sectionTitle = SectionTitle.AdjustmentsTitle(),
-      taskItems = Some(
-        Seq(
-          rows.profitOrLossRow.build(businessId, taxYear, journeyStatuses)
-        ).flatten),
-      isSubSection = Some(true)
+      sectionTitle  = SectionTitle.AdjustmentsTitle(),
+      taskItems     = Some(
+                        Seq(
+                          rows.profitOrLossRow.build(businessId, taxYear, journeyStatuses)
+                        ).flatten
+                      ),
+      isSubSection  = Some(true),
+      titleParams   = traderName.toSeq.map(_.value),
+      caption       = None
     )
-
 }
