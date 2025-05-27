@@ -34,7 +34,7 @@ trait Api1501Test extends CommonTestData {
     body = requestBody
   )
 
-  val successResponseRaw: String =
+  val api1501ResponseJson: String =
     s"""{
       |  "businessId": "${testBusinessId.value}",
       |  "typeOfLoss": "self-employment",
@@ -44,5 +44,5 @@ trait Api1501Test extends CommonTestData {
       |}
       |""".stripMargin
 
-  val successResponse = Json.parse(successResponseRaw).as[SuccessResponseSchema]
+  val api1501Response: SuccessResponseSchema = Json.parse(api1501ResponseJson).as[SuccessResponseSchema]
 }

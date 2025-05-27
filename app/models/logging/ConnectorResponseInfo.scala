@@ -24,8 +24,7 @@ final case class ConnectorResponseInfo(method: String, url: String, response: Ht
   private val responseReceived = s"Connector: Response Received for $method $url. Response status: ${response.status}"
 
   private def logMessage: String = {
-    val nonSuccessBody = if (response.status < 200 || response.status >= 300) s" Body: ${response.body}" else ""
-    s"$responseReceived$nonSuccessBody"
+    responseReceived
   }
 
   private[logging] def logResponseWarnOn4xx: ConnectorResponseInfo.LevelLogging = {

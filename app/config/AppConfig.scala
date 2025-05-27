@@ -72,4 +72,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   def mkMetadata(apiName: ApiName, url: String): IntegrationHeaderCarrier =
     IntegrationHeaderCarrier(headerCarrierConfig, this, apiName, url)
 
+  def hipMigration1171Enabled: Boolean = servicesConfig.getBoolean("feature-switch.hip-migration-1171-enabled")
+
 }

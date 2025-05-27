@@ -18,15 +18,13 @@ import cats.implicits._
 import models.error.ServiceError.InvalidJsonFormatError
 import play.api.libs.json.{JsObject, Reads}
 
-import scala.reflect.ClassTag
-
 package object models {
-  def jsonAs[A: Reads](jsObj: JsObject)(implicit ct: ClassTag[A]): Either[InvalidJsonFormatError, A] =
+  def jsonAs[A: Reads](jsObj: JsObject): Either[InvalidJsonFormatError, A] =
     jsObj
       .validate[A]
       .asEither
       .fold(
-        err => InvalidJsonFormatError(ct.runtimeClass.getName, jsObj.toString(), err.toList).asLeft,
+        err => InvalidJsonFormatError(err.toList).asLeft,
         answers => answers.asRight
       )
 }

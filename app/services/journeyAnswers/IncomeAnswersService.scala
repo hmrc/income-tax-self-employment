@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
-import connectors.IFSConnector
+import connectors.IFS.IFSConnector
 import models.audit.AuditTradingAllowance
 import models.common.JourneyName.{ExpensesTailoring, Income}
 import models.common.TaxYear.{endDate, startDate}
@@ -96,7 +96,7 @@ class IncomeAnswersServiceImpl @Inject() (repository: JourneyAnswersRepository,
                                                          x: Option[CreateAmendSEAnnualSubmissionRequestBody])(implicit
       hc: HeaderCarrier): ApiResultT[Unit] = {
     val result = connector.createUpdateOrDeleteApiAnnualSummaries(ctx, x)
-    businessService.getBusiness(ctx.nino, ctx.businessId).map(_.tradingName) map { businessName =>
+    businessService.getBusiness(ctx.businessId, ctx.mtditid, ctx.nino).map(_.tradingName) map { businessName =>
       auditService.sendAuditEvent(AuditTradingAllowance.auditType, AuditTradingAllowance.apply(ctx, businessName, answers))
     }
     result

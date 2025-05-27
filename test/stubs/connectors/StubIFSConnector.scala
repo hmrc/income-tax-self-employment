@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,15 @@
 
 package stubs.connectors
 
-import bulders.BusinessDataBuilder.citizenDetailsDateOfBirth
+import builders.BusinessDataBuilder.citizenDetailsDateOfBirth
 import cats.data.EitherT
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
-import connectors.IFSConnector
-import connectors.IFSConnector._
+import connectors.IFS.IFSConnector
+import IFSConnector._
 import models.common.{BusinessId, JourneyContextWithNino}
 import models.connector.ReliefClaimType.CF
 import models.connector._
-import models.connector.api_1171.{BusinessDataDetails, BusinessDataDetailsTestData}
+import models.connector.api_1171.BusinessDataDetailsTestData
 import models.connector.api_1500.LossType
 import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBody}
 import models.connector.api_1508.GetLossClaimSuccessResponse
@@ -37,6 +37,7 @@ import models.connector.api_1870.LossData
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
+import models.connector.businessDetailsConnector.{BusinessDataDetails, ResponseType}
 import models.connector.citizen_details.{Ids, LegalNames, Name}
 import models.domain.ApiResultT
 import models.error.{DownstreamError, ServiceError}
@@ -44,9 +45,10 @@ import stubs.connectors.StubIFSConnector._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
-import java.time.{LocalDateTime, OffsetDateTime}
+import java.time.OffsetDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
+@deprecated("StubIFSConnector is deprecated. Use MockIFSConnector instead")
 case class StubIFSConnector(
     createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(().asRight),
     amendSEPeriodSummaryResult: Either[DownstreamError, Unit] = Right(()),
@@ -160,32 +162,36 @@ object StubIFSConnector {
       dateOfBirth = citizenDetailsDateOfBirth
     )
 
-  val api1171EmptyResponse: api_1171.SuccessResponseSchema =
-    api_1171.SuccessResponseSchema(
+  val api1171EmptyResponse: businessDetailsConnector.BusinessDetailsSuccessResponseSchema =
+    businessDetailsConnector.BusinessDetailsSuccessResponseSchema(
       OffsetDateTime.now().toString,
-      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, None))
+      ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, None))
 
-  def api1171SingleBusinessResponse(businessId: BusinessId): api_1171.SuccessResponseSchema =
-    api_1171.SuccessResponseSchema(
+  def api1171SingleBusinessResponse(businessId: BusinessId): businessDetailsConnector.BusinessDetailsSuccessResponseSchema =
+    businessDetailsConnector.BusinessDetailsSuccessResponseSchema(
       OffsetDateTime.now().toString,
-      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Option(List(BusinessDataDetailsTestData.mkExample(businessId))))
+      businessDetailsConnector.ResponseType(
+        "safeId",
+        "nino",
+        "mtdid",
+        None,
+        propertyIncome = false,
+        Option(List(BusinessDataDetailsTestData.mkExample(businessId))))
     )
 
-  def api1171MultipleBusinessResponse(businessIds: List[BusinessId]): api_1171.SuccessResponseSchema = {
+  def api1171MultipleBusinessResponse(businessIds: List[BusinessId]): businessDetailsConnector.BusinessDetailsSuccessResponseSchema = {
     val businessData: List[BusinessDataDetails] = businessIds.map(BusinessDataDetailsTestData.mkExample)
-    api_1171.SuccessResponseSchema(
+    businessDetailsConnector.BusinessDetailsSuccessResponseSchema(
       OffsetDateTime.now().toString,
-      api_1171.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Option(businessData))
+      businessDetailsConnector.ResponseType("safeId", "nino", "mtdid", None, propertyIncome = false, Option(businessData))
     )
   }
 
   val api1803SuccessResponse: SuccessResponseSchema = SuccessResponseSchema(
     None,
     Option(
-      AnnualAllowancesType.emptyAnnualAllowancesType.copy(
-        zeroEmissionsCarAllowance = Option(5000.00),
-        zeroEmissionGoodsVehicleAllowance = Option(5000.00)
-      )),
+      AnnualAllowancesType.emptyAnnualAllowancesType
+        .copy(zeroEmissionsCarAllowance = Option(BigDecimal(5000.00)), zeroEmissionGoodsVehicleAllowance = Option(BigDecimal(5000.00)))),
     None
   )
 
@@ -193,8 +199,8 @@ object StubIFSConnector {
     Option(AnnualAdjustmentsType.empty.copy(goodsAndServicesOwnUse = Option(BigDecimal(200)))),
     Option(
       AnnualAllowancesType.emptyAnnualAllowancesType.copy(
-        zeroEmissionsCarAllowance = Option(5000.00),
-        zeroEmissionGoodsVehicleAllowance = Option(5000.00)
+        zeroEmissionsCarAllowance = Option(BigDecimal(5000.00)),
+        zeroEmissionGoodsVehicleAllowance = Option(BigDecimal(5000.00))
       )),
     None
   )

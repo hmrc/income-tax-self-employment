@@ -24,7 +24,7 @@ import testdata.CommonTestData
 trait Api1871Test extends CommonTestData {
   val downstreamUrl = s"/income-tax/income-sources/${asTys(testTaxYear)}/$testNino/$testBusinessId/self-employment/biss"
 
-  val successResponseRaw: String =
+  val api1871ResponseJson: String =
     s"""{
       |   "incomeSourceId": "${testBusinessId.value}",
       |   "totalIncome": 200,
@@ -39,5 +39,5 @@ trait Api1871Test extends CommonTestData {
       |}
       |""".stripMargin
 
-  val successResponse = Json.parse(successResponseRaw).as[BusinessIncomeSourcesSummaryResponse]
+  val api1871Response = Json.parse(api1871ResponseJson).as[BusinessIncomeSourcesSummaryResponse]
 }

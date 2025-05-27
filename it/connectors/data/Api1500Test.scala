@@ -37,11 +37,11 @@ trait Api1500Test extends CommonTestData {
     body = requestBody
   )
 
-  val successResponseRaw: String =
+  val api1500ResponseJson: String =
     s"""{
       |   "lossId": "1234568790ABCDE"
       |}
       |""".stripMargin
 
-  val successResponse = Json.parse(successResponseRaw).as[SuccessResponseSchema]
+  val api1500Response = Json.parse(api1500ResponseJson).as[SuccessResponseSchema]
 }
