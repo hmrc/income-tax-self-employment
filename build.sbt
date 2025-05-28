@@ -51,7 +51,6 @@ lazy val microservice = Project(appName, file("."))
     )
   )
   .settings(inConfig(IntegrationTest)(itSettings): _*)
-  .settings(resolvers += Resolver.jcenterRepo)
   .settings(CodeCoverageSettings.settings: _*)
   .configs(IntegrationTest extend Test)
 
