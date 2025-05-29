@@ -5,7 +5,6 @@ import base.IntegrationBaseSpec
 import connectors.data.Api1171Test
 import helpers.AuthStub
 import models.common.{BusinessId, Nino}
-import org.mockito.MockitoSugar.when
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.Json
 import play.api.test.Helpers.await
@@ -20,7 +19,7 @@ class BusinessDetailsControllerISpec extends IntegrationBaseSpec with AuthStub w
     "Return a list of businesses from the HIP Business Details API" in {
       stubAuthorisedIndividual()
       stubGetWithResponseBody(
-        url = s"/RESTAdapter/itsa/taxpayer/business-details\\?mtdReference=$testMtdItId&nino=$testNino",
+        url = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?mtdReference=$testMtdItId&nino=$testNino",
         expectedStatus = OK,
         expectedResponse = api1171HipResponseJson
       )
@@ -34,7 +33,7 @@ class BusinessDetailsControllerISpec extends IntegrationBaseSpec with AuthStub w
     "Return NOT FOUND when no businesses are found" in {
       stubAuthorisedIndividual()
       stubGetWithoutResponseBody(
-        url = s"/RESTAdapter/itsa/taxpayer/business-details\\?mtdReference=$testMtdItId&nino=$testNino",
+        url = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?mtdReference=$testMtdItId&nino=$testNino",
         expectedStatus = NOT_FOUND,
       )
 
@@ -48,7 +47,7 @@ class BusinessDetailsControllerISpec extends IntegrationBaseSpec with AuthStub w
     "Return a business from the HIP Business Details API" in {
       stubAuthorisedIndividual()
       stubGetWithResponseBody(
-        url = s"/RESTAdapter/itsa/taxpayer/business-details\\?incomeSourceId=$testBusinessId&mtdReference=$testMtdItId&nino=$testNino",
+        url = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?incomeSourceId=$testBusinessId&mtdReference=$testMtdItId&nino=$testNino",
         expectedStatus = OK,
         expectedResponse = api1171HipResponseJson
       )
@@ -62,7 +61,7 @@ class BusinessDetailsControllerISpec extends IntegrationBaseSpec with AuthStub w
     "Return NO CONTENT when no business was found" in {
       stubAuthorisedIndividual()
       stubGetWithoutResponseBody(
-        url = s"/RESTAdapter/itsa/taxpayer/business-details\\?incomeSourceId=$testBusinessId&mtdReference=$testMtdItId&nino=$testNino",
+        url = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?incomeSourceId=$testBusinessId&mtdReference=$testMtdItId&nino=$testNino",
         expectedStatus = NOT_FOUND,
       )
 
