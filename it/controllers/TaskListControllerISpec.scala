@@ -24,7 +24,7 @@ import models.commonTaskList.TaskStatus.{CannotStartYet, NotStarted}
 import models.commonTaskList.{SectionTitle, TaskListSection, TaskListSectionItem, TaskStatus}
 import org.scalatest.Assertion
 import play.api.http.Status.OK
-import play.api.libs.json.{Format, JsLookupResult, Json}
+import play.api.libs.json.{Format, JsLookupResult}
 import play.api.test.Helpers.await
 import testdata.CommonTestData
 
@@ -56,7 +56,7 @@ class TaskListControllerISpec extends IntegrationBaseSpec with CommonTestData wi
       "return task list sections for each business, displaying all static rows" in new Api1171Test {
         stubAuthorisedIndividual()
         stubGetWithResponseBody(
-          url = s"/RESTAdapter/itsa/taxpayer/business-details\\?mtdReference=$testMtdItId&nino=$testNino",
+          url = s"/etmp/RESTAdapter/itsa/taxpayer/business-details\\?mtdReference=$testMtdItId&nino=$testNino",
           expectedResponse = test1171HipResponseJson,
           expectedStatus = OK
         )

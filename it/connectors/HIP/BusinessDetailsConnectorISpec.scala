@@ -24,7 +24,6 @@ import models.error.DownstreamError.GenericDownstreamError
 import models.error.ServiceError
 import org.mockito.MockitoSugar
 import play.api.http.Status._
-import play.api.libs.json.Json
 import play.api.test.Helpers.await
 import testdata.CommonTestData
 import utils.{MockIdGenerator, MockTimeMachine}
@@ -46,7 +45,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
     mockIdGenerator
   )
 
-  val baseUrl = s"/RESTAdapter/itsa/taxpayer/business-details"
+  val baseUrl = s"/etmp/RESTAdapter/itsa/taxpayer/business-details"
 
   val api1171Url = s"$baseUrl\\?incomeSourceId=$testBusinessId&mtdReference=$testMtdItId&nino=$testNino"
 
