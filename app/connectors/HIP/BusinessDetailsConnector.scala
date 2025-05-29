@@ -37,7 +37,7 @@ class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig:
     extends Logging {
 
   private def getBusinessDetailsUrl(incomeSourceId: Option[BusinessId], mtdReference: Mtditid, nino: Nino): URI = {
-    val baseUrl = s"${appConfig.hipBaseUrl}/RESTAdapter/itsa/taxpayer/business-details"
+    val baseUrl = s"${appConfig.hipBaseUrl}/etmp/RESTAdapter/itsa/taxpayer/business-details"
     val queryParams = Seq(
       incomeSourceId.map(id => s"incomeSourceId=$id").getOrElse(""),
       s"mtdReference=$mtdReference",
