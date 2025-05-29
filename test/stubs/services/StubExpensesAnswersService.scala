@@ -37,7 +37,7 @@ import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 import models.frontend.expenses.workplaceRunningCosts.{WorkplaceRunningCostsAnswers, WorkplaceRunningCostsJourneyAnswers}
 import play.api.libs.json.Writes
-import services.journeyAnswers.ExpensesAnswersService
+import services.journeyAnswers.expenses.ExpensesAnswersService
 import stubs.serviceUnitT
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -52,8 +52,7 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
                                       getWorkplaceRunningCostsAnswers: Option[WorkplaceRunningCostsAnswers] = None,
                                       deleteSimplifiedExpensesAnswersRes: ApiResultT[Unit] = serviceUnitT,
                                       clearExpensesAndCapitalAllowancesDataRes: ApiResultT[Unit] = serviceUnitT,
-                                      clearExpensesDataRes: ApiResultT[Unit] = serviceUnitT)
-    extends ExpensesAnswersService {
+                                      clearExpensesDataRes: ApiResultT[Unit] = serviceUnitT) {
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
       writes: Writes[A]): ApiResultT[Unit] =

@@ -59,7 +59,8 @@ import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import play.api.http.Status._
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent}
-import services.journeyAnswers.{CapitalAllowancesAnswersService, ExpensesAnswersService}
+import services.journeyAnswers.CapitalAllowancesAnswersService
+import services.journeyAnswers.expenses.ExpensesAnswersService
 import stubs.serviceErrorT
 import stubs.services._
 import uk.gov.hmrc.http.HeaderCarrier
