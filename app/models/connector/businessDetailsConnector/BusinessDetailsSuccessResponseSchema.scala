@@ -19,7 +19,6 @@ package models.connector.businessDetailsConnector
 import models.domain.Business
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
-import play.api.libs.functional.syntax._
 
 case class BusinessDetailsSuccessResponseSchema(processingDate: String,
                                                 taxPayerDisplayResponse: ResponseType) {
@@ -40,7 +39,7 @@ object BusinessDetailsSuccessResponseSchema {
     (JsPath \ "taxPayerDisplayResponse").read[ResponseType](ResponseType.hipFormat)
   )(BusinessDetailsSuccessResponseSchema.apply _)
 
-  val hipFormat: Format[BusinessDetailsSuccessResponseSchema] = Format(hipReads, successResponseSchemaJsonFormat.writes)
+  val hipFormat: Format[BusinessDetailsSuccessResponseSchema] = Format(hipReads, successResponseSchemaJsonFormat.writes(_))
 
 }
 

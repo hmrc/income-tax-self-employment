@@ -15,14 +15,14 @@
  */
 
 import play.core.PlayVersion.current
-import sbt._
+import sbt.*
 
 object AppDependencies {
 
   private val bootstrapVersion = "9.12.0"
   private val hmrcMongoVersion = "2.6.0"
 
-  val jacksonAndPlayExclusions = Seq(
+  val jacksonAndPlayExclusions: Seq[InclusionRule] = Seq(
     ExclusionRule(organization = "com.fasterxml.jackson.core"),
     ExclusionRule(organization = "com.fasterxml.jackson.datatype"),
     ExclusionRule(organization = "com.fasterxml.jackson.module"),
@@ -33,10 +33,10 @@ object AppDependencies {
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-30" % bootstrapVersion,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.18.0",
-    "org.typelevel"                %% "cats-core"                 % "2.12.0",
-    "com.beachape"                 %% "enumeratum"                % "1.7.5",
-    "com.beachape"                 %% "enumeratum-play-json"      % "1.8.2" excludeAll (jacksonAndPlayExclusions *),
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.19.0",
+    "org.typelevel"                %% "cats-core"                 % "2.13.0",
+    "com.beachape"                 %% "enumeratum"                % "1.9.0",
+    "com.beachape"                 %% "enumeratum-play-json"      % "1.9.0" excludeAll (jacksonAndPlayExclusions *),
     "org.codehaus.janino"           % "janino"                    % "3.1.12" // it's required by logback for conditional logging
   )
 

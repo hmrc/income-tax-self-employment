@@ -76,7 +76,7 @@ class NICsAnswersServiceImpl @Inject()(connector: IFSConnector,
   def saveClass4SingleBusiness(ctx: JourneyContextWithNino, answers: NICsClass4Answers)
                               (implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
-      updatedContext <- businessService.getBusiness(ctx.businessId, ctx.mtditid, ctx.nino)
+      _ <- businessService.getBusiness(ctx.businessId, ctx.mtditid, ctx.nino)
       exemptionAnswer = Class4ExemptionAnswers(ctx.businessId, answers.class4NICs, answers.class4ExemptionReason)
       result <- saveClass4BusinessData(ctx, exemptionAnswer)
     } yield result

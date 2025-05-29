@@ -70,7 +70,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       case _                 => Option(ProfitOrLossJourneyAnswers.apply(maybeAnnualSummaries, claims, optLossData))
     }
 
-  private def getAnnualSummariesGoodsAndServicesOwnUse[A](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BigDecimal]] =
+  private def getAnnualSummariesGoodsAndServicesOwnUse(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[BigDecimal]] =
     EitherT.liftF(ifsConnector.getAnnualSummaries(ctx).map {
       case Right(annualSummaries) => annualSummaries.annualAdjustments.flatMap(_.goodsAndServicesOwnUse)
       case Left(_)                => None
