@@ -39,7 +39,7 @@ object BusinessDetailsSuccessResponseSchema {
     (JsPath \ "taxPayerDisplayResponse").read[ResponseType](ResponseType.hipFormat)
   )(BusinessDetailsSuccessResponseSchema.apply _)
 
-  val hipFormat: Format[BusinessDetailsSuccessResponseSchema] = Format(hipReads, successResponseSchemaJsonFormat.writes(_))
+  val hipFormat: Format[BusinessDetailsSuccessResponseSchema] = Format(hipReads, successResponseSchemaJsonFormat.writes)
 
 }
 
