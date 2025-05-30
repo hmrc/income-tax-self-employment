@@ -19,7 +19,6 @@ package models.connector.businessDetailsConnector
 import models.domain.Business
 import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
-import play.api.libs.functional.syntax._
 
 case class BusinessDetailsSuccessResponseSchema(processingDate: String,
                                                 taxPayerDisplayResponse: ResponseType) {

@@ -19,7 +19,7 @@ package services
 import cats.data.EitherT
 import cats.implicits.toTraverseOps
 import config.AppConfig
-import connectors.HIP.BusinessDetailsConnector
+import connectors.HIP.{BusinessDetailsConnector, IncomeSourcesConnector}
 import connectors.IFS.{IFSBusinessDetailsConnector, IFSConnector}
 import connectors.MDTP.MDTPConnector
 import models.common.{BusinessId, JourneyContextWithNino, Mtditid, Nino, TaxYear}
@@ -43,6 +43,7 @@ class BusinessService @Inject()(ifsBusinessDetailsConnector: IFSBusinessDetailsC
                                 mdtpConnector: MDTPConnector,
                                 hipBusinessDetailsConnector: BusinessDetailsConnector,
                                 ifsConnector: IFSConnector,
+                                hipIncomeSourceConnector: IncomeSourcesConnector,
                                 appConfig: AppConfig)
                                (implicit ec: ExecutionContext)
   extends Logging {
@@ -114,6 +115,13 @@ class BusinessService @Inject()(ifsBusinessDetailsConnector: IFSBusinessDetailsC
     } yield result
 
   def hasOtherIncomeSources(taxYear: TaxYear, nino: Nino)
-                           (implicit hc: HeaderCarrier): ApiResultT[Boolean] =
-    ifsBusinessDetailsConnector.getListOfIncomeSources(taxYear, nino).map(_.selfEmployments.sizeIs > 1)
+                           (implicit hc: HeaderCarrier): ApiResultT[Boolean] = {
+    val incomeSources = if (appConfig.hipMigration2085Enabled) {
+      hipIncomeSourceConnector.getIncomeSources(nino)
+    } else {
+      ifsBusinessDetailsConnector.getListOfIncomeSources(taxYear, nino)
+    }
+
+    incomeSources.map(_.selfEmployments.sizeIs > 1)
+  }
 }

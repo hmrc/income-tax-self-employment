@@ -47,7 +47,7 @@ class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig:
     new URI(s"$baseUrl?$queryParams")
   }
 
-  private val additionalHeaders: Seq[(String, String)] = Seq(
+  private def additionalHeaders: Seq[(String, String)] = Seq(
     "correlationid"         -> idGenerator.generateCorrelationId(),
     "X-Message-Type"        -> "TaxpayerDisplay",
     "X-Originating-System"  -> "MDTP",
