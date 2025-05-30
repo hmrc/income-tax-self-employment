@@ -38,7 +38,6 @@ import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsJourneyAnswers
-import repositories.JourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTOps.EitherTExtensions
 

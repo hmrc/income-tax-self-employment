@@ -35,23 +35,11 @@ import models.database.expenses.{ExpensesCategoriesDb, TaxiMinicabOrRoadHaulageD
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
-import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
-import models.frontend.expenses.construction.ConstructionJourneyAnswers
-import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
-import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
-import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
 import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers}
-import models.frontend.expenses.interest.InterestJourneyAnswers
-import models.frontend.expenses.irrecoverableDebts.IrrecoverableDebtsJourneyAnswers
-import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
-import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
-import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
-import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
-import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategories, NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
-import models.frontend.expenses.workplaceRunningCosts.{WorkplaceRunningCostsAnswers, WorkplaceRunningCostsJourneyAnswers}
+import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import org.mockito.MockitoSugar.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -61,6 +49,7 @@ import play.api.libs.json.{JsObject, Json}
 import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers.await
 import repositories.MongoJourneyAnswersRepository
+import services.journeyAnswers.expenses.ExpensesAnswersService
 import stubs.connectors.StubIFSConnector
 import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
 import stubs.repositories.StubJourneyAnswersRepository
@@ -73,7 +62,7 @@ import java.time.Clock
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with MongoSupport with TimeData with DefaultAwaitTimeout {
+class ExpensesAnswersServiceSpec extends AnyWordSpec with Matchers with MongoSupport with TimeData with DefaultAwaitTimeout {
 
   val clock: Clock             = mock[Clock]
   val mockAppConfig: AppConfig = mock[AppConfig]
@@ -101,7 +90,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     None,
     None,
     None,
-    false,
+    wfbpExpensesAreDisallowable = false,
     None,
     None,
     None,
@@ -115,98 +104,6 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
   def buildPeriodData(deductions: Option[Deductions]): AmendSEPeriodSummaryRequestData =
     AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), deductions))
 
-  "save answers" should {
-    "saveTailoringAnswers" in new Test {
-      val answers: ExpensesTailoringAnswers.ExpensesTailoringIndividualCategoriesAnswers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveTailoringAnswers(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveOfficeSuppliesAnswers" in new Test {
-      val answers: OfficeSuppliesJourneyAnswers = genOne(officeSuppliesJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]    = underTest.saveOfficeSuppliesAnswers(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveGoodsToSell" in new Test {
-      val answers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]      = underTest.saveGoodsToSell(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveRepairsAndMaintenance" in new Test {
-      val answers: RepairsAndMaintenanceCostsJourneyAnswers = genOne(repairsAndMaintenanceCostsJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]                = underTest.saveRepairsAndMaintenance(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveWorkplaceRunningCosts" in new Test {
-      val answers: WorkplaceRunningCostsJourneyAnswers = genOne(workplaceRunningCostsJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]           = underTest.saveWorkplaceRunningCosts(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveAdvertisingOrMarketing" in new Test {
-      val answers: AdvertisingOrMarketingJourneyAnswers = genOne(advertisingOrMarketingJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]            = underTest.saveAdvertisingOrMarketing(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveEntertainmentCosts" in new Test {
-      val answers: EntertainmentJourneyAnswers = genOne(entertainmentJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]   = underTest.saveEntertainmentCosts(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveStaffCosts" in new Test {
-      val answers: StaffCostsJourneyAnswers  = genOne(staffCostsJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveStaffCosts(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveConstructionIndustrySubcontractors" in new Test {
-      val answers: ConstructionJourneyAnswers = genOne(constructionJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]  = underTest.saveConstructionIndustrySubcontractors(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveProfessionalFees" in new Test {
-      val answers: ProfessionalFeesJourneyAnswers = genOne(professionalFeesJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]      = underTest.saveProfessionalFees(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveFinancialCharges" in new Test {
-      val answers: FinancialChargesJourneyAnswers = genOne(financialChargesJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]      = underTest.saveFinancialCharges(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveBadDebts" in new Test {
-      val answers: IrrecoverableDebtsJourneyAnswers = genOne(irrecoverableDebtsJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]        = underTest.saveBadDebts(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveDepreciationCosts" in new Test {
-      val answers: DepreciationCostsJourneyAnswers = genOne(depreciationCostsJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]       = underTest.saveDepreciationCosts(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveOtherExpenses" in new Test {
-      val answers: OtherExpensesJourneyAnswers = genOne(otherExpensesJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]   = underTest.saveOtherExpenses(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-    "saveInterests" in new Test {
-      val answers: InterestJourneyAnswers    = genOne(interestJourneyAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveInterests(journeyCtxWithNino, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-
-  }
 
   "save ExpensesTailoringNoExpensesAnswers" should {
     "store data successfully" in new Test {
@@ -222,15 +119,6 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       val answers: ExpensesTailoringAnswers.ExpensesTailoringIndividualCategoriesAnswers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
       val result: Either[ServiceError, Unit] =
         underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
-      result shouldBe ().asRight
-    }
-  }
-
-  "save expenses journey answers" should {
-    "store data successfully" in new Test {
-
-      val someExpensesAnswers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
-      val result: Either[ServiceError, Unit]                  = underTest.saveGoodsToSell(journeyCtxWithNino, someExpensesAnswers).value.futureValue
       result shouldBe ().asRight
     }
   }
@@ -292,6 +180,15 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
       result shouldBe answers.some.asRight
     }
 
+  }
+
+  "save answers" should {
+    "saveTailoringAnswers" in new Test {
+      val answers: ExpensesTailoringAnswers.ExpensesTailoringIndividualCategoriesAnswers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
+      val result: Either[ServiceError, Unit] = underTest.saveTailoringAnswers(journeyCtxWithNino, answers).value.futureValue
+
+      result shouldBe ().asRight
+    }
   }
 
   "getGoodsToSellOrUseAnswers" should {
@@ -590,7 +487,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
     val connector: StubIFSConnector = new StubIFSConnector()
 
     val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository()
-    lazy val underTest                     = new ExpensesAnswersServiceImpl(connector, repo)
+    lazy val underTest                     = new ExpensesAnswersService(connector, repo)
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
   }
@@ -602,7 +499,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
 
     val repository: MongoJourneyAnswersRepository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, clock)
 
-    lazy val underTest = new ExpensesAnswersServiceImpl(connector, repository)
+    lazy val underTest = new ExpensesAnswersService(connector, repository)
 
     implicit val hc: HeaderCarrier = HeaderCarrier()
 
@@ -701,7 +598,7 @@ class ExpensesAnswersServiceImplSpec extends AnyWordSpec with Matchers with Mong
   }
 }
 
-object ExpensesAnswersServiceImplSpec {
+object ExpensesAnswersServiceSpec {
   val mockAppConfig: AppConfig = mock[AppConfig]
 
   val tailoringJourneyAnswers: JourneyAnswers = JourneyAnswers(

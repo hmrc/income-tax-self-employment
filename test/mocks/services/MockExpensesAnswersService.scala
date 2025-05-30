@@ -23,6 +23,7 @@ import models.domain.ApiResultT
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
+import org.mockito.ArgumentMatchers.any
 import org.mockito.stubbing.ScalaOngoingStubbing
 import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.MockitoSugar.when
@@ -38,41 +39,60 @@ object MockExpensesAnswersService {
   val mockInstance: ExpensesAnswersService = mock[ExpensesAnswersService]
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)
-                    (returnValue: ApiResultT[Unit])(implicit writes: Writes[A]): ScalaOngoingStubbing[ApiResultT[Unit]] = {
-    when(mockInstance.persistAnswers(eqTo(businessId), eqTo(taxYear), eqTo(mtditid), eqTo(journey), eqTo(answers)))
+                    (returnValue: ApiResultT[Unit]): ScalaOngoingStubbing[ApiResultT[Unit]] = {
+    when(mockInstance.persistAnswers(eqTo(businessId), eqTo(taxYear), eqTo(mtditid), eqTo(journey), eqTo(answers))(any[Writes[A]]))
       .thenReturn(returnValue)
   }
 
   def saveTailoringAnswers(ctx: JourneyContextWithNino, answers: ExpensesTailoringAnswers)
-                              (returnValue: ApiResultT[Unit])(implicit hc: HeaderCarrier): ScalaOngoingStubbing[ApiResultT[Unit]] = {
-    when(mockInstance.saveTailoringAnswers(eqTo(ctx), eqTo(answers)))
-      .thenReturn(returnValue)
+                              (returnValue: ApiResultT[Unit]): ScalaOngoingStubbing[ApiResultT[Unit]] = {
+    when(mockInstance.saveTailoringAnswers(eqTo(ctx), eqTo(answers))(any[HeaderCarrier]))
+      .thenReturn(EitherT.rightT(returnValue))
   }
 
   def getAnswers[A: Api1786ExpensesResponseParser](ctx: JourneyContextWithNino)
   (returnValue: ApiResultT[A])(implicit hc: HeaderCarrier): ScalaOngoingStubbing[ApiResultT[A]] = {
-    when(mockInstance.getAnswers[A](eqTo(ctx)))
+    when(mockInstance.getAnswers[A](eqTo(ctx))(any[Api1786ExpensesResponseParser[A]], any[HeaderCarrier]))
       .thenReturn(returnValue)
   }
 
   def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)
-                                 (returnValue: ApiResultT[Option[ExpensesTailoringAnswers]]
-                                 )(implicit hc: HeaderCarrier): ScalaOngoingStubbing[ApiResultT[Option[ExpensesTailoringAnswers]]] = {
-    when(mockInstance.getExpensesTailoringAnswers(eqTo(ctx)))
-      .thenReturn(EitherT.rightT(returnValue))
+                                 (returnValue: ApiResultT[Option[ExpensesTailoringAnswers]]):
+  ScalaOngoingStubbing[ApiResultT[Option[ExpensesTailoringAnswers]]] = {
+    when(mockInstance.getExpensesTailoringAnswers(eqTo(ctx))(any[HeaderCarrier]))
+      .thenReturn(returnValue)
   }
+
 
   def getGoodsToSellOrUseAnswers(ctx: JourneyContextWithNino)
                              (returnValue: ApiResultT[Option[GoodsToSellOrUseAnswers]]
-                             )(implicit hc: HeaderCarrier): ScalaOngoingStubbing[ApiResultT[Option[GoodsToSellOrUseAnswers]]] = {
-    when(mockInstance.getGoodsToSellOrUseAnswers(eqTo(ctx)))
-      .thenReturn(EitherT.rightT(returnValue))
+                             ): ScalaOngoingStubbing[ApiResultT[Option[GoodsToSellOrUseAnswers]]] = {
+    when(mockInstance.getGoodsToSellOrUseAnswers(eqTo(ctx))(any[HeaderCarrier]))
+      .thenReturn(returnValue)
   }
 
   def getWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino)
                                      (returnValue: ApiResultT[Option[WorkplaceRunningCostsAnswers]]
-                                     )(implicit hc: HeaderCarrier): ScalaOngoingStubbing[ApiResultT[Option[WorkplaceRunningCostsAnswers]]] = {
-    when(mockInstance.getWorkplaceRunningCostsAnswers(eqTo(ctx)))
+                                     ): ScalaOngoingStubbing[ApiResultT[Option[WorkplaceRunningCostsAnswers]]] = {
+    when(mockInstance.getWorkplaceRunningCostsAnswers(eqTo(ctx))(any[HeaderCarrier]))
+      .thenReturn(returnValue)
+  }
+
+  def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)
+                                     (returnValue: ApiResultT[Unit]): ScalaOngoingStubbing[ApiResultT[Unit]] = {
+    when(mockInstance.deleteSimplifiedExpensesAnswers(eqTo(ctx))(any[HeaderCarrier]))
+      .thenReturn(EitherT.rightT(returnValue))
+  }
+
+  def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)
+                                           (returnValue: ApiResultT[Unit]): ScalaOngoingStubbing[ApiResultT[Unit]] = {
+    when(mockInstance.clearExpensesAndCapitalAllowancesData(eqTo(ctx))(any[HeaderCarrier]))
+      .thenReturn(EitherT.rightT(returnValue))
+  }
+
+  def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)
+                       (returnValue: ApiResultT[Unit]): ScalaOngoingStubbing[ApiResultT[Unit]] = {
+    when(mockInstance.clearExpensesData(eqTo(ctx), eqTo(journeyName))(any[HeaderCarrier]))
       .thenReturn(EitherT.rightT(returnValue))
   }
 

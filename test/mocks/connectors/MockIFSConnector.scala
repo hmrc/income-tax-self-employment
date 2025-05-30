@@ -19,11 +19,12 @@ package mocks.connectors
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFS.IFSConnector
-import connectors.IFS.IFSConnector.{Api1786Response, Api1803Response}
+import connectors.IFS.IFSConnector.{Api1786Response, Api1803Response, Api1895Response}
 import models.common.JourneyContextWithNino
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestBody
+import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.domain.ApiResultT
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar.eqTo
@@ -63,6 +64,10 @@ object MockIFSConnector {
 
   def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(returnValue: Api1786Response): ScalaOngoingStubbing[Future[Api1786Response]] =
     when(mockInstance.getPeriodicSummaryDetail(eqTo(ctx))(any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(Future.successful(returnValue))
+
+  def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(returnValue: Api1895Response): ScalaOngoingStubbing[Future[Unit]] =
+    when(mockInstance.amendSEPeriodSummary(eqTo(data))(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(Future.successful(returnValue))
 
 }
