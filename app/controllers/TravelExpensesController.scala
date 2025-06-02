@@ -16,17 +16,34 @@
 
 package controllers
 
+import cats.implicits._
 import controllers.actions.AuthorisedAction
-import play.api.mvc.ControllerComponents
+import models.common.{BusinessId, JourneyContextWithNino, Nino, TaxYear}
+import models.database.expenses.travel.TravelExpensesDb
+import play.api.mvc._
+import services.journeyAnswers.expenses.PeriodSummaryService
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.Logging
 
-import javax.inject.Inject
-import scala.concurrent.ExecutionContext
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 
-//@Singleton
-class TravelExpensesController @Inject() (auth: AuthorisedAction, cc: ControllerComponents)(implicit ec: ExecutionContext)
+@Singleton
+class TravelExpensesController @Inject() (auth: AuthorisedAction,
+                                          periodSummaryService: PeriodSummaryService,
+                                          cc: ControllerComponents)(implicit ec: ExecutionContext)
   extends BackendController(cc)
     with Logging {
+
+  def getTravelExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    handleApiResultT(periodSummaryService.getTravelExpensesAnswers(JourneyContextWithNino(taxYear, businessId, user.getMtditid, nino)))
+  }
+
+  def updateTravelExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    getBodyWithCtx[TravelExpensesDb](taxYear, businessId, nino) { (ctx, value) =>
+      periodSummaryService.saveTravelExpenses(ctx, value).map(_ => NoContent)
+    }
+  }
+
 }

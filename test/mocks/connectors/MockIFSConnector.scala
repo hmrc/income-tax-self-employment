@@ -66,7 +66,7 @@ object MockIFSConnector {
     when(mockInstance.getPeriodicSummaryDetail(eqTo(ctx))(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(Future.successful(returnValue))
 
-  def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(returnValue: Api1895Response): ScalaOngoingStubbing[Future[Unit]] =
+  def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(returnValue: Api1895Response): ScalaOngoingStubbing[Future[Api1895Response]] =
     when(mockInstance.amendSEPeriodSummary(eqTo(data))(any[HeaderCarrier], any[ExecutionContext]))
       .thenReturn(Future.successful(returnValue))
 

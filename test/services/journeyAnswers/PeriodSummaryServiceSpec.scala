@@ -16,9 +16,20 @@
 
 package services.journeyAnswers
 
+
+import cats.data.EitherT
+import cats.data._
+import cats.implicits._
+import cats.instances.future._
 import cats.implicits.catsSyntaxEitherId
 import gens.ExpensesJourneyAnswersGen._
 import gens.genOne
+import mocks.connectors.MockIFSConnector
+import mocks.services.MockPeriodSummaryService
+import models.connector.api_1786.{DeductionsTypeTestData, FinancialsType, IncomeTypeTestData}
+import models.connector.api_1895.request.AmendSEPeriodSummaryRequestBodyTestData.dataSample
+import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBodyTestData, DeductionsTestData}
+import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
@@ -36,17 +47,23 @@ import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsJourneyAnswers
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import repositories.JourneyAnswersRepository
 import services.journeyAnswers.expenses.PeriodSummaryService
 import stubs.connectors.StubIFSConnector
+import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
 import utils.BaseSpec
 import utils.BaseSpec.journeyCtxWithNino
+
+import scala.concurrent.Future
 
 
 class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BaseSpec {
 
   val connector: StubIFSConnector = new StubIFSConnector()
+  val repo: JourneyAnswersRepository = mock[JourneyAnswersRepository]
 
-  val service = new PeriodSummaryService(connector)
+  val service = new PeriodSummaryService(connector, repo)
   
   "save answers" should {
 

@@ -20,6 +20,7 @@ import cats.data.EitherT
 import cats.implicits._
 import connectors.IFS.IFSConnector
 import models.common.JourneyContextWithNino
+import models.common.JourneyName.TravelExpenses
 import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData}
 import models.database.expenses.travel.TravelExpensesDb
 import models.domain.ApiResultT
@@ -38,6 +39,8 @@ import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
 import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
 import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsJourneyAnswers
+import repositories.JourneyAnswersRepository
+import services.journeyAnswers.getPersistedAnswers
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTOps.EitherTExtensions
 
@@ -45,7 +48,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PeriodSummaryService @Inject()(connector: IFSConnector)(implicit ec: ExecutionContext) {
+class PeriodSummaryService @Inject()(connector: IFSConnector, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext) {
 
   private def updatePeriodSummary(ctx: JourneyContextWithNino, updateBody: AmendSEPeriodSummaryRequestBody => AmendSEPeriodSummaryRequestBody)(
     implicit hc: HeaderCarrier): EitherT[Future, ServiceError, Unit] =
@@ -55,6 +58,12 @@ class PeriodSummaryService @Inject()(connector: IFSConnector)(implicit ec: Execu
       data = AmendSEPeriodSummaryRequestData(ctx.taxYear, ctx.nino, ctx.businessId, updateBody(financials))
       _ <- EitherT(connector.amendSEPeriodSummary(data)).leftAs[ServiceError]
     } yield ()
+
+  def getTravelExpensesAnswers(ctx: JourneyContextWithNino): ApiResultT[Option[TravelExpensesDb]] =
+    for {
+      maybeData <- repository.get(ctx.toJourneyContext(TravelExpenses))
+      dbAnswer  <- getPersistedAnswers[TravelExpensesDb](maybeData)
+    } yield dbAnswer
 
   def saveTravelExpenses(ctx: JourneyContextWithNino,
                          answers: TravelExpensesDb)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
