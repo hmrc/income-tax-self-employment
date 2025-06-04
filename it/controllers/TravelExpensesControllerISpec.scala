@@ -19,21 +19,36 @@ package controllers
 import base.IntegrationBaseSpec
 import connectors.data.{Api1786Test, Api1895Test}
 import helpers.AuthStub
+import models.common.TaxYear.{asTys, endDate, startDate}
 import models.common.{BusinessId, Nino, TaxYear}
-import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, OK}
+import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, NO_CONTENT, OK}
+import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
 import play.api.test.Helpers.await
 
 
 class TravelExpensesControllerISpec extends IntegrationBaseSpec with AuthStub {
 
-  private def url(taxYear: TaxYear, businessId: BusinessId, nino: Nino) = s"/$taxYear/$businessId/travel-expenses/$nino/answers"
+  private def url(taxYear: TaxYear, businessId: BusinessId, nino: Nino) = s"/income-tax-self-employment$taxYear/$businessId/travel-expenses/$nino/answers"
+
+  val api1786ResponseJson: String =
+    """{
+      |   "from": "2001-01-01",
+      |   "to": "2001-01-01",
+      |   "financials": {
+      |   "deductions": {},
+      |      "incomes": {
+      |         "turnover": 100
+      |      }
+      |   }
+      |}
+      |""".stripMargin
 
   "GET /:taxYear/:businessId/travel-expenses/:nino/answers" should {
     "Return answers from the IFS get self-employment period summary" in new Api1786Test {
       stubAuthorisedIndividual()
       stubGetWithResponseBody(
-        url = s"/$testTaxYear/$testBusinessId/travel-expenses/$testNino/answers",
+        url = s"/income-tax-self-employment/$testTaxYear/$testBusinessId/travel-expenses/$testNino/answers",
         expectedStatus = OK,
         expectedResponse = api1786ResponseJson
       )
@@ -46,7 +61,7 @@ class TravelExpensesControllerISpec extends IntegrationBaseSpec with AuthStub {
     "Return OK when no body found" in new Api1786Test {
       stubAuthorisedIndividual()
       stubGetWithoutResponseBody(
-        url = s"/$testTaxYear/$testBusinessId/travel-expenses/$testNino/answers",
+        url = s"/income-tax-self-employment/$testTaxYear/$testBusinessId/travel-expenses/$testNino/answers",
         expectedStatus = NOT_FOUND
       )
 
@@ -59,22 +74,31 @@ class TravelExpensesControllerISpec extends IntegrationBaseSpec with AuthStub {
   "PUT /:taxYear/:businessId/travel-expenses/:nino/answers" should {
     "Update travel expenses and return OK when the request is valid" in new Api1895Test {
       stubAuthorisedIndividual()
+
+      stubGetWithResponseBody(
+        url = s"/income-tax/${asTys(testTaxYear)}/$testNino/self-employments/$testBusinessId/periodic-summary-detail\\?" +
+          s"from=${testTaxYear.fromAnnualPeriod}&to=${testTaxYear.toAnnualPeriod}",
+        expectedStatus = OK,
+        expectedResponse = api1786ResponseJson
+      )
       stubPutWithRequestAndResponseBody(
-        url = s"/$testTaxYear/$testBusinessId/travel-expenses/$testNino/answers",
+        url = s"/income-tax/${asTys(testTaxYear)}/$testNino/self-employments/$testBusinessId/periodic-summaries\\?"+
+          s"from=${startDate(testTaxYear)}&to=${endDate(testTaxYear)}",
         requestBody = requestBody,
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = OK
       )
 
-      val result: WSResponse = await(buildClient(url(testTaxYear, testBusinessId, testNino)).put(api1895RequestJson))
+      val result: WSResponse = await(buildClient(url(testTaxYear, testBusinessId, testNino))
+        .put(Json.toJson(travelExpensesDb)))
 
-      result.status mustBe OK
+      result.status mustBe NO_CONTENT
     }
 
     "Return BAD_REQUEST when the request is invalid" in new Api1895Test {
       stubAuthorisedIndividual()
       stubPutWithRequestAndResponseBody(
-        url = s"/$testTaxYear/$testBusinessId/travel-expenses/$testNino/answers",
+        url = s"/income-tax-self-employment/$testTaxYear/$testBusinessId/travel-expenses/$testNino/answers",
         requestBody = requestBody,
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = OK

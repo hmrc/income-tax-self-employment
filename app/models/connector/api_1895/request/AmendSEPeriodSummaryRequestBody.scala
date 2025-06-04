@@ -43,7 +43,7 @@ case class AmendSEPeriodSummaryRequestBody(incomes: Option[Incomes], deductions:
     copy(
       deductions = Some(
         getDeductions.copy(
-          travelCosts = Some(SelfEmploymentDeductionsDetailType(answers.totalTravelExpenses.get, answers.disallowableTravelExpenses))
+          travelCosts = answers.totalTravelExpenses.map(SelfEmploymentDeductionsDetailType(_, answers.disallowableTravelExpenses))
         ))
     )
 
