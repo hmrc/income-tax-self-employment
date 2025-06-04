@@ -18,7 +18,9 @@ package services.journeyAnswers
 
 import cats.data.EitherT
 import cats.implicits._
+import config.AppConfig
 import connectors.ReliefClaimsConnector
+import connectors.HIP.HipReliefClaimsConnector
 import models.common._
 import models.connector.api_1505.ClaimId
 import models.connector.common.ReliefClaim
@@ -31,7 +33,13 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class ReliefClaimsService @Inject() (reliefClaimsConnector: ReliefClaimsConnector)(implicit ec: ExecutionContext) {
+class ReliefClaimsService @Inject()(
+                                     reliefClaimsConnector: ReliefClaimsConnector,
+                                     hipReliefClaimsConnector: HipReliefClaimsConnector,
+                                     appConfig: AppConfig
+                                   )(implicit ec: ExecutionContext) {
+
+  private val hipMigrationEnabled: Boolean = appConfig.hipMigration1505Enabled
 
   def getAllReliefClaims(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] =
     for {
@@ -49,7 +57,8 @@ class ReliefClaimsService @Inject() (reliefClaimsConnector: ReliefClaimsConnecto
     } else {
       answers
         .map { answer =>
-          reliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
+          if (hipMigrationEnabled) hipReliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
+          else reliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
         }
         .sequence
         .map(_.toList)
@@ -64,7 +73,9 @@ class ReliefClaimsService @Inject() (reliefClaimsConnector: ReliefClaimsConnecto
     val answersToDelete             = oldAnswers.diff(answersToKeep)
 
     val deleteResponses = answersToDelete.map(answer => reliefClaimsConnector.deleteReliefClaim(ctx, answer.claimId))
-    val createResponses = answersToCreate.map(answer => reliefClaimsConnector.createReliefClaim(ctx, answer))
+    val createResponses = answersToCreate.map(answer =>
+      if(hipMigrationEnabled) hipReliefClaimsConnector.createReliefClaim(ctx, answer)
+      else reliefClaimsConnector.createReliefClaim(ctx, answer))
 
     for {
       _ <- deleteResponses.sequence
