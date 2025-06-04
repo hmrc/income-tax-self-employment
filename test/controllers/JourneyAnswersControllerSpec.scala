@@ -596,8 +596,17 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         methodBlock = () => controller.getGoodsToSellOrUse(currTaxYear, businessId, nino)
       )
     }
-
-    s"Save return a $NO_CONTENT when successful" ignore forAll(goodsToSellOrUseAnswersGen) { data =>
+//    s"Save return a $NO_CONTENT when successful" in forAll(officeSuppliesJourneyAnswersGen) { data =>
+    //      MockPeriodSummaryService.saveOfficeSuppliesAnswers(journeyCtxWithNino, data)(EitherT.rightT(()))
+    //
+    //      behave like testRoute(
+    //        request = buildRequest(data),
+    //        expectedStatus = NO_CONTENT,
+    //        expectedBody = "",
+    //        methodBlock = () => underTest.saveOfficeSupplies(currTaxYear, businessId, nino)
+    //      )
+    //    }
+    s"Save return a $NO_CONTENT when successful" in forAll(goodsToSellOrUseAnswersGen) { data =>
       val journeyAnswers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
 
       MockPeriodSummaryService.saveGoodsToSell(journeyCtxWithNino, journeyAnswers)(EitherT.rightT(()))
@@ -631,7 +640,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
 
-    s"Save return a $NO_CONTENT when successful" ignore
+    s"Save return a $NO_CONTENT when successful" in
       forAll(workplaceRunningCostsAnswersGen) { data =>
         val journeyAnswers: WorkplaceRunningCostsJourneyAnswers = genOne(workplaceRunningCostsJourneyAnswersGen)
 

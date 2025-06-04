@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,27 +22,45 @@ import models.database.expenses.travel.TravelExpensesDb
 import play.api.libs.json.{JsValue, Json}
 import testdata.CommonTestData
 
-
 trait Api1895Test extends CommonTestData {
 
   val downstreamSuccessResponse: String = Json.stringify(Json.obj("periodId" -> "someId"))
 
-  val requestBody: AmendSEPeriodSummaryRequestBody = AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), Some(Deductions(costOfGoods = None,
-    constructionIndustryScheme = None,
-    staffCosts = None,
-    premisesRunningCosts = None,
-    maintenanceCosts = None,
-    adminCosts = None,
-    businessEntertainmentCosts = None,
-    advertisingCosts = None,
-    interest = None,
-    financialCharges = None,
-    badDebt = None,
-    professionalFees = None,
-    depreciation = None,
-    other = None,
-    simplifiedExpenses = None,
-    travelCosts = Some(SelfEmploymentDeductionsDetailType(200, Some(100))))))
+  val invalidRequestBody: AmendSEPeriodSummaryRequestBody = AmendSEPeriodSummaryRequestBody(
+    None,
+    None
+  )
+
+  val requestBody: AmendSEPeriodSummaryRequestBody = AmendSEPeriodSummaryRequestBody(
+    Some(Incomes(
+      turnover = Some(100.00),
+      other = None,
+      taxTakenOffTradingIncome = None)
+    ),
+    Some(Deductions(
+      costOfGoods = None,
+      constructionIndustryScheme = None,
+      staffCosts = None,
+      premisesRunningCosts = None,
+      maintenanceCosts = None,
+      adminCosts = None,
+      businessEntertainmentCosts = None,
+      advertisingCosts = None,
+      interest = None,
+      financialCharges = None,
+      badDebt = None,
+      professionalFees = None,
+      depreciation = None,
+      other = None,
+      simplifiedExpenses = None,
+      travelCosts = Some(
+        SelfEmploymentDeductionsDetailType(
+          200,
+          Some(100)
+        )
+      ))
+    )
+  )
 
   val data: AmendSEPeriodSummaryRequestData = AmendSEPeriodSummaryRequestData(testTaxYear, testNino, testBusinessId, requestBody)
 

@@ -19,6 +19,7 @@ package services
 import builders.BusinessDataBuilder._
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
+import mocks.connectors.{MockBusinessDetailsConnector, MockIFSBusinessDetailsConnector, MockIFSConnector}
 import mocks.connectors.{MockBusinessDetailsConnector, MockIFSBusinessDetailsConnector, MockIFSConnector, MockIncomeSourcesConnector}
 import models.common.{BusinessId, Mtditid, Nino}
 import models.connector.api_1171._
@@ -37,25 +38,25 @@ import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers.await
 import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
-import stubs.connectors.{StubIFSConnector, StubMDTPConnector}
+import stubs.connectors.StubMDTPConnector
+import data.CommonTestData
+import models.common.BusinessId
+import models.connector.businessDetailsConnector.{BusinessDetailsSuccessResponseSchema, ResponseType}
 import utils.BaseSpec._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAfterEach with DefaultAwaitTimeout {
+class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAfterEach with DefaultAwaitTimeout with CommonTestData {
 
   val mockAppConfig: AppConfig = mock[AppConfig]
 
   val mdtpConnector: StubMDTPConnector = StubMDTPConnector()
 
-  // TODO: Refactor to use CommonTestData
-  val testMtdId = Mtditid("NIUT24195581820")
-  val testNino = Nino("FI290077A")
-  val testBusinessId1 = BusinessId("SJPR05893938418")
-  val testBusinessId2 = BusinessId("")
-  val taxpayer = businessDetailsSuccessResponse.taxPayerDisplayResponse.copy(businessData = None)
-  val emptyBusinessDetailsResponse = businessDetailsSuccessResponse.copy(taxPayerDisplayResponse = taxpayer)
+  val taxpayer: ResponseType =
+    businessDetailsSuccessResponse.taxPayerDisplayResponse.copy(businessData = None)
 
+  val emptyBusinessDetailsResponse: BusinessDetailsSuccessResponseSchema =
+    businessDetailsSuccessResponse.copy(taxPayerDisplayResponse = taxpayer)
 
   val testService =
     new BusinessService(
@@ -84,7 +85,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
           testNino,
           testMtdId,
           List(
-            BusinessDataDetailsTestData.mkExample(testBusinessId1),
+            BusinessDataDetailsTestData.mkExample(testBusinessId),
             BusinessDataDetailsTestData.mkExample(testBusinessId2)
           )
         )
@@ -95,7 +96,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
         val result = await(testService.getBusinesses(testMtdId, testNino).value)
 
         result shouldBe Right(List(
-          BusinessTestData.mkExample(testBusinessId1),
+          BusinessTestData.mkExample(testBusinessId),
           BusinessTestData.mkExample(testBusinessId2)
         ))
       }

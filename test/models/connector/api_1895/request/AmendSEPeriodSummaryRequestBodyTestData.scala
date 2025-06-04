@@ -35,7 +35,7 @@ object AmendSEPeriodSummaryRequestBodyTestData extends CommonTestData {
     testTaxYear,
     testNino,
     testBusinessId,
-    deductionsSample
+    sample
   )
 
 }

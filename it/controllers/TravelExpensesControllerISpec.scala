@@ -48,7 +48,7 @@ class TravelExpensesControllerISpec extends IntegrationBaseSpec with AuthStub {
     "Return answers from the IFS get self-employment period summary" in new Api1786Test {
       stubAuthorisedIndividual()
       stubGetWithResponseBody(
-        url = s"/income-tax-self-employment/$testTaxYear/$testBusinessId/travel-expenses/$testNino/answers",
+        url = downstreamUrl,
         expectedStatus = OK,
         expectedResponse = api1786ResponseJson
       )
@@ -61,7 +61,7 @@ class TravelExpensesControllerISpec extends IntegrationBaseSpec with AuthStub {
     "Return OK when no body found" in new Api1786Test {
       stubAuthorisedIndividual()
       stubGetWithoutResponseBody(
-        url = s"/income-tax-self-employment/$testTaxYear/$testBusinessId/travel-expenses/$testNino/answers",
+        url = downstreamUrl,
         expectedStatus = NOT_FOUND
       )
 
@@ -82,11 +82,11 @@ class TravelExpensesControllerISpec extends IntegrationBaseSpec with AuthStub {
         expectedResponse = api1786ResponseJson
       )
       stubPutWithRequestAndResponseBody(
-        url = s"/income-tax/${asTys(testTaxYear)}/$testNino/self-employments/$testBusinessId/periodic-summaries\\?"+
+        url = s"/income-tax/${asTys(testTaxYear)}/$testNino/self-employments/$testBusinessId/periodic-summaries\\?" +
           s"from=${startDate(testTaxYear)}&to=${endDate(testTaxYear)}",
         requestBody = requestBody,
         expectedResponse = downstreamSuccessResponse,
-        expectedStatus = OK
+        expectedStatus = NO_CONTENT
       )
 
       val result: WSResponse = await(buildClient(url(testTaxYear, testBusinessId, testNino))
@@ -95,20 +95,36 @@ class TravelExpensesControllerISpec extends IntegrationBaseSpec with AuthStub {
       result.status mustBe NO_CONTENT
     }
 
+    "Return NOT_FOUND when the request is called incorrectly" in new Api1895Test {
+      stubAuthorisedIndividual()
+
+      stubPutWithRequestAndResponseBody(
+        url = s"/income-tax/${asTys(testTaxYear)}/$testNino/self-employments/$testBusinessId/periodic-summaries\\?" +
+          s"from=${startDate(testTaxYear)}&to=${endDate(testTaxYear)}",
+        requestBody = requestBody,
+        expectedResponse = downstreamSuccessResponse,
+        expectedStatus = NO_CONTENT
+      )
+
+      val result: WSResponse = await(buildClient(url(testTaxYear, testBusinessId, testNino))
+        .put(Json.toJson(travelExpensesDb)))
+
+      result.status mustBe NOT_FOUND
+    }
+
     "Return BAD_REQUEST when the request is invalid" in new Api1895Test {
       stubAuthorisedIndividual()
       stubPutWithRequestAndResponseBody(
         url = s"/income-tax-self-employment/$testTaxYear/$testBusinessId/travel-expenses/$testNino/answers",
-        requestBody = requestBody,
+        requestBody = invalidRequestBody,
         expectedResponse = downstreamSuccessResponse,
-        expectedStatus = OK
+        expectedStatus = BAD_REQUEST
       )
 
-      val result: WSResponse = await(buildClient(url(testTaxYear, testBusinessId, testNino)).put(requestBody.toString))
+      val result: WSResponse = await(buildClient(url(testTaxYear, testBusinessId, testNino)).put(travelExpensesDb.toString))
 
       result.status mustBe BAD_REQUEST
     }
-
   }
 
 }
