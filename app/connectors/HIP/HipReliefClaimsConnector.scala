@@ -38,7 +38,7 @@ class HipReliefClaimsConnector @Inject()(httpClientV2: HttpClientV2,
                                         )
                                         (implicit ec: ExecutionContext) extends Logging {
 
-  val getUrl: Nino => URL = (nino) => url"${appConfig.hipBaseUrl}/itsd/income-sources/claims-for-relief/$nino"
+  val getUrl: Nino => URL = (nino) => url"${appConfig.hipBaseUrl}/income-sources/claims-for-relief/$nino"
 
   def createReliefClaim(ctx: JourneyContextWithNino, answer: ReliefClaimType)(implicit hc: HeaderCarrier): ApiResultT[ClaimId] = {
     val enrichedHeaderCarrier: HeaderCarrier = appConfig.mkMetadata(HipApiName.Api1505, getUrl(ctx.nino).toString).enrichedHeaderCarrier

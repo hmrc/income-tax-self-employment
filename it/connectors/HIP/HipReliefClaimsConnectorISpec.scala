@@ -21,22 +21,17 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import models.common.JourneyContextWithNino
 import models.connector.ReliefClaimType
 import models.connector.api_1505.ClaimId
-import org.mockito.MockitoSugar
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.Helpers.await
 import testdata.CommonTestData
-import utils.{MockIdGenerator, MockTimeMachine}
 
-class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestData
-  with MockitoSugar
-  with MockTimeMachine
-  with MockIdGenerator  {
+class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestData {
 
   val connector                   = new HipReliefClaimsConnector(httpClientV2, appConfig)
   val ctx: JourneyContextWithNino = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
 
-  val api1505Url: String = s"/itsd/income-sources/claims-for-relief/${testNino.value}"
+  val api1505Url: String = s"/income-sources/claims-for-relief/${testNino.value}"
 
   "createReliefClaim" should {
 
