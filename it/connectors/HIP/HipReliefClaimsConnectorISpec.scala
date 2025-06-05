@@ -21,8 +21,9 @@ import com.github.tomakehurst.wiremock.client.WireMock._
 import models.common.JourneyContextWithNino
 import models.connector.ReliefClaimType
 import models.connector.api_1505.ClaimId
+import models.error.DownstreamError.GenericDownstreamError
 import play.api.http.Status._
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.await
 import testdata.CommonTestData
 
@@ -31,7 +32,7 @@ class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestD
   val connector                   = new HipReliefClaimsConnector(httpClientV2, appConfig)
   val ctx: JourneyContextWithNino = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
 
-  val api1505Url: String = s"/income-sources/claims-for-relief/${testNino.value}"
+  val api1505Url: String = s"/itsd/income-sources/claims-for-relief/${testNino.value}"
 
   "createReliefClaim" should {
 
@@ -50,6 +51,35 @@ class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestD
       verify(1, postRequestedFor(urlEqualTo(api1505Url)))
     }
 
-  }
+    "the API returns 400 BAD_REQUEST, 422 UNPROCESSABLE_ENTITY or 5xx response" should {
+      "return a service error" in {
+        Seq(
+          (BAD_REQUEST, "INVALID_TAX_YEAR", "Submission has not passed validation. Invalid parameter taxYear."),
+          (UNPROCESSABLE_ENTITY, "TAX_YEAR_NOT_SUPPORTED", "The remote endpoint has indicated that this tax year is not supported."),
+          (INTERNAL_SERVER_ERROR, "SERVER_ERROR", "IF is currently experiencing problems that require live service intervention."),
+          (SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE", "Dependent systems are currently not responding.")
+        ) foreach { case (status, code, reason) =>
+          val response: JsObject = Json.obj(
+            "failures" -> Json.arr(
+              Json.obj(
+                "code"   -> code,
+                "reason" -> reason
+              )
+            )
+          )
 
+          stubPostWithResponseBody(
+            url = api1505Url,
+            expectedStatus = status,
+            expectedResponse = Json.stringify(response)
+          )
+
+          val result = await(connector.createReliefClaim(testContextWithNino, ReliefClaimType.CF).value)
+
+          result.isLeft mustBe true
+          result.merge mustBe a[GenericDownstreamError]
+        }
+      }
+    }
+  }
 }

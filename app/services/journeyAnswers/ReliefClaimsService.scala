@@ -39,7 +39,7 @@ class ReliefClaimsService @Inject()(
                                      appConfig: AppConfig
                                    )(implicit ec: ExecutionContext) {
 
-  private val hipMigrationEnabled: Boolean = appConfig.hipMigration1505Enabled
+  private val hipMigration1505Enabled: Boolean = appConfig.hipMigration1505Enabled
 
   def getAllReliefClaims(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[List[ReliefClaim]] =
     for {
@@ -57,7 +57,7 @@ class ReliefClaimsService @Inject()(
     } else {
       answers
         .map { answer =>
-          if (hipMigrationEnabled) hipReliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
+          if (hipMigration1505Enabled) hipReliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
           else reliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
         }
         .sequence
@@ -74,7 +74,7 @@ class ReliefClaimsService @Inject()(
 
     val deleteResponses = answersToDelete.map(answer => reliefClaimsConnector.deleteReliefClaim(ctx, answer.claimId))
     val createResponses = answersToCreate.map(answer =>
-      if(hipMigrationEnabled) hipReliefClaimsConnector.createReliefClaim(ctx, answer)
+      if(hipMigration1505Enabled) hipReliefClaimsConnector.createReliefClaim(ctx, answer)
       else reliefClaimsConnector.createReliefClaim(ctx, answer))
 
     for {

@@ -38,7 +38,7 @@ class HipReliefClaimsConnector @Inject()(httpClientV2: HttpClientV2,
                                         )
                                         (implicit ec: ExecutionContext) extends Logging {
 
-  val getUrl: Nino => URL = (nino) => url"${appConfig.hipBaseUrl}/income-sources/claims-for-relief/$nino"
+  val getUrl: Nino => URL = (nino) => url"${appConfig.hipBaseUrl}/itsd/income-sources/claims-for-relief/$nino"
 
   def createReliefClaim(ctx: JourneyContextWithNino, answer: ReliefClaimType)(implicit hc: HeaderCarrier): ApiResultT[ClaimId] = {
     val enrichedHeaderCarrier: HeaderCarrier = appConfig.mkMetadata(HipApiName.Api1505, getUrl(ctx.nino).toString).enrichedHeaderCarrier
@@ -54,9 +54,6 @@ class HipReliefClaimsConnector @Inject()(httpClientV2: HttpClientV2,
               errors => Left(createCommonErrorParser(method, url, response).reportInvalidJsonError(errors.toList)),
               claimId => Right(claimId)
             )
-          case NOT_FOUND =>
-            logger.warn(s"$response")
-            Right(ClaimId(""))
           case _ =>
             logger.error(s"HIP GET Create Claim for Relief returned unexpected status '${response.status}'")
             Left(createCommonErrorParser(method, url, response).handleDownstreamError(response))
