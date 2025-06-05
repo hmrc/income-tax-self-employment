@@ -36,7 +36,7 @@ class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestD
   val connector                   = new HipReliefClaimsConnector(httpClientV2, appConfig)
   val ctx: JourneyContextWithNino = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
 
-  val api1505Url: String = s"/income-sources/claims-for-relief/${testNino.value}"
+  val api1505Url: String = s"/itsd/income-sources/claims-for-relief/${testNino.value}"
 
   "createReliefClaim" should {
 
@@ -52,7 +52,7 @@ class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestD
       val result = await(connector.createReliefClaim(testContextWithNino, ReliefClaimType.CF).value)
       result mustBe Right(expectedResponse)
 
-//      verify(1, postRequestedFor(urlEqualTo(api1505Url)))
+      verify(1, postRequestedFor(urlEqualTo(api1505Url)))
     }
 
   }
