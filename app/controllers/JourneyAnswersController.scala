@@ -219,7 +219,7 @@ class JourneyAnswersController @Inject() (auth: AuthorisedAction,
       handleApiUnitResultT(result)
   }
 
-  def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
+    def saveGoodsToSellOrUse(taxYear: TaxYear, businessId: BusinessId, nino: Nino): Action[AnyContent] = auth.async { implicit user =>
     getBodyWithCtx[GoodsToSellOrUseAnswers](taxYear, businessId, nino) { (ctx, value) =>
       for {
         _ <- periodSummaryService.saveGoodsToSell(

@@ -51,7 +51,7 @@ object MockExpensesAnswersService {
   }
 
   def getAnswers[A: Api1786ExpensesResponseParser](ctx: JourneyContextWithNino)
-  (returnValue: ApiResultT[A])(implicit hc: HeaderCarrier): ScalaOngoingStubbing[ApiResultT[A]] = {
+  (returnValue: ApiResultT[A]): ScalaOngoingStubbing[ApiResultT[A]] = {
     when(mockInstance.getAnswers[A](eqTo(ctx))(any[Api1786ExpensesResponseParser[A]], any[HeaderCarrier]))
       .thenReturn(returnValue)
   }

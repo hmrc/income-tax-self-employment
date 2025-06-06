@@ -50,7 +50,7 @@ class TravelExpensesControllerISpec extends IntegrationBaseSpec with AuthStub {
       stubGetWithResponseBody(
         url = downstreamUrl,
         expectedStatus = OK,
-        expectedResponse = api1786ResponseJson
+        expectedResponse = this.api1786ResponseJson
       )
 
       val result: WSResponse = await(buildClient(url(testTaxYear, testBusinessId, testNino)).get())
