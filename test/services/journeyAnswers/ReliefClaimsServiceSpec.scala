@@ -17,7 +17,7 @@
 package services.journeyAnswers
 
 import data.CommonTestData
-import mocks.connectors.MockReliefClaimsConnector
+import mocks.connectors.{MockHipReliefClaimsConnector, MockReliefClaimsConnector}
 import models.common.JourneyName.ProfitOrLoss
 import models.common._
 import models.connector.ReliefClaimType.{CF, CSGI}
@@ -27,13 +27,14 @@ import models.error.ServiceError
 import models.frontend.adjustments._
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.times
-import org.mockito.MockitoSugar.{reset, verify}
+import org.mockito.MockitoSugar.{mock, reset, verify}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTTestOps.whenReady
+import config.AppConfig
 
 import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -50,7 +51,8 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
 
   trait ReliefClaimsServiceTestSetup {
 
-    val service: ReliefClaimsService = new ReliefClaimsService(MockReliefClaimsConnector.mockInstance)
+    val mockAppConfig: AppConfig = mock[AppConfig]
+    val service: ReliefClaimsService = new ReliefClaimsService(MockReliefClaimsConnector.mockInstance, MockHipReliefClaimsConnector.mockInstance, mockAppConfig)
 
     val ctxNoNino2025: JourneyContext = testContextCurrentYear.toJourneyContext(ProfitOrLoss)
     val ctxNoNino2024: JourneyContext = testContextPrevYear.toJourneyContext(ProfitOrLoss)
