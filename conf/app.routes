@@ -14,6 +14,10 @@ GET         /:taxYear/business-income-sources-summary/:nino/:businessId         
 GET         /:taxYear/net-business-profit-or-loss-values/:nino/:businessId                               controllers.BusinessDetailsController.getNetBusinessProfitOrLossValues(taxYear: TaxYear, nino: Nino, businessId: BusinessId)
 GET         /:taxYear/check-for-other-income-source/:nino                                                controllers.BusinessDetailsController.hasOtherIncomeSources(taxYear: TaxYear, nino: Nino)
 
+# Travel Expenses
+GET         /:taxYear/:businessId/travel-expenses/:nino/answers                                          controllers.TravelExpensesController.getTravelExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+PUT         /:taxYear/:businessId/travel-expenses/:nino/answers                                          controllers.TravelExpensesController.updateTravelExpenses(taxYear: TaxYear, businessId: BusinessId, nino: Nino)
+
 # Journey Statuses
 GET         /:taxYear/:nino/task-list                                                                    controllers.JourneyStatusController.getTaskList(taxYear: TaxYear, nino: Nino)
 GET         /completed-section/:businessId/:journey/:taxYear                                             controllers.JourneyStatusController.getStatus(businessId: BusinessId, journey: JourneyName, taxYear: TaxYear)

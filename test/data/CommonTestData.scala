@@ -36,9 +36,10 @@ import java.time.temporal.ChronoUnit
 
 trait CommonTestData extends TimeData {
 
-  val testBusinessId: BusinessId = BusinessId("XH1234567890")
-  val testMtdId: Mtditid         = Mtditid("12345")
-  val testNino: Nino             = Nino("AB123456C")
+  val testBusinessId: BusinessId  = BusinessId("XH1234567890")
+  val testBusinessId2: BusinessId = BusinessId("XH1234567891")
+  val testMtdId: Mtditid          = Mtditid("12345")
+  val testNino: Nino              = Nino("AB123456C")
 
   val testCurrentTaxYear: TaxYear = TaxYear(2025)
   val testPrevTaxYear: TaxYear    = TaxYear(2024)

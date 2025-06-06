@@ -18,16 +18,15 @@ package connectors.IFS
 
 import base.IntegrationBaseSpec
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
-import connectors.data.{Api1505Test, Api1786Test, Api1803Test}
+import connectors.data.{Api1505Test, Api1786Test, Api1803Test, Api1895Test}
 import models.common.JourneyContextWithNino
-import models.common.TaxYear.{asTys, endDate, startDate}
+import models.common.TaxYear.asTys
 import models.connector.api_1505.ClaimId
 import models.connector.api_1638.{RequestSchemaAPI1638, RequestSchemaAPI1638Class2Nics}
 import models.connector.api_1639.{SuccessResponseAPI1639, SuccessResponseAPI1639Class2Nics}
 import models.connector.api_1802.request._
 import models.connector.api_1803.SuccessResponseSchema
 import models.connector.api_1894.request._
-import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
 import models.connector.api_1965.{ListSEPeriodSummariesResponse, PeriodDetails}
 import models.error.DownstreamError.{GenericDownstreamError, SingleDownstreamError}
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
@@ -47,10 +46,10 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
     "return successful response" in new Api1786Test {
       stubGetWithResponseBody(
         url = downstreamUrl,
-        expectedResponse = api1171ResponseJson,
+        expectedResponse = api1786ResponseJson,
         expectedStatus = OK
       )
-      connector.getPeriodicSummaryDetail(ctx).futureValue shouldBe api1171Response.asRight
+      connector.getPeriodicSummaryDetail(ctx).futureValue shouldBe api1786Response.asRight
     }
   }
 
@@ -364,18 +363,6 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
 
     val downstreamUrl =
       s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries"
-  }
-
-  trait Api1895Test {
-    val downstreamSuccessResponse: String = Json.stringify(Json.obj("periodId" -> "someId"))
-
-    val requestBody: AmendSEPeriodSummaryRequestBody = AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), None)
-
-    val data: AmendSEPeriodSummaryRequestData = AmendSEPeriodSummaryRequestData(testTaxYear, testNino, testBusinessId, requestBody)
-
-    val downstreamUrl =
-      s"/income-tax/${asTys(data.taxYear)}/${data.nino.value}/self-employments/${data.businessId.value}/periodic-summaries\\?from=${startDate(
-          data.taxYear)}&to=${endDate(data.taxYear)}"
   }
 
   trait ApiDisclosuresTest {

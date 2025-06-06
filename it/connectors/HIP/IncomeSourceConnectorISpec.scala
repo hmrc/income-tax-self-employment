@@ -5,7 +5,7 @@ import base.IntegrationBaseSpec
 import models.connector.api_2085.ListOfIncomeSources
 import models.error.DownstreamError
 import org.mockito.MockitoSugar
-import play.api.http.Status.{BAD_GATEWAY, BAD_REQUEST, FORBIDDEN, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED}
+import play.api.http.Status.{BAD_GATEWAY, BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, OK, SERVICE_UNAVAILABLE, UNAUTHORIZED}
 import play.api.libs.json.Json
 import play.api.test.Helpers.await
 import testdata.CommonTestData

@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,11 @@ import testdata.CommonTestData
 import utils.BaseSpec.{taxYearEnd, taxYearStart}
 
 trait Api1786Test extends CommonTestData {
+
   val downstreamUrl =
     s"/income-tax/${asTys(testTaxYear)}/$testNino/self-employments/$testBusinessId/periodic-summary-detail\\?from=$taxYearStart&to=$taxYearEnd"
 
-  val api1171ResponseJson: String =
+  val api1786ResponseJson: String =
     """{
       |   "from": "2001-01-01",
       |   "to": "2001-01-01",
@@ -102,5 +103,5 @@ trait Api1786Test extends CommonTestData {
       |}
       |""".stripMargin
 
-  val api1171Response = Json.parse(api1171ResponseJson).as[SuccessResponseSchema]
+  val api1786Response: SuccessResponseSchema = Json.parse(api1786ResponseJson).as[SuccessResponseSchema]
 }
