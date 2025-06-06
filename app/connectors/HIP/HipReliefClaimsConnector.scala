@@ -20,11 +20,11 @@ import cats.data.EitherT
 import config.AppConfig
 import jakarta.inject.{Inject, Singleton}
 import models.common.{JourneyContextWithNino, Nino}
-import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBody}
+import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBodyHip}
 import models.connector.{ApiResponse, HipApiName, ReliefClaimType, createCommonErrorParser}
 import models.domain.ApiResultT
 import play.api.Logging
-import play.api.http.Status.{NOT_FOUND, OK}
+import play.api.http.Status.OK
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, StringContextOps}
@@ -61,10 +61,10 @@ class HipReliefClaimsConnector @Inject()(httpClientV2: HttpClientV2,
       }
     }
 
-    val body = CreateLossClaimRequestBody(
+    val body = CreateLossClaimRequestBodyHip(
       incomeSourceId = ctx.businessId.value,
       reliefClaimed = answer.toString,
-      taxYear = ctx.taxYear.endYear.toString
+      taxYearClaimedFor = ctx.taxYear.endYear
     )
 
     EitherT {
