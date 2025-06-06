@@ -55,7 +55,7 @@ class HipReliefClaimsConnector @Inject()(httpClientV2: HttpClientV2,
               claimId => Right(claimId)
             )
           case _ =>
-            logger.error(s"HIP GET Create Claim for Relief returned unexpected status '${response.status}'")
+            logger.error(s"HIP POST Create Claim for Relief returned unexpected status '${response.status}'")
             Left(createCommonErrorParser(method, url, response).handleDownstreamError(response))
         }
       }
