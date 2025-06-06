@@ -18,26 +18,11 @@ package stubs.services
 
 import cats.data.EitherT
 import models.common._
-import models.connector.Api1786ExpensesResponseParser
 import models.domain.ApiResultT
 import models.error.ServiceError
-import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
-import models.frontend.expenses.construction.ConstructionJourneyAnswers
-import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
-import models.frontend.expenses.entertainment.EntertainmentJourneyAnswers
-import models.frontend.expenses.financialCharges.FinancialChargesJourneyAnswers
-import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers}
-import models.frontend.expenses.interest.InterestJourneyAnswers
-import models.frontend.expenses.irrecoverableDebts.IrrecoverableDebtsJourneyAnswers
-import models.frontend.expenses.officeSupplies.OfficeSuppliesJourneyAnswers
-import models.frontend.expenses.otherExpenses.OtherExpensesJourneyAnswers
-import models.frontend.expenses.professionalFees.ProfessionalFeesJourneyAnswers
-import models.frontend.expenses.repairsandmaintenance.RepairsAndMaintenanceCostsJourneyAnswers
-import models.frontend.expenses.staffcosts.StaffCostsJourneyAnswers
+import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
-import models.frontend.expenses.workplaceRunningCosts.{WorkplaceRunningCostsAnswers, WorkplaceRunningCostsJourneyAnswers}
-import play.api.libs.json.Writes
-import services.journeyAnswers.expenses.ExpensesAnswersService
+import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import stubs.serviceUnitT
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -54,13 +39,6 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
                                       clearExpensesAndCapitalAllowancesDataRes: ApiResultT[Unit] = serviceUnitT,
                                       clearExpensesDataRes: ApiResultT[Unit] = serviceUnitT) {
 
-//  def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
-//      writes: Writes[A]): ApiResultT[Unit] =
-//    expensesSaveTailoringAnswersRes
-
-//  def getAnswers[A: Api1786ExpensesResponseParser](ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[A] =
-//    expensesGetAnswersRes.map(_.asInstanceOf[A])
-
   def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]] =
     EitherT.rightT[Future, ServiceError](getTailoringJourneyAnswers)
 
@@ -72,52 +50,6 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
 
   def saveTailoringAnswers(ctx: JourneyContextWithNino, answers: ExpensesTailoringAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     expensesSaveAnswersRes
-
-//  def saveOfficeSuppliesAnswers(ctx: JourneyContextWithNino, answers: OfficeSuppliesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-//
-//  def saveGoodsToSell(ctx: JourneyContextWithNino, answers: GoodsToSellOrUseJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-//
-//  def saveRepairsAndMaintenance(ctx: JourneyContextWithNino, answers: RepairsAndMaintenanceCostsJourneyAnswers)(implicit
-//      hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-
-//  def saveWorkplaceRunningCosts(ctx: JourneyContextWithNino, answers: WorkplaceRunningCostsJourneyAnswers)(implicit
-//      hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-//
-//  def saveAdvertisingOrMarketing(ctx: JourneyContextWithNino, answers: AdvertisingOrMarketingJourneyAnswers)(implicit
-//      hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-
-//  def saveEntertainmentCosts(ctx: JourneyContextWithNino, answers: EntertainmentJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-//
-//  def saveStaffCosts(ctx: JourneyContextWithNino, answers: StaffCostsJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-//
-//  def saveConstructionIndustrySubcontractors(ctx: JourneyContextWithNino, answers: ConstructionJourneyAnswers)(implicit
-//      hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-
-//  def saveProfessionalFees(ctx: JourneyContextWithNino, answers: ProfessionalFeesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-
-//  def saveFinancialCharges(ctx: JourneyContextWithNino, answers: FinancialChargesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-
-//  def saveBadDebts(ctx: JourneyContextWithNino, answers: IrrecoverableDebtsJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-
-//  def saveDepreciationCosts(ctx: JourneyContextWithNino, answers: DepreciationCostsJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-//
-//  def saveOtherExpenses(ctx: JourneyContextWithNino, answers: OtherExpensesJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
-
-//  def saveInterests(ctx: JourneyContextWithNino, answers: InterestJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
-//    expensesSaveAnswersRes
 
   def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] = deleteSimplifiedExpensesAnswersRes
 

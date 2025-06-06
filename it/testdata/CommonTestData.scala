@@ -4,7 +4,6 @@ package testdata
 import models.common._
 import models.connector.businessDetailsConnector.{BusinessDataDetails, BusinessDetailsHipSuccessWrapper, BusinessDetailsSuccessResponseSchema, ResponseType}
 import models.connector.api_2085.{IncomeSource, ListOfIncomeSources}
-import models.connector.businessDetailsConnector.{BusinessDataDetails, BusinessDetailsSuccessResponseSchema, ResponseType}
 
 import java.time.LocalDate
 
