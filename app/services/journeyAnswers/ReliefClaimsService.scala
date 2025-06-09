@@ -57,6 +57,7 @@ class ReliefClaimsService @Inject()(
     } else {
       answers
         .map { answer =>
+          println("=========================HERE" + hipMigration1505Enabled)
           if (hipMigration1505Enabled) hipReliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
           else reliefClaimsConnector.createReliefClaim(ctx, toReliefClaimType(answer))
         }
