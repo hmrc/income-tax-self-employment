@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,26 @@
 
 package models.connector.api_1895.request
 
-object AmendSEPeriodSummaryRequestBodyTestData {
+import data.CommonTestData
+
+
+object AmendSEPeriodSummaryRequestBodyTestData extends CommonTestData {
+
   val sample: AmendSEPeriodSummaryRequestBody = AmendSEPeriodSummaryRequestBody(
     incomes = Some(Incomes(Some(1.0), Some(2.0), Some(3.0))),
     deductions = Some(DeductionsTestData.sample)
   )
+
+  val deductionsSample: AmendSEPeriodSummaryRequestBody = AmendSEPeriodSummaryRequestBody(
+    incomes = None,
+    deductions = Some(DeductionsTestData.sample)
+  )
+
+  val dataSample: AmendSEPeriodSummaryRequestData = AmendSEPeriodSummaryRequestData(
+    testTaxYear,
+    testNino,
+    testBusinessId,
+    sample
+  )
+
 }

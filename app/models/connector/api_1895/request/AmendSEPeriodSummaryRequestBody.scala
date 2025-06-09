@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package models.connector.api_1895.request
 
+import models.database.expenses.travel.TravelExpensesDb
 import models.frontend.expenses.advertisingOrMarketing.AdvertisingOrMarketingJourneyAnswers
 import models.frontend.expenses.construction.ConstructionJourneyAnswers
 import models.frontend.expenses.depreciation.DepreciationCostsJourneyAnswers
@@ -34,9 +35,17 @@ import play.api.libs.json.{Json, OFormat}
 
 case class AmendSEPeriodSummaryRequestBody(incomes: Option[Incomes], deductions: Option[Deductions]) {
 
-  def returnNoneIfEmpty = if (this == AmendSEPeriodSummaryRequestBody.empty) None else Some(this)
+  def returnNoneIfEmpty: Option[AmendSEPeriodSummaryRequestBody] = if (this == AmendSEPeriodSummaryRequestBody.empty) None else Some(this)
 
   private def getDeductions: Deductions = deductions.getOrElse(Deductions.empty)
+
+  def updateTravelExpenses(answers: TravelExpensesDb): AmendSEPeriodSummaryRequestBody =
+    copy(
+      deductions = Some(
+        getDeductions.copy(
+          travelCosts = answers.totalTravelExpenses.map(SelfEmploymentDeductionsDetailType(_, answers.disallowableTravelExpenses))
+        ))
+    )
 
   def updateOfficeSupplies(answers: OfficeSuppliesJourneyAnswers): AmendSEPeriodSummaryRequestBody =
     copy(
@@ -184,5 +193,5 @@ case class AmendSEPeriodSummaryRequestBody(incomes: Option[Incomes], deductions:
 object AmendSEPeriodSummaryRequestBody {
   implicit val formats: OFormat[AmendSEPeriodSummaryRequestBody] = Json.format[AmendSEPeriodSummaryRequestBody]
 
-  val empty = AmendSEPeriodSummaryRequestBody(None, None)
+  val empty: AmendSEPeriodSummaryRequestBody = AmendSEPeriodSummaryRequestBody(None, None)
 }
