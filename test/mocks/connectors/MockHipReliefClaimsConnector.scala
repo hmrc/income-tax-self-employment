@@ -39,6 +39,9 @@ object MockHipReliefClaimsConnector {
 
   val mockInstance: HipReliefClaimsConnector = mock[HipReliefClaimsConnector]
 
+  def deleteReliefClaims(ctx: JourneyContextWithNino, claimId: String)(returnValue: ClaimId): ScalaOngoingStubbing[ApiResultT[Unit]] =
+    when(mockInstance.deleteReliefClaims(ArgumentMatchers.eq(ctx), ArgumentMatchers.eq(claimId))(any(), any())).thenReturn(EitherT.pure(returnValue))
+
   def createReliefClaim(ctx: JourneyContextWithNino, answer: ReliefClaimType)(returnValue: ClaimId): ScalaOngoingStubbing[ApiResultT[ClaimId]] =
     when(mockInstance.createReliefClaim(ArgumentMatchers.eq(ctx), ArgumentMatchers.eq(answer))(any())).thenReturn(EitherT.pure(returnValue))
 

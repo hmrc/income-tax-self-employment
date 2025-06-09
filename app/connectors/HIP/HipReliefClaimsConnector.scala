@@ -18,7 +18,7 @@ package connectors.HIP
 
 import cats.data.EitherT
 import config.AppConfig
-import models.common.TaxYear
+import models.common.{JourneyContextWithNino, Nino, TaxYear}
 import models.connector.{ApiResponse, HipApiName, createCommonErrorParser}
 import jakarta.inject.{Inject, Singleton}
 import models.common.{JourneyContextWithNino, Nino}
@@ -47,9 +47,8 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class HipReliefClaimsConnector @Inject()(httpClientV2: HttpClientV2,
                                          idGenerator: IdGenerator,
-                                         appConfig: AppConfig
-                                        )
-                                        (implicit ec: ExecutionContext) extends Logging {
+                                         appConfig: AppConfig)
+  extends Logging {
 
   val getUrl: Nino => URL = (nino) => url"${appConfig.hipBaseUrl}/itsd/income-sources/claims-for-relief/$nino"
 
@@ -62,11 +61,11 @@ class HipReliefClaimsConnector @Inject()(httpClientV2: HttpClientV2,
         response.status match {
           case OK =>
             response.json
-            .validate[ClaimId]
-            .fold(
-              errors => Left(createCommonErrorParser(method, url, response).reportInvalidJsonError(errors.toList)),
-              claimId => Right(claimId)
-            )
+              .validate[ClaimId]
+              .fold(
+                errors => Left(createCommonErrorParser(method, url, response).reportInvalidJsonError(errors.toList)),
+                claimId => Right(claimId)
+              )
           case _ =>
             logger.error(s"HIP POST Create Claim for Relief returned unexpected status '${response.status}'")
             Left(createCommonErrorParser(method, url, response).handleDownstreamError(response))
@@ -88,14 +87,12 @@ class HipReliefClaimsConnector @Inject()(httpClientV2: HttpClientV2,
     }
   }
 
-  private def deleteReliefClaimsUrl(taxableEntityId: String, claimId: String, taxYear: Option[TaxYear]): URI = {
+  private def deleteReliefClaimsUrl(taxableEntityId: Nino, claimId: String, taxYear: TaxYear): URI = {
 
     val baseUrl = s"${appConfig.hipBaseUrl}/itsd/income-sources/claims-for-relief/$taxableEntityId/$claimId"
 
     val queryParams = Seq(
-      s"taxableEntityId=$taxableEntityId",
-      s"lossId=$claimId",
-      taxYear.map(ty => s"taxYear=${TaxYear.asTys(ty)}").getOrElse("")
+      s"taxYear=${TaxYear.asTys(taxYear)}"
     ).filter(_.nonEmpty).mkString("&")
 
     new URI(s"$baseUrl?$queryParams")
@@ -105,11 +102,9 @@ class HipReliefClaimsConnector @Inject()(httpClientV2: HttpClientV2,
     "correlationid" -> idGenerator.generateCorrelationId()
   )
 
-  def deleteReliefClaims(taxableEntityId: String, claimId: String, taxYear: Option[TaxYear])(implicit
-                                                                                             hc: HeaderCarrier,
-                                                                                             ec: ExecutionContext): ApiResultT[Unit] = {
+  def deleteReliefClaims(ctx: JourneyContextWithNino, claimId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
 
-    val url: URI                             = deleteReliefClaimsUrl(taxableEntityId, claimId, taxYear)
+    val url: URI                             = deleteReliefClaimsUrl(ctx.nino, claimId, ctx.taxYear)
     val enrichedHeaderCarrier: HeaderCarrier = appConfig.mkMetadata(HipApiName.Api1509, url.toString).enrichedHeaderCarrier
 
     implicit object DeleteReliefClaimsHttpReads extends HttpReads[ApiResponse[Unit]] {

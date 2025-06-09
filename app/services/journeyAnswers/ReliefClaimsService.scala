@@ -19,6 +19,8 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits._
 import config.AppConfig
+import connectors.HIP.HipReliefClaimsConnector
+import config.AppConfig
 import connectors.ReliefClaimsConnector
 import connectors.HIP.HipReliefClaimsConnector
 import models.common._
@@ -38,6 +40,7 @@ class ReliefClaimsService @Inject()(
                                      hipReliefClaimsConnector: HipReliefClaimsConnector,
                                      appConfig: AppConfig
                                    )(implicit ec: ExecutionContext) {
+  private val hipMigration1509Enabled: Boolean = appConfig.hipMigration1509Enabled
 
   private val hipMigration1505Enabled: Boolean = appConfig.hipMigration1505Enabled
 
@@ -92,7 +95,8 @@ class ReliefClaimsService @Inject()(
     } else {
       reliefClaims
         .map { reliefClaim =>
-          reliefClaimsConnector.deleteReliefClaim(ctx, reliefClaim.claimId)
+          if (hipMigration1509Enabled) hipReliefClaimsConnector.deleteReliefClaims(ctx, reliefClaim.claimId)
+          else reliefClaimsConnector.deleteReliefClaim(ctx, reliefClaim.claimId)
         }
         .sequence
         .map(_ => ())

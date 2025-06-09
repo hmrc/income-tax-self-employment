@@ -17,24 +17,35 @@
 package connectors.HIP
 
 import base.IntegrationBaseSpec
+import com.github.tomakehurst.wiremock.client.WireMock.{postRequestedFor, urlEqualTo, verify}
+import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.client.WireMock._
 import connectors.data.Api1505Test
 import models.common.JourneyContextWithNino
+import models.connector.ReliefClaimType
+import models.connector.api_1505.ClaimId
 import models.connector.ReliefClaimType
 import models.connector.api_1505.ClaimId
 import models.error.DownstreamError.GenericDownstreamError
 import models.error.ServiceError
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.await
 import testdata.CommonTestData
+import utils.MockIdGenerator
 
-class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestData {
+class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestData with MockIdGenerator {
 
-  val connector                   = new HipReliefClaimsConnector(httpClientV2, appConfig)
-  val ctx: JourneyContextWithNino = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
+  val connector: HipReliefClaimsConnector = new HipReliefClaimsConnector(httpClientV2, mockIdGenerator, appConfig)
+  val ctx: JourneyContextWithNino         = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
 
   val api1505Url: String = s"/itsd/income-sources/claims-for-relief/${testNino.value}"
+  val api1509Url: String = s"/itsd/income-sources/claims-for-relief/${testNino.value}/$testClaimId\\?taxYear=$testTaxYear2425"
+
+  val additionalHeader: Seq[HttpHeader] = Seq(
+    new HttpHeader("correlationid", testCorrelationId)
+  )
 
   "createReliefClaim" should {
 
@@ -82,6 +93,49 @@ class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestD
           result.isLeft mustBe true
           result.merge mustBe a[GenericDownstreamError]
         }
+      }
+    }
+
+  "deleteReliefClaim" should {
+
+    "call HIP API 1509 once to delete a relief claim" in {
+      mockCorrelationId(testCorrelationId)
+
+      stubDelete(
+        url = api1509Url,
+        expectedResponse = "",
+        expectedStatus = NO_CONTENT,
+        requestHeaders = additionalHeader
+      )
+
+      val result = await(connector.deleteReliefClaims(testContextWithNino, testClaimId).value)
+
+      result mustBe Right(())
+
+    }
+
+    Seq(
+      BAD_REQUEST,
+      UNAUTHORIZED,
+      NOT_FOUND,
+      NOT_IMPLEMENTED,
+      UNPROCESSABLE_ENTITY,
+      INTERNAL_SERVER_ERROR,
+      BAD_GATEWAY,
+      SERVICE_UNAVAILABLE
+    ).foreach { status=>
+      s"return failure when downstream fails with $status" in {
+        stubGetWithResponseBody(
+          url = api1509Url,
+          expectedStatus = status,
+          expectedResponse = "",
+          requestHeaders = additionalHeader
+        )
+
+        val result = await(connector.deleteReliefClaims(testContextWithNino, testClaimId).value)
+
+        result.isLeft mustBe true
+        result.merge mustBe a[GenericDownstreamError]
       }
     }
   }
