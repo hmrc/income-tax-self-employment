@@ -19,35 +19,24 @@ package connectors.HIP
 import cats.data.EitherT
 import config.AppConfig
 import models.common.{JourneyContextWithNino, Nino, TaxYear}
-import models.connector.{ApiResponse, HipApiName, createCommonErrorParser}
-import jakarta.inject.{Inject, Singleton}
-import models.common.{JourneyContextWithNino, Nino}
 import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBodyHip}
 import models.connector.{ApiResponse, HipApiName, ReliefClaimType, createCommonErrorParser}
-import models.common.TaxYear
-import models.connector.{ApiResponse, HipApiName, createCommonErrorParser}
 import models.domain.ApiResultT
 import play.api.Logging
-import play.api.http.Status.OK
-import play.api.libs.json.Json
 import play.api.http.Status._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
-import play.api.http.Status.{BAD_GATEWAY, BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NOT_IMPLEMENTED, NO_CONTENT, SERVICE_UNAVAILABLE, UNAUTHORIZED, UNPROCESSABLE_ENTITY}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.client.HttpClientV2
-import utils.{IdGenerator, Logging}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, StringContextOps}
+import utils.IdGenerator
 
-import java.net.URI
+import java.net.{URI, URL}
 import javax.inject.{Inject, Singleton}
-import java.net.URL
-import java.net.URI
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class HipReliefClaimsConnector @Inject()(httpClientV2: HttpClientV2,
+class HipReliefClaimsConnector @Inject ()(httpClientV2: HttpClientV2,
                                          idGenerator: IdGenerator,
-                                         appConfig: AppConfig)
+                                         appConfig: AppConfig)(implicit ec: ExecutionContext)
   extends Logging {
 
   val getUrl: Nino => URL = (nino) => url"${appConfig.hipBaseUrl}/itsd/income-sources/claims-for-relief/$nino"
@@ -67,7 +56,6 @@ class HipReliefClaimsConnector @Inject()(httpClientV2: HttpClientV2,
                 claimId => Right(claimId)
               )
           case _ =>
-            logger.error(s"HIP POST Create Claim for Relief returned unexpected status '${response.status}'")
             Left(createCommonErrorParser(method, url, response).handleDownstreamError(response))
         }
       }
@@ -102,7 +90,7 @@ class HipReliefClaimsConnector @Inject()(httpClientV2: HttpClientV2,
     "correlationid" -> idGenerator.generateCorrelationId()
   )
 
-  def deleteReliefClaims(ctx: JourneyContextWithNino, claimId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
+  def deleteReliefClaim(ctx: JourneyContextWithNino, claimId: String)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
 
     val url: URI                             = deleteReliefClaimsUrl(ctx.nino, claimId, ctx.taxYear)
     val enrichedHeaderCarrier: HeaderCarrier = appConfig.mkMetadata(HipApiName.Api1509, url.toString).enrichedHeaderCarrier

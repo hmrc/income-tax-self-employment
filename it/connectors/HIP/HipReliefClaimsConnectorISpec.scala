@@ -17,19 +17,15 @@
 package connectors.HIP
 
 import base.IntegrationBaseSpec
-import com.github.tomakehurst.wiremock.client.WireMock.{postRequestedFor, urlEqualTo, verify}
-import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.client.WireMock._
 import connectors.data.Api1505Test
+import com.github.tomakehurst.wiremock.http.HttpHeader
 import models.common.JourneyContextWithNino
-import models.connector.ReliefClaimType
-import models.connector.api_1505.ClaimId
 import models.connector.ReliefClaimType
 import models.connector.api_1505.ClaimId
 import models.error.DownstreamError.GenericDownstreamError
 import models.error.ServiceError
 import play.api.http.Status._
-import play.api.libs.json.{JsObject, Json}
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.await
 import testdata.CommonTestData
@@ -95,6 +91,7 @@ class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestD
         }
       }
     }
+  }
 
   "deleteReliefClaim" should {
 
@@ -108,7 +105,7 @@ class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestD
         requestHeaders = additionalHeader
       )
 
-      val result = await(connector.deleteReliefClaims(testContextWithNino, testClaimId).value)
+      val result = await(connector.deleteReliefClaim(testContextWithNino, testClaimId).value)
 
       result mustBe Right(())
 
@@ -132,7 +129,7 @@ class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestD
           requestHeaders = additionalHeader
         )
 
-        val result = await(connector.deleteReliefClaims(testContextWithNino, testClaimId).value)
+        val result = await(connector.deleteReliefClaim(testContextWithNino, testClaimId).value)
 
         result.isLeft mustBe true
         result.merge mustBe a[GenericDownstreamError]

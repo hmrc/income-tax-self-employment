@@ -22,9 +22,7 @@ import connectors.HIP.HipReliefClaimsConnector
 import models.common.JourneyContextWithNino
 import models.connector.ReliefClaimType
 import models.connector.api_1505.ClaimId
-import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
-import models.error.ServiceError
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar.eqTo
@@ -33,14 +31,16 @@ import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
 import uk.gov.hmrc.http.HeaderCarrier
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object MockHipReliefClaimsConnector {
 
   val mockInstance: HipReliefClaimsConnector = mock[HipReliefClaimsConnector]
 
-  def deleteReliefClaims(ctx: JourneyContextWithNino, claimId: String)(returnValue: ClaimId): ScalaOngoingStubbing[ApiResultT[Unit]] =
-    when(mockInstance.deleteReliefClaims(ArgumentMatchers.eq(ctx), ArgumentMatchers.eq(claimId))(any(), any())).thenReturn(EitherT.pure(returnValue))
+  def deleteReliefClaim(ctx: JourneyContextWithNino, claimId: String): ScalaOngoingStubbing[ApiResultT[Unit]] =
+    when(mockInstance.deleteReliefClaim(eqTo(ctx), eqTo(claimId))(any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(EitherT.pure(()))
 
   def createReliefClaim(ctx: JourneyContextWithNino, answer: ReliefClaimType)(returnValue: ClaimId): ScalaOngoingStubbing[ApiResultT[ClaimId]] =
     when(mockInstance.createReliefClaim(ArgumentMatchers.eq(ctx), ArgumentMatchers.eq(answer))(any())).thenReturn(EitherT.pure(returnValue))
