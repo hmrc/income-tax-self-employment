@@ -68,7 +68,6 @@ trait IFSConnector {
 
 object IFSConnector {
   type Api1505Response = ApiResponse[api_1505.ClaimId]
-  type Api1508Response = ApiResponse[api_1508.GetLossClaimSuccessResponse]
   type Api1638Response = ApiResponse[Unit]
   type Api1639Response = ApiResponseOption[SuccessResponseAPI1639]
   type Api1786Response = ApiResponse[api_1786.SuccessResponseSchema]
