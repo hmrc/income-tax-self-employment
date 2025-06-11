@@ -20,14 +20,12 @@ import builders.BusinessDataBuilder.citizenDetailsDateOfBirth
 import cats.data.EitherT
 import cats.implicits.{catsSyntaxEitherId, catsSyntaxOptionId}
 import connectors.IFS.IFSConnector
-import IFSConnector._
+import connectors.IFS.IFSConnector._
 import models.common.{BusinessId, JourneyContextWithNino}
-import models.connector.ReliefClaimType.CF
 import models.connector._
 import models.connector.api_1171.BusinessDataDetailsTestData
 import models.connector.api_1500.LossType
 import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBody}
-import models.connector.api_1508.GetLossClaimSuccessResponse
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1786.{DeductionsType, SelfEmploymentDeductionsDetailTypePosNeg}
@@ -64,8 +62,7 @@ case class StubIFSConnector(
     getAnnualSummariesResultTest2: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
     getAnnualSummariesResultTest3: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
     getAnnualSummariesResultTest4: Either[DownstreamError, api_1803.SuccessResponseSchema] = Right(api1803SuccessResponse),
-    createLossClaimResult: Either[DownstreamError, ClaimId] = Right(api1505SuccessResponse),
-    getLossClaimResult: Either[DownstreamError, GetLossClaimSuccessResponse] = Right(api1508SuccessResponse)
+    createLossClaimResult: Either[DownstreamError, ClaimId] = Right(api1505SuccessResponse)
 ) extends IFSConnector {
   var amendSEPeriodSummaryResultData: Option[AmendSEPeriodSummaryRequestData]                    = None
   var upsertDisclosuresSubmissionData: Option[RequestSchemaAPI1638]                              = None
@@ -146,11 +143,6 @@ case class StubIFSConnector(
   def createLossClaim(ctx: JourneyContextWithNino, requestBody: CreateLossClaimRequestBody)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): ApiResultT[ClaimId] = EitherT.fromEither[Future](createLossClaimResult)
-
-  def getLossClaim(ctx: JourneyContextWithNino, claimId: String)(implicit
-      hc: HeaderCarrier,
-      ec: ExecutionContext): ApiResultT[GetLossClaimSuccessResponse] = EitherT.fromEither[Future](getLossClaimResult)
-
 }
 
 object StubIFSConnector {
@@ -259,13 +251,6 @@ object StubIFSConnector {
   val api1505SuccessResponse: api_1505.ClaimId =
     api_1505.ClaimId("1234568790ABCDE")
 
-  val api1508SuccessResponse: api_1508.GetLossClaimSuccessResponse =
-    api_1508.GetLossClaimSuccessResponse(
-      incomeSourceId = "012345678912345",
-      reliefClaimed = CF,
-      claimId = models.connector.ClaimId("AAZZ1234567890A"),
-      sequence = Option(2),
-      submissionDate = testDateTime)
   val api1870EmptyResponse: api_1870.SuccessResponseSchema = api_1870.SuccessResponseSchema(List.empty)
   val api2085EmptyResponse: api_2085.ListOfIncomeSources   = api_2085.ListOfIncomeSources(List.empty)
   val api1870SuccessResponse: api_1870.SuccessResponseSchema = api_1870.SuccessResponseSchema(
