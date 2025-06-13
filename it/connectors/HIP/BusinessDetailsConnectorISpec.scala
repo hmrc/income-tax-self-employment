@@ -17,12 +17,13 @@
 package connectors.HIP
 
 import base.IntegrationBaseSpec
+import com.github.tomakehurst.wiremock.client.WireMock.{equalTo, getRequestedFor, urlEqualTo, verify => wireMockVerfiy}
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import connectors.data.Api1171Test
 import models.connector.businessDetailsConnector.BusinessDetailsHipSuccessWrapper
 import models.error.DownstreamError.GenericDownstreamError
 import models.error.ServiceError
-import org.mockito.MockitoSugar
+import play.api.http.HeaderNames
 import play.api.http.Status._
 import play.api.test.Helpers.await
 import testdata.CommonTestData
@@ -30,7 +31,7 @@ import utils.{MockIdGenerator, MockTimeMachine}
 
 import java.time.OffsetDateTime
 
-class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestData with MockitoSugar with MockTimeMachine with MockIdGenerator {
+class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestData with MockTimeMachine with MockIdGenerator {
 
   val fixedTime: OffsetDateTime = OffsetDateTime.parse("2025-04-30T15:00:00+01:00")
   mockNow(fixedTime)
@@ -69,6 +70,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
         await(connector.getBusinessDetails(Some(testBusinessId), testMtdItId, testNino).value)
 
       result mustBe Right(Some(api1171HipResponse))
+      wireMockVerfiy(1, getRequestedFor(urlEqualTo(api1171Url.replace("\\",""))).withHeader(HeaderNames.AUTHORIZATION, equalTo("Bearer secret")))
     }
 
     "Return Right when the API returns 404 NOT FOUND" in {
