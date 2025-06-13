@@ -79,4 +79,6 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
 
   def hipMigration1505Enabled: Boolean = servicesConfig.getBoolean("feature-switch.hip-migration-1505-enabled")
 
+  def hipMigration1509Enabled: Boolean = servicesConfig.getBoolean("feature-switch.hip-migration-1509-enabled")
+
 }

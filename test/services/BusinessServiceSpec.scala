@@ -19,12 +19,13 @@ package services
 import builders.BusinessDataBuilder._
 import cats.implicits.catsSyntaxEitherId
 import config.AppConfig
-import mocks.connectors.{MockBusinessDetailsConnector, MockIFSBusinessDetailsConnector, MockIFSConnector}
+import data.CommonTestData
 import mocks.connectors.{MockBusinessDetailsConnector, MockIFSBusinessDetailsConnector, MockIFSConnector, MockIncomeSourcesConnector}
-import models.common.{BusinessId, Mtditid, Nino}
+import models.common.BusinessId
 import models.connector.api_1171._
 import models.connector.api_1786.{FinancialsType, IncomeTypeTestData}
 import models.connector.api_1803
+import models.connector.businessDetailsConnector.{BusinessDetailsSuccessResponseSchema, ResponseType}
 import models.domain.BusinessTestData
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.ServiceError.BusinessNotFoundError
@@ -39,9 +40,6 @@ import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers.await
 import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
 import stubs.connectors.StubMDTPConnector
-import data.CommonTestData
-import models.common.BusinessId
-import models.connector.businessDetailsConnector.{BusinessDetailsSuccessResponseSchema, ResponseType}
 import utils.BaseSpec._
 
 import scala.concurrent.ExecutionContext.Implicits.global

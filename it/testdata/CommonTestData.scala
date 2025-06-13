@@ -4,11 +4,13 @@ package testdata
 import models.common._
 import models.connector.businessDetailsConnector.{BusinessDataDetails, BusinessDetailsHipSuccessWrapper, BusinessDetailsSuccessResponseSchema, ResponseType}
 import models.connector.api_2085.{IncomeSource, ListOfIncomeSources}
+import utils.BaseSpec.taxYear
 
 import java.time.LocalDate
 
 trait CommonTestData extends IntegrationTimeData {
 
+  val testTaxYear2425: String = TaxYear.asTys(taxYear)
   val testTaxYear2024: TaxYear    = TaxYear(2024)
   val testTaxYear2025: TaxYear    = TaxYear(2025)
   val testMtdItId: Mtditid        = Mtditid("555555555")
@@ -22,7 +24,7 @@ trait CommonTestData extends IntegrationTimeData {
   val testTaxYear: TaxYear  = TaxYear(2024)
   val testAuthToken: String = "Bearer 123"
   val testApiToken          = "testToken"
-  val testCorrelationId = "X-123"
+  val testCorrelationId     = "X-123"
 
   val testContextWithNino: JourneyContextWithNino = JourneyContextWithNino(testTaxYear2024, testBusinessId, testMtdItId, testNino)
 

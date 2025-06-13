@@ -61,6 +61,7 @@ object HipApiName extends Enum[HipApiName] {
   val values: IndexedSeq[HipApiName] = IndexedSeq[HipApiName]()
 
   final case object Api1504 extends HipApiName("1504")
+  final case object Api1509 extends HipApiName("1509")
   final case object Api1505 extends HipApiName("1505")
   final case object Api1171 extends HipApiName("1171")
   final case object Api5190 extends HipApiName("5190")
