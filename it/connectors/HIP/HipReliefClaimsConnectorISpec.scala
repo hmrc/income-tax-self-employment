@@ -46,7 +46,7 @@ class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestD
   "createReliefClaim" should {
 
     "call HIP API 1505 once to create a relief claim for 1 checkbox" in new Api1505Test {
-      val expectedResponse = ClaimId(claimId = testClaimId)
+      val expectedResponse: ClaimId = ClaimId(claimId = testClaimId)
 
       stubPostWithRequestAndResponseBody(
         url = api1505Url,
