@@ -25,7 +25,7 @@ import models.domain.ApiResultT
 import models.error.DownstreamError
 import play.api.http.Status._
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, HttpReads, HttpResponse}
 import utils.{IdGenerator, Logging, TimeMachine}
 
 import java.net.URI
@@ -47,14 +47,14 @@ class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig:
     new URI(s"$baseUrl?$queryParams")
   }
 
-  private def additionalHeaders: Seq[(String, String)] = Seq(
+  private def additionalHeaders(authToken : Seq[(String, String)]): Seq[(String, String)] = Seq(
     "correlationid"         -> idGenerator.generateCorrelationId(),
     "X-Message-Type"        -> "TaxpayerDisplay",
     "X-Originating-System"  -> "MDTP",
     "X-Receipt-Date"        -> timeMachine.now.toString,
     "X-Regime-Type"         -> "ITSA",
     "X-Transmitting-System" -> "HIP"
-  )
+  ) ++ authToken
 
   def getBusinessDetails(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier,
@@ -84,7 +84,7 @@ class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig:
     EitherT {
       httpClientV2
         .get(url.toURL)(enrichedHeaderCarrier)
-        .transform(_.addHttpHeaders(additionalHeaders : _*))
+        .setHeader(additionalHeaders(enrichedHeaderCarrier.headers(Seq(HeaderNames.authorisation))): _*)
         .execute
     }
   }
