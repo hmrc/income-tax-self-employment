@@ -83,7 +83,7 @@ class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig:
 
     EitherT {
       httpClientV2
-        .get(url.toURL)(enrichedHeaderCarrier)
+        .get(url.toURL)
         .setHeader(additionalHeaders(enrichedHeaderCarrier.headers(Seq(HeaderNames.authorisation))): _*)
         .execute
     }
