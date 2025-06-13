@@ -76,7 +76,7 @@ class IncomeSourcesConnector @Inject()(httpClientV2: HttpClientV2,
     EitherT {
       httpClientV2
         .get(getUrl(nino))(enrichedHeaderCarrier)
-        .setHeader(additionalHeaders: _*)
+        .transform(_.addHttpHeaders(additionalHeaders : _*))
         .execute
     }
   }
