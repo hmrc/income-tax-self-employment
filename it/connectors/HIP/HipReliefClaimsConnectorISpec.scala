@@ -18,10 +18,12 @@ package connectors.HIP
 
 import base.IntegrationBaseSpec
 import com.github.tomakehurst.wiremock.client.WireMock._
+import connectors.data.Api1505Test
 import models.common.JourneyContextWithNino
 import models.connector.ReliefClaimType
 import models.connector.api_1505.ClaimId
 import models.error.DownstreamError.GenericDownstreamError
+import models.error.ServiceError
 import play.api.http.Status._
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.await
@@ -36,16 +38,17 @@ class HipReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestD
 
   "createReliefClaim" should {
 
-    "call HIP API 1505 once to create a relief claim for 1 checkbox" in {
+    "call HIP API 1505 once to create a relief claim for 1 checkbox" in new Api1505Test {
       val expectedResponse = ClaimId(claimId = testClaimId)
 
-      stubPostWithResponseBody(
+      stubPostWithRequestAndResponseBody(
         url = api1505Url,
+        requestBody = hipRequestBody,
         expectedStatus = OK,
         expectedResponse = Json.stringify(Json.toJson(expectedResponse))
       )
 
-      val result = await(connector.createReliefClaim(testContextWithNino, ReliefClaimType.CF).value)
+      val result: Either[ServiceError, ClaimId] = await(connector.createReliefClaim(testContextWithNino, ReliefClaimType.CF).value)
       result mustBe Right(expectedResponse)
 
       verify(1, postRequestedFor(urlEqualTo(api1505Url)))

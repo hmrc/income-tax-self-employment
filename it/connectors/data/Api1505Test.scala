@@ -16,7 +16,7 @@
 
 package connectors.data
 
-import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBody}
+import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBody, CreateLossClaimRequestBodyHip}
 import play.api.libs.json.Json
 import testdata.CommonTestData
 
@@ -36,6 +36,12 @@ trait Api1505Test extends CommonTestData {
     incomeSourceId = "012345678912345",
     reliefClaimed = "CF",
     taxYear = "2020"
+  )
+
+  val hipRequestBody: CreateLossClaimRequestBodyHip = CreateLossClaimRequestBodyHip(
+    incomeSourceId = "SJPR05893938418",
+    reliefClaimed = "CF",
+    taxYearClaimedFor = 2024
   )
 
   val badRequestResponseRaw: String =
