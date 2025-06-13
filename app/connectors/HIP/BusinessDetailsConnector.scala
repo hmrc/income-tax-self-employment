@@ -48,13 +48,14 @@ class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig:
   }
 
   private def additionalHeaders(authToken : Seq[(String, String)]): Seq[(String, String)] = Seq(
+    HeaderNames.authorisation -> "Basic NThlYTdjMTQtNDZiMC00MGMyLTk0YTEtOTM1YmY0MjU1YTZhOnhjVE43aUVjUWIycjVWaXBjMU1kbldPME8zMFAwRFlh",
     "correlationid"         -> idGenerator.generateCorrelationId(),
     "X-Message-Type"        -> "TaxpayerDisplay",
     "X-Originating-System"  -> "MDTP",
     "X-Receipt-Date"        -> timeMachine.now.toString,
     "X-Regime-Type"         -> "ITSA",
     "X-Transmitting-System" -> "HIP"
-  ) ++ authToken
+  )
 
   def getBusinessDetails(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier,
