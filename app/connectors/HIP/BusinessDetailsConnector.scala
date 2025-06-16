@@ -47,8 +47,7 @@ class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig:
     new URI(s"$baseUrl?$queryParams")
   }
 
-  private def additionalHeaders(authToken : Seq[(String, String)]): Seq[(String, String)] = Seq(
-    HeaderNames.authorisation -> "Basic MzNmYWUyY2ItNjQ4MC00MmI1LTkxODktNDU0ZGUxZDdmMDc4OnQxWXVlekdGVWhoVVRpbVlUOUJlQ3VycWFNVUtvTW54",
+  private def additionalHeaders: Seq[(String, String)] = Seq(
     "correlationid"         -> idGenerator.generateCorrelationId(),
     "X-Message-Type"        -> "TaxpayerDisplay",
     "X-Originating-System"  -> "MDTP",
@@ -84,8 +83,8 @@ class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig:
 
     EitherT {
       httpClientV2
-        .get(url.toURL)
-        .setHeader(additionalHeaders(enrichedHeaderCarrier.headers(Seq(HeaderNames.authorisation))): _*)
+        .get(url.toURL)(enrichedHeaderCarrier)
+        .transform(_.addHttpHeaders(additionalHeaders : _*))
         .execute
     }
   }

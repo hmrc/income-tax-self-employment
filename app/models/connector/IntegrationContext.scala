@@ -16,10 +16,13 @@
 
 package models.connector
 
+import com.google.common.base.Charsets
 import config.AppConfig
 import connectors.ApiConnector
 import uk.gov.hmrc.http.HeaderCarrier.Config
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
+
+import java.util.Base64
 
 sealed trait IntegrationContext {
   val url: String
@@ -37,7 +40,9 @@ object IntegrationContext {
           val updatedHeader = headerCarrier.copy(authorization = Option(Authorization(s"Bearer ${appConfig.ifsAuthorisationToken(api.entryName)}")))
           (updatedHeader, List("Environment" -> appConfig.ifsEnvironment))
         case _: HipApiName =>
-          val updatedHeader = headerCarrier.copy(authorization = Option(Authorization(s"Bearer ${appConfig.hipAuthorisationToken(api.entryName)}")))
+          val encodedToken = Base64.getEncoder.encodeToString(s"${appConfig.clientId}:${appConfig.clientSecret}".getBytes(Charsets.UTF_8))
+
+          val updatedHeader = headerCarrier.copy(authorization = Option(Authorization(s"Bearer $encodedToken")))
           (updatedHeader, List("Environment" -> appConfig.hipEnvironment))
         case _: MDTPApiName => // We don't need bearer for MDTP services
           (headerCarrier, Nil)
