@@ -16,6 +16,7 @@
 
 package services.journeyAnswers
 
+import config.AppConfig
 import data.CommonTestData
 import mocks.connectors.{MockHipReliefClaimsConnector, MockReliefClaimsConnector}
 import models.common.JourneyName.ProfitOrLoss
@@ -27,14 +28,13 @@ import models.error.ServiceError
 import models.frontend.adjustments._
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.times
-import org.mockito.MockitoSugar.{mock, reset, verify}
+import org.mockito.MockitoSugar.{mock, reset, verify, when}
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.EitherTTestOps.whenReady
-import config.AppConfig
 
 import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -43,16 +43,22 @@ import scala.concurrent.Future
 class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonTestData with BeforeAndAfterEach {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
+  val mockAppConfig: AppConfig   = mock[AppConfig]
 
   override def afterEach(): Unit = {
     super.afterEach()
     reset(MockReliefClaimsConnector.mockInstance)
+    reset(MockHipReliefClaimsConnector.mockInstance)
+    reset(mockAppConfig)
   }
 
   trait ReliefClaimsServiceTestSetup {
 
-    val mockAppConfig: AppConfig = mock[AppConfig]
-    val service: ReliefClaimsService = new ReliefClaimsService(MockReliefClaimsConnector.mockInstance, MockHipReliefClaimsConnector.mockInstance, mockAppConfig)
+    val service: ReliefClaimsService = new ReliefClaimsService(
+      MockReliefClaimsConnector.mockInstance,
+      MockHipReliefClaimsConnector.mockInstance,
+      mockAppConfig
+    )
 
     val ctxNoNino2025: JourneyContext = testContextCurrentYear.toJourneyContext(ProfitOrLoss)
     val ctxNoNino2024: JourneyContext = testContextPrevYear.toJourneyContext(ProfitOrLoss)
@@ -206,6 +212,30 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
       verify(MockReliefClaimsConnector.mockInstance, times(1)).createReliefClaim(any(), any())(any())
     }
 
+    "Make a single delete call if the user un-checks one answer when hip enabled" in new ReliefClaimsServiceTestSetup {
+      val newAnswers: Seq[WhatDoYouWantToDoWithLoss] = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
+
+      when(mockAppConfig.hipMigration1509Enabled).thenReturn(true)
+      when(mockAppConfig.hipMigration1505Enabled).thenReturn(true)
+
+      MockHipReliefClaimsConnector.deleteReliefClaim(testContextCurrentYear, seClaimId2.claimId)
+      MockHipReliefClaimsConnector.createReliefClaim(testContextCurrentYear, seClaim1.reliefClaimed)(seClaimId1)
+
+      val result: Future[Either[ServiceError, UpdateReliefClaimsResponse]] =
+        service.updateReliefClaims(testContextCurrentYear, claims, newAnswers).value
+
+      whenReady(result) { res =>
+        res shouldBe Right(
+          UpdateReliefClaimsResponse(
+            created = List(WhatDoYouWantToDoWithLoss.CarryItForward),
+            deleted = List(WhatDoYouWantToDoWithLoss.DeductFromOtherTypes)
+          ))
+      }
+
+      verify(MockHipReliefClaimsConnector.mockInstance, times(1)).deleteReliefClaim(any(), any())(any(), any())
+      verify(MockHipReliefClaimsConnector.mockInstance, times(1)).createReliefClaim(any(), any())(any())
+    }
+
     "Make two create calls if the user checks both answers" in new ReliefClaimsServiceTestSetup {
       val newAnswers: Seq[WhatDoYouWantToDoWithLoss] = Seq(WhatDoYouWantToDoWithLoss.CarryItForward, WhatDoYouWantToDoWithLoss.DeductFromOtherTypes)
 
@@ -244,6 +274,44 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
       }
 
       verify(MockReliefClaimsConnector.mockInstance, times(2)).createReliefClaim(any(), any())(any())
+    }
+  }
+
+  "delete relief claims" should {
+    "return success when claims list is empty" in new ReliefClaimsServiceTestSetup {
+      when(mockAppConfig.hipMigration1509Enabled).thenReturn(true)
+
+      override val claims: List[ReliefClaim] = List(seClaim1).empty
+
+      MockReliefClaimsConnector.deleteReliefClaim(testContextCurrentYear, seClaimId1.claimId)
+
+      val result: Either[ServiceError, Unit] = await(service.deleteReliefClaims(testContextCurrentYear, claims).value)
+
+      result shouldBe Right(())
+    }
+
+    "return success via ifs connector when hipMigration1509Enable is disabled" in new ReliefClaimsServiceTestSetup {
+      when(mockAppConfig.hipMigration1509Enabled).thenReturn(false)
+
+      override val claims: List[ReliefClaim] = List(seClaim1)
+
+      MockReliefClaimsConnector.deleteReliefClaim(testContextCurrentYear, seClaimId1.claimId)
+
+      val result: Either[ServiceError, Unit] = await(service.deleteReliefClaims(testContextCurrentYear, claims).value)
+
+      result shouldBe Right(())
+    }
+
+    "return success via hip connector when hipMigration1509Enable is true" in new ReliefClaimsServiceTestSetup {
+      override val claims: List[ReliefClaim] = List(seClaim1)
+
+      when(mockAppConfig.hipMigration1509Enabled).thenReturn(true)
+
+      MockHipReliefClaimsConnector.deleteReliefClaim(testContextCurrentYear, seClaimId1.claimId)
+
+      val result: Either[ServiceError, Unit] = await(service.deleteReliefClaims(testContextCurrentYear, claims).value)
+
+      result shouldBe Right(())
     }
   }
 

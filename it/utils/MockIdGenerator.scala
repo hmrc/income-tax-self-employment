@@ -16,10 +16,11 @@
 
 package utils
 
-import org.mockito.MockitoSugar
+import org.mockito.MockitoSugar.when
 import org.mockito.stubbing.ScalaOngoingStubbing
+import org.scalatestplus.mockito.MockitoSugar.mock
 
-trait MockIdGenerator extends MockitoSugar {
+trait MockIdGenerator {
 
   val mockIdGenerator: IdGenerator = mock[IdGenerator]
 
