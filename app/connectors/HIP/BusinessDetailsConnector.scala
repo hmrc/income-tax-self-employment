@@ -47,14 +47,14 @@ class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig:
     new URI(s"$baseUrl?$queryParams")
   }
 
-  private def additionalHeaders(authToken : Seq[(String, String)]): Seq[(String, String)] = Seq(
+  private def additionalHeaders: Seq[(String, String)] = Seq(
     "correlationid"         -> idGenerator.generateCorrelationId(),
     "X-Message-Type"        -> "TaxpayerDisplay",
     "X-Originating-System"  -> "MDTP",
     "X-Receipt-Date"        -> timeMachine.now.toString,
     "X-Regime-Type"         -> "ITSA",
     "X-Transmitting-System" -> "HIP"
-  ) ++ authToken
+  )
 
   def getBusinessDetails(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)(implicit
       hc: HeaderCarrier,
@@ -81,14 +81,10 @@ class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig:
         }
     }
 
-    println("=========================================="+
-      s"Calling HIP BusinessDetails API with URL: $url and headers: ${enrichedHeaderCarrier.headers(Seq(HeaderNames.authorisation))}")
-    println("==============================6666============"+
-    additionalHeaders(enrichedHeaderCarrier.headers(Seq(HeaderNames.authorisation))))
     EitherT {
       httpClientV2
-        .get(url.toURL)
-        .setHeader(additionalHeaders(enrichedHeaderCarrier.headers(Seq(HeaderNames.authorisation))): _*)
+        .get(url.toURL)(enrichedHeaderCarrier)
+        .transform(_.addHttpHeaders(additionalHeaders : _*))
         .execute
     }
   }
