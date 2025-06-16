@@ -42,7 +42,7 @@ object IntegrationContext {
         case _: HipApiName =>
           val encodedToken = Base64.getEncoder.encodeToString(s"${appConfig.clientId}:${appConfig.clientSecret}".getBytes(Charsets.UTF_8))
 
-          val updatedHeader = headerCarrier.copy(authorization = Option(Authorization(s"Bearer $encodedToken")))
+          val updatedHeader = headerCarrier.copy(authorization = Option(Authorization(s"Basic $encodedToken")))
           (updatedHeader, List("Environment" -> appConfig.hipEnvironment))
         case _: MDTPApiName => // We don't need bearer for MDTP services
           (headerCarrier, Nil)
