@@ -70,7 +70,7 @@ class BusinessDetailsConnectorISpec extends IntegrationBaseSpec with CommonTestD
         await(connector.getBusinessDetails(Some(testBusinessId), testMtdItId, testNino).value)
 
       result mustBe Right(Some(api1171HipResponse))
-      wireMockVerfiy(1, getRequestedFor(urlEqualTo(api1171Url.replace("\\",""))).withHeader(HeaderNames.AUTHORIZATION, equalTo("Bearer secret")))
+      wireMockVerfiy(1, getRequestedFor(urlEqualTo(api1171Url.replace("\\",""))).withHeader(HeaderNames.AUTHORIZATION, equalTo("Basic c29tZUNsaWVudElkOnNvbWVDbGllbnRTZWNyZXQ=")))
     }
 
     "Return Right when the API returns 404 NOT FOUND" in {

@@ -47,6 +47,8 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   // TODO This is not good. It means that the app will fail on missing config only on first request, not on bootstrap
   def ifsAuthorisationToken(api: String): String = config.get[String](s"microservice.services.integration-framework.authorisation-token.$api")
   def hipAuthorisationToken(api: String): String = config.get[String](s"microservice.services.hip-integration-framework.authorisation-token.$api")
+  def clientId: String = config.get[String](s"microservice.services.hip-integration-framework.clientId")
+  def clientSecret: String = config.get[String](s"microservice.services.hip-integration-framework.clientSecret")
 
   val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
 
