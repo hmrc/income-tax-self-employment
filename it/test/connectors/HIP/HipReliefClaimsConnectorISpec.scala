@@ -18,8 +18,8 @@ package connectors.HIP
 
 import base.IntegrationBaseSpec
 import com.github.tomakehurst.wiremock.client.WireMock._
-import connectors.data.Api1505Test
 import com.github.tomakehurst.wiremock.http.HttpHeader
+import connectors.data.Api1505Test
 import models.common.JourneyContextWithNino
 import models.connector.ReliefClaimType
 import models.connector.api_1505.ClaimId

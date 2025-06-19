@@ -33,7 +33,7 @@ object AppDependencies {
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-30" % bootstrapVersion,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.19.0",
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.19.1",
     "org.typelevel"                %% "cats-core"                 % "2.13.0",
     "com.beachape"                 %% "enumeratum"                % "1.9.0",
     "com.beachape"                 %% "enumeratum-play-json"      % "1.9.0" excludeAll (jacksonAndPlayExclusions *),
@@ -46,12 +46,12 @@ object AppDependencies {
     "org.playframework"      %% "play-test"                % current,
     "org.scalatest"          %% "scalatest"                % "3.2.19",
     "org.scalatestplus"      %% "scalacheck-1-15"          % "3.2.11.0",
-    "org.mockito"            %% "mockito-scala-scalatest"  % "1.17.37",
-    "org.typelevel"          %% "cats-core"                % "2.12.0",
+    "org.mockito"            %% "mockito-scala-scalatest"  % "2.0.0",
+    "org.typelevel"          %% "cats-core"                % "2.13.0",
     "com.vladsch.flexmark"    % "flexmark-all"             % "0.64.8",
     "org.scalatestplus.play" %% "scalatestplus-play"       % "7.0.1",
     "com.github.tomakehurst"  % "wiremock-jre8-standalone" % "3.0.1",
-    "org.scalamock"          %% "scalamock"                % "6.0.0"
-  ).map(_ % s"$Test, $IntegrationTest")
+    "org.scalamock"          %% "scalamock"                % "7.3.2"
+  ).map(_ % Test)
 
 }

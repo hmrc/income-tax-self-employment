@@ -20,7 +20,7 @@ import models.connector.api_1500.{CreateBroughtForwardLossRequestBody, LossType,
 import models.connector.api_1501._
 import play.api.libs.json.Json
 import testdata.CommonTestData
-import utils.BaseSpec.{nino, _}
+import utils.BaseSpec.{businessId, nino, _}
 
 trait Api1501UpdateYearTest extends CommonTestData {
 
