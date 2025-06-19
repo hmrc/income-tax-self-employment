@@ -24,18 +24,18 @@ import utils.BaseSpec.{businessId, nino, _}
 
 trait Api1501UpdateYearTest extends CommonTestData {
 
-  val taxYearStr          = testTaxYear.toYYYY_YY
+  val taxYearStr: String = testTaxYear.toYYYY_YY
   val downstreamCreateUrl = s"/individuals/losses/$testNino/brought-forward-losses/$taxYearStr"
   val downstreamDeleteUrl = s"/individuals/losses/$testNino/brought-forward-losses/$businessId"
 
-  val requestBody = CreateBroughtForwardLossRequestBody(
+  val requestBody: CreateBroughtForwardLossRequestBody = CreateBroughtForwardLossRequestBody(
     businessId = testBusinessId.value,
     typeOfLoss = LossType.SelfEmployment,
     lossAmount = BigDecimal(250),
     taxYearBroughtForwardFrom = "2023-24"
   )
 
-  val data = UpdateBroughtForwardLossYear(
+  val data: UpdateBroughtForwardLossYear = UpdateBroughtForwardLossYear(
     nino = nino,
     lossId = testBusinessId.value,
     taxYear = taxYear,
@@ -48,5 +48,5 @@ trait Api1501UpdateYearTest extends CommonTestData {
        |}
        |""".stripMargin
 
-  val api1171Response = Json.parse(api1171ResponseJson).as[SuccessResponseSchema]
+  val api1171Response: SuccessResponseSchema = Json.parse(api1171ResponseJson).as[SuccessResponseSchema]
 }

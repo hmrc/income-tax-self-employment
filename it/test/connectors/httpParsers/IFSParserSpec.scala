@@ -30,7 +30,7 @@ class IFSParserSpec extends TestUtils {
 
   object FakeParser extends DownstreamParser {
     val parserName: String    = "TestParser"
-    val targetUrl             = downstreamApi
+    val targetUrl: String = downstreamApi
     val requestMethod: String = "GET"
     val responseStatus: Int   = 500
     val responseBody: String  = "error body"
@@ -42,7 +42,7 @@ class IFSParserSpec extends TestUtils {
 
   val svcUnavailJs    = s"""{"code":"SERVICE_UNAVAILABLE", "reason":"$serviceUnavailableReason", "errorType":"DOWNSTREAM_ERROR_CODE"}"""
   val svrErrJs        = s"""{"code":"SERVER_ERROR", "reason":"$serverErrorReason", "errorType":"DOWNSTREAM_ERROR_CODE"}"""
-  val multiErrJs      = s"""{"failures":[$svcUnavailJs, $svrErrJs], "reason":""}""".stripMargin
+  val multiErrJs: String = s"""{"failures":[$svcUnavailJs, $svrErrJs], "reason":""}""".stripMargin
   val nonValidatingJs = s"""{"code":"SERVER_ERROR", "reason":"$serverErrorReason", "errorType":"WRONG_ERROR_CODE"}"""
 
   def failureHttpResponse(json: JsValue): HttpResponse =

@@ -24,11 +24,11 @@ trait Api1501Test extends CommonTestData {
 
   val downstreamUrl = s"/individuals/losses/$testNino/brought-forward-losses/$testBusinessId/change-loss-amount"
 
-  val requestBody = UpdateBroughtForwardLossRequestBody(
+  val requestBody: UpdateBroughtForwardLossRequestBody = UpdateBroughtForwardLossRequestBody(
     lossAmount = BigDecimal(260)
   )
 
-  val data = UpdateBroughtForwardLossRequestData(
+  val data: UpdateBroughtForwardLossRequestData = UpdateBroughtForwardLossRequestData(
     nino = testNino,
     lossId = testBusinessId.value,
     body = requestBody
