@@ -25,6 +25,7 @@ import models.commonTaskList.{SectionTitle, TaskListSection, TaskListSectionItem
 import org.scalatest.Assertion
 import play.api.http.Status.OK
 import play.api.libs.json.{Format, JsLookupResult}
+import play.api.libs.ws.WSResponse
 import play.api.test.Helpers.await
 import testdata.CommonTestData
 
@@ -61,12 +62,12 @@ class TaskListControllerISpec extends IntegrationBaseSpec with CommonTestData wi
           expectedStatus = OK
         )
 
-        val res = await(buildClient(s"/$testTaxYear/tasks/$testNino").get)
+        val res: WSResponse = await(buildClient(s"/$testTaxYear/tasks/$testNino").get)
 
         res.status mustBe OK
 
         // Business 1 checks
-        val selfEmploymentSection = jsPath[TaskListSection](res.json \ "taskList" \ 0)
+        val selfEmploymentSection: Option[TaskListSection] = jsPath[TaskListSection](res.json \ "taskList" \ 0)
 
         selfEmploymentSection.get.is(
           SectionTitle.SelfEmploymentTitle() -> Map(
@@ -76,21 +77,21 @@ class TaskListControllerISpec extends IntegrationBaseSpec with CommonTestData wi
           )
         )
 
-        val expensesSection = jsPath[TaskListSection](res.json \ "taskList" \ 1)
+        val expensesSection: Option[TaskListSection] = jsPath[TaskListSection](res.json \ "taskList" \ 1)
         expensesSection.get.is(
           SectionTitle.ExpensesTitle() -> Map(
             ExpensesTailoring.entryName -> CannotStartYet()
           )
         )
 
-        val capitalAllowancesSection = jsPath[TaskListSection](res.json \ "taskList" \ 2)
+        val capitalAllowancesSection: Option[TaskListSection] = jsPath[TaskListSection](res.json \ "taskList" \ 2)
         capitalAllowancesSection.get.is(
           SectionTitle.CapitalAllowancesTitle() -> Map(
             CapitalAllowancesTailoring.entryName -> CannotStartYet()
           )
         )
 
-        val adjustmentsSection = jsPath[TaskListSection](res.json \ "taskList" \ 3)
+        val adjustmentsSection: Option[TaskListSection] = jsPath[TaskListSection](res.json \ "taskList" \ 3)
         adjustmentsSection.get.is(
           SectionTitle.AdjustmentsTitle() -> Map(
             ProfitOrLoss.entryName -> CannotStartYet()
@@ -98,7 +99,7 @@ class TaskListControllerISpec extends IntegrationBaseSpec with CommonTestData wi
         )
 
         // Business 2 checks
-        val selfEmploymentSection2 = jsPath[TaskListSection](res.json \ "taskList" \ 4)
+        val selfEmploymentSection2: Option[TaskListSection] = jsPath[TaskListSection](res.json \ "taskList" \ 4)
         selfEmploymentSection2.get.is(
           SectionTitle.SelfEmploymentTitle() -> Map(
             TradeDetails.entryName         -> NotStarted(),
@@ -107,21 +108,21 @@ class TaskListControllerISpec extends IntegrationBaseSpec with CommonTestData wi
           )
         )
 
-        val expensesSection2 = jsPath[TaskListSection](res.json \ "taskList" \ 5)
+        val expensesSection2: Option[TaskListSection] = jsPath[TaskListSection](res.json \ "taskList" \ 5)
         expensesSection2.get.is(
           SectionTitle.ExpensesTitle() -> Map(
             ExpensesTailoring.entryName -> CannotStartYet()
           )
         )
 
-        val capitalAllowancesSection2 = jsPath[TaskListSection](res.json \ "taskList" \ 6)
+        val capitalAllowancesSection2: Option[TaskListSection] = jsPath[TaskListSection](res.json \ "taskList" \ 6)
         capitalAllowancesSection2.get.is(
           SectionTitle.CapitalAllowancesTitle() -> Map(
             CapitalAllowancesTailoring.entryName -> CannotStartYet()
           )
         )
 
-        val adjustmentsSection2 = jsPath[TaskListSection](res.json \ "taskList" \ 7)
+        val adjustmentsSection2: Option[TaskListSection] = jsPath[TaskListSection](res.json \ "taskList" \ 7)
         adjustmentsSection2.get.is(
           SectionTitle.AdjustmentsTitle() -> Map(
             ProfitOrLoss.entryName -> CannotStartYet()

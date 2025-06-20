@@ -1,10 +1,5 @@
-import org.mongodb.scala.MongoCollection
-import org.mongodb.scala.model.Filters
-
-import scala.concurrent.{ExecutionContext, Future}
-
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +14,18 @@ import scala.concurrent.{ExecutionContext, Future}
  * limitations under the License.
  */
 
-package object repositories {
+package utils
 
-  def removeAll(collection: MongoCollection[_])(implicit ec: ExecutionContext): Future[Unit] =
-    collection
-      .deleteMany(Filters.empty())
-      .toFuture()
-      .map(_ => ())
+import org.mockito.MockitoSugar
+import org.mockito.stubbing.ScalaOngoingStubbing
+
+import java.time.temporal.ChronoUnit
+import java.time.{OffsetDateTime, ZonedDateTime}
+
+trait MockTimeMachine extends MockitoSugar {
+
+  val mockTimeMachine: TimeMachine = mock[TimeMachine]
+
+  def mockNow(setNow: OffsetDateTime): ScalaOngoingStubbing[ZonedDateTime] =
+    when(mockTimeMachine.now).thenReturn(setNow.toZonedDateTime.truncatedTo(ChronoUnit.SECONDS))
 }

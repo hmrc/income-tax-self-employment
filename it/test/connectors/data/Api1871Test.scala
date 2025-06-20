@@ -39,5 +39,5 @@ trait Api1871Test extends CommonTestData {
       |}
       |""".stripMargin
 
-  val api1871Response = Json.parse(api1871ResponseJson).as[BusinessIncomeSourcesSummaryResponse]
+  val api1871Response: BusinessIncomeSourcesSummaryResponse = Json.parse(api1871ResponseJson).as[BusinessIncomeSourcesSummaryResponse]
 }

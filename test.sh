@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-sbt scalastyle test it:test
+sbt scalastyle test it/test

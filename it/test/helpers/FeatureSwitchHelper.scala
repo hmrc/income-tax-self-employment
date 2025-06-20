@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package utils
+package helpers
 
-import org.mockito.MockitoSugar
-import org.mockito.stubbing.ScalaOngoingStubbing
+object FeatureSwitchHelper {
 
-import java.time.{OffsetDateTime, ZonedDateTime}
-import java.time.temporal.ChronoUnit
+  def enable(featureSwitch: String): Unit = System.setProperty(featureSwitch, "true")
 
-trait MockTimeMachine extends MockitoSugar {
+  def disable(featureSwitch: String): Unit = System.setProperty(featureSwitch, "false")
 
-  val mockTimeMachine: TimeMachine = mock[TimeMachine]
-
-  def mockNow(setNow: OffsetDateTime): ScalaOngoingStubbing[ZonedDateTime] =
-    when(mockTimeMachine.now).thenReturn(setNow.toZonedDateTime.truncatedTo(ChronoUnit.SECONDS))
 }

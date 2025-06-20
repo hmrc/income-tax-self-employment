@@ -15,6 +15,7 @@
  */
 
 import play.sbt.routes.RoutesKeys
+import uk.gov.hmrc.DefaultBuildSettings
 
 lazy val appName = "income-tax-self-employment"
 
@@ -50,19 +51,14 @@ lazy val microservice = Project(appName, file("."))
       "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"
     )
   )
-  .settings(inConfig(IntegrationTest)(itSettings): _*)
-  .settings(CodeCoverageSettings.settings: _*)
-  .configs(IntegrationTest extend Test)
+  .settings(CodeCoverageSettings.settings *)
 
 lazy val testSettings: Seq[Def.Setting[_]] = Seq(
   fork := true,
   unmanagedSourceDirectories += baseDirectory.value / "test-utils"
 )
 
-lazy val itSettings = Defaults.itSettings ++ Seq(
-  unmanagedSourceDirectories := Seq(
-    baseDirectory.value / "it"
-  ),
-  parallelExecution := false,
-  fork              := true
-)
+lazy val it = project.enablePlugins(PlayScala)
+  .dependsOn(microservice % "test->test") // the "test->test" allows reusing test code and test dependencies
+  .settings(DefaultBuildSettings.itSettings())
+  .settings(libraryDependencies ++= AppDependencies.test)

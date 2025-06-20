@@ -81,7 +81,7 @@ trait AuthStub {
         .willReturn(
           aResponse()
             .withStatus(OK)
-            .withBody(response + Json.obj("nino" -> "AA123123A").toString())
+            .withBody(s"$response ${Json.obj("nino" -> "AA123123A").toString()}")
             .withHeader("Content-Type", "application/json; charset=utf-8")
         ))
 

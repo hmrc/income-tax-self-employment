@@ -16,32 +16,37 @@
 
 package connectors.data
 
-import models.connector.api_1500._
+import models.connector.api_1500.{CreateBroughtForwardLossRequestBody, LossType, SuccessResponseSchema}
+import models.connector.api_1501._
 import play.api.libs.json.Json
 import testdata.CommonTestData
+import utils.BaseSpec.{businessId, nino, _}
 
-trait Api1500Test extends CommonTestData {
+trait Api1501UpdateYearTest extends CommonTestData {
+
   val taxYearStr: String = testTaxYear.toYYYY_YY
-  val downstreamUrl      = s"/individuals/losses/$testNino/brought-forward-losses/$taxYearStr"
+  val downstreamCreateUrl = s"/individuals/losses/$testNino/brought-forward-losses/$taxYearStr"
+  val downstreamDeleteUrl = s"/individuals/losses/$testNino/brought-forward-losses/$businessId"
 
   val requestBody: CreateBroughtForwardLossRequestBody = CreateBroughtForwardLossRequestBody(
-    businessId = "SJPR05893938418",
+    businessId = testBusinessId.value,
     typeOfLoss = LossType.SelfEmployment,
     lossAmount = BigDecimal(250),
     taxYearBroughtForwardFrom = "2023-24"
   )
 
-  val data: CreateBroughtForwardLossRequestData = CreateBroughtForwardLossRequestData(
-    nino = testNino,
-    taxYear = testTaxYear,
+  val data: UpdateBroughtForwardLossYear = UpdateBroughtForwardLossYear(
+    nino = nino,
+    lossId = testBusinessId.value,
+    taxYear = taxYear,
     body = requestBody
   )
 
-  val api1500ResponseJson: String =
+  val api1171ResponseJson: String =
     s"""{
-      |   "lossId": "1234568790ABCDE"
-      |}
-      |""".stripMargin
+       |   "lossId": "${testBusinessId.value}"
+       |}
+       |""".stripMargin
 
-  val api1500Response = Json.parse(api1500ResponseJson).as[SuccessResponseSchema]
+  val api1171Response: SuccessResponseSchema = Json.parse(api1171ResponseJson).as[SuccessResponseSchema]
 }

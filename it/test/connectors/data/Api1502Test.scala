@@ -40,5 +40,5 @@ trait Api1502Test extends CommonTestData {
       |}
       |""".stripMargin
 
-  val api1502Response = Json.parse(api1502ResponseJson).as[SuccessResponseSchema]
+  val api1502Response: SuccessResponseSchema = Json.parse(api1502ResponseJson).as[SuccessResponseSchema]
 }
