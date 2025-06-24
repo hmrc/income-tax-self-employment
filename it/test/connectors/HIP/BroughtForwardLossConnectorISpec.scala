@@ -22,10 +22,11 @@ import models.common.JourneyContextWithNino
 import models.error.DownstreamError.GenericDownstreamError
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status._
+import play.api.test.Helpers.await
 
 class BroughtForwardLossConnectorISpec extends IntegrationBaseSpec {
 
-  val connector                   = new BroughtForwardLossConnector(httpClient, appConfig)
+  val connector                   = new BroughtForwardLossConnector(httpClientV2, appConfig)
   val ctx: JourneyContextWithNino = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
 
   "deleteBroughtForwardLoss" must {
@@ -35,7 +36,7 @@ class BroughtForwardLossConnectorISpec extends IntegrationBaseSpec {
         expectedResponse = "",
         expectedStatus = NO_CONTENT
       )
-      connector.deleteBroughtForwardLoss(testNino, testTaxYear, testBusinessId.value).value.futureValue shouldBe Right(())
+      await(connector.deleteBroughtForwardLoss(testNino, testTaxYear, testBusinessId.value).value) shouldBe Right(())
     }
 
     Seq(
@@ -52,7 +53,7 @@ class BroughtForwardLossConnectorISpec extends IntegrationBaseSpec {
           expectedResponse = "",
           expectedStatus = status
         )
-        connector.deleteBroughtForwardLoss(testNino, testTaxYear, testBusinessId.value).value.futureValue shouldBe Left(
+        await(connector.deleteBroughtForwardLoss(testNino, testTaxYear, testBusinessId.value).value) shouldBe Left(
           GenericDownstreamError(
             status,
             s"Downstream error when calling DELETE http://localhost:11111$deleteBroughtForwardLossDownstreamUrl: status=$status, body:\n"))

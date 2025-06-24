@@ -84,7 +84,7 @@ class ReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestData
           expectedResponse = Json.stringify(response)
         )
 
-        val result = connector.getAllReliefClaims(testContextWithNino).value.futureValue
+        val result = await(connector.getAllReliefClaims(testContextWithNino).value)
 
         result mustBe Right(List(testBaseReliefClaim))
         result.map(_.head.isSelfEmploymentClaim) mustBe Right(true)
@@ -101,7 +101,7 @@ class ReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestData
         expectedResponse = Json.stringify(response)
       )
 
-      val result = connector.getAllReliefClaims(testContextWithNino).value.futureValue
+      val result = await(connector.getAllReliefClaims(testContextWithNino).value)
 
       result mustBe Right(expectedClaims)
 
@@ -117,7 +117,7 @@ class ReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestData
           expectedResponse = Json.stringify(response)
         )
 
-        val result = connector.getAllReliefClaims(testContextWithNino).value.futureValue
+        val result = await(connector.getAllReliefClaims(testContextWithNino).value)
 
         result mustBe Right(Nil)
       }
@@ -146,7 +146,7 @@ class ReliefClaimsConnectorISpec extends IntegrationBaseSpec with CommonTestData
             expectedResponse = Json.stringify(response)
           )
 
-          val result = connector.getAllReliefClaims(testContextWithNino).value.futureValue
+          val result = await(connector.getAllReliefClaims(testContextWithNino).value)
 
           result.isLeft mustBe true
           result.merge mustBe a[GenericDownstreamError]

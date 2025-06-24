@@ -27,7 +27,8 @@ import models.connector.api_1500.{CreateBroughtForwardLossRequestBody, CreateBro
 import models.connector.api_1501.{UpdateBroughtForwardLossRequestBody, UpdateBroughtForwardLossRequestData}
 import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
 import models.domain.ApiResultT
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import utils.Logging
 
 import javax.inject.{Inject, Singleton}
@@ -63,7 +64,7 @@ object IFSBusinessDetailsConnector {
 }
 
 @Singleton
-class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends IFSBusinessDetailsConnector with Logging {
+class IFSBusinessDetailsConnectorImpl @Inject() (http: HttpClientV2, appConfig: AppConfig) extends IFSBusinessDetailsConnector with Logging {
   private def api1171BusinessDetailsUrl(idType: IdType, idNumber: String) =
     s"${appConfig.ifsApi1171}/registration/business-details/$idType/$idNumber"
 

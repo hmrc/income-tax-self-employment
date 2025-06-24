@@ -25,10 +25,11 @@ import models.error.DownstreamError.GenericDownstreamError
 import models.error.ServiceError
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status._
+import play.api.test.Helpers.await
 
 class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
 
-  val connector                   = new IFSBusinessDetailsConnectorImpl(httpClient, appConfig)
+  val connector                   = new IFSBusinessDetailsConnectorImpl(httpClientV2, appConfig)
   val ctx: JourneyContextWithNino = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
 
   "getBusinesses" must {
@@ -50,7 +51,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1871ResponseJson,
         expectedStatus = OK
       )
-      connector.getBusinessIncomeSourcesSummary(testTaxYear, testNino, testBusinessId).value.futureValue shouldBe Right(api1871Response)
+      await(connector.getBusinessIncomeSourcesSummary(testTaxYear, testNino, testBusinessId).value) shouldBe Right(api1871Response)
     }
   }
 
@@ -62,7 +63,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1500ResponseJson,
         expectedStatus = OK
       )
-      connector.createBroughtForwardLoss(data).value.futureValue shouldBe api1500Response.asRight
+      await(connector.createBroughtForwardLoss(data).value) shouldBe api1500Response.asRight
     }
   }
 
@@ -74,7 +75,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1501ResponseJson,
         expectedStatus = OK
       )
-      connector.updateBroughtForwardLoss(data).value.futureValue shouldBe api1501Response.asRight
+      await(connector.updateBroughtForwardLoss(data).value) shouldBe api1501Response.asRight
     }
   }
 
@@ -85,7 +86,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1502ResponseJson,
         expectedStatus = OK
       )
-      connector.getBroughtForwardLoss(testNino, testBusinessId.value).value.futureValue shouldBe api1502Response.asRight
+      await(connector.getBroughtForwardLoss(testNino, testBusinessId.value).value) shouldBe api1502Response.asRight
     }
   }
 
@@ -96,7 +97,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1870ResponseJson,
         expectedStatus = OK
       )
-      connector.listBroughtForwardLosses(testNino, testTaxYear).value.futureValue shouldBe api1870Response.asRight
+      await(connector.listBroughtForwardLosses(testNino, testTaxYear).value) shouldBe api1870Response.asRight
     }
   }
 
@@ -108,7 +109,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = OK
       )
 
-      connector.getListOfIncomeSources(testTaxYear, testNino).value.futureValue shouldBe api2085Response.asRight
+      await(connector.getListOfIncomeSources(testTaxYear, testNino).value) shouldBe api2085Response.asRight
     }
 
     for (errorStatus <- Seq(BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, INTERNAL_SERVER_ERROR))
@@ -119,7 +120,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
           expectedStatus = errorStatus
         )
 
-        val result: Either[ServiceError, ListOfIncomeSources] = connector.getListOfIncomeSources(testTaxYear, testNino).value.futureValue
+        val result: Either[ServiceError, ListOfIncomeSources] = await(connector.getListOfIncomeSources(testTaxYear, testNino).value)
         result match {
           case Left(GenericDownstreamError(status, message)) =>
             status shouldBe errorStatus

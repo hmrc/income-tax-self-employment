@@ -35,9 +35,9 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class HipReliefClaimsConnector @Inject ()(httpClientV2: HttpClientV2,
-                                         idGenerator: IdGenerator,
-                                         appConfig: AppConfig)(implicit ec: ExecutionContext)
-  extends Logging {
+                                          idGenerator: IdGenerator,
+                                          appConfig: AppConfig)
+                                          (implicit ec: ExecutionContext) extends Logging {
 
   val getUrl: Nino => URL = (nino) => url"${appConfig.hipBaseUrl}/itsd/income-sources/claims-for-relief/$nino"
 
