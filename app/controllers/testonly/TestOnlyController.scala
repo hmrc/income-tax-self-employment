@@ -24,7 +24,8 @@ import models.connector.{ApiResponse, commonDeleteReads}
 import models.domain.ApiResultT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import repositories.JourneyAnswersRepository
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 import utils.Logging
 
@@ -33,7 +34,7 @@ import scala.concurrent.ExecutionContext
 
 /** Contains operations used only by tests and environment with stubs.
   */
-class TestOnlyController @Inject() (httpClient: HttpClient,
+class TestOnlyController @Inject() (httpClient: HttpClientV2,
                                     journeyAnswersRepository: JourneyAnswersRepository,
                                     cc: MessagesControllerComponents,
                                     appConfig: AppConfig)(implicit ec: ExecutionContext)
@@ -72,9 +73,9 @@ class TestOnlyController @Inject() (httpClient: HttpClient,
   }
 
   private def testClearIFSData(nino: String)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
-    val url                                          = s"${appConfig.ifsBaseUrl}/nino/$nino"
+    val url                                          = url"${appConfig.ifsBaseUrl}/nino/$nino"
     implicit val reads: HttpReads[ApiResponse[Unit]] = commonDeleteReads
-    val res                                          = httpClient.DELETE[ApiResponse[Unit]](url)(reads, hc, ec)
+    val res                                          = httpClient.delete(url).execute(reads, ec)
 
     EitherT(res)
   }

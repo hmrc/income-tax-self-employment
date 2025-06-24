@@ -33,8 +33,10 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class BusinessDetailsConnector @Inject() (httpClientV2: HttpClientV2, appConfig: AppConfig, timeMachine: TimeMachine, idGenerator: IdGenerator)
-    extends Logging {
+class BusinessDetailsConnector @Inject()(httpClientV2: HttpClientV2,
+                                         appConfig: AppConfig,
+                                         timeMachine: TimeMachine,
+                                         idGenerator: IdGenerator) extends Logging {
 
   private def getBusinessDetailsUrl(incomeSourceId: Option[BusinessId], mtdReference: Mtditid, nino: Nino): URI = {
     val baseUrl = s"${appConfig.hipBaseUrl}/etmp/RESTAdapter/itsa/taxpayer/business-details"

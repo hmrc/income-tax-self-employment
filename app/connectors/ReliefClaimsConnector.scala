@@ -20,16 +20,17 @@ import cats.data.EitherT
 import config.AppConfig
 import jakarta.inject.Inject
 import models.common._
-import models.connector.api_1505.{CreateLossClaimRequestBody, ClaimId}
-import models.connector.common.ReliefClaim
 import models.connector._
+import models.connector.api_1505.{ClaimId, CreateLossClaimRequestBody}
+import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.client.HttpClientV2
 import utils.Logging
 
 import scala.concurrent.ExecutionContext
 
-class ReliefClaimsConnector @Inject() (httpClient: HttpClient, appConfig: AppConfig)(implicit ec: ExecutionContext) extends Logging {
+class ReliefClaimsConnector @Inject()(httpClient: HttpClientV2, appConfig: AppConfig)(implicit ec: ExecutionContext) extends Logging {
 
   private val fulcrumTaxYear = 2025
 

@@ -31,7 +31,8 @@ import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, Amend
 import models.connector.api_1965.ListSEPeriodSummariesResponse
 import models.connector.{ApiResponse, _}
 import models.domain.ApiResultT
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import utils.Logging
 
 import javax.inject.{Inject, Singleton}
@@ -80,7 +81,7 @@ object IFSConnector {
 }
 
 @Singleton
-class IFSConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends IFSConnector with Logging {
+class IFSConnectorImpl @Inject() (http: HttpClientV2, appConfig: AppConfig) extends IFSConnector with Logging {
 
   private def baseUrl(nino: Nino, incomeSourceId: BusinessId, taxYear: TaxYear) =
     s"${appConfig.ifsBaseUrl}/income-tax/${asTys(taxYear)}/$nino/self-employments/$incomeSourceId"

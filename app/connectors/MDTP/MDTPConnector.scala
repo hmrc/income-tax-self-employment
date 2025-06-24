@@ -23,7 +23,8 @@ import connectors.get
 import models.common._
 import models.connector._
 import models.domain.ApiResultT
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import utils.Logging
 
 import javax.inject.{Inject, Singleton}
@@ -38,7 +39,7 @@ object MDTPConnector {
 }
 
 @Singleton
-class MDTPConnectorImpl @Inject() (http: HttpClient, appConfig: AppConfig) extends MDTPConnector with Logging {
+class MDTPConnectorImpl @Inject() (http: HttpClientV2, appConfig: AppConfig) extends MDTPConnector with Logging {
   private def citizenDetailsUrl(idType: IdType, idNumber: Nino) = s"${appConfig.citizenDetailsUrl}/citizen-details/$idType/$idNumber"
 
   def getCitizenDetails(nino: Nino)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[citizen_details.SuccessResponseSchema] = {

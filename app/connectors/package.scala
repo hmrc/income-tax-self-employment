@@ -15,36 +15,46 @@
  */
 
 import models.connector.IntegrationContext
-import play.api.libs.json.Writes
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import play.api.libs.json.{Json, Writes}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, StringContextOps}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 package object connectors {
 
-  def get[Resp: HttpReads](http: HttpClient, context: IntegrationContext)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Resp] = {
+  def get[Resp: HttpReads](http: HttpClientV2, context: IntegrationContext)
+                          (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Resp] = {
     val reads = implicitly[HttpReads[Resp]]
-    http.GET[Resp](context.url)(reads, context.enrichedHeaderCarrier, ec)
+
+    http.get(url"${context.url}")(context.enrichedHeaderCarrier).execute(reads, ec)
   }
 
-  def post[Req: Writes, Resp: HttpReads](http: HttpClient, context: IntegrationContext, body: Req)(implicit
+  def post[Req: Writes, Resp: HttpReads](http: HttpClientV2, context: IntegrationContext, body: Req)
+                                        (implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Resp] = {
+    val reads  = implicitly[HttpReads[Resp]]
+    val writes = implicitly[Writes[Req]]
+
+    http.post(url"${context.url}")(context.enrichedHeaderCarrier)
+      .withBody(Json.toJson(body)(writes))
+      .execute(reads, ec)
+  }
+
+  def put[Req: Writes, Resp: HttpReads](http: HttpClientV2, context: IntegrationContext, body: Req)(implicit
       hc: HeaderCarrier,
       ec: ExecutionContext): Future[Resp] = {
     val reads  = implicitly[HttpReads[Resp]]
     val writes = implicitly[Writes[Req]]
-    http.POST[Req, Resp](context.url, body)(writes, reads, context.enrichedHeaderCarrier, ec)
+
+    http.put(url"${context.url}")(context.enrichedHeaderCarrier)
+      .withBody(Json.toJson(body)(writes))
+      .execute(reads, ec)
   }
 
-  def put[Req: Writes, Resp: HttpReads](http: HttpClient, context: IntegrationContext, body: Req)(implicit
-      hc: HeaderCarrier,
-      ec: ExecutionContext): Future[Resp] = {
-    val reads  = implicitly[HttpReads[Resp]]
-    val writes = implicitly[Writes[Req]]
-    http.PUT[Req, Resp](context.url, body)(writes, reads, context.enrichedHeaderCarrier, ec)
-  }
-
-  def delete[Resp: HttpReads](http: HttpClient, context: IntegrationContext)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Resp] = {
+  def delete[Resp: HttpReads](http: HttpClientV2, context: IntegrationContext)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Resp] = {
     val reads = implicitly[HttpReads[Resp]]
-    http.DELETE[Resp](context.url)(reads, context.enrichedHeaderCarrier, ec)
+
+    http.delete(url"${context.url}")(context.enrichedHeaderCarrier)
+      .execute(reads, ec)
   }
 }

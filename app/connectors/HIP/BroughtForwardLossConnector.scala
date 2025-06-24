@@ -22,7 +22,8 @@ import connectors.delete
 import models.common._
 import models.connector._
 import models.domain.ApiResultT
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpReads}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpReads}
 import utils.Logging
 
 import javax.inject.{Inject, Singleton}
@@ -30,7 +31,7 @@ import scala.concurrent.ExecutionContext
 
 
 @Singleton
-class BroughtForwardLossConnector @Inject() (http: HttpClient, appConfig: AppConfig) extends Logging {
+class BroughtForwardLossConnector @Inject() (http: HttpClientV2, appConfig: AppConfig) extends Logging {
 
   private def deleteBroughtForwardLossUrl(nino: Nino, taxYear: TaxYear, lossId: String) =
     s"${appConfig.hipBaseUrl}/income-tax/v1/brought-forward-losses/$nino/${TaxYear.asTys(taxYear)}/$lossId"

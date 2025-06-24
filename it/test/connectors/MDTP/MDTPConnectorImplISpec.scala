@@ -21,9 +21,10 @@ import cats.implicits.catsSyntaxEitherId
 import connectors.data.CitizenDetailsTest
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status.OK
+import play.api.test.Helpers.await
 
 class MDTPConnectorImplISpec extends IntegrationBaseSpec {
-  val connector = new MDTPConnectorImpl(httpClient, appConfig)
+  val connector = new MDTPConnectorImpl(httpClientV2, appConfig)
 
   "getCitizenDetails" must {
     "return successful response" in new CitizenDetailsTest {
@@ -32,7 +33,7 @@ class MDTPConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1171ResponseJson,
         expectedStatus = OK
       )
-      connector.getCitizenDetails(testNino).value.futureValue shouldBe api1171Response.asRight
+      await(connector.getCitizenDetails(testNino).value) shouldBe api1171Response.asRight
     }
   }
 

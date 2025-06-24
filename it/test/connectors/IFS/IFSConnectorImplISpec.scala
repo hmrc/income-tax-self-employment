@@ -36,10 +36,11 @@ import org.scalatest.EitherValues._
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status._
 import play.api.libs.json.Json
+import play.api.test.Helpers.await
 
 class IFSConnectorImplISpec extends IntegrationBaseSpec {
 
-  val connector: IFSConnectorImpl = new IFSConnectorImpl(httpClient, appConfig)
+  val connector: IFSConnectorImpl = new IFSConnectorImpl(httpClientV2, appConfig)
   val ctx: JourneyContextWithNino = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdItId, testNino)
 
   "getPeriodicSummaryDetail" must {
@@ -49,7 +50,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1786ResponseJson,
         expectedStatus = OK
       )
-      connector.getPeriodicSummaryDetail(ctx).futureValue shouldBe api1786Response.asRight
+      await(connector.getPeriodicSummaryDetail(ctx)) shouldBe api1786Response.asRight
     }
   }
 
@@ -61,7 +62,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = OK)
 
-      connector.createAmendSEAnnualSubmission(data).futureValue shouldBe ().asRight
+      await(connector.createAmendSEAnnualSubmission(data)) shouldBe ().asRight
     }
   }
 
@@ -73,7 +74,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = OK
       )
 
-      connector.getAnnualSummaries(ctx).futureValue shouldBe api1171Response.asRight
+      await(connector.getAnnualSummaries(ctx)) shouldBe api1171Response.asRight
     }
 
     "return an empty annual summary if not found" in new Api1803Test {
@@ -83,7 +84,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = NOT_FOUND
       )
 
-      connector.getAnnualSummaries(ctx).futureValue shouldBe SuccessResponseSchema(None, None, None).asRight
+      await(connector.getAnnualSummaries(ctx)) shouldBe SuccessResponseSchema(None, None, None).asRight
     }
   }
 
@@ -95,7 +96,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = "",
         expectedStatus = OK
       )
-      val result = connector.deleteSEAnnualSummaries(ctx).value.futureValue
+      val result = await(connector.deleteSEAnnualSummaries(ctx).value)
       assert(result === Right(()))
     }
   }
@@ -108,7 +109,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = OK
       )
 
-      connector.createUpdateOrDeleteApiAnnualSummaries(ctx, None).value.futureValue shouldBe ().asRight
+      await(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, None).value) shouldBe ().asRight
     }
     "send a DELETE request when given no data to submit" in new Api1802Test {
       stubPutWithRequestAndResponseBody(
@@ -117,7 +118,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = OK)
 
-      connector.createUpdateOrDeleteApiAnnualSummaries(ctx, requestBody.some).value.futureValue shouldBe ().asRight
+      await(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, requestBody.some).value) shouldBe ().asRight
     }
   }
 
@@ -129,8 +130,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = CREATED)
 
-      connector.createSEPeriodSummary(data).futureValue shouldBe ().asRight
-
+      await(connector.createSEPeriodSummary(data)) shouldBe ().asRight
     }
   }
 
@@ -142,8 +142,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = OK)
 
-      connector.amendSEPeriodSummary(data).futureValue shouldBe ().asRight
-
+      await(connector.amendSEPeriodSummary(data)) shouldBe ().asRight
     }
   }
 
@@ -158,14 +157,13 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
       val expectedResponse: Option[ListSEPeriodSummariesResponse] =
         Option(ListSEPeriodSummariesResponse(Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"))))))
 
-      connector.listSEPeriodSummary(ctx).futureValue shouldBe expectedResponse.asRight
-
+      await(connector.listSEPeriodSummary(ctx)) shouldBe expectedResponse.asRight
     }
   }
 
   "getDisclosuresSubmission" must {
     "return None when no data" in {
-      val result = connector.getDisclosuresSubmission(ctx).value.futureValue
+      val result = await(connector.getDisclosuresSubmission(ctx).value)
       assert(result === Right(None))
     }
 
@@ -175,7 +173,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = OK,
         expectedResponse = responseJson
       )
-      val result: Option[SuccessResponseAPI1639] = connector.getDisclosuresSubmission(ctx).value.futureValue.value
+      val result: Option[SuccessResponseAPI1639] = await(connector.getDisclosuresSubmission(ctx).value).value
       assert(result === Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))))
     }
   }
@@ -189,7 +187,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = "",
         expectedStatus = CREATED
       )
-      val result: Either[ServiceError, Unit] = connector.upsertDisclosuresSubmission(ctx, request).value.futureValue
+      val result: Either[ServiceError, Unit] = await(connector.upsertDisclosuresSubmission(ctx, request).value)
       assert(result === Right(()))
     }
   }
@@ -201,7 +199,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = "",
         expectedStatus = OK
       )
-      val result: Either[ServiceError, Unit] = connector.deleteDisclosuresSubmission(ctx).value.futureValue
+      val result: Either[ServiceError, Unit] = await(connector.deleteDisclosuresSubmission(ctx).value)
       assert(result === Right(()))
     }
   }
@@ -210,7 +208,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
     "return a success" in new Api1505Test {
       stubPostWithRequestAndResponseBody(url = downstreamUrl, requestBody = requestBody, expectedResponse = api1171ResponseJson, expectedStatus = OK)
 
-      connector.createLossClaim(ctx, requestBody).value.futureValue shouldBe api1171Response.asRight
+      await(connector.createLossClaim(ctx, requestBody).value) shouldBe api1171Response.asRight
     }
 
     "return a ParsingError when expectedResponse is incorrect" in new Api1505Test {
@@ -220,7 +218,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = badRequestResponseRaw,
         expectedStatus = OK)
 
-      connector.createLossClaim(ctx, requestBody).value.futureValue shouldBe
+      await(connector.createLossClaim(ctx, requestBody).value) shouldBe
         Left(SingleDownstreamError(500, SingleDownstreamErrorBody("PARSING_ERROR", "Error parsing response from API", DownstreamErrorCode)))
     }
 
@@ -232,7 +230,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = BAD_REQUEST
       )
 
-      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = await(connector.createLossClaim(ctx, requestBody).value)
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 400
@@ -251,7 +249,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = NOT_FOUND
       )
 
-      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = await(connector.createLossClaim(ctx, requestBody).value)
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 404
@@ -270,7 +268,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = CONFLICT
       )
 
-      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = await(connector.createLossClaim(ctx, requestBody).value)
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 409
@@ -289,7 +287,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = UNPROCESSABLE_ENTITY
       )
 
-      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = await(connector.createLossClaim(ctx, requestBody).value)
       result match {
         case Left(GenericDownstreamError(status, message)) =>
           status shouldBe 422
@@ -308,7 +306,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = CREATED
       )
 
-      val result: Either[ServiceError, ClaimId] = connector.createLossClaim(ctx, requestBody).value.futureValue
+      val result: Either[ServiceError, ClaimId] = await(connector.createLossClaim(ctx, requestBody).value)
 
       result match {
         case Left(GenericDownstreamError(status, message)) =>

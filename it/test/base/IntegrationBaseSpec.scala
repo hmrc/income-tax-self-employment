@@ -53,7 +53,6 @@ trait IntegrationBaseSpec
   protected lazy val ws: WSClient          = app.injector.instanceOf[WSClient]
   val mongo: MongoJourneyAnswersRepository = app.injector.instanceOf[MongoJourneyAnswersRepository]
   lazy val appConfig: AppConfig            = app.injector.instanceOf[AppConfig]
-  lazy val httpClient: HttpClient          = app.injector.instanceOf[HttpClient]
   lazy val httpClientV2: HttpClientV2      = app.injector.instanceOf[HttpClientV2]
 
   val headerCarrierConfig: Config = Config()
