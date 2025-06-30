@@ -18,6 +18,7 @@ package services.journeyAnswers
 
 import builders.BusinessDataBuilder
 import cats.implicits._
+import data.IFSConnectorTestData._
 import gens.IncomeJourneyAnswersGen.incomeJourneyAnswersGen
 import mocks.connectors.MockIFSConnector
 import mocks.repositories.MockJourneyAnswersRepository
@@ -27,7 +28,6 @@ import models.common.TaxYear.{endDate, startDate}
 import models.common._
 import models.connector.api_1802.request.{AnnualAllowances, CreateAmendSEAnnualSubmissionRequestBody}
 import models.connector.api_1894.request.{CreateSEPeriodSummaryRequestBody, CreateSEPeriodSummaryRequestData, FinancialsType, IncomesType}
-import models.connector.api_1895.request.{AmendSEPeriodSummaryRequestBody, AmendSEPeriodSummaryRequestData, Incomes}
 import models.database.JourneyAnswers
 import models.database.income.IncomeStorageAnswers
 import models.error.DownstreamError.SingleDownstreamError
@@ -35,9 +35,8 @@ import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
 import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
-import org.mockito.Mockito.reset
+import models.frontend.income.TradingAllowance.UseTradingAllowance
 import org.mockito.matchers.MacroBasedMatchers
-import org.scalatest.BeforeAndAfterEach
 import org.scalatest.EitherValues._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -45,7 +44,6 @@ import play.api.http.Status.NOT_FOUND
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import services.AuditService
-import data.IFSConnectorTestData._
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
@@ -170,7 +168,9 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike
         IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound).asLeft)
         IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(createAnnualSummaryRequest))(().asRight)
         JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(Income), Json.toJson(answers.toDbModel.get))
-        JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(ExpensesTailoring), Some("expenses-"))
+        if(answers.tradingAllowance == UseTradingAllowance) {
+          JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(ExpensesTailoring), Some("expenses-"))
+        }
 
         val ctx: JourneyContextWithNino = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
 
