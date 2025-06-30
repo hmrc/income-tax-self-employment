@@ -32,7 +32,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait MockReliefClaimsConnector extends TestSuite with MockFactory with OneInstancePerTest {
+trait MockReliefClaimsConnector extends TestSuite with MockFactory {
 
   val mockReliefClaimsConnector: ReliefClaimsConnector = mock[ReliefClaimsConnector]
 

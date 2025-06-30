@@ -16,20 +16,21 @@
 
 package connectors
 
-import mocks.MockAppConfig
+import config.AppConfig
 import models.connector.IFSApiName
 import models.connector.IntegrationContext.IntegrationHeaderCarrier
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import uk.gov.hmrc.http.HeaderCarrier.Config
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
-class IntegrationHeaderCarrierSpec extends AnyWordSpecLike with Matchers with MockAppConfig {
+class IntegrationHeaderCarrierSpec extends AnyWordSpecLike with Matchers with GuiceOneServerPerSuite {
 
   "IFSHeaderCarrier" should {
     val internalHost        = "http://localhost"
     val hc                  = HeaderCarrier()
-    val mockApiConfig       = mockAppConfig
+    val mockApiConfig       = app.injector.instanceOf[AppConfig]
     val headerCarrierConfig = Config()
 
     "enrich header carrier with bearer and environment" in {

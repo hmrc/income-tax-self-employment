@@ -139,7 +139,6 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     (answers.unusedLossAmount, answers.whichYearIsLossReported) match {
       case (Some(amount), Some(whichYear)) =>
         if (whichYear.apiTaxYear == lossData.taxYearBroughtForwardFrom) {
-          println(ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossData(ctx, lossData.lossId, amount))
           ifsBusinessDetailsConnector
             .updateBroughtForwardLoss(ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossData(ctx, lossData.lossId, amount))
             .map(_ => ())

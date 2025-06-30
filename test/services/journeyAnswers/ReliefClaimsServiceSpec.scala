@@ -26,10 +26,7 @@ import models.connector.api_1505._
 import models.connector.common.{ReliefClaim, UkProperty}
 import models.error.ServiceError
 import models.frontend.adjustments._
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.times
-import org.mockito.MockitoSugar.{mock, reset, verify, when}
-import org.scalatest.BeforeAndAfterEach
+import org.mockito.MockitoSugar.{when, mock => msMock}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
@@ -43,19 +40,11 @@ import scala.concurrent.Future
 class ReliefClaimsServiceSpec extends AnyWordSpecLike
   with Matchers
   with CommonTestData
-  with BeforeAndAfterEach
   with MockReliefClaimsConnector
   with MockHipReliefClaimsConnector {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-  val mockAppConfig: AppConfig   = mock[AppConfig]
-
-  override def afterEach(): Unit = {
-    super.afterEach()
-    reset(mockReliefClaimsConnector)
-    reset(mockHipReliefClaimsConnector)
-    reset(mockAppConfig)
-  }
+  val mockAppConfig: AppConfig   = msMock[AppConfig]
 
   trait ReliefClaimsServiceTestSetup {
 
@@ -259,6 +248,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike
       }
 
       ReliefClaimsConnectorMock.createReliefClaimError(testContextCurrentYear, seClaim1.reliefClaimed)(testServiceError)
+      ReliefClaimsConnectorMock.createReliefClaimError(testContextCurrentYear, seClaim2.reliefClaimed)(testServiceError)
 
       val result: Future[Either[ServiceError, UpdateReliefClaimsResponse]] =
         service.updateReliefClaims(testContextCurrentYear, claims, newAnswers).value
@@ -276,8 +266,6 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike
       when(mockAppConfig.hipMigration1509Enabled).thenReturn(true)
 
       override val claims: List[ReliefClaim] = List(seClaim1).empty
-
-      ReliefClaimsConnectorMock.deleteReliefClaim(testContextCurrentYear, seClaimId1.claimId)
 
       val result: Either[ServiceError, Unit] = await(service.deleteReliefClaims(testContextCurrentYear, claims).value)
 

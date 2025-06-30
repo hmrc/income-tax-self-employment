@@ -87,7 +87,7 @@ class ReliefClaimsService @Inject()(
     )
   }
 
-  def deleteReliefClaims(ctx: JourneyContextWithNino, reliefClaims: Seq[ReliefClaim])(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def deleteReliefClaims(ctx: JourneyContextWithNino, reliefClaims: Seq[ReliefClaim])(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     if (reliefClaims.isEmpty) {
       EitherT.pure(())
     } else {
@@ -101,6 +101,7 @@ class ReliefClaimsService @Inject()(
         .sequence
         .map(_ => ())
     }
+  }
 
 }
 
