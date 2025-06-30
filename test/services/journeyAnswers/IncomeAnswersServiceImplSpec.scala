@@ -195,7 +195,9 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike
         IFSConnectorMock.amendSEPeriodSummaryAny(().asRight)
         IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(createAnnualSummaryRequest))(().asRight)
         JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(Income), Json.toJson(answers.toDbModel.get))
-
+        if(answers.tradingAllowance == UseTradingAllowance) {
+          JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(ExpensesTailoring), Some("expenses-"))
+        }
         val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
 
         await(service.saveAnswers(ctx, answers).value) shouldBe ().asRight
