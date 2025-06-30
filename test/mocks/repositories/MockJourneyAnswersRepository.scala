@@ -33,7 +33,7 @@ import repositories.JourneyAnswersRepository
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-trait MockJourneyAnswersRepository extends TestSuite with MockFactory with OneInstancePerTest {
+trait MockJourneyAnswersRepository extends TestSuite with MockFactory {
 
   val mockJourneyAnswersRepository: JourneyAnswersRepository = mock[JourneyAnswersRepository]
 

@@ -24,7 +24,7 @@ import models.common.JourneyContextWithNino
 import models.connector.ApiResponse
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
-import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestBody
 import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.connector.api_1965.ListSEPeriodSummariesResponse
@@ -32,13 +32,13 @@ import models.domain.ApiResultT
 import models.error.{DownstreamError, ServiceError}
 import org.scalamock.handlers.{CallHandler3, CallHandler4}
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.{OneInstancePerTest, TestSuite}
+import org.scalatest.TestSuite
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-trait MockIFSConnector extends TestSuite with MockFactory with OneInstancePerTest {
+trait MockIFSConnector extends TestSuite with MockFactory {
 
   val mockIFSConnector: IFSConnector = mock[IFSConnector]
 

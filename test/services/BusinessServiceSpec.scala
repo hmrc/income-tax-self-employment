@@ -426,11 +426,6 @@ class BusinessServiceSpec extends AnyWordSpecLike
       "return true if have more then one income sources" in {
         (() => mockConfig.hipMigration2085Enabled).expects().returning(true)
         IncomeSourcesConnectorMock.getIncomeSources(nino)(Right(listOfIncomeSources))
-        IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(
-          returnValue = Right(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Option(IncomeTypeTestData.sample))))
-        )
-        IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
-
         val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
 
         result shouldBe Right(true)
@@ -452,10 +447,6 @@ class BusinessServiceSpec extends AnyWordSpecLike
       "return true if have more then one income sources" in {
         (() => mockConfig.hipMigration2085Enabled).expects().returning(false)
         IFSBusinessDetailsConnectorMock.getListOfIncomeSources(taxYear, nino)(Right(listOfIncomeSources))
-        IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(
-          returnValue = Right(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Option(IncomeTypeTestData.sample))))
-        )
-        IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
 
         val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
 
