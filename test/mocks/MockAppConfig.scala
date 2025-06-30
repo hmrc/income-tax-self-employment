@@ -17,10 +17,22 @@
 package mocks
 
 import config.AppConfig
-import org.scalatestplus.mockito.MockitoSugar
+import org.scalamock.handlers.CallHandler0
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{OneInstancePerTest, TestSuite}
 
-trait MockAppConfig extends MockitoSugar {
+trait MockAppConfig extends TestSuite with MockFactory with OneInstancePerTest {
 
-  val mockedAppConfig: AppConfig = mock[AppConfig]
+  lazy val mockAppConfig = mock[AppConfig]
+
+  object AppConfigMock {
+
+    def hipMigration1171Enabled(setting: Boolean): CallHandler0[Boolean] = {
+      (mockAppConfig.hipMigration1171Enabled _)
+        .expects()
+        .returning(setting)
+    }
+
+  }
 
 }

@@ -31,9 +31,13 @@ import play.api.test.Helpers.await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData with DefaultAwaitTimeout {
+class AnswerServiceSpec extends AnyWordSpec
+  with Matchers
+  with CommonTestData
+  with DefaultAwaitTimeout
+  with MockJourneyAnswersRepository {
 
-  val service                                   = new AnswerService(MockJourneyAnswersRepository.mockInstance)
+  val service                                   = new AnswerService(mockJourneyAnswersRepository)
   val testContext: JourneyContextWithNino       = JourneyContextWithNino(testTaxYear, testBusinessId, testMtdId, testNino)
   val testTravelExpensesContext: JourneyContext = testContext.toJourneyContext(TravelExpenses)
   val testVehicleDetailsContext: JourneyContext = testContext.toJourneyContext(VehicleDetails)
@@ -63,7 +67,7 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
 
   "getJourneyAnswers" should {
     "return None if the journey answers don't exist" in {
-      MockJourneyAnswersRepository.getJourneyAnswers(testTravelExpensesContext)(Future.successful(None))
+      JourneyAnswersRepositoryMock.getJourneyAnswers(testTravelExpensesContext)(Future.successful(None))
 
       val result = await(service.getJourneyAnswers[TravelExpensesDb](testContext, TravelExpenses))
 
@@ -71,7 +75,7 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
     }
 
     "return data in the correct format where journey answers exist" in {
-      MockJourneyAnswersRepository.getJourneyAnswers(testTravelExpensesContext)(Future.successful(Some(testJourneyAnswers)))
+      JourneyAnswersRepositoryMock.getJourneyAnswers(testTravelExpensesContext)(Future.successful(Some(testJourneyAnswers)))
 
       val result = await(service.getJourneyAnswers[TravelExpensesDb](testContext, TravelExpenses))
 
@@ -81,7 +85,7 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
 
   "upsertJourneyAnswers" should {
     "create a record if one doesn't exist and return the data" in {
-      MockJourneyAnswersRepository.upsertJourneyAnswers(testTravelExpensesContext, testTravelExpensesJson)(
+      JourneyAnswersRepositoryMock.upsertJourneyAnswers(testTravelExpensesContext, testTravelExpensesJson)(
         Future.successful(Some(testTravelExpensesJson)))
 
       val result = await(service.upsertJourneyAnswers(testContext, TravelExpenses, testTravelExpenses))
@@ -92,7 +96,7 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
     "update an existing record and return the data" in {
       val update     = testTravelExpenses.copy(allowablePublicTransportExpenses = None)
       val updateJson = Json.toJson(update)
-      MockJourneyAnswersRepository.upsertJourneyAnswers(testTravelExpensesContext, updateJson)(Future.successful(Some(updateJson)))
+      JourneyAnswersRepositoryMock.upsertJourneyAnswers(testTravelExpensesContext, updateJson)(Future.successful(Some(updateJson)))
 
       val result = await(service.upsertJourneyAnswers(testContext, TravelExpenses, update))
 
@@ -102,7 +106,7 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
 
   "deleteJourneyAnswers" should {
     "return true if the journey answers are deleted" in {
-      MockJourneyAnswersRepository.deleteJourneyAnswers(testTravelExpensesContext)(wasDeleted = true)
+      JourneyAnswersRepositoryMock.deleteJourneyAnswers(testTravelExpensesContext)(wasDeleted = true)
 
       val result = await(service.deleteJourneyAnswers(testContext, TravelExpenses))
 
@@ -110,7 +114,7 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
     }
 
     "return false if the journey answers are not deleted" in {
-      MockJourneyAnswersRepository.deleteJourneyAnswers(testTravelExpensesContext)(wasDeleted = false)
+      JourneyAnswersRepositoryMock.deleteJourneyAnswers(testTravelExpensesContext)(wasDeleted = false)
 
       val result = await(service.deleteJourneyAnswers(testContext, TravelExpenses))
 
@@ -120,7 +124,7 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
 
   "getCollectionAnswer" should {
     "return None if the journey answers don't exist" in {
-      MockJourneyAnswersRepository.getJourneyAnswers(testVehicleDetailsContext)(Future.successful(None))
+      JourneyAnswersRepositoryMock.getJourneyAnswers(testVehicleDetailsContext)(Future.successful(None))
 
       val result = await(service.getCollectionAnswer[VehicleDetailsDb](testContext, VehicleDetails, index = 1))
 
@@ -129,7 +133,7 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
 
     "return data in the correct format where journey answers exist" in {
       val answers = testJourneyAnswers.copy(data = Json.toJson(CollectionSection(Seq(testVehicleDetails))).as[JsObject])
-      MockJourneyAnswersRepository.getJourneyAnswers(testVehicleDetailsContext)(Future.successful(Some(answers)))
+      JourneyAnswersRepositoryMock.getJourneyAnswers(testVehicleDetailsContext)(Future.successful(Some(answers)))
 
       val result = await(service.getCollectionAnswer[VehicleDetailsDb](testContext, VehicleDetails, index = 1))
 
@@ -142,8 +146,8 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
       val answers = CollectionSection(Seq(testVehicleDetails))
       val json    = Json.toJson(answers)
 
-      MockJourneyAnswersRepository.getJourneyAnswers(testVehicleDetailsContext)(Future.successful(None))
-      MockJourneyAnswersRepository.upsertJourneyAnswers(testVehicleDetailsContext, json)(Future.successful(Some(json)))
+      JourneyAnswersRepositoryMock.getJourneyAnswers(testVehicleDetailsContext)(Future.successful(None))
+      JourneyAnswersRepositoryMock.upsertJourneyAnswers(testVehicleDetailsContext, json)(Future.successful(Some(json)))
 
       val result = await(service.upsertCollectionAnswer(testContext, VehicleDetails, testVehicleDetails, index = 1))
 
@@ -155,8 +159,8 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
       val updatedIndex     = CollectionSection(Seq(update))
       val updatedIndexJson = Json.toJson(updatedIndex)
 
-      MockJourneyAnswersRepository.getJourneyAnswers(testVehicleDetailsContext)(Future.successful(Some(testVehicleDetailsAnswers)))
-      MockJourneyAnswersRepository.upsertJourneyAnswers(testVehicleDetailsContext, updatedIndexJson)(Future.successful(Some(updatedIndexJson)))
+      JourneyAnswersRepositoryMock.getJourneyAnswers(testVehicleDetailsContext)(Future.successful(Some(testVehicleDetailsAnswers)))
+      JourneyAnswersRepositoryMock.upsertJourneyAnswers(testVehicleDetailsContext, updatedIndexJson)(Future.successful(Some(updatedIndexJson)))
 
       val result = await(service.upsertCollectionAnswer(testContext, VehicleDetails, update, index = 1))
 
@@ -166,8 +170,8 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
 
   "deleteCollectionAnswer" should {
     "delete the whole section if the last index was removed" in {
-      MockJourneyAnswersRepository.getJourneyAnswers(testVehicleDetailsContext)(Future.successful(Some(testVehicleDetailsAnswers)))
-      MockJourneyAnswersRepository.deleteJourneyAnswers(testVehicleDetailsContext)(wasDeleted = true)
+      JourneyAnswersRepositoryMock.getJourneyAnswers(testVehicleDetailsContext)(Future.successful(Some(testVehicleDetailsAnswers)))
+      JourneyAnswersRepositoryMock.deleteJourneyAnswers(testVehicleDetailsContext)(wasDeleted = true)
 
       val result = await(service.deleteCollectionAnswer(testContext, VehicleDetails, index = 1))
 
@@ -189,10 +193,10 @@ class AnswerServiceSpec extends AnyWordSpec with Matchers with CommonTestData wi
             testVehicleDetails.copy(description = Some("3"))
           )))
 
-      MockJourneyAnswersRepository.getJourneyAnswers(testVehicleDetailsContext)(
+      JourneyAnswersRepositoryMock.getJourneyAnswers(testVehicleDetailsContext)(
         response = Future.successful(Some(testVehicleDetailsAnswers.copy(data = Json.toJson(originalAnswers).as[JsObject])))
       )
-      MockJourneyAnswersRepository.upsertJourneyAnswers(testVehicleDetailsContext, updatedAnswersJson)(
+      JourneyAnswersRepositoryMock.upsertJourneyAnswers(testVehicleDetailsContext, updatedAnswersJson)(
         response = Future.successful(Some(updatedAnswersJson))
       )
 

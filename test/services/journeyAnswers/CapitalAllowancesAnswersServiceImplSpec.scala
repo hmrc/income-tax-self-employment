@@ -20,10 +20,14 @@ import cats.implicits.catsSyntaxEitherId
 import controllers.ControllerBehaviours.buildRequest
 import controllers.actions.AuthorisedAction
 import controllers.actions.AuthorisedAction.User
+import data.IFSConnectorTestData.{api1803EmptyResponse, api1803SuccessResponse}
 import gens.CapitalAllowancesAnswersGen._
 import gens.genOne
+import mocks.connectors.MockIFSConnector
+import mocks.repositories.MockJourneyAnswersRepository
 import models.common.JourneyName.ZeroEmissionCars
 import models.common.{JourneyName, JourneyStatus}
+import models.connector.api_1802.request.{AnnualAllowances, CreateAmendSEAnnualSubmissionRequestBody}
 import models.connector.api_1803.{AnnualAdjustmentsType, SuccessResponseSchema}
 import models.database.JourneyAnswers
 import models.database.capitalAllowances.ZeroEmissionCarsDb
@@ -37,23 +41,26 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
 import play.api.mvc.AnyContent
-import stubs.connectors.StubIFSConnector
-import stubs.connectors.StubIFSConnector.api1803SuccessResponse
-import stubs.repositories.StubJourneyAnswersRepository
+import play.api.mvc.Results.NoContent
+import play.api.test.DefaultAwaitTimeout
+import play.api.test.Helpers.await
 import utils.BaseSpec._
 import utils.EitherTTestOps._
 import utils.Logging
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Logging {
-  val connector: StubIFSConnector =
-    StubIFSConnector(
-      createAmendSEAnnualSubmissionResult = ().asRight,
-      getAnnualSummariesResult = api1803SuccessResponse.asRight
-    )
-  val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository()
-  val service                                  = new CapitalAllowancesAnswersServiceImpl(connector, repository)
+class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike
+  with Matchers
+  with Logging
+  with DefaultAwaitTimeout
+  with MockIFSConnector
+  with MockJourneyAnswersRepository {
+
+  val service = new CapitalAllowancesAnswersServiceImpl(
+    mockIFSConnector,
+    mockJourneyAnswersRepository
+  )
 
   "saveAnswers" should {
     "store data successfully" in {
@@ -61,27 +68,43 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       val request                                          = buildRequest[ZeroEmissionCarsAnswers](answers)
       implicit val user: AuthorisedAction.User[AnyContent] = User(mtditid.value, None)(request)
 
-      service.saveAnswers[ZeroEmissionCarsDb, ZeroEmissionCarsAnswers](ZeroEmissionCars, taxYear, businessId, nino).map { result =>
-        assert(result === ().asRight)
-        assert(connector.upsertAnnualSummariesSubmissionData === Option(answers))
-        assert(repository.lastUpsertedAnswer === Option(Json.toJson(answers.toDbModel)))
-      }
+      val createRequest = CreateAmendSEAnnualSubmissionRequestBody(
+        None,
+        Some(AnnualAllowances.empty.copy(
+          zeroEmissionsCarAllowance = answers.zecClaimAmount,
+          zeroEmissionGoodsVehicleAllowance = Some(BigDecimal("5000"))
+        )),
+        None
+      )
+
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803SuccessResponse.asRight)
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(createRequest))()
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ZeroEmissionCars), Json.toJson(answers.toDbModel.get))
+
+      val result = await(service.saveAnswers[ZeroEmissionCarsDb, ZeroEmissionCarsAnswers](ZeroEmissionCars, currTaxYear, businessId, nino))
+
+      assert(result === NoContent)
     }
   }
 
   "persistAnswers" should {
     "persist answers successfully" in {
       val answers = genOne(zeroEmissionCarsAnswersGen).toDbModel.get
-      service.persistAnswers[ZeroEmissionCarsDb](businessId, currTaxYear, mtditid, ZeroEmissionCars, answers).value.map { result =>
-        assert(result === ().asRight)
-        assert(repository.lastUpsertedAnswer === Option(Json.toJson(answers)))
-      }
+
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ZeroEmissionCars), Json.toJson(answers))
+
+      val result = await(service.persistAnswers[ZeroEmissionCarsDb](businessId, currTaxYear, mtditid, ZeroEmissionCars, answers).value)
+
+      assert(result === ().asRight)
     }
   }
 
   "getCapitalAllowancesTailoring" should {
     "return empty if no answers" in {
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.CapitalAllowancesTailoring))(None)
+
       val result = service.getCapitalAllowancesTailoring(journeyCtxWithNino).rightValue
+
       assert(result === None)
     }
 
@@ -91,19 +114,21 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       val journeyAnswers: JourneyAnswers =
         mkJourneyAnswers(JourneyName.CapitalAllowancesTailoring, JourneyStatus.Completed, Json.toJsObject(tailoringAnswers))
 
-      val service = new CapitalAllowancesAnswersServiceImpl(
-        connector,
-        StubJourneyAnswersRepository(
-          getAnswer = Option(journeyAnswers)
-        ))
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.CapitalAllowancesTailoring))(Option(journeyAnswers))
+
       val result = service.getCapitalAllowancesTailoring(journeyCtxWithNino).rightValue
-      assert(result === Option(tailoringAnswers))
+
+      assert(result === Some(tailoringAnswers))
     }
   }
 
   "getZeroEmissionCars" should {
     "return empty if no answers" in {
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.ZeroEmissionCars))(None)
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+
       val result = service.getZeroEmissionCars(journeyCtxWithNino).rightValue
+
       assert(result === None)
     }
 
@@ -111,21 +136,25 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       val dbAnswers = genOne(zeroEmissionCarsDbAnswersGen)
       val journeyAnswers: JourneyAnswers =
         mkJourneyAnswers(JourneyName.ZeroEmissionCars, JourneyStatus.Completed, Json.toJsObject(dbAnswers))
-      val services = new CapitalAllowancesAnswersServiceImpl(
-        connector,
-        StubJourneyAnswersRepository(
-          getAnswer = Option(journeyAnswers)
-        ))
-      val result          = services.getZeroEmissionCars(journeyCtxWithNino).rightValue
+
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.ZeroEmissionCars))(Some(journeyAnswers))
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+
+      val result          = service.getZeroEmissionCars(journeyCtxWithNino).rightValue
+
       val expectedAnswers = ZeroEmissionCarsAnswers(dbAnswers, api1803SuccessResponse)
 
-      result shouldBe Option(expectedAnswers)
+      result shouldBe Some(expectedAnswers)
     }
   }
 
   "getZeroEmissionGoodsVehicle" should {
     "return empty if no answers" in {
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.ZeroEmissionGoodsVehicle))(None)
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+
       val result = service.getZeroEmissionGoodsVehicle(journeyCtxWithNino).rightValue
+
       assert(result === None)
     }
 
@@ -133,20 +162,23 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       val dbAnswers = genOne(zeroEmissionGoodsVehicleDbAnswersGen)
       val journeyAnswers: JourneyAnswers =
         mkJourneyAnswers(JourneyName.ZeroEmissionGoodsVehicle, JourneyStatus.Completed, Json.toJsObject(dbAnswers))
-      val services = new CapitalAllowancesAnswersServiceImpl(
-        connector,
-        StubJourneyAnswersRepository(
-          getAnswer = Option(journeyAnswers)
-        ))
-      val result          = services.getZeroEmissionGoodsVehicle(journeyCtxWithNino).rightValue
+
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.ZeroEmissionGoodsVehicle))(Some(journeyAnswers))
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+
+      val result          = service.getZeroEmissionGoodsVehicle(journeyCtxWithNino).rightValue
+
       val expectedAnswers = ZeroEmissionGoodsVehicleAnswers(dbAnswers, api1803SuccessResponse)
 
-      result shouldBe Option(expectedAnswers)
+      result shouldBe Some(expectedAnswers)
     }
   }
 
   "getAnnualInvestmentAllowance" should {
     "return empty if no answers" in {
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.AnnualInvestmentAllowance))(None)
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+
       val result = service.getAnnualInvestmentAllowance(journeyCtxWithNino).rightValue
       assert(result === None)
     }
@@ -155,24 +187,27 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
       val dbAnswers = genOne(annualInvestmentAllowanceDbAnswersGen)
       val journeyAnswers: JourneyAnswers =
         mkJourneyAnswers(JourneyName.AnnualInvestmentAllowance, JourneyStatus.Completed, Json.toJsObject(dbAnswers))
-      val services = new CapitalAllowancesAnswersServiceImpl(
-        connector,
-        StubJourneyAnswersRepository(
-          getAnswer = Option(journeyAnswers)
-        ))
-      val result = services.getAnnualInvestmentAllowance(journeyCtxWithNino).rightValue
+
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.AnnualInvestmentAllowance))(Some(journeyAnswers))
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+
+      val result = service.getAnnualInvestmentAllowance(journeyCtxWithNino).rightValue
       val expectedAnswers = AnnualInvestmentAllowanceAnswers(
         dbAnswers.annualInvestmentAllowance,
         api1803SuccessResponse.annualAllowances.flatMap(_.annualInvestmentAllowance))
 
-      result shouldBe Option(expectedAnswers)
+      result shouldBe Some(expectedAnswers)
     }
   }
 
   "getBalancingCharge" should {
 
     "return empty if no answers" in {
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.BalancingCharge))(None)
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+
       val result = service.getBalancingCharge(journeyCtxWithNino).rightValue
+
       assert(result === None)
     }
 
@@ -184,24 +219,19 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
             balancingChargeOther = if (dbAnswers.balancingCharge) Option(BigDecimal(100.00)) else None
           )))
 
-      val connector: StubIFSConnector =
-        StubIFSConnector(
-          createAmendSEAnnualSubmissionResult = ().asRight,
-          getAnnualSummariesResult = updatedResponse.asRight
-        )
-
       val journeyAnswers: JourneyAnswers =
         mkJourneyAnswers(JourneyName.BalancingCharge, JourneyStatus.Completed, Json.toJsObject(dbAnswers))
-      val service = new CapitalAllowancesAnswersServiceImpl(
-        connector,
-        StubJourneyAnswersRepository(
-          getAnswer = Option(journeyAnswers)
-        ))
+
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.BalancingCharge))(Some(journeyAnswers))
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(updatedResponse.asRight)
+
       val result = service.getBalancingCharge(journeyCtxWithNino).rightValue
+
       val expectedAnswers = BalancingChargeAnswers(
         dbAnswers.balancingCharge,
         updatedResponse.annualAdjustments.flatMap(_.balancingChargeOther)
       )
+
       result shouldBe Option(expectedAnswers)
     }
 
@@ -212,23 +242,19 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike with Match
             balancingChargeOther = Option(BigDecimal(500))
           )))
 
-      val connector: StubIFSConnector =
-        StubIFSConnector(
-          createAmendSEAnnualSubmissionResult = ().asRight,
-          getAnnualSummariesResult = updatedResponse.asRight
-        )
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.BalancingCharge))(None)
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(updatedResponse.asRight)
 
-      val service = new CapitalAllowancesAnswersServiceImpl(
-        connector,
-        StubJourneyAnswersRepository(
-          getAnswer = None
-        ))
       val result = service.getBalancingCharge(journeyCtxWithNino).rightValue
+
       val expectedAnswers = BalancingChargeAnswers(
         balancingCharge = true,
         updatedResponse.annualAdjustments.flatMap(_.balancingChargeOther)
       )
+
       result shouldBe Option(expectedAnswers)
     }
+
   }
+
 }

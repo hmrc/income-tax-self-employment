@@ -23,26 +23,33 @@ import models.common.JourneyContextWithNino
 import models.connector.ReliefClaimType
 import models.connector.api_1505.ClaimId
 import models.domain.ApiResultT
-import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaOngoingStubbing
-import org.scalatestplus.mockito.MockitoSugar.mock
+import org.scalamock.handlers.{CallHandler3, CallHandler4}
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{OneInstancePerTest, TestSuite}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object MockHipReliefClaimsConnector {
+trait MockHipReliefClaimsConnector extends TestSuite with MockFactory with OneInstancePerTest {
 
-  val mockInstance: HipReliefClaimsConnector = mock[HipReliefClaimsConnector]
+  val mockHipReliefClaimsConnector: HipReliefClaimsConnector = mock[HipReliefClaimsConnector]
 
-  def deleteReliefClaim(ctx: JourneyContextWithNino, claimId: String): ScalaOngoingStubbing[ApiResultT[Unit]] =
-    when(mockInstance.deleteReliefClaim(eqTo(ctx), eqTo(claimId))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(EitherT.pure(()))
+  object HipReliefClaimsConnectorMock {
 
-  def createReliefClaim(ctx: JourneyContextWithNino, answer: ReliefClaimType)(returnValue: ClaimId): ScalaOngoingStubbing[ApiResultT[ClaimId]] =
-    when(mockInstance.createReliefClaim(ArgumentMatchers.eq(ctx), ArgumentMatchers.eq(answer))(any())).thenReturn(EitherT.pure(returnValue))
+    def deleteReliefClaim(ctx: JourneyContextWithNino,
+                          claimId: String): CallHandler4[JourneyContextWithNino, String, HeaderCarrier, ExecutionContext, ApiResultT[Unit]] =
+      (mockHipReliefClaimsConnector.deleteReliefClaim(_: JourneyContextWithNino, _: String)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(ctx, claimId, *, *)
+        .returning(EitherT.pure(()))
+
+    def createReliefClaim(ctx: JourneyContextWithNino,
+                          answer: ReliefClaimType)
+                         (returnValue: ClaimId): CallHandler3[JourneyContextWithNino, ReliefClaimType, HeaderCarrier, ApiResultT[ClaimId]] =
+      (mockHipReliefClaimsConnector.createReliefClaim(_: JourneyContextWithNino, _: ReliefClaimType)(_: HeaderCarrier))
+        .expects(ctx, answer, *)
+        .returning(EitherT.pure(returnValue))
+
+  }
 
 }

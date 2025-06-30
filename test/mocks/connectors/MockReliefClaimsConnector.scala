@@ -25,38 +25,51 @@ import models.connector.api_1505.ClaimId
 import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
 import models.error.ServiceError
-import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaOngoingStubbing
-import org.scalatestplus.mockito.MockitoSugar.mock
+import org.scalamock.handlers.{CallHandler2, CallHandler3}
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{OneInstancePerTest, TestSuite}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object MockReliefClaimsConnector {
+trait MockReliefClaimsConnector extends TestSuite with MockFactory with OneInstancePerTest {
 
-  val mockInstance: ReliefClaimsConnector = mock[ReliefClaimsConnector]
+  val mockReliefClaimsConnector: ReliefClaimsConnector = mock[ReliefClaimsConnector]
 
-  def createReliefClaim(ctx: JourneyContextWithNino, answer: ReliefClaimType)(returnValue: ClaimId): ScalaOngoingStubbing[ApiResultT[ClaimId]] =
-    when(mockInstance.createReliefClaim(ArgumentMatchers.eq(ctx), ArgumentMatchers.eq(answer))(any())).thenReturn(EitherT.pure(returnValue))
+  object ReliefClaimsConnectorMock {
 
-  def createReliefClaimError(ctx: JourneyContextWithNino, answer: ReliefClaimType)(
-      returnValue: ServiceError): ScalaOngoingStubbing[ApiResultT[ClaimId]] =
-    when(mockInstance.createReliefClaim(eqTo(ctx), eqTo(answer))(any()))
-      .thenReturn(EitherT.leftT(returnValue))
+    def createReliefClaim(ctx: JourneyContextWithNino,
+                          answer: ReliefClaimType)
+                         (returnValue: ClaimId): CallHandler3[JourneyContextWithNino, ReliefClaimType, HeaderCarrier, ApiResultT[ClaimId]] =
+      (mockReliefClaimsConnector.createReliefClaim(_: JourneyContextWithNino, _: ReliefClaimType)(_: HeaderCarrier))
+        .expects(ctx, answer, *)
+        .returning(EitherT.pure(returnValue))
 
-  def deleteReliefClaim(ctx: JourneyContextWithNino, claimId: String): ScalaOngoingStubbing[ApiResultT[Unit]] =
-    when(mockInstance.deleteReliefClaim(eqTo(ctx), eqTo(claimId))(any()))
-      .thenReturn(EitherT.pure(()))
+    def createReliefClaimError(ctx: JourneyContextWithNino,
+                               answer: ReliefClaimType)
+                              (returnValue: ServiceError): CallHandler3[JourneyContextWithNino, ReliefClaimType, HeaderCarrier, ApiResultT[ClaimId]] =
+      (mockReliefClaimsConnector.createReliefClaim(_: JourneyContextWithNino, _: ReliefClaimType)(_: HeaderCarrier))
+        .expects(ctx, answer, *)
+        .returning(EitherT.leftT(returnValue))
 
-  def getAllReliefClaims(ctx: JourneyContextWithNino)(returnValue: List[ReliefClaim]): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
-    when(mockInstance.getAllReliefClaims(eqTo(ctx))(any[HeaderCarrier]))
-      .thenReturn(EitherT.pure(returnValue))
+    def deleteReliefClaim(ctx: JourneyContextWithNino,
+                          claimId: String): CallHandler3[JourneyContextWithNino, String, HeaderCarrier, ApiResultT[Unit]] =
+      (mockReliefClaimsConnector.deleteReliefClaim(_: JourneyContextWithNino, _: String)(_: HeaderCarrier))
+        .expects(ctx, claimId, *)
+        .returning(EitherT.pure(()))
 
-  def getAllReliefClaimsError(ctx: JourneyContextWithNino)(returnValue: ServiceError): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
-    when(mockInstance.getAllReliefClaims(eqTo(ctx))(any()))
-      .thenReturn(EitherT.leftT(returnValue))
+    def getAllReliefClaims(ctx: JourneyContextWithNino)
+                          (returnValue: List[ReliefClaim]): CallHandler2[JourneyContextWithNino, HeaderCarrier, ApiResultT[List[ReliefClaim]]] =
+      (mockReliefClaimsConnector.getAllReliefClaims(_: JourneyContextWithNino)(_: HeaderCarrier))
+        .expects(ctx, *)
+        .returning(EitherT.pure(returnValue))
+
+    def getAllReliefClaimsError(ctx: JourneyContextWithNino)
+                               (returnValue: ServiceError): CallHandler2[JourneyContextWithNino, HeaderCarrier, ApiResultT[List[ReliefClaim]]] =
+      (mockReliefClaimsConnector.getAllReliefClaims(_: JourneyContextWithNino)(_: HeaderCarrier))
+        .expects(ctx, *)
+        .returning(EitherT.leftT(returnValue))
+
+  }
 
 }

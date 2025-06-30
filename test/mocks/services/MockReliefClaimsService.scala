@@ -22,6 +22,7 @@ import models.common.JourneyContextWithNino
 import models.connector.api_1505.ClaimId
 import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
+import models.error.ServiceError
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchersSugar.eqTo
@@ -38,6 +39,10 @@ object MockReliefClaimsService {
   def getAllReliefClaims(ctx: JourneyContextWithNino)(returnValue: List[ReliefClaim] = Nil): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
     when(mockInstance.getAllReliefClaims(eqTo(ctx))(any()))
       .thenReturn(EitherT.pure(returnValue))
+
+  def getAllReliefClaimsFailure(ctx: JourneyContextWithNino)(returnValue: ServiceError): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
+    when(mockInstance.getAllReliefClaims(eqTo(ctx))(any()))
+      .thenReturn(EitherT.leftT(returnValue))
 
   def createReliefClaims(ctx: JourneyContextWithNino, answers: WhatDoYouWantToDoWithLoss*)(
       returnValue: List[ClaimId] = Nil): ScalaOngoingStubbing[ApiResultT[List[ClaimId]]] =

@@ -17,28 +17,28 @@
 package mocks.connectors
 
 import cats.data.EitherT
-import connectors.HIP.IncomeSourcesConnector
+import connectors.MDTP.MDTPConnector
 import models.common.Nino
-import models.connector.ApiResponse
-import models.connector.api_2085.ListOfIncomeSources
-import models.domain.ApiResultT
-import org.scalamock.handlers.CallHandler2
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{OneInstancePerTest, TestSuite}
+import models.connector.citizen_details.SuccessResponseSchema
+import models.domain.ApiResultT
+import models.error.ServiceError
+import org.scalamock.handlers.CallHandler3
 import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
-trait MockIncomeSourcesConnector extends TestSuite with MockFactory with OneInstancePerTest {
+trait MockCitizenDetailsConnector extends TestSuite with MockFactory with OneInstancePerTest {
 
-  val mockIncomeSourcesConnector: IncomeSourcesConnector = mock[IncomeSourcesConnector]
+  val mockCitizenDetailsConnector = mock[MDTPConnector]
 
-  object IncomeSourcesConnectorMock {
+  object CitizenDetailsConnectorMock {
 
-    def getIncomeSources(nino: Nino)
-                        (returnValue: ApiResponse[ListOfIncomeSources]): CallHandler2[Nino, HeaderCarrier, ApiResultT[ListOfIncomeSources]] =
-      (mockIncomeSourcesConnector.getIncomeSources(_: Nino)(_: HeaderCarrier))
-        .expects(nino, *)
+    def getCitizenDetails(nino: Nino)
+                         (returnValue: Either[ServiceError, SuccessResponseSchema]): CallHandler3[Nino, HeaderCarrier, ExecutionContext, ApiResultT[SuccessResponseSchema]] =
+      (mockCitizenDetailsConnector.getCitizenDetails(_: Nino)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(nino, *, *)
         .returning(EitherT(Future.successful(returnValue)))
 
   }

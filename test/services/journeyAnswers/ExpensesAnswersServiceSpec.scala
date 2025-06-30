@@ -16,18 +16,20 @@
 
 package services.journeyAnswers
 
-import cats.data.EitherT
 import cats.implicits._
 import config.AppConfig
+import data.IFSConnectorTestData.{api1786DeductionsSuccessResponse, api1786EmptySuccessResponse}
 import data.TimeData
 import data.api1802.AnnualAllowancesData
-import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne
+import mocks.connectors.MockIFSConnector
+import mocks.repositories.MockJourneyAnswersRepository
 import models.common.JourneyName._
 import models.common.{JourneyName, JourneyStatus}
 import models.connector.Api1786ExpensesResponseParser.goodsToSellOrUseParser
+import models.connector.api_1786.SuccessResponseSchema
 import models.connector.api_1802.request._
 import models.connector.api_1895.request._
 import models.database.JourneyAnswers
@@ -36,36 +38,38 @@ import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
 import models.frontend.expenses.goodsToSellOrUse.{GoodsToSellOrUseAnswers, GoodsToSellOrUseJourneyAnswers}
-import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategories, NoExpenses, TotalAmount}
+import models.frontend.expenses.tailoring.ExpensesTailoring.{NoExpenses, TotalAmount}
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
-import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
+import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, ExpensesTailoringIndividualCategoriesAnswers, NoExpensesAnswers}
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
-import org.mockito.MockitoSugar.when
+import org.scalatest.OneInstancePerTest
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar.mock
-import play.api.http.Status.INTERNAL_SERVER_ERROR
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.libs.json.{JsObject, Json}
 import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers.await
-import repositories.MongoJourneyAnswersRepository
 import services.journeyAnswers.expenses.ExpensesAnswersService
-import stubs.connectors.StubIFSConnector
-import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
-import stubs.repositories.StubJourneyAnswersRepository
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.test.MongoSupport
 import utils.BaseSpec._
-import utils.EitherTTestOps.EitherTExtensions
 
 import java.time.Clock
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
-class ExpensesAnswersServiceSpec extends AnyWordSpec with Matchers with MongoSupport with TimeData with DefaultAwaitTimeout {
+class ExpensesAnswersServiceSpec extends AnyWordSpec
+  with Matchers
+  with MongoSupport
+  with TimeData
+  with DefaultAwaitTimeout
+  with MockIFSConnector
+  with MockJourneyAnswersRepository
+  with OneInstancePerTest {
 
+  val underTest                     = new ExpensesAnswersService(mockIFSConnector, mockJourneyAnswersRepository)
+
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   val clock: Clock             = mock[Clock]
-  val mockAppConfig: AppConfig = mock[AppConfig]
 
   val tailoringJourneyAnswers: JourneyAnswers = JourneyAnswers(
     mtditid,
@@ -78,6 +82,7 @@ class ExpensesAnswersServiceSpec extends AnyWordSpec with Matchers with MongoSup
     testInstant,
     testInstant
   )
+
   val goodsToSellOrUseJourneyAnswers: JourneyAnswers      = tailoringJourneyAnswers.copy(journey = JourneyName.GoodsToSellOrUse)
   val workplaceRunningCostsJourneyAnswers: JourneyAnswers = tailoringJourneyAnswers.copy(journey = JourneyName.WorkplaceRunningCosts)
 
@@ -98,37 +103,48 @@ class ExpensesAnswersServiceSpec extends AnyWordSpec with Matchers with MongoSup
     None
   )
 
+  val emptyAmendRequest: AmendSEPeriodSummaryRequestData = AmendSEPeriodSummaryRequestData(
+    currTaxYear,
+    nino,
+    businessId,
+    AmendSEPeriodSummaryRequestBody(None, None)
+  )
+
   val downstreamError: Either[SingleDownstreamError, Nothing] =
     SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serverError).asLeft
 
   def buildPeriodData(deductions: Option[Deductions]): AmendSEPeriodSummaryRequestData =
-    AmendSEPeriodSummaryRequestData(taxYear, nino, businessId, AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), deductions))
+    AmendSEPeriodSummaryRequestData(currTaxYear, nino, businessId, AmendSEPeriodSummaryRequestBody(Some(Incomes(Some(100.00), None, None)), deductions))
 
 
   "save ExpensesTailoringNoExpensesAnswers" should {
-    "store data successfully" in new Test {
+    "store data successfully" in {
       val answers: ExpensesTailoringAnswers = NoExpensesAnswers
-      val result: Either[ServiceError, Unit] =
-        underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
+
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ExpensesTailoring), Json.toJson(answers))
+
+      val result: Either[ServiceError, Unit] = await(underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value)
+
       result shouldBe ().asRight
     }
   }
 
   "save ExpensesTailoringIndividualCategoriesAnswers" should {
-    "store data successfully" in new Test {
+    "store data successfully" in {
       val answers: ExpensesTailoringAnswers.ExpensesTailoringIndividualCategoriesAnswers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
-      val result: Either[ServiceError, Unit] =
-        underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value.futureValue
+
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ExpensesTailoring), Json.toJson(answers))
+
+      val result: Either[ServiceError, Unit] = await(underTest.persistAnswers(businessId, currTaxYear, mtditid, ExpensesTailoring, answers).value)
+
       result shouldBe ().asRight
     }
   }
 
-  "get journey answers" in new Test {
-    override val connector: StubIFSConnector =
-      StubIFSConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
+  "get journey answers" in {
+    IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786DeductionsSuccessResponse.asRight)
 
-    val result: Either[ServiceError, GoodsToSellOrUseJourneyAnswers] =
-      underTest.getAnswers(journeyCtxWithNino)(goodsToSellOrUseParser, hc).value.futureValue
+    val result: Either[ServiceError, GoodsToSellOrUseJourneyAnswers] = await(underTest.getAnswers(journeyCtxWithNino)(goodsToSellOrUseParser, hc).value)
 
     val expectedResult: GoodsToSellOrUseJourneyAnswers = GoodsToSellOrUseJourneyAnswers(100.0, Option(BigDecimal(100.0)))
 
@@ -136,318 +152,324 @@ class ExpensesAnswersServiceSpec extends AnyWordSpec with Matchers with MongoSup
   }
 
   "getExpensesTailoringAnswers" should {
-    "return None when there are no answers" in new Test {
+    "return None when there are no answers" in {
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(ExpensesTailoring))(None)
 
-      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] =
-        underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
+      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] = await(underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value)
+
       result shouldBe None.asRight
     }
 
-    "return NoExpensesAnswers" in new Test {
+    "return NoExpensesAnswers" in {
+      val answers: JourneyAnswers = tailoringJourneyAnswers.copy(data = Json.toJson(ExpensesCategoriesDb(NoExpenses)).as[JsObject])
 
-      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
-        .copy(data = Json.toJson(ExpensesCategoriesDb(NoExpenses)).as[JsObject])
-        .some)
-      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] =
-        underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(ExpensesTailoring))(Some(answers))
+
+      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] = await(underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value)
+
       result shouldBe NoExpensesAnswers.some.asRight
     }
 
-    "return AsOneTotalAnswers" in new Test {
-      override val connector: StubIFSConnector = StubIFSConnector(
-        getPeriodicSummaryDetailResult = Future.successful(
-          api1786DeductionsSuccessResponse
-            .copy(financials = api1786DeductionsSuccessResponse.financials
-              .copy(deductions = api1786DeductionsSuccessResponse.financials.deductions.map(_.copy(simplifiedExpenses = BigDecimal("10.5").some))))
-            .asRight)
-      )
-      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
-        .copy(data = Json.toJson(ExpensesCategoriesDb(TotalAmount)).as[JsObject])
-        .some)
-      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] =
-        underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
+    "return AsOneTotalAnswers" in {
+      val api1786Res: SuccessResponseSchema = api1786DeductionsSuccessResponse
+        .copy(financials = api1786DeductionsSuccessResponse.financials.copy(
+          deductions = api1786DeductionsSuccessResponse.financials.deductions.map(_.copy(simplifiedExpenses = BigDecimal("10.5").some))
+        ))
+      val answers: JourneyAnswers = tailoringJourneyAnswers.copy(data = Json.toJson(ExpensesCategoriesDb(TotalAmount)).as[JsObject])
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786Res.asRight)
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(ExpensesTailoring))(Some(answers))
+
+      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] = await(underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value)
+
       result shouldBe AsOneTotalAnswers(BigDecimal("10.5")).some.asRight
     }
 
-    "return ExpensesTailoringIndividualCategoriesAnswers" in new Test {
-      val answers: ExpensesTailoringAnswers.ExpensesTailoringIndividualCategoriesAnswers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
+    "return ExpensesTailoringIndividualCategoriesAnswers" in {
+      val categoriesAnswers: ExpensesTailoringAnswers.ExpensesTailoringIndividualCategoriesAnswers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
+      val answers: JourneyAnswers = tailoringJourneyAnswers.copy(data = Json.toJson(categoriesAnswers).as[JsObject])
 
-      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers
-        .copy(data = Json.toJson(answers).as[JsObject])
-        .some)
-      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] =
-        underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value.futureValue
-      result shouldBe answers.some.asRight
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(ExpensesTailoring))(Some(answers))
+
+      val result: Either[ServiceError, Option[ExpensesTailoringAnswers]] = await(underTest.getExpensesTailoringAnswers(journeyCtxWithNino)(hc).value)
+
+      result shouldBe categoriesAnswers.some.asRight
     }
 
   }
 
   "save answers" should {
-    "saveTailoringAnswers" in new Test {
+    "saveTailoringAnswers" in {
       val answers: ExpensesTailoringAnswers.ExpensesTailoringIndividualCategoriesAnswers = genOne(expensesTailoringIndividualCategoriesAnswersGen)
-      val result: Either[ServiceError, Unit] = underTest.saveTailoringAnswers(journeyCtxWithNino, answers).value.futureValue
+      val amendRequest = AmendSEPeriodSummaryRequestData(currTaxYear, nino, businessId, AmendSEPeriodSummaryRequestBody(None, None))
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(amendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ExpensesTailoring), Json.toJson(answers))
+
+      val result: Either[ServiceError, Unit] = await(underTest.saveTailoringAnswers(journeyCtxWithNino, answers).value)
 
       result shouldBe ().asRight
     }
   }
 
   "getGoodsToSellOrUseAnswers" should {
-    "return None when there are no answers" in new Test {
+    "return None when there are no answers" in {
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(GoodsToSellOrUse))(None)
 
-      val result: Either[ServiceError, Option[GoodsToSellOrUseAnswers]] =
-        underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value.futureValue
+      val result: Either[ServiceError, Option[GoodsToSellOrUseAnswers]] = await(underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value)
+
       result shouldBe None.asRight
     }
 
-    "return GoodsToSellOrUseAnswers when they exist" in new Test {
-      override val connector: StubIFSConnector =
-        StubIFSConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
-      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = goodsToSellOrUseJourneyAnswers
-        .copy(data = Json.toJson(TaxiMinicabOrRoadHaulageDb(true)).as[JsObject])
-        .some)
-      val result: Either[ServiceError, Option[GoodsToSellOrUseAnswers]] =
-        underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value.futureValue
+    "return GoodsToSellOrUseAnswers when they exist" in {
+      val answers: JourneyAnswers = goodsToSellOrUseJourneyAnswers.copy(data = Json.toJson(TaxiMinicabOrRoadHaulageDb(true)).as[JsObject])
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786DeductionsSuccessResponse.asRight)
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(GoodsToSellOrUse))(Some(answers))
+
+      val result: Either[ServiceError, Option[GoodsToSellOrUseAnswers]] = await(underTest.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(hc).value)
+
       result shouldBe GoodsToSellOrUseAnswers(taxiMinicabOrRoadHaulage = true, BigDecimal("100.0"), Option(BigDecimal("100.0"))).some.asRight
     }
+
   }
 
   "getWorkplaceRunningCostsAnswers" should {
-    "return None when there are no answers" in new Test {
+    "return None when there are no answers" in {
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(WorkplaceRunningCosts))(None)
 
-      val result: Either[ServiceError, Option[WorkplaceRunningCostsAnswers]] =
-        underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value.futureValue
+      val result: Either[ServiceError, Option[WorkplaceRunningCostsAnswers]] = await(underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value)
+
       result shouldBe None.asRight
     }
 
-    "return WorkplaceRunningCostsAnswers when they exist" in new Test {
-      override val connector: StubIFSConnector =
-        StubIFSConnector(getPeriodicSummaryDetailResult = Future.successful(api1786DeductionsSuccessResponse.asRight))
-      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = workplaceRunningCostsJourneyAnswers
-        .copy(data = Json.toJson(workplaceRunningCostsDb).as[JsObject])
-        .some)
-      val result: Either[ServiceError, Option[WorkplaceRunningCostsAnswers]] =
-        underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value.futureValue
+    "return WorkplaceRunningCostsAnswers when they exist" in {
+      val answers: JourneyAnswers = workplaceRunningCostsJourneyAnswers.copy(data = Json.toJson(workplaceRunningCostsDb).as[JsObject])
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786DeductionsSuccessResponse.asRight)
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(WorkplaceRunningCosts))(Some(answers))
+
+      val result: Either[ServiceError, Option[WorkplaceRunningCostsAnswers]] = await(underTest.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(hc).value)
+
       result shouldBe WorkplaceRunningCostsAnswers(workplaceRunningCostsDb, api1786DeductionsSuccessResponse).some.asRight
     }
   }
 
   "deleteSimplifiedExpensesAnswers" should {
-    "delete Tailoring DB answers and SimplifiedAmount API answer" in new Test {
-      val existingPeriodData: AmendSEPeriodSummaryRequestData = buildPeriodData(Option(DeductionsTestData.sample))
+    "delete Tailoring DB answers and SimplifiedAmount API answer" in {
+      val deductions: Deductions = Deductions.empty.copy(
+        costOfGoods = Some(SelfEmploymentDeductionsDetailPosNegType(amount = BigDecimal(100.00).some, disallowableAmount = BigDecimal(100.00).some)),
+        premisesRunningCosts = Some(SelfEmploymentDeductionsDetailPosNegType(amount = BigDecimal(100.00).some, disallowableAmount = BigDecimal(100.00).some))
+      )
+      val amendRequestBody: AmendSEPeriodSummaryRequestBody = AmendSEPeriodSummaryRequestBody(None, Some(deductions))
+      val existingPeriodData: AmendSEPeriodSummaryRequestData = AmendSEPeriodSummaryRequestData(currTaxYear, nino, businessId, amendRequestBody)
 
-      override val connector: StubIFSConnector = StubIFSConnector()
-      connector.amendSEPeriodSummaryResultData = Option(existingPeriodData)
-      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(getAnswer = tailoringJourneyAnswers.some)
-      repo.lastUpsertedAnswer = Option(Json.toJson(ExpensesCategoriesDb(IndividualCategories)))
+      IFSConnectorMock.amendSEPeriodSummary(existingPeriodData)(().asRight)
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786DeductionsSuccessResponse.asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(ExpensesTailoring))
 
-      val result: Either[ServiceError, Unit] = underTest.deleteSimplifiedExpensesAnswers(journeyCtxWithNino).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.deleteSimplifiedExpensesAnswers(journeyCtxWithNino).value)
 
       result shouldBe ().asRight
-      val apiResult: Option[AmendSEPeriodSummaryRequestBody] = connector.amendSEPeriodSummaryResultData.flatMap(_.body.returnNoneIfEmpty)
-      apiResult shouldBe None
-      repo.lastUpsertedAnswer shouldBe None
     }
   }
 
   "clearExpensesAndCapitalAllowancesData" must {
+
+    val notFoundError = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
+
     "delete any expenses and capital allowances from DB and APIs" in new Test2 {
-      prepareData()
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(notFoundError.asLeft)
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(notFoundError.asLeft)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(ExpensesTailoring), Some("expenses-"))
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(CapitalAllowancesTailoring), Some("capital-allowances-"))
+
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value)
 
       result shouldBe ().asRight
-
-      periodicApiResult shouldBe None
-      annualApiResult shouldBe None
-
-      incomeResult should not be None
-      expensesTailoringResult shouldBe None
-      goodsToSellOrUseResult shouldBe None
-      capitalAllowancesResult shouldBe None
-      zeroEmissionCarsResult shouldBe None
     }
 
     "return an error from downstream" when {
       "connector fails to update the PeriodicSummaries API" in new Test2 {
-        override lazy val connector: StubIFSConnector = new StubIFSConnector(amendSEPeriodSummaryResult = downstreamError)
-        prepareData()
-        val result: Either[ServiceError, Unit] = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
+        IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+        IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(downstreamError)
+        IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(notFoundError.asLeft)
+
+        val result: Either[ServiceError, Unit] = await(underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value)
 
         result shouldBe downstreamError
-
-        periodicApiResult should not be None
-        annualApiResult shouldBe None
       }
+
       "connector fails to update the AnnualSummaries API" in new Test2 {
-        override lazy val connector: StubIFSConnector = new StubIFSConnector(getAnnualSummariesResult = downstreamError)
-        prepareData()
-        val result: Either[ServiceError, Unit] = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
+        IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+        IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+        IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(downstreamError)
+
+        val result: Either[ServiceError, Unit] = await(underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value)
 
         result shouldBe downstreamError
-
-        periodicApiResult shouldBe None
-        annualApiResult should not be None
       }
-      "connector fails to update the repository database" in new Test {
-        override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
 
-        val result: Either[ServiceError, Unit] = underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value.futureValue
+      "connector fails to update the repository database" in {
+        val error = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serverError)
+
+        IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(notFoundError.asLeft)
+        IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(notFoundError.asLeft)
+        JourneyAnswersRepositoryMock.deleteOneOrMoreJourneysError(journeyCtxWithNino.toJourneyContext(ExpensesTailoring), Some("expenses-"))(error)
+
+        val result: Either[ServiceError, Unit] = await(underTest.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino).value)
 
         result shouldBe downstreamError
-        repo.lastUpsertedAnswer shouldBe None
       }
     }
   }
 
   "clearExpensesData" must {
     "delete all staff costs expenses API answer" in new Test2 {
-      prepareData()
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(StaffCosts))
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, StaffCosts).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, StaffCosts).value)
 
       result shouldBe ().asRight
-
-      incomeResult should not be None
-      staffCosts shouldBe None
     }
 
     "delete all professional fees expenses API answer" in new Test2 {
-      prepareData()
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(ProfessionalFees))
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, ProfessionalFees).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, ProfessionalFees).value)
 
       result shouldBe ().asRight
-
-      incomeResult should not be None
-      professionalFees shouldBe None
     }
 
     "delete all OfficeSupplies expenses API answer" in new Test2 {
-      prepareData()
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(OfficeSupplies))
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, OfficeSupplies).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, OfficeSupplies).value)
 
       result shouldBe ().asRight
-
-      incomeResult should not be None
-      officeSuppliesResult shouldBe None
     }
 
     "delete all Construction expenses API answer" in new Test2 {
-      prepareData()
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(Construction))
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, Construction).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, Construction).value)
 
       result shouldBe ().asRight
-
-      incomeResult should not be None
-      constructionCostsResult shouldBe None
     }
 
     "delete all OtherExpenses expenses API answer" in new Test2 {
-      prepareData()
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(OtherExpenses))
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, OtherExpenses).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, OtherExpenses).value)
 
       result shouldBe ().asRight
-
-      incomeResult should not be None
-      otherExpensesResult shouldBe None
     }
 
     "delete all financial charges expenses API answer" in new Test2 {
-      prepareData()
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(FinancialCharges))
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, FinancialCharges).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, FinancialCharges).value)
 
       result shouldBe ().asRight
-
-      incomeResult should not be None
-      financialChargesResult shouldBe None
     }
 
     "delete all IrrecoverableDebts expenses API answer" in new Test2 {
-      prepareData()
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(IrrecoverableDebts))
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, IrrecoverableDebts).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, IrrecoverableDebts).value)
 
       result shouldBe ().asRight
-
-      incomeResult should not be None
-      irrecoverableDebts shouldBe None
     }
 
     "delete all AdvertisingOrMarketing expenses API answer" in new Test2 {
-      prepareData()
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(AdvertisingOrMarketing))
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, AdvertisingOrMarketing).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, AdvertisingOrMarketing).value)
 
       result shouldBe ().asRight
-
-      incomeResult should not be None
-      advertisingOrMarketingResult shouldBe None
     }
 
     "delete all GoodsToSellOrUse expenses API answer" in new Test2 {
-      prepareData()
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(GoodsToSellOrUse))
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, GoodsToSellOrUse).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, GoodsToSellOrUse).value)
 
       result shouldBe ().asRight
-
-      incomeResult should not be None
-      goodsToSellOrUseResult shouldBe None
     }
 
     "delete all WorkplaceRunningCosts expenses API answer" in new Test2 {
-      prepareData()
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(WorkplaceRunningCosts))
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, WorkplaceRunningCosts).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, WorkplaceRunningCosts).value)
 
       result shouldBe ().asRight
-
-      incomeResult should not be None
-      workplaceRunningCostsResult shouldBe None
     }
 
     "delete all RepairsAndMaintenanceCosts expenses API answer" in new Test2 {
-      prepareData()
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(RepairsAndMaintenanceCosts))
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, RepairsAndMaintenanceCosts).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, RepairsAndMaintenanceCosts).value)
 
       result shouldBe ().asRight
-
-      incomeResult should not be None
-      repairsAndMaintenanceCosts shouldBe None
     }
 
     "delete all interest on banks and other expenses API answer" in new Test2 {
-      prepareData()
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneys(journeyCtxWithNino.toJourneyContext(Interest))
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, Interest).value.futureValue
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, Interest).value)
 
       result shouldBe ().asRight
-
-      incomeResult should not be None
-      interestOnBanksAndOtherResult shouldBe None
     }
 
     "connector fails to update the PeriodSummary API" in new Test2 {
-      override lazy val connector: StubIFSConnector = new StubIFSConnector(amendSEPeriodSummaryResult = downstreamError)
-      val result: Either[ServiceError, Unit]        = underTest.clearExpensesData(journeyCtxWithNino, StaffCosts).value.futureValue
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(downstreamError)
+
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, StaffCosts).value)
 
       result shouldBe downstreamError
     }
 
-    "connector fails to update the repository database" in new Test {
-      override val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(deleteOneOrMoreJourneys = downstreamError)
+    "connector fails to update the repository database" in {
+      val error: SingleDownstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serverError)
 
-      val result: Either[ServiceError, Unit] = underTest.clearExpensesData(journeyCtxWithNino, StaffCosts).value.futureValue
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+      IFSConnectorMock.amendSEPeriodSummary(emptyAmendRequest)(().asRight)
+      JourneyAnswersRepositoryMock.deleteOneOrMoreJourneysError(journeyCtxWithNino.toJourneyContext(StaffCosts))(error)
+
+      val result: Either[ServiceError, Unit] = await(underTest.clearExpensesData(journeyCtxWithNino, StaffCosts).value)
 
       result shouldBe downstreamError
-      repo.lastUpsertedAnswer shouldBe None
     }
 
-    "clearSpecificExpensesData" in new Test {
+    "clearSpecificExpensesData" in {
       underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, OfficeSupplies).adminCosts shouldBe None
       underTest.clearSpecificExpensesData(models.connector.api_1894.request.DeductionsTestData.sample, GoodsToSellOrUse).costOfGoods shouldBe None
 
@@ -483,45 +505,17 @@ class ExpensesAnswersServiceSpec extends AnyWordSpec with Matchers with MongoSup
     }
   }
 
-  trait Test {
-    val connector: StubIFSConnector = new StubIFSConnector()
-
-    val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository()
-    lazy val underTest                     = new ExpensesAnswersService(connector, repo)
-
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-  }
-
   trait Test2 extends TimeData {
-    lazy val connector: StubIFSConnector = new StubIFSConnector()
+    (() => clock.instant).expects().returning(testInstant).anyNumberOfTimes()
 
-    when(clock.instant()).thenReturn(testInstant)
-
-    val repository: MongoJourneyAnswersRepository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, clock)
-
-    lazy val underTest = new ExpensesAnswersService(connector, repository)
-
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-
-    def prepareDatabase(): EitherT[Future, ServiceError, Unit] = for {
-      _ <- repository.upsertAnswers(incomeCtx, Json.obj("field" -> "value"))
-      _ <- repository.upsertAnswers(expensesTailoringCtx, Json.obj("field" -> "value"))
-      _ <- repository.upsertAnswers(officeSuppliesCtx, Json.obj("field" -> "value"))
-      _ <- repository.upsertAnswers(goodsToSellOrUseCtx, Json.obj("field" -> "value"))
-      _ <- repository.upsertAnswers(repairsAndMaintenanceCostsCtx, Json.obj("field" -> "value"))
-      _ <- repository.upsertAnswers(staffCostsCtx, Json.obj("field" -> "value"))
-      _ <- repository.upsertAnswers(workplaceRunningCostsCtx, Json.obj("field" -> "value"))
-      _ <- repository.upsertAnswers(capitalAllowancesTailoringCtx, Json.obj("field" -> "value"))
-      _ <- repository.upsertAnswers(zeroEmissionCarsCtx, Json.obj("field" -> "value"))
-      _ <- repository.upsertAnswers(otherExpensesCtx, Json.obj("field" -> "value"))
-      _ <- repository.upsertAnswers(financialChargesCtx, Json.obj("field" -> "value"))
-      _ <- repository.upsertAnswers(advertisingOrMarketingCtx, Json.obj("field" -> "value"))
-      _ <- repository.upsertAnswers(interestCtx, Json.obj("field" -> "value"))
-    } yield ()
+    val testDeductions: Deductions = Deductions.empty.copy(
+      costOfGoods = Some(SelfEmploymentDeductionsDetailPosNegType(amount = BigDecimal(100.00).some, disallowableAmount = BigDecimal(100.00).some)),
+      premisesRunningCosts = Some(SelfEmploymentDeductionsDetailPosNegType(amount = BigDecimal(100.00).some, disallowableAmount = BigDecimal(100.00).some))
+    )
 
     def preparePeriodData(): Unit = {
-      def existingPeriodData = buildPeriodData(Option(DeductionsTestData.sample))
-      connector.amendSEPeriodSummaryResultData = Option(existingPeriodData)
+      def existingPeriodData = buildPeriodData(Option(testDeductions))
+      IFSConnectorMock.amendSEPeriodSummary(existingPeriodData)(().asRight)
     }
 
     def prepareAnnualSummariesData(): Unit = {
@@ -533,69 +527,10 @@ class ExpensesAnswersServiceSpec extends AnyWordSpec with Matchers with MongoSup
         nino,
         businessId,
         CreateAmendSEAnnualSubmissionRequestBody(adjustments.some, allowances.some, nonFinancials.some))
-      connector.upsertAnnualSummariesSubmissionData = Option(existingAnnualSummariesData)
+
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(existingAnnualSummariesData.body))()
     }
 
-    def prepareData(): Either[ServiceError, Unit] = {
-      preparePeriodData()
-      prepareAnnualSummariesData()
-      await(prepareDatabase().value)
-    }
-
-    lazy val periodicApiResult: Option[Deductions]     = connector.amendSEPeriodSummaryResultData.flatMap(_.body.deductions)
-    lazy val annualApiResult: Option[AnnualAllowances] = connector.upsertAnnualSummariesSubmissionData.flatMap(_.body.annualAllowances)
-    lazy val (
-      incomeResult,
-      expensesTailoringResult,
-      officeSuppliesResult,
-      goodsToSellOrUseResult,
-      workplaceRunningCostsResult,
-      repairsAndMaintenanceCosts,
-      staffCosts,
-      professionalFees,
-      irrecoverableDebts,
-      constructionCostsResult,
-      otherExpensesResult,
-      financialChargesResult,
-      advertisingOrMarketingResult,
-      interestOnBanksAndOtherResult,
-      capitalAllowancesResult,
-      zeroEmissionCarsResult) =
-      (for {
-        income                     <- repository.get(incomeCtx)
-        expensesTailoring          <- repository.get(expensesTailoringCtx)
-        officeSupplies             <- repository.get(officeSuppliesCtx)
-        goodsToSellOrUse           <- repository.get(goodsToSellOrUseCtx)
-        workplaceRunningCosts      <- repository.get(workplaceRunningCostsCtx)
-        repairsAndMaintenanceCosts <- repository.get(repairsAndMaintenanceCostsCtx)
-        staffCosts                 <- repository.get(staffCostsCtx)
-        professionalFees           <- repository.get(professionalFeesCtx)
-        irrecoverableDebts         <- repository.get(irrecoverableDebtsExpensesCtx)
-        constructionCosts          <- repository.get(constructionCostsCtx)
-        otherExpenses              <- repository.get(otherExpensesCtx)
-        financialCharges           <- repository.get(financialChargesCtx)
-        advertisingOrMarketing     <- repository.get(advertisingOrMarketingCtx)
-        interests                  <- repository.get(interestCtx)
-        capitalAllowancesTailoring <- repository.get(capitalAllowancesTailoringCtx)
-        zeroEmissionCars           <- repository.get(zeroEmissionCarsCtx)
-      } yield (
-        income,
-        expensesTailoring,
-        officeSupplies,
-        goodsToSellOrUse,
-        workplaceRunningCosts,
-        repairsAndMaintenanceCosts,
-        staffCosts,
-        professionalFees,
-        irrecoverableDebts,
-        constructionCosts,
-        otherExpenses,
-        financialCharges,
-        advertisingOrMarketing,
-        interests,
-        capitalAllowancesTailoring,
-        zeroEmissionCars)).rightValue
-  }
 }
 
 object ExpensesAnswersServiceSpec {
@@ -660,4 +595,4 @@ object ExpensesAnswersServiceSpec {
       nino,
       businessId,
       AmendSEPeriodSummaryRequestBody(Option(Incomes(Option(BigDecimal(100.00)), None, None)), deductions))
-}
+}}

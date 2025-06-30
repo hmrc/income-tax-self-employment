@@ -22,69 +22,91 @@ import models.common._
 import models.database.JourneyAnswers
 import models.domain.{ApiResultT, Business}
 import models.error.DownstreamError.SingleDownstreamError
+import models.error.ServiceError
 import models.frontend.TaskList
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaOngoingStubbing
-import org.scalatestplus.mockito.MockitoSugar.mock
+import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler3}
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{OneInstancePerTest, TestSuite}
 import play.api.libs.json.{JsValue, Reads}
 import repositories.JourneyAnswersRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-object MockJourneyAnswersRepository {
+trait MockJourneyAnswersRepository extends TestSuite with MockFactory with OneInstancePerTest {
 
-  val mockInstance: JourneyAnswersRepository = mock[JourneyAnswersRepository]
+  val mockJourneyAnswersRepository: JourneyAnswersRepository = mock[JourneyAnswersRepository]
 
-  def getJourneyAnswers(context: JourneyContext)
-                       (response: Future[Option[JourneyAnswers]]): ScalaOngoingStubbing[Future[Option[JourneyAnswers]]] = {
-    when(mockInstance.getJourneyAnswers(eqTo(context)))
-      .thenReturn(response)
+  object JourneyAnswersRepositoryMock {
+
+    def getJourneyAnswers(context: JourneyContext)
+                         (response: Future[Option[JourneyAnswers]]): CallHandler1[JourneyContext, Future[Option[JourneyAnswers]]] =
+      (mockJourneyAnswersRepository.getJourneyAnswers(_: JourneyContext))
+        .expects(context)
+        .returning(response)
+
+    def upsertJourneyAnswers(context: JourneyContext, data: JsValue)
+                            (response: Future[Option[JsValue]]): CallHandler2[JourneyContext, JsValue, Future[Option[JsValue]]] =
+      (mockJourneyAnswersRepository.upsertJourneyAnswers(_: JourneyContext, _: JsValue))
+        .expects(context, data)
+        .returning(response)
+
+    def deleteJourneyAnswers(context: JourneyContext)
+                            (wasDeleted: Boolean): CallHandler1[JourneyContext, Future[Boolean]] =
+      (mockJourneyAnswersRepository.deleteJourneyAnswers(_: JourneyContext))
+        .expects(context)
+        .returning(Future.successful(wasDeleted))
+
+    def get(context: JourneyContext)
+           (returnValue: Option[JourneyAnswers]): CallHandler1[JourneyContext, ApiResultT[Option[JourneyAnswers]]] =
+      (mockJourneyAnswersRepository.get(_: JourneyContext))
+        .expects(context)
+        .returning(EitherT.pure(returnValue))
+
+    def getAll(taxYear: TaxYear, mtdId: Mtditid, businesses: List[Business])
+              (returnValue: TaskList): CallHandler3[TaxYear, Mtditid, List[Business], ApiResultT[TaskList]] =
+      (mockJourneyAnswersRepository.getAll(_: TaxYear, _: Mtditid, _: List[Business]))
+        .expects(taxYear, mtdId, businesses)
+        .returning(EitherT.pure(returnValue))
+
+    def getAllError(taxYear: TaxYear, mtdId: Mtditid, businesses: List[Business])
+                   (returnValue: SingleDownstreamError): CallHandler3[TaxYear, Mtditid, List[Business], ApiResultT[TaskList]] =
+      (mockJourneyAnswersRepository.getAll(_: TaxYear, _: Mtditid, _: List[Business]))
+        .expects(taxYear, mtdId, businesses)
+        .returning(EitherT.leftT(returnValue))
+
+    def getAnswers[A: Reads](ctx: JourneyContext)
+                            (returnValue: Option[A]): CallHandler2[JourneyContext, Reads[A], ApiResultT[Option[A]]] =
+      (mockJourneyAnswersRepository.getAnswers[A](_: JourneyContext)(_: Reads[A]))
+        .expects(ctx, *)
+        .returning(EitherT.pure(returnValue))
+
+    def upsertAnswers(ctx: JourneyContext, newData: JsValue): CallHandler2[JourneyContext, JsValue, ApiResultT[Unit]] =
+      (mockJourneyAnswersRepository.upsertAnswers(_: JourneyContext, _: JsValue))
+        .expects(ctx, newData)
+        .returning(EitherT.pure(()))
+
+    def upsertAnswersFailure(ctx: JourneyContext, newData: JsValue)(error: ServiceError): CallHandler2[JourneyContext, JsValue, ApiResultT[Unit]] =
+      (mockJourneyAnswersRepository.upsertAnswers(_: JourneyContext, _: JsValue))
+        .expects(ctx, newData)
+        .returning(EitherT.leftT(error))
+
+    def setStatus(ctx: JourneyContext, status: JourneyStatus): CallHandler2[JourneyContext, JourneyStatus, ApiResultT[Unit]] =
+      (mockJourneyAnswersRepository.setStatus(_: JourneyContext, _: JourneyStatus))
+        .expects(ctx, status)
+        .returning(EitherT.pure(()))
+
+    def deleteOneOrMoreJourneys(ctx: JourneyContext, multiplePrefix: Option[String] = None): CallHandler2[JourneyContext, Option[String], ApiResultT[Unit]] =
+      (mockJourneyAnswersRepository.deleteOneOrMoreJourneys(_: JourneyContext, _: Option[String]))
+        .expects(ctx, multiplePrefix)
+        .returning(EitherT.pure(()))
+
+    def deleteOneOrMoreJourneysError(ctx: JourneyContext, multiplePrefix: Option[String] = None)
+                                    (returnValue: ServiceError): CallHandler2[JourneyContext, Option[String], ApiResultT[Unit]] =
+      (mockJourneyAnswersRepository.deleteOneOrMoreJourneys(_: JourneyContext, _: Option[String]))
+        .expects(ctx, multiplePrefix)
+        .returning(EitherT.leftT(returnValue))
+
   }
-
-  def upsertJourneyAnswers(context: JourneyContext, data: JsValue)
-                          (response: Future[Option[JsValue]]): ScalaOngoingStubbing[Future[Option[JsValue]]] =
-    when(mockInstance.upsertJourneyAnswers(eqTo(context), eqTo(data)))
-      .thenReturn(response)
-
-  def deleteJourneyAnswers(context: JourneyContext)
-                          (wasDeleted: Boolean): ScalaOngoingStubbing[Future[Boolean]] =
-    when(mockInstance.deleteJourneyAnswers(eqTo(context)))
-      .thenReturn(Future.successful(wasDeleted))
-
-  def get(context: JourneyContext)
-         (returnValue: Option[JourneyAnswers]): ScalaOngoingStubbing[ApiResultT[Option[JourneyAnswers]]] =
-    when(mockInstance.get(eqTo(context)))
-      .thenReturn(EitherT.pure(returnValue))
-
-  def getAll(taxYear: TaxYear, mtdId: Mtditid, businesses: List[Business])
-            (returnValue: TaskList): ScalaOngoingStubbing[ApiResultT[TaskList]] =
-    when(mockInstance.getAll(eqTo(taxYear), eqTo(mtdId), eqTo(businesses)))
-      .thenReturn(EitherT.pure(returnValue))
-
-  def getAllError(taxYear: TaxYear, mtdId: Mtditid, businesses: List[Business])
-                 (returnValue: SingleDownstreamError): ScalaOngoingStubbing[ApiResultT[TaskList]] =
-    when(mockInstance.getAll(eqTo(taxYear), eqTo(mtdId), eqTo(businesses)))
-      .thenReturn(EitherT.leftT(returnValue))
-
-  def getAnswers[A: Reads](ctx: JourneyContext)
-                          (returnValue: Option[A]): ScalaOngoingStubbing[ApiResultT[Option[A]]] =
-    when(mockInstance.getAnswers[A](eqTo(ctx))(any()))
-      .thenReturn(EitherT.pure(returnValue))
-
-  def upsertAnswers(ctx: JourneyContext, newData: JsValue): ScalaOngoingStubbing[ApiResultT[Unit]] =
-    when(mockInstance.upsertAnswers(eqTo(ctx), eqTo(newData)))
-      .thenReturn(EitherT.pure(()))
-
-  def setStatus(ctx: JourneyContext, status: JourneyStatus): ScalaOngoingStubbing[ApiResultT[Unit]] =
-    when(mockInstance.setStatus(eqTo(ctx), eqTo(status)))
-      .thenReturn(EitherT.pure(()))
-
-  def deleteOneOrMoreJourneys(ctx: JourneyContext, multiplePrefix: Option[String] = None): ScalaOngoingStubbing[ApiResultT[Unit]] =
-    when(
-      mockInstance.deleteOneOrMoreJourneys(eqTo(ctx), eqTo(multiplePrefix)))
-      .thenReturn(EitherT.pure(()))
 
 }

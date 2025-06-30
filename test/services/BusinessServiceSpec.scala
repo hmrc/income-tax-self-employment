@@ -18,9 +18,11 @@ package services
 
 import builders.BusinessDataBuilder._
 import cats.implicits.catsSyntaxEitherId
-import config.AppConfig
+import config.FeatureSwitchConfig
 import data.CommonTestData
-import mocks.connectors.{MockBusinessDetailsConnector, MockIFSBusinessDetailsConnector, MockIFSConnector, MockIncomeSourcesConnector}
+import data.IFSConnectorTestData.{api1786DeductionsSuccessResponse, citizenDetailsResponse}
+import mocks.MockAppConfig
+import mocks.connectors._
 import models.common.BusinessId
 import models.connector.api_1171._
 import models.connector.api_1786.{FinancialsType, IncomeTypeTestData}
@@ -31,24 +33,26 @@ import models.error.DownstreamError.SingleDownstreamError
 import models.error.ServiceError.BusinessNotFoundError
 import models.error.{DownstreamErrorBody, ServiceError}
 import models.frontend.adjustments.NetBusinessProfitOrLossValues
-import org.mockito.MockitoSugar.when
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers.await
-import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
-import stubs.connectors.StubMDTPConnector
 import utils.BaseSpec._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAfterEach with DefaultAwaitTimeout with CommonTestData {
-
-  val mockAppConfig: AppConfig = mock[AppConfig]
-
-  val mdtpConnector: StubMDTPConnector = StubMDTPConnector()
+class BusinessServiceSpec extends AnyWordSpecLike
+  with Matchers
+  with BeforeAndAfterEach
+  with DefaultAwaitTimeout
+  with CommonTestData
+  with MockIFSBusinessDetailsConnector
+  with MockCitizenDetailsConnector
+  with MockBusinessDetailsConnector
+  with MockIFSConnector
+  with MockIncomeSourcesConnector
+  with MockAppConfig {
 
   val taxpayer: ResponseType =
     businessDetailsSuccessResponse.taxPayerDisplayResponse.copy(businessData = None)
@@ -56,14 +60,16 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
   val emptyBusinessDetailsResponse: BusinessDetailsSuccessResponseSchema =
     businessDetailsSuccessResponse.copy(taxPayerDisplayResponse = taxpayer)
 
-  val testService =
+  val mockConfig = mock[FeatureSwitchConfig]
+
+  lazy val testService =
     new BusinessService(
-      MockIFSBusinessDetailsConnector.mockInstance,
-      mdtpConnector,
-      MockBusinessDetailsConnector.mockInstance,
-      MockIFSConnector.mockInstance,
-      MockIncomeSourcesConnector.mockInstance,
-      mockAppConfig
+      mockIFSBusinessDetailsConnector,
+      mockCitizenDetailsConnector,
+      mockBusinessDetailsConnector,
+      mockIFSConnector,
+      mockIncomeSourcesConnector,
+      mockConfig
     )
 
   private val error = SingleDownstreamError(400, DownstreamErrorBody.SingleDownstreamErrorBody.serverError)
@@ -71,8 +77,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
   "getBusinesses" when {
     "the hipMigration1171Enabled feature switch is enabled" should {
       "return an empty list" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, testMtdId, testNino)(Right(None))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(true)
+        BusinessDetailsConnectorMock.getBusinessDetails(None, testMtdId, testNino)(Right(None))
 
         val result = await(testService.getBusinesses(testMtdId, testNino).value)
         result shouldBe Right(Nil)
@@ -88,8 +94,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
           )
         )
 
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, testMtdId, testNino)(Right(Some(businesses)))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(true)
+        BusinessDetailsConnectorMock.getBusinessDetails(None, testMtdId, testNino)(Right(Some(businesses)))
 
         val result = await(testService.getBusinesses(testMtdId, testNino).value)
 
@@ -102,8 +108,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "the hipMigration1171Enabled feature switch is disabled" should {
       "return an empty list" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(emptyBusinessDetailsResponse))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(false)
+        IFSBusinessDetailsConnectorMock.getBusinesses(nino)(Right(emptyBusinessDetailsResponse))
 
         val result = await(testService.getBusinesses(mtditid, nino).value)
         result shouldBe Right(Nil)
@@ -119,8 +125,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
           )
         )
 
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(businesses))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(false)
+        IFSBusinessDetailsConnectorMock.getBusinesses(nino)(Right(businesses))
 
         val result = await(testService.getBusinesses(mtditid, nino).value)
 
@@ -135,8 +141,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
   "getBusiness" when {
     "the hipMigration1171Enabled feature switch is enabled" should {
       "return Not Found if no business exist when hipMigration1171Enabled is true" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(Right(None))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(true)
+        BusinessDetailsConnectorMock.getBusinessDetails(Some(businessId), mtditid, nino)(Right(None))
 
         val result = await(testService.getBusiness(businessId, mtditid, nino).value)
 
@@ -153,8 +159,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
           )
         )
 
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(Some(businessId), mtditid, nino)(Right(Some(businesses)))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(true)
+        BusinessDetailsConnectorMock.getBusinessDetails(Some(businessId), mtditid, nino)(Right(Some(businesses)))
 
         val result = await(testService.getBusiness(businessId, mtditid, nino).value)
 
@@ -164,8 +170,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "the hipMigration1171Enabled feature switch is disabled" should {
       "return Not Found if no business exist" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Left(BusinessNotFoundError(businessId)))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(false)
+        IFSBusinessDetailsConnectorMock.getBusinesses(nino)(Left(BusinessNotFoundError(businessId)))
 
         val result = await(testService.getBusiness(businessId, mtditid, nino).value)
 
@@ -182,8 +188,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
           )
         )
 
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(businesses))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(false)
+        IFSBusinessDetailsConnectorMock.getBusinesses(nino)(Right(businesses))
 
         val result = await(testService.getBusiness(businessId, mtditid, nino).value)
 
@@ -195,8 +201,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
   "getUserBusinessIds" when {
     "the hipMigration1171Enabled feature switch is enabled" should {
       "return an empty list when hipMigration1171Enabled is true" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, mtditid, nino)(Right(None))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(true)
+        BusinessDetailsConnectorMock.getBusinessDetails(None, mtditid, nino)(Right(None))
 
         val result = await(testService.getUserBusinessIds(mtditid, nino).value)
 
@@ -213,8 +219,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
           )
         )
 
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, mtditid, nino)(Right(Some(businesses)))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(true)
+        BusinessDetailsConnectorMock.getBusinessDetails(None, mtditid, nino)(Right(Some(businesses)))
 
         val result = await(testService.getUserBusinessIds(mtditid, nino).value)
 
@@ -227,8 +233,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "the hipMigration1171Enabled feature switch is disabled" should {
       "return an empty list" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(emptyBusinessDetailsResponse))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(false)
+        IFSBusinessDetailsConnectorMock.getBusinesses(nino)(Right(emptyBusinessDetailsResponse))
 
         val result = await(testService.getUserBusinessIds(mtditid, nino).value)
 
@@ -245,8 +251,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
           )
         )
 
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(businesses))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(false)
+        IFSBusinessDetailsConnectorMock.getBusinesses(nino)(Right(businesses))
 
         val result = await(testService.getUserBusinessIds(mtditid, nino).value)
 
@@ -261,31 +267,17 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
   "getUserDateOfBirth" should {
     "return a user's date of birth as a LocalDate" in {
       val expectedResult = Right(aUserDateOfBirth)
-      val service = new BusinessService(
-        MockIFSBusinessDetailsConnector.mockInstance,
-        StubMDTPConnector(),
-        MockBusinessDetailsConnector.mockInstance,
-        MockIFSConnector.mockInstance,
-        MockIncomeSourcesConnector.mockInstance,
-        mockAppConfig
-      )
+      CitizenDetailsConnectorMock.getCitizenDetails(nino)(citizenDetailsResponse.asRight)
 
-      val result = await(service.getUserDateOfBirth(nino).value)
+      val result = await(testService.getUserDateOfBirth(nino).value)
 
       result shouldBe expectedResult
     }
 
     "return an error from downstream" in {
-      val service = new BusinessService(
-        MockIFSBusinessDetailsConnector.mockInstance,
-        StubMDTPConnector(getCitizenDetailsRes = error.asLeft),
-        MockBusinessDetailsConnector.mockInstance,
-        MockIFSConnector.mockInstance,
-        MockIncomeSourcesConnector.mockInstance,
-        mockAppConfig
-      )
+      CitizenDetailsConnectorMock.getCitizenDetails(nino)(error.asLeft)
 
-      val result = await(service.getUserDateOfBirth(nino).value)
+      val result = await(testService.getUserDateOfBirth(nino).value)
 
       result shouldBe error.asLeft
     }
@@ -294,8 +286,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
   "getAllBusinessIncomeSourcesSummaries" when {
     "the hipMigration1171Enabled feature switch is enabled" should {
       "return an empty list if a user has no businesses" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, mtditid, nino)(Right(None))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(true)
+        BusinessDetailsConnectorMock.getBusinessDetails(None, mtditid, nino)(Right(None))
 
         val result = await(testService.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value)
 
@@ -303,9 +295,9 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
       }
 
       "return an IncomeSourcesSummary for each business" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, mtditid, nino)(Right(Some(businessDetailsHipSuccessResponse)))
-        MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(true)
+        BusinessDetailsConnectorMock.getBusinessDetails(None, mtditid, nino)(Right(Some(businessDetailsHipSuccessResponse)))
+        IFSBusinessDetailsConnectorMock.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
 
         val result = await(testService.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value)
 
@@ -313,8 +305,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
       }
 
       "return an error from downstream" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(true)
-        MockBusinessDetailsConnector.getBusinessDetails(None, mtditid, nino)(Left(BusinessNotFoundError(businessId)))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(true)
+        BusinessDetailsConnectorMock.getBusinessDetails(None, mtditid, nino)(Left(BusinessNotFoundError(businessId)))
 
         val result = await(testService.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value)
 
@@ -324,8 +316,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "the hipMigration1171Enabled feature switch is disabled" should {
       "return an empty list if a user has no businesses" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(emptyBusinessDetailsResponse))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(false)
+        IFSBusinessDetailsConnectorMock.getBusinesses(nino)(Right(emptyBusinessDetailsResponse))
 
         val result = await(testService.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value)
 
@@ -333,9 +325,9 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
       }
 
       "return an IncomeSourcesSummary for each business" in {
-        when(mockAppConfig.hipMigration1171Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getBusinesses(nino)(Right(aGetBusinessDataResponse))
-        MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
+        (() => mockConfig.hipMigration1171Enabled).expects().returning(false)
+        IFSBusinessDetailsConnectorMock.getBusinesses(nino)(Right(aGetBusinessDataResponse))
+        IFSBusinessDetailsConnectorMock.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
 
         val result = await(testService.getAllBusinessIncomeSourcesSummaries(taxYear, mtditid, nino).value)
 
@@ -346,7 +338,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
   "getBusinessIncomeSourcesSummary" should {
     "return an IncomeSourcesSummary for a business" in {
-      MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
+      IFSBusinessDetailsConnectorMock.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
 
       val result = await(testService.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value)
 
@@ -354,7 +346,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
     }
 
     "return an error from downstream" in {
-      MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Left(BusinessNotFoundError(businessId)))
+      IFSBusinessDetailsConnectorMock.getBusinessIncomeSourcesSummary(taxYear, nino, businessId)(Left(BusinessNotFoundError(businessId)))
 
       val result = await(testService.getBusinessIncomeSourcesSummary(taxYear, nino, businessId).value)
 
@@ -380,11 +372,11 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
         outstandingBusinessIncome = 0
       )
 
-      MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(currTaxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
-      MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(
+      IFSBusinessDetailsConnectorMock.getBusinessIncomeSourcesSummary(currTaxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(
         returnValue = Right(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Some(IncomeTypeTestData.sample))))
       )
-      MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
 
       val result: Either[ServiceError, NetBusinessProfitOrLossValues] = await(testService.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value)
 
@@ -393,7 +385,7 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "return an error from downstream" when {
       "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in {
-        MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(currTaxYear, nino, businessId)(Left(error))
+        IFSBusinessDetailsConnectorMock.getBusinessIncomeSourcesSummary(currTaxYear, nino, businessId)(Left(error))
 
         val result: Either[ServiceError, NetBusinessProfitOrLossValues] = await(
           testService.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value
@@ -403,8 +395,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
       }
 
       "IFSConnector .getPeriodicSummaryDetail returns an error" in {
-        MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(currTaxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
-        MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(Left(error))
+        IFSBusinessDetailsConnectorMock.getBusinessIncomeSourcesSummary(currTaxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
+        IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Left(error))
 
         val result: Either[ServiceError, NetBusinessProfitOrLossValues] = await(
           testService.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value
@@ -414,11 +406,11 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
       }
 
       "IFSConnector .getAnnualSummaries returns an error" in {
-        MockIFSBusinessDetailsConnector.getBusinessIncomeSourcesSummary(currTaxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
-        MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(
+        IFSBusinessDetailsConnectorMock.getBusinessIncomeSourcesSummary(currTaxYear, nino, businessId)(Right(aBusinessIncomeSourcesSummaryResponse))
+        IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(
           returnValue = Right(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Some(IncomeTypeTestData.sample))))
         )
-        MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Left(error))
+        IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Left(error))
 
         val result: Either[ServiceError, NetBusinessProfitOrLossValues] = await(
           testService.getNetBusinessProfitOrLossValues(journeyCtxWithNino).value
@@ -432,12 +424,12 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
   "hasOtherIncomeSources" when {
     "the hipMigration2085 feature switch is enabled" must {
       "return true if have more then one income sources" in {
-        when(mockAppConfig.hipMigration2085Enabled).thenReturn(true)
-        MockIncomeSourcesConnector.getIncomeSources(nino)(Right(listOfIncomeSources))
-        MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(
+        (() => mockConfig.hipMigration2085Enabled).expects().returning(true)
+        IncomeSourcesConnectorMock.getIncomeSources(nino)(Right(listOfIncomeSources))
+        IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(
           returnValue = Right(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Option(IncomeTypeTestData.sample))))
         )
-        MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
+        IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
 
         val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
 
@@ -446,8 +438,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
       "return an error from downstream" when {
         "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in {
-          when(mockAppConfig.hipMigration2085Enabled).thenReturn(true)
-          MockIncomeSourcesConnector.getIncomeSources(nino)(Left(error))
+          (() => mockConfig.hipMigration2085Enabled).expects().returning(true)
+          IncomeSourcesConnectorMock.getIncomeSources(nino)(Left(error))
 
           val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
 
@@ -458,12 +450,12 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
     "the hipMigration2085 feature switch is disabled" must {
       "return true if have more then one income sources" in {
-        when(mockAppConfig.hipMigration2085Enabled).thenReturn(false)
-        MockIFSBusinessDetailsConnector.getListOfIncomeSources(taxYear, nino)(Right(listOfIncomeSources))
-        MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(
+        (() => mockConfig.hipMigration2085Enabled).expects().returning(false)
+        IFSBusinessDetailsConnectorMock.getListOfIncomeSources(taxYear, nino)(Right(listOfIncomeSources))
+        IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(
           returnValue = Right(api1786DeductionsSuccessResponse.copy(financials = FinancialsType(None, Option(IncomeTypeTestData.sample))))
         )
-        MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
+        IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
 
         val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
 
@@ -472,8 +464,8 @@ class BusinessServiceSpec extends AnyWordSpecLike with Matchers with BeforeAndAf
 
       "return an error from downstream" when {
         "IFSBusinessDetailsConnector .getBusinessIncomeSourcesSummary returns an error" in {
-          when(mockAppConfig.hipMigration2085Enabled).thenReturn(false)
-          MockIFSBusinessDetailsConnector.getListOfIncomeSources(taxYear, nino)(Left(error))
+          (() => mockConfig.hipMigration2085Enabled).expects().returning(false)
+          IFSBusinessDetailsConnectorMock.getListOfIncomeSources(taxYear, nino)(Left(error))
 
           val result: Either[ServiceError, Boolean] = await(testService.hasOtherIncomeSources(taxYear, nino).value)
 

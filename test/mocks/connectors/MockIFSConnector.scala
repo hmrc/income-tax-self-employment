@@ -19,60 +19,92 @@ package mocks.connectors
 import cats.data.EitherT
 import cats.implicits._
 import connectors.IFS.IFSConnector
-import connectors.IFS.IFSConnector.{Api1786Response, Api1803Response, Api1895Response}
+import connectors.IFS.IFSConnector.{Api1786Response, Api1803Response, Api1894Response, Api1895Response}
 import models.common.JourneyContextWithNino
+import models.connector.ApiResponse
 import models.connector.api_1638.RequestSchemaAPI1638
 import models.connector.api_1639.SuccessResponseAPI1639
-import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestBody
+import models.connector.api_1802.request.{CreateAmendSEAnnualSubmissionRequestBody, CreateAmendSEAnnualSubmissionRequestData}
+import models.connector.api_1894.request.CreateSEPeriodSummaryRequestData
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
+import models.connector.api_1965.ListSEPeriodSummariesResponse
 import models.domain.ApiResultT
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaOngoingStubbing
-import org.scalatestplus.mockito.MockitoSugar.mock
+import models.error.{DownstreamError, ServiceError}
+import org.scalamock.handlers.{CallHandler3, CallHandler4}
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{OneInstancePerTest, TestSuite}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-object MockIFSConnector {
+trait MockIFSConnector extends TestSuite with MockFactory with OneInstancePerTest {
 
-  val mockInstance: IFSConnector = mock[IFSConnector]
+  val mockIFSConnector: IFSConnector = mock[IFSConnector]
 
-  def getDisclosuresSubmission(ctx: JourneyContextWithNino)
-                              (returnValue: Option[SuccessResponseAPI1639]): ScalaOngoingStubbing[ApiResultT[Option[SuccessResponseAPI1639]]] =
-    when(mockInstance.getDisclosuresSubmission(eqTo(ctx))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(EitherT.rightT(returnValue))
+  object IFSConnectorMock {
 
-  def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638): ScalaOngoingStubbing[ApiResultT[Unit]] =
-    when(mockInstance.upsertDisclosuresSubmission(eqTo(ctx), eqTo(data))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(EitherT.rightT(()))
+    def getDisclosuresSubmission(ctx: JourneyContextWithNino)
+                                (returnValue: Option[SuccessResponseAPI1639]): CallHandler3[JourneyContextWithNino, HeaderCarrier, ExecutionContext, ApiResultT[Option[SuccessResponseAPI1639]]] =
+      (mockIFSConnector.getDisclosuresSubmission(_: JourneyContextWithNino)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(ctx, *, *)
+        .returning(EitherT.rightT(returnValue))
 
-  def deleteDisclosuresSubmission(ctx: JourneyContextWithNino): ScalaOngoingStubbing[ApiResultT[Unit]] =
-    when(mockInstance.deleteDisclosuresSubmission(eqTo(ctx))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(EitherT.rightT(()))
+    def upsertDisclosuresSubmission(ctx: JourneyContextWithNino,
+                                    data: RequestSchemaAPI1638): CallHandler4[JourneyContextWithNino, RequestSchemaAPI1638, HeaderCarrier, ExecutionContext, ApiResultT[Unit]] =
+      (mockIFSConnector.upsertDisclosuresSubmission(_: JourneyContextWithNino, _: RequestSchemaAPI1638)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(ctx, data, *, *)
+        .returning(EitherT.rightT(()))
 
-  def getAnnualSummaries(ctx: JourneyContextWithNino)(response: Api1803Response): ScalaOngoingStubbing[Future[Api1803Response]] =
-    when(mockInstance.getAnnualSummaries(eqTo(ctx))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(Future.successful(response))
+    def deleteDisclosuresSubmission(ctx: JourneyContextWithNino): CallHandler3[JourneyContextWithNino, HeaderCarrier, ExecutionContext, ApiResultT[Unit]] =
+      (mockIFSConnector.deleteDisclosuresSubmission(_: JourneyContextWithNino)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(ctx, *, *)
+        .returning(EitherT.rightT(()))
 
-  def createUpdateOrDeleteApiAnnualSummaries(ctx: JourneyContextWithNino,
-                                             requestBody: Option[CreateAmendSEAnnualSubmissionRequestBody]): ScalaOngoingStubbing[ApiResultT[Unit]] =
-    when(mockInstance.createUpdateOrDeleteApiAnnualSummaries(eqTo(ctx), eqTo(requestBody))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(EitherT.rightT(()))
+    def getAnnualSummaries(ctx: JourneyContextWithNino)
+                          (response: Api1803Response): CallHandler3[JourneyContextWithNino, HeaderCarrier, ExecutionContext, Future[Api1803Response]] =
+      (mockIFSConnector.getAnnualSummaries(_: JourneyContextWithNino)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(ctx, *, *)
+        .returning(Future.successful(response))
 
-  def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(returnValue: Api1786Response): ScalaOngoingStubbing[Future[Api1786Response]] =
-    when(mockInstance.getPeriodicSummaryDetail(eqTo(ctx))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(Future.successful(returnValue))
+    def createUpdateOrDeleteApiAnnualSummaries(ctx: JourneyContextWithNino,
+                                               requestBody: Option[CreateAmendSEAnnualSubmissionRequestBody])
+                                              (returnValue: Either[ServiceError, Unit] = Right(())): CallHandler4[JourneyContextWithNino, Option[CreateAmendSEAnnualSubmissionRequestBody], HeaderCarrier, ExecutionContext, ApiResultT[Unit]] =
+      (mockIFSConnector.createUpdateOrDeleteApiAnnualSummaries(
+        _: JourneyContextWithNino,
+        _: Option[CreateAmendSEAnnualSubmissionRequestBody]
+      )(_: HeaderCarrier, _: ExecutionContext))
+        .expects(ctx, requestBody, *, *)
+        .returning(EitherT(Future.successful(returnValue)))
 
-//    TODO implement the amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData) below in place of the current amendSEPeriodSummary
-//  def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(returnValue: Api1895Response): ScalaOngoingStubbing[Future[Api1895Response]] =
-//    when(mockInstance.amendSEPeriodSummary(eqTo(data))(any[HeaderCarrier], any[ExecutionContext]))
-//      .thenReturn(Future.successful(returnValue))
+    def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)
+                                (returnValue: Api1786Response): CallHandler3[JourneyContextWithNino, HeaderCarrier, ExecutionContext, Future[Api1786Response]] =
+      (mockIFSConnector.getPeriodicSummaryDetail(_: JourneyContextWithNino)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(ctx, *, *)
+        .returning(Future.successful(returnValue))
 
-    def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(returnValue: Api1895Response): ScalaOngoingStubbing[Future[Api1895Response]] =
-      when(mockInstance.amendSEPeriodSummary(any[AmendSEPeriodSummaryRequestData])(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(returnValue))
+    def listSEPeriodSummary(ctx: JourneyContextWithNino)
+                           (returnValue: Either[DownstreamError, Option[ListSEPeriodSummariesResponse]]): CallHandler3[JourneyContextWithNino, HeaderCarrier, ExecutionContext, Future[ApiResponse[Option[ListSEPeriodSummariesResponse]]]] =
+      (mockIFSConnector.listSEPeriodSummary(_: JourneyContextWithNino)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(ctx, *, *)
+        .returning(Future.successful(returnValue))
 
+    def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)
+                             (returnValue: Either[DownstreamError, Unit] = Right(())): CallHandler3[CreateSEPeriodSummaryRequestData, HeaderCarrier, ExecutionContext, Future[Api1894Response]] =
+      (mockIFSConnector.createSEPeriodSummary(_: CreateSEPeriodSummaryRequestData)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(*, *, *)
+        .returning(Future.successful(returnValue))
+
+    def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)
+                            (returnValue: Api1895Response): CallHandler3[AmendSEPeriodSummaryRequestData, HeaderCarrier, ExecutionContext, Future[Api1895Response]] =
+      (mockIFSConnector.amendSEPeriodSummary(_: AmendSEPeriodSummaryRequestData)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(data, *, *)
+        .returning(Future.successful(returnValue))
+
+    def amendSEPeriodSummaryAny(returnValue: Api1895Response): CallHandler3[AmendSEPeriodSummaryRequestData, HeaderCarrier, ExecutionContext, Future[Api1895Response]] =
+      (mockIFSConnector.amendSEPeriodSummary(_: AmendSEPeriodSummaryRequestData)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(*, *, *)
+        .returning(Future.successful(returnValue))
+
+  }
 }

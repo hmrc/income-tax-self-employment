@@ -17,9 +17,9 @@
 package services.journeyAnswers
 
 import cats.implicits._
-import connectors.IFS.IFSConnector
 import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne
+import mocks.connectors.MockIFSConnector
 import models.connector.api_1786.IncomesType
 import models.connector.api_1803.AnnualAdjustmentsType
 import models.connector.{api_1786, api_1803}
@@ -33,65 +33,86 @@ import org.scalatest.concurrent.ScalaFutures.convertScalaFuture
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.http.Status.INTERNAL_SERVER_ERROR
-import services.journeyAnswers.PrepopAnswersServiceImplSpec._
-import stubs.connectors.StubIFSConnector
+import play.api.test.DefaultAwaitTimeout
+import play.api.test.Helpers.await
+import data.IFSConnectorTestData.{api1786EmptySuccessResponse, api1803EmptyResponse}
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.BaseSpec._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
-class PrepopAnswersServiceImplSpec extends AnyWordSpecLike with Matchers {
+class PrepopAnswersServiceImplSpec extends AnyWordSpecLike
+  with Matchers
+  with DefaultAwaitTimeout
+  with MockIFSConnector {
+
+  val service = new PrepopAnswersServiceImpl(mockIFSConnector)
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
-
   private val downstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.parsingError)
 
   "getIncomeAnswers" should {
     val filledIncomes: IncomesType = IncomesType(Some(100), Some(50), None)
-    "return empty answers if there is no answers submitted" in new TestCase() {
-      service.getIncomeAnswers(journeyCtxWithNino).value.futureValue shouldBe IncomePrepopAnswers(None, None).asRight
+
+    "return empty answers if there is no answers submitted" in {
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(api1786EmptySuccessResponse.asRight)
+
+      await(service.getIncomeAnswers(journeyCtxWithNino).value) shouldBe IncomePrepopAnswers(None, None).asRight
     }
 
-    "return error if error is returned from the Connector" in new TestCase(connector =
-      StubIFSConnector(getPeriodicSummaryDetailResult = Future(downstreamError.asLeft))) {
-      val result: Either[ServiceError, IncomePrepopAnswers] = service.getIncomeAnswers(journeyCtxWithNino).value.futureValue
+    "return error if error is returned from the Connector" in {
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(downstreamError.asLeft)
+
+      val result: Either[ServiceError, IncomePrepopAnswers] = await(service.getIncomeAnswers(journeyCtxWithNino).value)
+
       val error: ServiceError                               = result.left.value
       error shouldBe a[DownstreamError]
     }
 
-    "return IncomePrepopAnswers" in new TestCase(connector = StubIFSConnector(getPeriodicSummaryDetailResult = Future.successful(
-      api_1786.SuccessResponseSchema(currTaxYearStart, currTaxYearEnd, api_1786.FinancialsType(None, filledIncomes.some)).asRight))) {
-      val result: Either[ServiceError, IncomePrepopAnswers] = service.getIncomeAnswers(journeyCtxWithNino).value.futureValue
+    "return IncomePrepopAnswers" in {
+      val periodicSummaryDetailResponse = api_1786.SuccessResponseSchema(
+        currTaxYearStart, currTaxYearEnd, api_1786.FinancialsType(None, filledIncomes.some)
+      ).asRight
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(periodicSummaryDetailResponse)
+
+      val result: Either[ServiceError, IncomePrepopAnswers] = await(service.getIncomeAnswers(journeyCtxWithNino).value)
+
       result.value shouldBe IncomePrepopAnswers(filledIncomes.turnover, filledIncomes.other)
     }
+
   }
 
   "getAdjustmentsAnswers" should {
     val annualAdjustmentsType: AnnualAdjustmentsType = genOne(annualAdjustmentsTypeGen)
-    "return empty answers if there is no answers submitted" in new TestCase() {
-      service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue shouldBe AdjustmentsPrepopAnswers.emptyAnswers.asRight
+
+    "return empty answers if there is no answers submitted" in {
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+
+      await(service.getAdjustmentsAnswers(journeyCtxWithNino).value) shouldBe AdjustmentsPrepopAnswers.emptyAnswers.asRight
     }
 
-    "return error if error is returned from the Connector" in new TestCase(connector =
-      StubIFSConnector(getAnnualSummariesResult = downstreamError.asLeft)) {
+    "return error if error is returned from the Connector" in {
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(downstreamError.asLeft)
+
       val result: Either[ServiceError, AdjustmentsPrepopAnswers] = service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue
+
       val error: ServiceError                                    = result.left.value
       error shouldBe a[DownstreamError]
     }
 
-    "return IncomePrepopAnswers" in new TestCase(connector =
-      StubIFSConnector(getAnnualSummariesResult = api_1803.SuccessResponseSchema(annualAdjustmentsType.some, None, None).asRight)) {
-      val result: Either[ServiceError, AdjustmentsPrepopAnswers] =
-        service.getAdjustmentsAnswers(journeyCtxWithNino).value.futureValue
+    "return IncomePrepopAnswers" in {
+      val annualSummariesResponse = api_1803.SuccessResponseSchema(annualAdjustmentsType.some, None, None).asRight
+
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(annualSummariesResponse)
+
+      val result: Either[ServiceError, AdjustmentsPrepopAnswers] = await(service.getAdjustmentsAnswers(journeyCtxWithNino).value)
+
       val expectedAnswer: AdjustmentsPrepopAnswers = fromAnnualAdjustmentsType(annualAdjustmentsType)
       result.value shouldBe expectedAnswer
     }
+
   }
+
 }
 
-object PrepopAnswersServiceImplSpec {
-  abstract class TestCase(val connector: IFSConnector = StubIFSConnector()) {
-    val service = new PrepopAnswersServiceImpl(connector)
-  }
-}

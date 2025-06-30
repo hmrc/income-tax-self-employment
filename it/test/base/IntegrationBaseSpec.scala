@@ -28,7 +28,7 @@ import play.api.http.HeaderNames
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.{WSClient, WSRequest}
 import play.api.test.DefaultAwaitTimeout
-import repositories.MongoJourneyAnswersRepository
+import repositories.JourneyAnswersRepository
 import testdata.CommonTestData
 import uk.gov.hmrc.http.HeaderCarrier.Config
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -51,7 +51,7 @@ trait IntegrationBaseSpec
   implicit val hc: HeaderCarrier    = HeaderCarrier(sessionId = Some(SessionId("sessionIdValue")))
 
   protected lazy val ws: WSClient          = app.injector.instanceOf[WSClient]
-  val mongo: MongoJourneyAnswersRepository = app.injector.instanceOf[MongoJourneyAnswersRepository]
+  val mongo: JourneyAnswersRepository = app.injector.instanceOf[JourneyAnswersRepository]
   lazy val appConfig: AppConfig            = app.injector.instanceOf[AppConfig]
   lazy val httpClientV2: HttpClientV2      = app.injector.instanceOf[HttpClientV2]
 

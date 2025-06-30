@@ -48,8 +48,10 @@ import scala.concurrent.{ExecutionContext, Future}
 class ExpensesAnswersService @Inject() (connector: IFSConnector, repository: JourneyAnswersRepository)(implicit ec: ExecutionContext) {
 
   def persistAnswers[A](businessId: BusinessId, taxYear: TaxYear, mtditid: Mtditid, journey: JourneyName, answers: A)(implicit
-      writes: Writes[A]): ApiResultT[Unit] =
+      writes: Writes[A]): ApiResultT[Unit] = {
+    println ("EGG")
     repository.upsertAnswers(JourneyContext(taxYear, businessId, mtditid, journey), Json.toJson(answers))
+  }
 
   def saveTailoringAnswers(ctx: JourneyContextWithNino, answers: ExpensesTailoringAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] = {
     def createFinancials(existingFinancials: api_1786.FinancialsType): FinancialsType = {

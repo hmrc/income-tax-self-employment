@@ -16,12 +16,12 @@
 
 package config
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import models.common.TaxYear.asTys
 import models.common.{Nino, TaxYear}
 import models.connector.ApiName
 import models.connector.IntegrationContext.IntegrationHeaderCarrier
-import play.api.Configuration
+import play.api.{ConfigLoader, Configuration}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import utils.Logging
@@ -29,20 +29,29 @@ import utils.Logging
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.Duration
 
+trait FeatureSwitchConfig {
+  def hipMigration1171Enabled: Boolean
+  def hipMigration2085Enabled: Boolean
+  def hipMigration1505Enabled: Boolean
+  def hipMigration1509Enabled: Boolean
+}
+
 @Singleton
-class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig) extends Logging {
-  val appName: String = config.get[String]("appName")
-  val testMode: List[String] =
-    config.getOptional[String]("microservice.services.integration-framework.test-mode").map(_.split(",").toList).getOrElse(Nil)
+class AppConfig @Inject()(config: Configuration, servicesConfig: ServicesConfig) extends FeatureSwitchConfig with Logging {
+
+  lazy val appName: String = config.get[String]("appName")
+  lazy val testMode: List[String] = config.getOptional[String]("microservice.services.integration-framework.test-mode")
+    .map(_.split(",").toList)
+    .getOrElse(Nil)
 
   if (testMode.nonEmpty) {
-    logger.warn("!! TEST MODE enabled in microservice.services.test-mode - YOU SHOULD NOT SEE THIS MESSAGE ON PROD or END TO END tests !!")
+    logger.warn("!! TEST MODE enabled in microservice.services.test-mode - YOU SHOULD NOT SEE THIS MESSAGE ON PROD or ,END TO END tests !!")
     logger.info(s"Test Scenarios activated: ${testMode.mkString(",")}")
   }
 
-  val ifsEnvironment: String             = config.get[String]("microservice.services.integration-framework.environment")
-  val hipEnvironment: String             = config.get[String]("microservice.services.hip-integration-framework.environment")
-  val selfEmploymentFrontendHost: String = servicesConfig.baseUrl("income-tax-self-employment-frontend")
+  lazy val ifsEnvironment: String             = config.get[String]("microservice.services.integration-framework.environment")
+  lazy val hipEnvironment: String             = config.get[String]("microservice.services.hip-integration-framework.environment")
+  lazy val selfEmploymentFrontendHost: String = servicesConfig.baseUrl("income-tax-self-employment-frontend")
 
   // TODO This is not good. It means that the app will fail on missing config only on first request, not on bootstrap
   def ifsAuthorisationToken(api: String): String = config.get[String](s"microservice.services.integration-framework.authorisation-token.$api")
@@ -50,26 +59,26 @@ class AppConfig @Inject() (config: Configuration, servicesConfig: ServicesConfig
   def clientId: String = config.get[String](s"microservice.services.hip-integration-framework.clientId")
   def clientSecret: String = config.get[String](s"microservice.services.hip-integration-framework.clientSecret")
 
-  val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
+  lazy val ifsBaseUrl: String = servicesConfig.baseUrl("integration-framework")
 
-  val hipBaseUrl: String = servicesConfig.baseUrl("hip-integration-framework")
+  lazy val hipBaseUrl: String = servicesConfig.baseUrl("hip-integration-framework")
 
-  val ifsApi1171: String = servicesConfig.baseUrl("integration-framework-api1171")
+  lazy val ifsApi1171: String = servicesConfig.baseUrl("integration-framework-api1171")
 
-  val api1507Url: Nino => String = nino => s"$ifsBaseUrl/income-tax/claims-for-relief/${nino.value}"
+  lazy val api1507Url: Nino => String = nino => s"$ifsBaseUrl/income-tax/claims-for-relief/${nino.value}"
 
   def api1505Url(nino: Nino, taxYear: TaxYear): String = s"$ifsBaseUrl/income-tax/claims-for-relief/${nino.value}/${asTys(taxYear)}"
 
   def api1509Url(nino: Nino, claimId: String): String = s"$ifsBaseUrl/income-tax/claims-for-relief/${nino.value}/$claimId"
 
-  val api1867Url: (TaxYear, Nino) => String =
+  lazy val api1867Url: (TaxYear, Nino) => String =
     (taxYear, nino) => s"$ifsBaseUrl/income-tax/${TaxYear.asTys(taxYear)}/claims-for-relief/${nino.value}"
 
-  val citizenDetailsUrl: String = servicesConfig.baseUrl("citizen-details")
+  lazy val citizenDetailsUrl: String = servicesConfig.baseUrl("citizen-details")
 
-  val mongoTTL: Int = Duration(servicesConfig.getString("mongodb.timeToLive")).toDays.toInt
+  lazy val mongoTTL: Int = Duration(servicesConfig.getString("mongodb.timeToLive")).toDays.toInt
 
-  val headerCarrierConfig: HeaderCarrier.Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
+  lazy val headerCarrierConfig: HeaderCarrier.Config = HeaderCarrier.Config.fromConfig(ConfigFactory.load())
 
   def mkMetadata(apiName: ApiName, url: String): IntegrationHeaderCarrier =
     IntegrationHeaderCarrier(headerCarrierConfig, this, apiName, url)

@@ -16,23 +16,27 @@
 
 package services.journeyAnswers
 
+import mocks.repositories.MockJourneyAnswersRepository
 import models.common.{JourneyName, JourneyStatus}
 import models.database.JourneyAnswers
 import models.frontend.abroad.SelfEmploymentAbroadAnswers
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.Json
-import stubs.repositories.StubJourneyAnswersRepository
 import utils.BaseSpec._
 import utils.EitherTTestOps._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class AbroadAnswersServiceImplSpec extends AnyWordSpecLike {
-  val service = new AbroadAnswersServiceImpl(StubJourneyAnswersRepository())
+class AbroadAnswersServiceImplSpec extends AnyWordSpecLike with MockJourneyAnswersRepository {
+
+  val service = new AbroadAnswersServiceImpl(mockJourneyAnswersRepository)
 
   "getAnswers" should {
     "return empty if no answers" in {
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.SelfEmploymentAbroad))(None)
+
       val result = service.getAnswers(journeyCtxWithNino).rightValue
+
       assert(result === None)
     }
 
@@ -43,11 +47,10 @@ class AbroadAnswersServiceImplSpec extends AnyWordSpecLike {
         Json.obj("selfEmploymentAbroad" -> true)
       )
 
-      val service = new AbroadAnswersServiceImpl(
-        StubJourneyAnswersRepository(
-          getAnswer = Some(journeyAnswers)
-        ))
+      JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.SelfEmploymentAbroad))(Some(journeyAnswers))
+
       val result = service.getAnswers(journeyCtxWithNino).rightValue
+
       assert(result === Some(SelfEmploymentAbroadAnswers(true)))
     }
   }
@@ -55,7 +58,13 @@ class AbroadAnswersServiceImplSpec extends AnyWordSpecLike {
   "persistAnswers" should {
     "persist answers successfully" in {
       val answers = SelfEmploymentAbroadAnswers(true)
-      val result  = service.persistAnswers(journeyCtxWithNino, answers).rightValue
+      JourneyAnswersRepositoryMock.upsertAnswers(
+        journeyCtxWithNino.toJourneyContext(JourneyName.SelfEmploymentAbroad),
+        newData = Json.toJson(answers)
+      )
+
+      val result: Unit = service.persistAnswers(journeyCtxWithNino, answers).rightValue
+
       assert(result === ())
     }
   }

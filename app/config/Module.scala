@@ -27,6 +27,7 @@ import java.time.{Clock, ZoneOffset}
 class Module extends AbstractModule {
 
   override def configure(): Unit = {
+    bind(classOf[FeatureSwitchConfig]).to(classOf[AppConfig])
     bind(classOf[AppConfig]).asEagerSingleton()
     bind(classOf[Clock]).toInstance(Clock.systemDefaultZone.withZone(ZoneOffset.UTC))
     bind(classOf[PrepopAnswersService]).to(classOf[PrepopAnswersServiceImpl])
@@ -40,7 +41,6 @@ class Module extends AbstractModule {
     bind(classOf[JourneyStatusService]).to(classOf[JourneyStatusServiceImpl])
     bind(classOf[ProfitOrLossAnswersService]).to(classOf[ProfitOrLossAnswersServiceImpl])
     bind(classOf[NICsAnswersService]).to(classOf[NICsAnswersServiceImpl])
-    bind(classOf[JourneyAnswersRepository]).to(classOf[MongoJourneyAnswersRepository])
     ()
   }
 

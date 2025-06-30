@@ -17,6 +17,7 @@
 package services.journeyAnswers
 
 import cats.implicits.catsSyntaxEitherId
+import data.IFSConnectorTestData.api1786EmptySuccessResponse
 import gens.ExpensesJourneyAnswersGen._
 import gens.genOne
 import mocks.connectors.MockIFSConnector
@@ -45,35 +46,35 @@ import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsJourn
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.libs.json.JsObject
 import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers.await
 import repositories.JourneyAnswersRepository
 import services.journeyAnswers.expenses.PeriodSummaryService
-import stubs.connectors.StubIFSConnector.api1786DeductionsSuccessResponse
 import utils.BaseSpec._
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 
-class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndAfterEach with DefaultAwaitTimeout {
+class PeriodSummaryServiceSpec extends AnyWordSpec
+  with Matchers
+  with BeforeAndAfterEach
+  with DefaultAwaitTimeout
+  with MockIFSConnector
+  with MockJourneyAnswersRepository {
 
   val repo: JourneyAnswersRepository = mock[JourneyAnswersRepository]
 
   val service = new PeriodSummaryService(
-    MockIFSConnector.mockInstance,
-    MockJourneyAnswersRepository.mockInstance
+    mockIFSConnector,
+    mockJourneyAnswersRepository
   )
 
   val deductTestData: Option[DeductionsType] = Some(DeductionsTypeTestData.sample)
   val incomeTestData: Option[IncomesType] = Some(IncomeTypeTestData.sample)
 
-  MockIFSConnector.getPeriodicSummaryDetail(journeyCtxWithNino)(
-    returnValue = Right(api1786DeductionsSuccessResponse.copy(
-      financials = FinancialsType(deductTestData, incomeTestData)))
-  )
+
 
   val amendBody: AmendSEPeriodSummaryRequestBody = AmendSEPeriodSummaryRequestBody(
     incomes = incomeTestData.map(_.toApi1895),
@@ -87,15 +88,12 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
     amendBody
   )
 
-  MockIFSConnector.amendSEPeriodSummary(dataSample)(Right(()))
-
   "get answers" should {
-
     "getTravelExpensesAnswers" in {
       val now: Instant   = Instant.now()
       val journeyAnswers = Some(JourneyAnswers(mtditid, businessId, taxYear, JourneyName.TravelExpenses, Completed, JsObject.empty, now, now, now))
 
-      MockJourneyAnswersRepository.get(travelExpensesCtx)(journeyAnswers)
+      JourneyAnswersRepositoryMock.get(travelExpensesCtx)(journeyAnswers)
 
       val result: Either[ServiceError, Option[TravelExpensesDb]] = await(service.getTravelExpensesAnswers(journeyCtxWithNino).value)
 
@@ -103,13 +101,16 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
     }
   }
 
+  // TODO: Update to expect proper data instead of using wildcard matchers
   "save answers" should {
-
     "saveTravelExpensesAnswers" in {
       val answers: TravelExpensesDb = TravelExpensesDb(
         totalTravelExpenses = Some(200.00),
         disallowableTravelExpenses = Some(100.00)
       )
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
 
       val result: Either[ServiceError, Unit] = await(service.saveTravelExpenses(journeyCtxWithNino, answers).value)
 
@@ -119,6 +120,9 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
     "saveOfficeSuppliesAnswers " in {
       val answers: OfficeSuppliesJourneyAnswers = genOne(officeSuppliesJourneyAnswersGen)
 
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit] = await(service.saveOfficeSuppliesAnswers(journeyCtxWithNino, answers).value)
 
       result shouldBe Right(())
@@ -126,6 +130,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveGoodsToSell" in {
       val answers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit]      = await(service.saveGoodsToSell(journeyCtxWithNino, answers).value)
 
       result shouldBe Right(())
@@ -133,6 +141,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveRepairsAndMaintenance" in {
       val answers: RepairsAndMaintenanceCostsJourneyAnswers = genOne(repairsAndMaintenanceCostsJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit]                = await(service.saveRepairsAndMaintenance(journeyCtxWithNino, answers).value)
 
       result shouldBe Right(())
@@ -140,6 +152,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveWorkplaceRunningCosts" in {
       val answers: WorkplaceRunningCostsJourneyAnswers = genOne(workplaceRunningCostsJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit]           = await(service.saveWorkplaceRunningCosts(journeyCtxWithNino, answers).value)
 
       result shouldBe Right(())
@@ -147,6 +163,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveAdvertisingOrMarketing" in {
       val answers: AdvertisingOrMarketingJourneyAnswers = genOne(advertisingOrMarketingJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit]            = await(service.saveAdvertisingOrMarketing(journeyCtxWithNino, answers).value)
 
       result shouldBe Right(())
@@ -154,6 +174,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveEntertainmentCosts" in {
       val answers: EntertainmentJourneyAnswers = genOne(entertainmentJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit]   = await(service.saveEntertainmentCosts(journeyCtxWithNino, answers).value)
 
       result shouldBe Right(())
@@ -161,6 +185,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveStaffCosts" in {
       val answers: StaffCostsJourneyAnswers  = genOne(staffCostsJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit] = await(service.saveStaffCosts(journeyCtxWithNino, answers).value)
 
       result shouldBe ().asRight
@@ -168,6 +196,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveConstructionIndustrySubcontractors" in {
       val answers: ConstructionJourneyAnswers = genOne(constructionJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit]  = await(service.saveConstructionIndustrySubcontractors(journeyCtxWithNino, answers).value)
 
       result shouldBe ().asRight
@@ -175,6 +207,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveProfessionalFees" in {
       val answers: ProfessionalFeesJourneyAnswers = genOne(professionalFeesJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit]      = await(service.saveProfessionalFees(journeyCtxWithNino, answers).value)
 
       result shouldBe ().asRight
@@ -182,6 +218,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveFinancialCharges" in {
       val answers: FinancialChargesJourneyAnswers = genOne(financialChargesJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit]      = await(service.saveFinancialCharges(journeyCtxWithNino, answers).value)
 
       result shouldBe ().asRight
@@ -189,6 +229,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveBadDebts" in {
       val answers: IrrecoverableDebtsJourneyAnswers = genOne(irrecoverableDebtsJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit]        = await(service.saveBadDebts(journeyCtxWithNino, answers).value)
 
       result shouldBe ().asRight
@@ -196,6 +240,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveDepreciationCosts" in {
       val answers: DepreciationCostsJourneyAnswers = genOne(depreciationCostsJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit]       = await(service.saveDepreciationCosts(journeyCtxWithNino, answers).value)
 
       result shouldBe ().asRight
@@ -203,6 +251,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveOtherExpenses" in {
       val answers: OtherExpensesJourneyAnswers = genOne(otherExpensesJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit]   = await(service.saveOtherExpenses(journeyCtxWithNino, answers).value)
 
       result shouldBe ().asRight
@@ -210,6 +262,10 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "saveInterests" in {
       val answers: InterestJourneyAnswers    = genOne(interestJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit] = await(service.saveInterests(journeyCtxWithNino, answers).value)
 
       result shouldBe ().asRight
@@ -217,10 +273,15 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
 
     "goodsToSell successfully" in {
       val someExpensesAnswers: GoodsToSellOrUseJourneyAnswers = genOne(goodsToSellOrUseJourneyAnswersGen)
+
+      IFSConnectorMock.getPeriodicSummaryDetail(journeyCtxWithNino)(Right(api1786EmptySuccessResponse))
+      IFSConnectorMock.amendSEPeriodSummaryAny(Right(()))
+
       val result: Either[ServiceError, Unit]                  = await(service.saveGoodsToSell(journeyCtxWithNino, someExpensesAnswers).value)
 
       result shouldBe ().asRight
     }
 
   }
+
 }

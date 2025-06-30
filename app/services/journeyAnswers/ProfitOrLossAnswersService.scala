@@ -86,7 +86,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     EitherT(submissionBody).flatMap(ifsConnector.createUpdateOrDeleteApiAnnualSummaries(ctx, _))
   }
 
-  def storeReliefClaimAnswers(ctx: JourneyContextWithNino, submittedAnswers: ProfitOrLossJourneyAnswers)(implicit
+  private def storeReliefClaimAnswers(ctx: JourneyContextWithNino, submittedAnswers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       reliefClaims <- reliefClaimsService.getAllReliefClaims(ctx)
@@ -121,7 +121,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     }
   }
 
-  def storeBroughtForwardLossAnswers(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  private def storeBroughtForwardLossAnswers(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
     for {
       maybeLoss <- getBroughtForwardLossByBusinessId(ctx)
       result    <- handleBroughtForwardLoss(ctx, maybeLoss, answers)
@@ -139,6 +139,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     (answers.unusedLossAmount, answers.whichYearIsLossReported) match {
       case (Some(amount), Some(whichYear)) =>
         if (whichYear.apiTaxYear == lossData.taxYearBroughtForwardFrom) {
+          println(ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossData(ctx, lossData.lossId, amount))
           ifsBusinessDetailsConnector
             .updateBroughtForwardLoss(ProfitOrLossJourneyAnswers.toUpdateBroughtForwardLossData(ctx, lossData.lossId, amount))
             .map(_ => ())

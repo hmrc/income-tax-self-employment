@@ -51,6 +51,8 @@ trait IFSConnector {
   def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1786Response]
   def createSEPeriodSummary(data: CreateSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1894Response]
   def amendSEPeriodSummary(data: AmendSEPeriodSummaryRequestData)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Api1895Response]
+
+  // TODO: Sort out this Option[Option[List[PeriodDetails]] situation - replace with List[PeriodDetails] which is either populated or not
   def listSEPeriodSummary(
       ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ApiResponse[Option[ListSEPeriodSummariesResponse]]]
 

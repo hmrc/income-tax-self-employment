@@ -22,21 +22,24 @@ import models.common.{BusinessId, Mtditid, Nino}
 import models.connector.businessDetailsConnector.BusinessDetailsHipSuccessWrapper
 import models.domain.ApiResultT
 import models.error.ServiceError
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaOngoingStubbing
-import org.scalatestplus.mockito.MockitoSugar.mock
+import org.scalamock.handlers.CallHandler5
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.{OneInstancePerTest, TestSuite}
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-object MockBusinessDetailsConnector {
+trait MockBusinessDetailsConnector extends TestSuite with MockFactory with OneInstancePerTest {
 
-  val mockInstance: BusinessDetailsConnector = mock[BusinessDetailsConnector]
+  val mockBusinessDetailsConnector: BusinessDetailsConnector = mock[BusinessDetailsConnector]
 
-  def getBusinessDetails(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)
-                        (returnValue: Either[ServiceError, Option[BusinessDetailsHipSuccessWrapper]]): ScalaOngoingStubbing[ApiResultT[Option[BusinessDetailsHipSuccessWrapper]]] =
-    when(mockInstance.getBusinessDetails(eqTo(businessId), eqTo(mtditid), eqTo(nino))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(EitherT.apply(Future.successful(returnValue)))
+  object BusinessDetailsConnectorMock {
 
+    def getBusinessDetails(businessId: Option[BusinessId], mtditid: Mtditid, nino: Nino)
+                          (returnValue: Either[ServiceError, Option[BusinessDetailsHipSuccessWrapper]]): CallHandler5[Option[BusinessId], Mtditid, Nino, HeaderCarrier, ExecutionContext, ApiResultT[Option[BusinessDetailsHipSuccessWrapper]]] =
+      (mockBusinessDetailsConnector.getBusinessDetails(_: Option[BusinessId], _: Mtditid, _: Nino)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(businessId, mtditid, nino, *, *)
+        .returning(EitherT.apply(Future.successful(returnValue)))
+
+  }
 }

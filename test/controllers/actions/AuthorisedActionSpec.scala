@@ -18,11 +18,14 @@ package controllers.actions
 
 import common._
 import controllers.actions.AuthorisedAction.User
-import mocks.MockAppConfig
+import mocks.{MockAppConfig, MockAuth}
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.wordspec.AnyWordSpec
 import play.api.http.Status._
 import play.api.mvc.Results._
 import play.api.mvc.{AnyContent, Result}
 import play.api.test.FakeRequest
+import play.api.test.Helpers.stubControllerComponents
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.Retrieval
@@ -30,13 +33,14 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
 import uk.gov.hmrc.http.HeaderCarrier
 import utils.TestUtils
+import utils.TestUtils.defaultActionBuilder
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuthorisedActionSpec extends TestUtils with MockAppConfig {
 
-  override val mockAuthorisedAction: AuthorisedAction =
-    new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents)
+  override val mockAuthorisedAction: AuthorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents)
+
   lazy val auth: AuthorisedAction = mockAuthorisedAction
 
   lazy val block: User[AnyContent] => Future[Result] =

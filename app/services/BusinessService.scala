@@ -18,7 +18,7 @@ package services
 
 import cats.data.EitherT
 import cats.implicits.toTraverseOps
-import config.AppConfig
+import config.{AppConfig, FeatureSwitchConfig}
 import connectors.HIP.{BusinessDetailsConnector, IncomeSourcesConnector}
 import connectors.IFS.{IFSBusinessDetailsConnector, IFSConnector}
 import connectors.MDTP.MDTPConnector
@@ -44,7 +44,7 @@ class BusinessService @Inject()(ifsBusinessDetailsConnector: IFSBusinessDetailsC
                                 hipBusinessDetailsConnector: BusinessDetailsConnector,
                                 ifsConnector: IFSConnector,
                                 hipIncomeSourceConnector: IncomeSourcesConnector,
-                                appConfig: AppConfig)
+                                appConfig: FeatureSwitchConfig)
                                (implicit ec: ExecutionContext)
   extends Logging {
 

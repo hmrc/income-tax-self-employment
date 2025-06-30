@@ -26,7 +26,7 @@ import org.mongodb.scala.result.DeleteResult
 import play.api.libs.json.{Format, JsObject, JsValue, Json}
 import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers.await
-import repositories.MongoJourneyAnswersRepository
+import repositories.JourneyAnswersRepository
 import testdata.CommonTestData
 
 import java.time.temporal.ChronoUnit
@@ -34,7 +34,7 @@ import java.time.temporal.ChronoUnit
 trait JourneyAnswersHelper {
   self: CommonTestData with DefaultAwaitTimeout =>
 
-  val mongo: MongoJourneyAnswersRepository
+  val mongo: JourneyAnswersRepository
 
   val filter: Bson = Filters.and(
     Filters.equal("mtditid", testMtdItId.value),

@@ -18,7 +18,6 @@ package utils
 
 import com.codahale.metrics.SharedMetricRegistries
 import common._
-import config.AppConfig
 import controllers.actions.AuthorisedAction
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.SystemMaterializer
@@ -57,8 +56,6 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
   val fakeRequestWithMtditid: FakeRequest[AnyContentAsEmpty.type] = FakeRequest().withSession("MTDITID" -> "1234567890")
 
   implicit val emptyHeaderCarrier: HeaderCarrier = HeaderCarrier()
-
-  val mockAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   implicit val stubControllerComponents: ControllerComponents = Helpers.stubControllerComponents()
   implicit val mockExecutionContext: ExecutionContext         = ExecutionContext.Implicits.global

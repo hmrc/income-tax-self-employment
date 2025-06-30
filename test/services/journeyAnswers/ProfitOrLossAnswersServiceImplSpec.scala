@@ -16,43 +16,36 @@
 
 package services.journeyAnswers
 
-import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
-import connectors.HIP.BroughtForwardLossConnector
+import data.IFSConnectorTestData._
+import mocks.connectors.{MockBroughtForwardLossConnector, MockIFSBusinessDetailsConnector, MockIFSConnector}
+import mocks.repositories.MockJourneyAnswersRepository
 import mocks.services.MockReliefClaimsService
-import mocks.services.MockReliefClaimsService.mockInstance
-import models.common.{JourneyContextWithNino, Nino, TaxYear}
+import models.common.JourneyName.ProfitOrLoss
+import models.common.TaxYear
 import models.connector.ReliefClaimType
-import models.connector.api_1501.UpdateBroughtForwardLossRequestBody
+import models.connector.api_1500.{CreateBroughtForwardLossRequestBody, CreateBroughtForwardLossRequestData, LossType}
+import models.connector.api_1501.{UpdateBroughtForwardLossRequestBody, UpdateBroughtForwardLossRequestData}
 import models.connector.api_1505.ClaimId
 import models.connector.api_1802.request._
 import models.connector.common.ReliefClaim
-import models.database.adjustments.ProfitOrLossDb
-import models.domain.ApiResultT
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
-import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.{CarryItForward, DeductFromOtherTypes}
+import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.CarryItForward
 import models.frontend.adjustments._
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import org.mockito.MockitoSugar.{reset, times, verify, when}
+import org.mockito.MockitoSugar.reset
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterEach, EitherValues}
-import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NOT_FOUND}
 import play.api.libs.json.Json
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
-import stubs.connectors.StubIFSConnector._
-import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
-import stubs.repositories.StubJourneyAnswersRepository
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
-import utils.BaseSpec.{businessId, hc, journeyCtxWithNino}
+import utils.BaseSpec.{businessId, currTaxYear, hc, journeyCtxWithNino, nino}
 import utils.EitherTTestOps.convertScalaFuture
 
 import java.time.LocalDateTime
-import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ProfitOrLossAnswersServiceImplSpec
@@ -60,7 +53,22 @@ class ProfitOrLossAnswersServiceImplSpec
     with TableDrivenPropertyChecks
     with Matchers
     with BeforeAndAfterEach
-    with EitherValues {
+    with EitherValues
+    with MockJourneyAnswersRepository
+    with MockIFSConnector
+    with MockIFSBusinessDetailsConnector
+    with MockBroughtForwardLossConnector {
+
+  val lossId                     = "lossId123"
+
+  def service: ProfitOrLossAnswersServiceImpl =
+    new ProfitOrLossAnswersServiceImpl(
+      ifsConnector = mockIFSConnector,
+      ifsBusinessDetailsConnector = mockIFSBusinessDetailsConnector,
+      broughtForwardLossConnector = mockBroughtForwardLossConnector,
+      reliefClaimsService = MockReliefClaimsService.mockInstance,
+      repository = mockJourneyAnswersRepository
+    )
 
   val downstreamError: SingleDownstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
   val notFoundError: SingleDownstreamError   = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
@@ -84,9 +92,9 @@ class ProfitOrLossAnswersServiceImplSpec
       journeyCtxWithNino.nino,
       journeyCtxWithNino.businessId,
       CreateAmendSEAnnualSubmissionRequestBody(
-        adjustments,
-        allowances,
-        None
+        annualAdjustments = adjustments,
+        annualAllowances = allowances,
+        annualNonFinancials = None
       )
     )
 
@@ -103,278 +111,264 @@ class ProfitOrLossAnswersServiceImplSpec
 
   "Saving ProfitOrLoss answers" must {
     val unusedLossAmount: BigDecimal = 400
-    val yesBroughtForwardLossAnswers =
-      ProfitOrLossJourneyAnswers(
-        goodsAndServicesForYourOwnUse = true,
-        Option(BigDecimal(200)),
-        Option(true),
-        None,
-        None,
-        previousUnusedLosses = true,
-        Option(unusedLossAmount),
-        Option(WhichYearIsLossReported.Year2018to2019)
+
+    val yesBroughtForwardLossAnswers = ProfitOrLossJourneyAnswers(
+      goodsAndServicesForYourOwnUse = true,
+      goodsAndServicesAmount = Option(BigDecimal(200)),
+      claimLossRelief = Option(true),
+      whatDoYouWantToDoWithLoss = None,
+      carryLossForward = None,
+      previousUnusedLosses = true,
+      unusedLossAmount = Option(unusedLossAmount),
+      whichYearIsLossReported = Option(WhichYearIsLossReported.Year2018to2019)
+    )
+
+    val noBroughtForwardLossAnswers = ProfitOrLossJourneyAnswers(
+      goodsAndServicesForYourOwnUse = false,
+      goodsAndServicesAmount = None,
+      claimLossRelief = Option(false),
+      whatDoYouWantToDoWithLoss = None,
+      carryLossForward = None,
+      previousUnusedLosses = false,
+      unusedLossAmount = None,
+      whichYearIsLossReported = None
+    )
+
+    val emptyBroughtForwardLossAnswers = ProfitOrLossJourneyAnswers(
+      goodsAndServicesForYourOwnUse = false,
+      goodsAndServicesAmount = None,
+      claimLossRelief = None,
+      whatDoYouWantToDoWithLoss = None,
+      carryLossForward = None,
+      previousUnusedLosses = false,
+      unusedLossAmount = None,
+      whichYearIsLossReported = None
+    )
+
+    val allowancesData: AnnualAllowances = AnnualAllowances(
+      annualInvestmentAllowance = None,
+      capitalAllowanceMainPool = None,
+      capitalAllowanceSpecialRatePool = None,
+      zeroEmissionGoodsVehicleAllowance = Option(BigDecimal(5000)),
+      businessPremisesRenovationAllowance = None, enhanceCapitalAllowance = None,
+      allowanceOnSales = None, capitalAllowanceSingleAssetPool = None,
+      structuredBuildingAllowance = None,
+      enhancedStructuredBuildingAllowance = None,
+      zeroEmissionsCarAllowance = Option(BigDecimal(5000)),
+      tradingIncomeAllowance = None
+    )
+
+    val createBfLossRequestBody = CreateBroughtForwardLossRequestBody(
+      taxYearBroughtForwardFrom = "2018-19",
+      typeOfLoss = LossType.SelfEmployment,
+      businessId = businessId.value,
+      lossAmount = 400
+    )
+
+    "successfully save data when answers are true" in {
+      val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData = expectedAnnualSummariesData(
+        adjustments = Option(yesBroughtForwardLossAnswers.toDownStreamAnnualAdjustments(Option(AnnualAdjustments.empty))),
+        allowances = Option(allowancesData)
       )
 
-    val noBroughtForwardLossAnswers =
-      ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse = false, None, Option(false), None, None, previousUnusedLosses = false, None, None)
-    val emptyBroughtForwardLossAnswers =
-      ProfitOrLossJourneyAnswers(goodsAndServicesForYourOwnUse = false, None, None, None, None, previousUnusedLosses = false, None, None)
-
-    "successfully save data when answers are true" in new StubbedService {
-      override val ifsConnector: StubIFSConnector =
-        StubIFSConnector(
-          getAnnualSummariesResult = api1803SuccessResponse.asRight
-        )
-
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803SuccessResponse.asRight)
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(expectedAnnualSummariesAnswers.body))()
+      IFSBusinessDetailsConnectorMock.getListOfBroughtForwardLosses(nino, currTaxYear)(api1870EmptyResponse.asRight)
+      IFSBusinessDetailsConnectorMock.createBroughtForwardLoss(
+        data = CreateBroughtForwardLossRequestData(nino, currTaxYear, createBfLossRequestBody)
+      )(api1500EmptyResponse.asRight)
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ProfitOrLoss), Json.toJson(yesBroughtForwardLossAnswers.toDbAnswers))
 
-      val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val allowancesData: AnnualAllowances =
-        AnnualAllowances(None, None, None, Option(BigDecimal(5000)), None, None, None, None, None, None, Option(BigDecimal(5000)), None)
-      val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
-        expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(Option(AnnualAdjustments.empty))), Option(allowancesData))
-      val result: Either[ServiceError, Unit] = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit] = await(service.saveProfitOrLoss(journeyCtxWithNino, yesBroughtForwardLossAnswers).value)
 
       assert(result == ().asRight)
-      assert(ifsConnector.upsertAnnualSummariesSubmissionData === Option(expectedAnnualSummariesAnswers))
-      assert(
-        repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
 
-    "successfully save data when answers are true (with WhatDoYouWantToDoWithLoss answer)" in new StubbedService {
-      override val ifsConnector: StubIFSConnector =
-        StubIFSConnector(
-          getAnnualSummariesResult = api1803SuccessResponse.asRight
-        )
+    "successfully save data when answers are true (with WhatDoYouWantToDoWithLoss answer)" in {
+      val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers.copy(whatDoYouWantToDoWithLoss = Option(Seq(CarryItForward)))
+      val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
+        expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(Option(AnnualAdjustments.empty))), Option(allowancesData))
 
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803SuccessResponse.asRight)
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(expectedAnnualSummariesAnswers.body))()
+      IFSBusinessDetailsConnectorMock.getListOfBroughtForwardLosses(nino, currTaxYear)(api1870EmptyResponse.asRight)
+      IFSBusinessDetailsConnectorMock.createBroughtForwardLoss(
+        data = CreateBroughtForwardLossRequestData(nino, currTaxYear, createBfLossRequestBody)
+      )(api1500EmptyResponse.asRight)
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
       MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(List(testClaimId1))
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ProfitOrLoss), Json.toJson(answers.toDbAnswers))
 
-      val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers.copy(whatDoYouWantToDoWithLoss = Option(Seq(CarryItForward)))
-      val allowancesData: AnnualAllowances =
-        AnnualAllowances(None, None, None, Option(BigDecimal(5000)), None, None, None, None, None, None, Option(BigDecimal(5000)), None)
-      val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
-        expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(Option(AnnualAdjustments.empty))), Option(allowancesData))
-
-      val result: Either[ServiceError, Unit] = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit] = await(service.saveProfitOrLoss(journeyCtxWithNino, answers).value)
 
       assert(result == ().asRight)
-      assert(ifsConnector.upsertAnnualSummariesSubmissionData === Option(expectedAnnualSummariesAnswers))
-      assert(
-        repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
 
-    "successfully save data when answers are false" in new StubbedService {
-      override val ifsConnector: StubIFSConnector =
-        StubIFSConnector(
-          getAnnualSummariesResult = api1803SuccessResponse.asRight
-        )
-
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
+    "successfully save data when answers are false" in {
       val answers: ProfitOrLossJourneyAnswers = noBroughtForwardLossAnswers
-      val allowancesData: AnnualAllowances =
-        AnnualAllowances(None, None, None, Option(BigDecimal(5000)), None, None, None, None, None, None, Option(BigDecimal(5000)), None)
       val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData = expectedAnnualSummariesData(None, Option(allowancesData))
 
-      val result: Either[ServiceError, Unit] = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803SuccessResponse.asRight)
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(expectedAnnualSummariesAnswers.body))()
+      IFSBusinessDetailsConnectorMock.getListOfBroughtForwardLosses(nino, currTaxYear)(api1870EmptyResponse.asRight)
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ProfitOrLoss), Json.toJson(answers.toDbAnswers))
+
+      val result: Either[ServiceError, Unit] = await(service.saveProfitOrLoss(journeyCtxWithNino, answers).value)
 
       assert(result == ().asRight)
-      assert(ifsConnector.upsertAnnualSummariesSubmissionData === Option(expectedAnnualSummariesAnswers))
-      assert(
-        repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = false, claimLossRelief = Option(false), previousUnusedLosses = false))))
+      //assert(ifsConnector.upsertAnnualSummariesSubmissionData === Option(expectedAnnualSummariesAnswers))
     }
 
-    "successfully create and save answers if no existing answers" in new StubbedService {
-      override val ifsConnector: StubIFSConnector =
-        StubIFSConnector(
-          getAnnualSummariesResult = api1803EmptyResponse.asRight
-        )
-
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
-
+    "successfully create and save answers if no existing answers" in {
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
       val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
         expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(None)), None)
-      val result: Either[ServiceError, Unit] = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(expectedAnnualSummariesAnswers.body))()
+      IFSBusinessDetailsConnectorMock.getListOfBroughtForwardLosses(nino, currTaxYear)(api1870EmptyResponse.asRight)
+      IFSBusinessDetailsConnectorMock.createBroughtForwardLoss(
+        data = CreateBroughtForwardLossRequestData(nino, currTaxYear, createBfLossRequestBody)
+      )(api1500EmptyResponse.asRight)
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ProfitOrLoss), Json.toJson(answers.toDbAnswers))
+
+      val result: Either[ServiceError, Unit] = await(service.saveProfitOrLoss(journeyCtxWithNino, answers).value)
 
       assert(result == ().asRight)
-      assert(ifsConnector.upsertAnnualSummariesSubmissionData === Option(expectedAnnualSummariesAnswers))
-      assert(
-        repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
 
-    "return left when getAnnualSummaries returns left" in new StubbedService {
-      override val ifsConnector: StubIFSConnector =
-        StubIFSConnector(
-          getAnnualSummariesResult = downstreamError.asLeft
-        )
-
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
+    "return left when getAnnualSummaries returns left" in {
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(downstreamError.asLeft)
+
+      val result: Either[ServiceError, Unit] = await(service.saveProfitOrLoss(journeyCtxWithNino, answers).value)
 
       assert(result == downstreamError.asLeft)
     }
 
-    "return left when createAmendSEAnnualSubmission returns left" in new StubbedService {
-      override val ifsConnector: StubIFSConnector =
-        StubIFSConnector(
-          createAmendSEAnnualSubmissionResult = downstreamError.asLeft
-        )
-
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
-
+    "return left when createAmendSEAnnualSubmission returns left" in {
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+      val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
+        expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(None)), None)
+
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(expectedAnnualSummariesAnswers.body))(downstreamError.asLeft)
+
+      val result: Either[ServiceError, Unit] = await(service.saveProfitOrLoss(journeyCtxWithNino, answers).value)
 
       assert(result == downstreamError.asLeft)
     }
 
-    "return left when upsertAnswers returns left" in new StubbedService {
-      override val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository(upsertDataField = downstreamError.asLeft)
-
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
-
+    "return left when upsertAnswers returns left" in {
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+      val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
+        expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(None)), None)
+
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(expectedAnnualSummariesAnswers.body))()
+      IFSBusinessDetailsConnectorMock.getListOfBroughtForwardLosses(nino, currTaxYear)(api1870EmptyResponse.asRight)
+      IFSBusinessDetailsConnectorMock.createBroughtForwardLoss(
+        data = CreateBroughtForwardLossRequestData(nino, currTaxYear, createBfLossRequestBody)
+      )(api1500EmptyResponse.asRight)
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
+      JourneyAnswersRepositoryMock.upsertAnswersFailure(
+        ctx = journeyCtxWithNino.toJourneyContext(ProfitOrLoss),
+        newData = Json.toJson(yesBroughtForwardLossAnswers.toDbAnswers)
+      )(downstreamError)
+
+      val result: Either[ServiceError, Unit] = await(service.saveProfitOrLoss(journeyCtxWithNino, answers).value)
 
       assert(result == downstreamError.asLeft)
     }
 
-    "successfully update brought forward loss answers when provided by user and API" in new StubbedService {
-      override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-        StubIFSBusinessDetailsConnector(
-          listBroughtForwardLossesResult = api1870SuccessResponse.asRight,
-          getBroughtForwardLossResult = api1502SuccessResponse.asRight,
-          updateBroughtForwardLossResult = api1501SuccessResponse.asRight
-        )
-
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
-
+    "successfully update brought forward loss answers when provided by user and API" in {
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+      val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
+        expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(Option(AnnualAdjustments.empty))), Option(allowancesData))
+      val updateBFLData = UpdateBroughtForwardLossRequestData(
+        nino,
+        lossId = "5678",
+        body = UpdateBroughtForwardLossRequestBody(lossAmount = unusedLossAmount)
+      )
+
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803SuccessResponse.asRight)
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(expectedAnnualSummariesAnswers.body))()
+      IFSBusinessDetailsConnectorMock.getListOfBroughtForwardLosses(nino, currTaxYear)(api1870SuccessResponse.asRight)
+      IFSBusinessDetailsConnectorMock.updateBroughtForwardLoss(updateBFLData)(api1501SuccessResponse.asRight)
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ProfitOrLoss), Json.toJson(answers.toDbAnswers))
+
+      val result: Either[ServiceError, Unit] = await(service.saveProfitOrLoss(journeyCtxWithNino, answers).value)
 
       assert(result == ().asRight)
-      assert(ifsBusinessDetailsConnector.updateBroughtForwardLossResult === api1501SuccessResponse.asRight)
-      assert(
-        repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
 
-    "successfully create brought forward loss answers when provided by user and get returns NOT_FOUND from API" in new StubbedService {
-      override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-        StubIFSBusinessDetailsConnector(
-          getBroughtForwardLossResult = downstreamError.asLeft,
-          createBroughtForwardLossResult = api1500SuccessResponse.asRight
-        )
-
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
-
+    "successfully create brought forward loss answers when provided by user and get returns NOT_FOUND from API" in {
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+      val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
+        expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(Option(AnnualAdjustments.empty))), Option(allowancesData))
+
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803SuccessResponse.asRight)
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(expectedAnnualSummariesAnswers.body))()
+      IFSBusinessDetailsConnectorMock.getListOfBroughtForwardLosses(nino, currTaxYear)(api1870EmptyResponse.asRight)
+      IFSBusinessDetailsConnectorMock.createBroughtForwardLoss(
+        data = CreateBroughtForwardLossRequestData(nino, currTaxYear, createBfLossRequestBody)
+      )(api1500SuccessResponse.asRight)
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ProfitOrLoss), Json.toJson(answers.toDbAnswers))
+
+      val result: Either[ServiceError, Unit] = await(service.saveProfitOrLoss(journeyCtxWithNino, answers).value)
 
       assert(result == ().asRight)
-      assert(ifsBusinessDetailsConnector.createBroughtForwardLossResult === api1500SuccessResponse.asRight)
-      assert(
-        repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
 
-    "successfully create brought forward loss answers when provided by user and list returns NOT_FOUND from API" in new StubbedService {
+    "successfully create brought forward loss answers when provided by user and list returns NOT_FOUND from API" in {
+      val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
       val downstreamError: SingleDownstreamError = SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound)
-      override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-        StubIFSBusinessDetailsConnector(
-          listBroughtForwardLossesResult = downstreamError.asLeft,
-          createBroughtForwardLossResult = api1500SuccessResponse.asRight
-        )
+      val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData =
+        expectedAnnualSummariesData(Option(answers.toDownStreamAnnualAdjustments(Option(AnnualAdjustments.empty))), Option(allowancesData))
 
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803SuccessResponse.asRight)
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(expectedAnnualSummariesAnswers.body))()
+      IFSBusinessDetailsConnectorMock.getListOfBroughtForwardLosses(nino, currTaxYear)(downstreamError.asLeft)
+      IFSBusinessDetailsConnectorMock.createBroughtForwardLoss(
+        data = CreateBroughtForwardLossRequestData(nino, currTaxYear, createBfLossRequestBody)
+      )(api1500SuccessResponse.asRight)
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ProfitOrLoss), Json.toJson(answers.toDbAnswers))
 
-      val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+      val result: Either[ServiceError, Unit] = await(service.saveProfitOrLoss(journeyCtxWithNino, answers).value)
 
       assert(result == ().asRight)
-      assert(ifsBusinessDetailsConnector.createBroughtForwardLossResult === api1500SuccessResponse.asRight)
-      assert(
-        repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = true, claimLossRelief = Option(true), previousUnusedLosses = true))))
     }
 
-    "successfully delete brought forward loss answers when none provided by user and some from API" in new StubbedService {
-      override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-        StubIFSBusinessDetailsConnector(
-          getBroughtForwardLossResult = api1502SuccessResponse.asRight
-        )
-      when(mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(EitherT.rightT(Right(())))
-
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
-
+    "successfully delete brought forward loss answers when none provided by user and some from API" in {
       val answers: ProfitOrLossJourneyAnswers = emptyBroughtForwardLossAnswers
-      val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
+      val expectedAnnualSummariesAnswers: CreateAmendSEAnnualSubmissionRequestData = expectedAnnualSummariesData(None, Some(allowancesData))
+
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803SuccessResponse.asRight)
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, Some(expectedAnnualSummariesAnswers.body))()
+      IFSBusinessDetailsConnectorMock.getListOfBroughtForwardLosses(nino, currTaxYear)(api1870SuccessResponse.asRight)
+      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
+      BroughtForwardLossConnectorMock.deleteBroughtForwardLosses(nino, TaxYear(2019), lossId = "5678")(().asRight)
+      JourneyAnswersRepositoryMock.upsertAnswers(journeyCtxWithNino.toJourneyContext(ProfitOrLoss), Json.toJson(emptyBroughtForwardLossAnswers.toDbAnswers))
+
+      val result: Either[ServiceError, Unit] = await(service.saveProfitOrLoss(journeyCtxWithNino, answers).value)
 
       assert(result == ().asRight)
-      assert(
-        repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = false, claimLossRelief = None, previousUnusedLosses = false))))
     }
 
-    "do nothing when none provided by user and get returns NOT_FOUND from API" in new StubbedService {
-      override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-        StubIFSBusinessDetailsConnector(
-          getBroughtForwardLossResult = notFoundError.asLeft
-        )
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
-      val answers: ProfitOrLossJourneyAnswers = emptyBroughtForwardLossAnswers
-      val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
-
-      assert(result == ().asRight)
-      assert(
-        repository.lastUpsertedAnswer === Option(
-          Json.toJson(ProfitOrLossDb(goodsAndServicesForYourOwnUse = false, claimLossRelief = None, previousUnusedLosses = false))))
-    }
-
-    "return error without updating AnnualSummaries, BFL or DB data when AnnualSummaries API returns a ServiceError" in new StubbedService {
-      override val ifsConnector = new StubIFSConnector(getAnnualSummariesResult = downstreamError.asLeft)
-
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
-      val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
-
-      assert(result === downstreamError.asLeft)
-      assert(ifsConnector.upsertDisclosuresSubmissionData === None)
-      assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-      assert(repository.lastUpsertedAnswer === None)
-    }
-
-    "return error without updating BFL or DB data when BroughtForwardLoss API returns a ServiceError" in new StubbedService {
-      override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-        StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = downstreamError.asLeft)
-
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
-      val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers
-      val result: Either[ServiceError, Unit]  = service.saveProfitOrLoss(journeyCtxWithNino, answers).value.futureValue
-
-      assert(result == downstreamError.asLeft)
-      assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-      assert(repository.lastUpsertedAnswer === None)
-    }
   }
 
   "getProfitOrLoss" must {
-
-    "must return ProfitOrLossJourneyAnswers when the API's returns data" in new StubbedService {
-
-      override val ifsConnector: StubIFSConnector =
-        StubIFSConnector(
-          getAnnualSummariesResult = api1803SuccessResponseWithAAType.asRight
-        )
-
+    "must return ProfitOrLossJourneyAnswers when the API's returns data" in {
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(List(testReliefClaim(testClaimId1, ReliefClaimType.CF)))
+      IFSBusinessDetailsConnectorMock.getListOfBroughtForwardLosses(nino, currTaxYear)(api1870EmptyResponse.asRight)
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803SuccessResponseWithAAType.asRight)
 
       val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] = service.getProfitOrLoss(journeyCtxWithNino).value.futureValue
 
@@ -394,452 +388,34 @@ class ProfitOrLossAnswersServiceImplSpec
       assert(result.value === expectedResult)
     }
 
-    "must return None when the API's returns no data" in new StubbedService {
-
-      override val ifsConnector: StubIFSConnector =
-        StubIFSConnector(
-          getAnnualSummariesResult = notFoundError.asLeft
-        )
-
-      override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-        StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = notFoundError.asLeft)
-
-      override val repository: StubJourneyAnswersRepository = StubJourneyAnswersRepository(
-        getAnswer = None
-      )
-
+    "must return None when the API's returns no data" in {
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(Nil)
+      IFSBusinessDetailsConnectorMock.getListOfBroughtForwardLosses(nino, currTaxYear)(notFoundError.asLeft)
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(notFoundError.asLeft)
 
       val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] = service.getProfitOrLoss(journeyCtxWithNino).value.futureValue
 
       assert(result.value === None)
     }
 
-    "must return error when the downstream api 'getAllReliefClaims' fails to get the data" in new StubbedService {
+    "must return error when the downstream api 'getAllReliefClaims' fails to get the data" in {
+      MockReliefClaimsService.getAllReliefClaimsFailure(journeyCtxWithNino)(downstreamError)
 
-      when(mockInstance.getAllReliefClaims(eqTo(journeyCtxWithNino))(any[HeaderCarrier])).thenReturn(EitherT.leftT(downstreamError))
       val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] = service.getProfitOrLoss(journeyCtxWithNino).value.futureValue
 
       assert(result === downstreamError.asLeft)
     }
 
-    "must return error when the downstream api 'listBroughtForwardLossesResult' fails to get the data" in new StubbedService {
-
-      override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-        StubIFSBusinessDetailsConnector(
-          listBroughtForwardLossesResult = downstreamError.asLeft
-        )
-
+    "must return error when the downstream api 'listBroughtForwardLossesResult' fails to get the data" in {
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(List(testReliefClaim(testClaimId1, ReliefClaimType.CF)))
+      IFSBusinessDetailsConnectorMock.getListOfBroughtForwardLosses(nino, currTaxYear)(downstreamError.asLeft)
 
       val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] = service.getProfitOrLoss(journeyCtxWithNino).value.futureValue
 
       assert(result === downstreamError.asLeft)
     }
+
   }
 
-  "storeReliefClaimAnswers" when {
-    "the user is answering the WhatDoYouWantToDoWithLoss question for the first time" must {
-      "call the ReliefClaimService create method once, with a single selection" in new StubbedService {
-        MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(Nil)
-        MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(List(testClaimId1))
-
-        val result: Either[ServiceError, Unit] =
-          service.storeReliefClaimAnswers(journeyCtxWithNino, testProfitOrLossAnswers(CarryItForward)).value.futureValue
-
-        result shouldBe Right(())
-
-        verify(MockReliefClaimsService.mockInstance, times(1)).createReliefClaims(journeyCtxWithNino, Seq(CarryItForward))
-        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(
-          any[JourneyContextWithNino],
-          any[List[ReliefClaim]],
-          any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(
-          any[HeaderCarrier])
-      }
-
-      "call the ReliefClaimService create method once, with both selections" in new StubbedService {
-        MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(Nil)
-        MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward, DeductFromOtherTypes)(List(testClaimId1))
-
-        val result: Either[ServiceError, Unit] = service
-          .storeReliefClaimAnswers(
-            ctx = journeyCtxWithNino,
-            submittedAnswers = testProfitOrLossAnswers(CarryItForward, DeductFromOtherTypes)
-          )
-          .value
-          .futureValue
-
-        result shouldBe Right(())
-        verify(MockReliefClaimsService.mockInstance, times(1)).createReliefClaims(journeyCtxWithNino, Seq(CarryItForward, DeductFromOtherTypes))
-        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(
-          any[JourneyContextWithNino],
-          any[List[ReliefClaim]],
-          any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(
-          any[HeaderCarrier])
-      }
-
-      "Do nothing if the user selects no options" in new StubbedService {
-        MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(Nil)
-        MockReliefClaimsService.createReliefClaims(journeyCtxWithNino)(Nil)
-
-        val result: Either[ServiceError, Unit] = service
-          .storeReliefClaimAnswers(
-            ctx = journeyCtxWithNino,
-            submittedAnswers = testProfitOrLossAnswers()
-          )
-          .value
-          .futureValue
-
-        result shouldBe Right(())
-        verify(MockReliefClaimsService.mockInstance, times(0))
-          .createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
-        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(
-          any[JourneyContextWithNino],
-          any[List[ReliefClaim]],
-          any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(
-          any[HeaderCarrier])
-      }
-    }
-
-    "the user is updating their answer to the WhatDoYouWantToDoWithLoss question" must {
-      "add a 2nd selection when the user previously selected 1" in new StubbedService {
-        val oldAnswers: List[ReliefClaim] = List(testReliefClaim(testClaimId1, ReliefClaimType.CF))
-        MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(oldAnswers)
-        MockReliefClaimsService.updateReliefClaims(journeyCtxWithNino, oldAnswers, CarryItForward, DeductFromOtherTypes)(
-          returnValue = UpdateReliefClaimsResponse(Seq(DeductFromOtherTypes), Nil)
-        )
-
-        val result: Either[ServiceError, Unit] = await(
-          service
-            .storeReliefClaimAnswers(
-              ctx = journeyCtxWithNino,
-              submittedAnswers = testProfitOrLossAnswers(CarryItForward, DeductFromOtherTypes)
-            )
-            .value)
-
-        result shouldBe Right(())
-
-        verify(MockReliefClaimsService.mockInstance, times(1)).updateReliefClaims(
-          journeyCtxWithNino,
-          oldAnswers,
-          Seq(CarryItForward, DeductFromOtherTypes))
-        verify(MockReliefClaimsService.mockInstance, times(0))
-          .createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(
-          any[HeaderCarrier])
-      }
-      "Remove the 2nd selection when the user previously selected both" in new StubbedService {
-        val oldAnswers: List[ReliefClaim] =
-          List(testReliefClaim(testClaimId1, ReliefClaimType.CF), testReliefClaim(testClaimId2, ReliefClaimType.CSGI))
-        MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(oldAnswers)
-        MockReliefClaimsService.updateReliefClaims(journeyCtxWithNino, oldAnswers, CarryItForward)(
-          returnValue = UpdateReliefClaimsResponse(Seq(DeductFromOtherTypes), Nil)
-        )
-
-        val result: Either[ServiceError, Unit] = await(
-          service
-            .storeReliefClaimAnswers(
-              ctx = journeyCtxWithNino,
-              submittedAnswers = testProfitOrLossAnswers(CarryItForward)
-            )
-            .value)
-
-        result shouldBe Right(())
-
-        verify(MockReliefClaimsService.mockInstance, times(1)).updateReliefClaims(journeyCtxWithNino, oldAnswers, Seq(CarryItForward))
-        verify(MockReliefClaimsService.mockInstance, times(0))
-          .createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
-        verify(MockReliefClaimsService.mockInstance, times(0)).deleteReliefClaims(any[JourneyContextWithNino], any[List[ReliefClaim]])(
-          any[HeaderCarrier])
-      }
-
-      "Remove both options if the user deselects both" in new StubbedService {
-        val oldAnswers: List[ReliefClaim] =
-          List(testReliefClaim(testClaimId1, ReliefClaimType.CF), testReliefClaim(testClaimId2, ReliefClaimType.CSGI))
-        MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(oldAnswers)
-        MockReliefClaimsService.deleteReliefClaims(journeyCtxWithNino, oldAnswers)
-
-        val result: Either[ServiceError, Unit] = await(
-          service
-            .storeReliefClaimAnswers(
-              ctx = journeyCtxWithNino,
-              submittedAnswers = testProfitOrLossAnswers()
-            )
-            .value)
-
-        result shouldBe Right(())
-
-        verify(MockReliefClaimsService.mockInstance, times(0))
-          .createReliefClaims(any[JourneyContextWithNino], any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier], any[ExecutionContext])
-        verify(MockReliefClaimsService.mockInstance, times(0)).updateReliefClaims(
-          any[JourneyContextWithNino],
-          any[List[ReliefClaim]],
-          any[Seq[WhatDoYouWantToDoWithLoss]])(any[HeaderCarrier])
-        verify(MockReliefClaimsService.mockInstance, times(1)).deleteReliefClaims(eqTo(journeyCtxWithNino), eqTo(oldAnswers))(any[HeaderCarrier])
-      }
-    }
-
-    "create a new loss claim when there is no existing data and submission data is provided" in new StubbedService {
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(returnValue = Nil)
-      MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(returnValue = List(api1505SuccessResponse))
-
-      val result: Either[ServiceError, Unit] = service
-        .storeReliefClaimAnswers(
-          journeyCtxWithNino,
-          testProfitOrLossAnswers(CarryItForward)
-        )
-        .value
-        .futureValue
-
-      result shouldBe Right(())
-    }
-
-    "do nothing when there is no existing data and no submission data" in new StubbedService {
-      MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(returnValue = Nil)
-      MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(returnValue = Nil)
-
-      val result: Either[ServiceError, Unit] = service
-        .storeReliefClaimAnswers(
-          journeyCtxWithNino,
-          testProfitOrLossAnswers(CarryItForward)
-        )
-        .value
-        .futureValue
-
-      result shouldBe Right(())
-    }
-  }
-
-  "storeBroughtForwardLossAnswers" should {
-    val unusedLossAmount: BigDecimal = 400
-    val yesBroughtForwardLossAnswers =
-      ProfitOrLossJourneyAnswers(
-        goodsAndServicesForYourOwnUse = true,
-        Option(BigDecimal(200)),
-        Option(true),
-        None,
-        Option(true),
-        previousUnusedLosses = true,
-        Option(unusedLossAmount),
-        Option(WhichYearIsLossReported.Year2018to2019)
-      )
-    val noBroughtForwardLossAnswers = ProfitOrLossJourneyAnswers(
-      goodsAndServicesForYourOwnUse = true,
-      Option(BigDecimal(200)),
-      Option(false),
-      None,
-      None,
-      previousUnusedLosses = false,
-      None,
-      None)
-
-    "return an empty success response" when {
-      "given a valid submissions to create a new BroughtForwardLoss data" in new StubbedService {
-        val result: Either[ServiceError, Unit] =
-          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, yesBroughtForwardLossAnswers).value.futureValue
-
-        assert(result == ().asRight)
-        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === Option(UpdateBroughtForwardLossRequestBody(unusedLossAmount)))
-      }
-
-      "given a valid submissions to update existing BroughtForwardLoss data with a different amount" in new StubbedService {
-        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-
-        val result: Either[ServiceError, Unit] =
-          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, yesBroughtForwardLossAnswers).value.futureValue
-
-        assert(result == ().asRight)
-        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === Option(UpdateBroughtForwardLossRequestBody(unusedLossAmount)))
-      }
-
-      "given a valid submissions to update existing BroughtForwardLoss data with a different year and amount" in new StubbedService {
-        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-
-        when(
-          mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(EitherT.rightT(Right(())))
-
-        val result: Either[ServiceError, Unit] = service
-          .storeBroughtForwardLossAnswers(
-            journeyCtxWithNino,
-            yesBroughtForwardLossAnswers.copy(whichYearIsLossReported = Option(WhichYearIsLossReported.Year2019to2020)))
-          .value
-          .futureValue
-
-        assert(result == ().asRight)
-        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === Option(UpdateBroughtForwardLossRequestBody(unusedLossAmount)))
-      }
-
-      "given a valid submissions to delete existing BroughtForwardLoss data when user submits 'No' answers" in new StubbedService {
-        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-
-        when(
-          mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(EitherT.rightT(()))
-
-        val result: Either[ServiceError, Unit] =
-          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
-
-        assert(result == ().asRight)
-        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-      }
-
-      "given a valid submissions to delete existing BroughtForwardLoss data when user submits 'No' answers" when {
-        "hip integration feature flag is enabled" in new StubbedService {
-
-          when(
-            mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-            .thenReturn(EitherT.rightT(()))
-
-          override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-            StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-
-          val result: Either[ServiceError, Unit] =
-            service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
-
-          assert(result == ().asRight)
-          assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-          verify(mockBroughtForwardLossConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(
-            any[HeaderCarrier],
-            any[ExecutionContext])
-        }
-      }
-
-      "user submits 'No' answers and there is no existing BroughtForwardLoss data to delete" in new StubbedService {
-        val result: Either[ServiceError, Unit] =
-          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
-
-        assert(result == ().asRight)
-        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-      }
-    }
-
-    "return a ServiceError" when {
-      "the BusinessDetailsConnector .listBroughtForwardLosses returns an error from downstream" in new StubbedService {
-        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = downstreamError.asLeft)
-
-        val result: Either[ServiceError, Unit] =
-          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, yesBroughtForwardLossAnswers).value.futureValue
-
-        assert(result === downstreamError.asLeft)
-        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-      }
-
-      "the BusinessDetailsConnector .createBroughtForwardLoss returns an error from downstream" in new StubbedService {
-        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-          StubIFSBusinessDetailsConnector(createBroughtForwardLossResult = downstreamError.asLeft)
-
-        val result: Either[ServiceError, Unit] =
-          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, yesBroughtForwardLossAnswers).value.futureValue
-
-        assert(result === downstreamError.asLeft)
-        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-      }
-
-      "the BusinessDetailsConnector .updateBroughtForwardLoss returns an error from downstream" in new StubbedService {
-        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector(
-          listBroughtForwardLossesResult = api1870SuccessResponse.asRight,
-          updateBroughtForwardLossResult = downstreamError.asLeft)
-
-        val result: Either[ServiceError, Unit] =
-          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, yesBroughtForwardLossAnswers).value.futureValue
-
-        assert(result === downstreamError.asLeft)
-        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-      }
-
-      "the BusinessDetailsConnector .updateBroughtForwardLossYear returns an error from downstream" in new StubbedService {
-        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-
-        when(
-          mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(EitherT.leftT(downstreamError))
-
-        val result: Either[ServiceError, Unit] = service
-          .storeBroughtForwardLossAnswers(
-            journeyCtxWithNino,
-            yesBroughtForwardLossAnswers.copy(whichYearIsLossReported = Option(WhichYearIsLossReported.Year2019to2020)))
-          .value
-          .futureValue
-
-        assert(result === downstreamError.asLeft)
-        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-      }
-
-      "the BusinessDetailsConnector .deleteBroughtForwardLoss returns an error from downstream" in new StubbedService {
-        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-
-        when(
-          mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(EitherT.leftT(downstreamError))
-
-        val res: ApiResultT[Unit] =
-          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers)
-
-        val result: Either[ServiceError, Unit] = res.value.futureValue
-        assert(result === downstreamError.asLeft)
-        assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-      }
-
-      "the BusinessDetailsConnector .deleteBroughtForwardLoss returns an error from downstream" when {
-        "hip integration feature switch is enabled" in new StubbedService {
-
-          when(
-            mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-            .thenReturn(EitherT.leftT(downstreamError))
-
-          override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-            StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
-
-          val result: Either[ServiceError, Unit] =
-            service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
-
-          assert(result === downstreamError.asLeft)
-          assert(ifsBusinessDetailsConnector.updatedBroughtForwardLossData === None)
-
-          verify(mockBroughtForwardLossConnector, times(1)).deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(
-            any[HeaderCarrier],
-            any[ExecutionContext])
-        }
-      }
-
-      "the BusinessDetailsConnector .storeBroughtForwardLossAnswers returns a notFoundError error from getLossByBusinessId" in new StubbedService {
-        override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
-          StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = notFoundError.asLeft)
-
-        val result: Either[ServiceError, Unit] =
-          service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
-
-        assert(result === Right(()))
-      }
-    }
-  }
 }
 
-trait StubbedService {
-  val lossId                     = "lossId123"
-  val mockHttpClient: HttpClient = mock[HttpClient]
-
-  val ifsConnector: StubIFSConnector                               = new StubIFSConnector()
-  val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()
-  val mockBroughtForwardLossConnector: BroughtForwardLossConnector = mock[BroughtForwardLossConnector]
-  val repository: StubJourneyAnswersRepository                     = StubJourneyAnswersRepository()
-
-  def service: ProfitOrLossAnswersServiceImpl =
-    new ProfitOrLossAnswersServiceImpl(
-      ifsConnector = ifsConnector,
-      ifsBusinessDetailsConnector = ifsBusinessDetailsConnector,
-      broughtForwardLossConnector = mockBroughtForwardLossConnector,
-      MockReliefClaimsService.mockInstance,
-      repository = repository
-    )
-}

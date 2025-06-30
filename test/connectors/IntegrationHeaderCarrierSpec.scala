@@ -16,15 +16,15 @@
 
 package connectors
 
+import mocks.MockAppConfig
 import models.connector.IFSApiName
 import models.connector.IntegrationContext.IntegrationHeaderCarrier
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import uk.gov.hmrc.http.HeaderCarrier.Config
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
-import utils.TestUtils.mockAppConfig
 
-class IntegrationHeaderCarrierSpec extends AnyWordSpecLike with Matchers {
+class IntegrationHeaderCarrierSpec extends AnyWordSpecLike with Matchers with MockAppConfig {
 
   "IFSHeaderCarrier" should {
     val internalHost        = "http://localhost"

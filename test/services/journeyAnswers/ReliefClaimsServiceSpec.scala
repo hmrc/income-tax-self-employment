@@ -40,23 +40,28 @@ import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonTestData with BeforeAndAfterEach {
+class ReliefClaimsServiceSpec extends AnyWordSpecLike
+  with Matchers
+  with CommonTestData
+  with BeforeAndAfterEach
+  with MockReliefClaimsConnector
+  with MockHipReliefClaimsConnector {
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
   val mockAppConfig: AppConfig   = mock[AppConfig]
 
   override def afterEach(): Unit = {
     super.afterEach()
-    reset(MockReliefClaimsConnector.mockInstance)
-    reset(MockHipReliefClaimsConnector.mockInstance)
+    reset(mockReliefClaimsConnector)
+    reset(mockHipReliefClaimsConnector)
     reset(mockAppConfig)
   }
 
   trait ReliefClaimsServiceTestSetup {
 
     val service: ReliefClaimsService = new ReliefClaimsService(
-      MockReliefClaimsConnector.mockInstance,
-      MockHipReliefClaimsConnector.mockInstance,
+      mockReliefClaimsConnector,
+      mockHipReliefClaimsConnector,
       mockAppConfig
     )
 
@@ -90,7 +95,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
   "getAllReliefClaims" should {
 
     "return only the claims for a specific year (current year)" in new ReliefClaimsServiceTestSetup {
-      MockReliefClaimsConnector.getAllReliefClaims(testContextCurrentYear)(claims)
+      ReliefClaimsConnectorMock.getAllReliefClaims(testContextCurrentYear)(claims)
 
       val result: Either[ServiceError, List[ReliefClaim]] = await(service.getAllReliefClaims(testContextCurrentYear).value)
 
@@ -98,7 +103,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
     }
 
     "return only the claims for a specific year (previous year)" in new ReliefClaimsServiceTestSetup {
-      MockReliefClaimsConnector.getAllReliefClaims(testContextPrevYear)(claims)
+      ReliefClaimsConnectorMock.getAllReliefClaims(testContextPrevYear)(claims)
 
       val result: Either[ServiceError, List[ReliefClaim]] = await(service.getAllReliefClaims(testContextPrevYear).value)
 
@@ -106,7 +111,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
     }
 
     "return an error when the connector fails" in new ReliefClaimsServiceTestSetup {
-      MockReliefClaimsConnector.getAllReliefClaimsError(testContextCurrentYear)(testServiceError)
+      ReliefClaimsConnectorMock.getAllReliefClaimsError(testContextCurrentYear)(testServiceError)
 
       val result: Either[ServiceError, List[ReliefClaim]] = await(service.getAllReliefClaims(testContextCurrentYear).value)
 
@@ -125,8 +130,6 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
       whenReady(result) { res =>
         res shouldBe Right(List.empty[ClaimId])
       }
-
-      verify(MockReliefClaimsConnector.mockInstance, times(0)).createReliefClaim(any(), any())(any())
     }
 
     "return a list with multiple successful responses when there are multiple valid answers" in new ReliefClaimsServiceTestSetup {
@@ -137,8 +140,8 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
       val expectedResponse1: ClaimId = ClaimId("claimId1")
       val expectedResponse2: ClaimId = ClaimId("claimId2")
 
-      MockReliefClaimsConnector.createReliefClaim(testContextCurrentYear, CF)(expectedResponse1)
-      MockReliefClaimsConnector.createReliefClaim(testContextCurrentYear, CSGI)(expectedResponse2)
+      ReliefClaimsConnectorMock.createReliefClaim(testContextCurrentYear, CF)(expectedResponse1)
+      ReliefClaimsConnectorMock.createReliefClaim(testContextCurrentYear, CSGI)(expectedResponse2)
 
       val result: Future[Either[ServiceError, Seq[ClaimId]]] =
         service.createReliefClaims(testContextCurrentYear, validAnswers).value
@@ -146,8 +149,6 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
       whenReady(result) { res =>
         res shouldBe Right(List(expectedResponse1, expectedResponse2))
       }
-
-      verify(MockReliefClaimsConnector.mockInstance, times(2)).createReliefClaim(any(), any())(any())
     }
 
     "return a list with one successful response when there is one valid answer" in new ReliefClaimsServiceTestSetup {
@@ -156,7 +157,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
       )
       val expectedResponse: ClaimId = ClaimId("claimId1")
 
-      MockReliefClaimsConnector.createReliefClaim(testContextCurrentYear, CF)(expectedResponse)
+      ReliefClaimsConnectorMock.createReliefClaim(testContextCurrentYear, CF)(expectedResponse)
 
       val result: Future[Either[ServiceError, Seq[ClaimId]]] =
         service.createReliefClaims(testContextCurrentYear, validAnswers).value
@@ -164,8 +165,6 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
       whenReady(result) { res =>
         res shouldBe Right(List(expectedResponse))
       }
-
-      verify(MockReliefClaimsConnector.mockInstance, times(1)).createReliefClaim(any(), any())(any())
     }
 
     "return an error when one of the answers results in a service error" in new ReliefClaimsServiceTestSetup {
@@ -175,8 +174,8 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
       )
       val expectedResponse: ClaimId = ClaimId("claimId1")
 
-      MockReliefClaimsConnector.createReliefClaim(testContextCurrentYear, CF)(expectedResponse)
-      MockReliefClaimsConnector.createReliefClaimError(testContextCurrentYear, CSGI)(testServiceError)
+      ReliefClaimsConnectorMock.createReliefClaim(testContextCurrentYear, CF)(expectedResponse)
+      ReliefClaimsConnectorMock.createReliefClaimError(testContextCurrentYear, CSGI)(testServiceError)
 
       val result: Future[Either[ServiceError, Seq[ClaimId]]] =
         service.createReliefClaims(testContextCurrentYear, validAnswers).value
@@ -184,8 +183,6 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
       whenReady(result) { res =>
         res shouldBe Left(testServiceError)
       }
-
-      verify(MockReliefClaimsConnector.mockInstance, times(2)).createReliefClaim(any(), any())(any())
     }
   }
 
@@ -194,8 +191,8 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
     "Make a single delete call if the user un-checks one answer" in new ReliefClaimsServiceTestSetup {
       val newAnswers: Seq[WhatDoYouWantToDoWithLoss] = Seq(WhatDoYouWantToDoWithLoss.CarryItForward)
 
-      MockReliefClaimsConnector.deleteReliefClaim(testContextCurrentYear, seClaimId2.claimId)
-      MockReliefClaimsConnector.createReliefClaim(testContextCurrentYear, seClaim1.reliefClaimed)(seClaimId1)
+      ReliefClaimsConnectorMock.deleteReliefClaim(testContextCurrentYear, seClaimId2.claimId)
+      ReliefClaimsConnectorMock.createReliefClaim(testContextCurrentYear, seClaim1.reliefClaimed)(seClaimId1)
 
       val result: Future[Either[ServiceError, UpdateReliefClaimsResponse]] =
         service.updateReliefClaims(testContextCurrentYear, claims, newAnswers).value
@@ -207,9 +204,6 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
             deleted = List(WhatDoYouWantToDoWithLoss.DeductFromOtherTypes)
           ))
       }
-
-      verify(MockReliefClaimsConnector.mockInstance, times(1)).deleteReliefClaim(any(), any())(any())
-      verify(MockReliefClaimsConnector.mockInstance, times(1)).createReliefClaim(any(), any())(any())
     }
 
     "Make a single delete call if the user un-checks one answer when hip enabled" in new ReliefClaimsServiceTestSetup {
@@ -218,8 +212,8 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
       when(mockAppConfig.hipMigration1509Enabled).thenReturn(true)
       when(mockAppConfig.hipMigration1505Enabled).thenReturn(true)
 
-      MockHipReliefClaimsConnector.deleteReliefClaim(testContextCurrentYear, seClaimId2.claimId)
-      MockHipReliefClaimsConnector.createReliefClaim(testContextCurrentYear, seClaim1.reliefClaimed)(seClaimId1)
+      HipReliefClaimsConnectorMock.deleteReliefClaim(testContextCurrentYear, seClaimId2.claimId)
+      HipReliefClaimsConnectorMock.createReliefClaim(testContextCurrentYear, seClaim1.reliefClaimed)(seClaimId1)
 
       val result: Future[Either[ServiceError, UpdateReliefClaimsResponse]] =
         service.updateReliefClaims(testContextCurrentYear, claims, newAnswers).value
@@ -232,15 +226,15 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
           ))
       }
 
-      verify(MockHipReliefClaimsConnector.mockInstance, times(1)).deleteReliefClaim(any(), any())(any(), any())
-      verify(MockHipReliefClaimsConnector.mockInstance, times(1)).createReliefClaim(any(), any())(any())
+      //verify(MockHipReliefClaimsConnector.mockInstance, times(1)).deleteReliefClaim(any(), any())(any(), any())
+     // verify(MockHipReliefClaimsConnector.mockInstance, times(1)).createReliefClaim(any(), any())(any())
     }
 
     "Make two create calls if the user checks both answers" in new ReliefClaimsServiceTestSetup {
       val newAnswers: Seq[WhatDoYouWantToDoWithLoss] = Seq(WhatDoYouWantToDoWithLoss.CarryItForward, WhatDoYouWantToDoWithLoss.DeductFromOtherTypes)
 
-      MockReliefClaimsConnector.createReliefClaim(testContextCurrentYear, seClaim1.reliefClaimed)(seClaimId1)
-      MockReliefClaimsConnector.createReliefClaim(testContextCurrentYear, seClaim2.reliefClaimed)(seClaimId2)
+      ReliefClaimsConnectorMock.createReliefClaim(testContextCurrentYear, seClaim1.reliefClaimed)(seClaimId1)
+      ReliefClaimsConnectorMock.createReliefClaim(testContextCurrentYear, seClaim2.reliefClaimed)(seClaimId2)
 
       val result: Future[Either[ServiceError, UpdateReliefClaimsResponse]] =
         service.updateReliefClaims(testContextCurrentYear, claims, newAnswers).value
@@ -253,8 +247,8 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
           ))
       }
 
-      verify(MockReliefClaimsConnector.mockInstance, times(0)).deleteReliefClaim(any(), any())(any())
-      verify(MockReliefClaimsConnector.mockInstance, times(2)).createReliefClaim(any(), any())(any())
+//      verify(MockReliefClaimsConnector.mockInstance, times(0)).deleteReliefClaim(any(), any())(any())
+//      verify(MockReliefClaimsConnector.mockInstance, times(2)).createReliefClaim(any(), any())(any())
     }
 
     "return an error when connector call fails" in new ReliefClaimsServiceTestSetup {
@@ -264,7 +258,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
         val errorMessage: String = "Error fetching relief claims"
       }
 
-      MockReliefClaimsConnector.createReliefClaimError(testContextCurrentYear, seClaim1.reliefClaimed)(testServiceError)
+      ReliefClaimsConnectorMock.createReliefClaimError(testContextCurrentYear, seClaim1.reliefClaimed)(testServiceError)
 
       val result: Future[Either[ServiceError, UpdateReliefClaimsResponse]] =
         service.updateReliefClaims(testContextCurrentYear, claims, newAnswers).value
@@ -273,7 +267,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
         res shouldBe Left(testServiceError)
       }
 
-      verify(MockReliefClaimsConnector.mockInstance, times(2)).createReliefClaim(any(), any())(any())
+//      verify(MockReliefClaimsConnector.mockInstance, times(2)).createReliefClaim(any(), any())(any())
     }
   }
 
@@ -283,7 +277,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
 
       override val claims: List[ReliefClaim] = List(seClaim1).empty
 
-      MockReliefClaimsConnector.deleteReliefClaim(testContextCurrentYear, seClaimId1.claimId)
+      ReliefClaimsConnectorMock.deleteReliefClaim(testContextCurrentYear, seClaimId1.claimId)
 
       val result: Either[ServiceError, Unit] = await(service.deleteReliefClaims(testContextCurrentYear, claims).value)
 
@@ -295,7 +289,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
 
       override val claims: List[ReliefClaim] = List(seClaim1)
 
-      MockReliefClaimsConnector.deleteReliefClaim(testContextCurrentYear, seClaimId1.claimId)
+      ReliefClaimsConnectorMock.deleteReliefClaim(testContextCurrentYear, seClaimId1.claimId)
 
       val result: Either[ServiceError, Unit] = await(service.deleteReliefClaims(testContextCurrentYear, claims).value)
 
@@ -307,7 +301,7 @@ class ReliefClaimsServiceSpec extends AnyWordSpecLike with Matchers with CommonT
 
       when(mockAppConfig.hipMigration1509Enabled).thenReturn(true)
 
-      MockHipReliefClaimsConnector.deleteReliefClaim(testContextCurrentYear, seClaimId1.claimId)
+      HipReliefClaimsConnectorMock.deleteReliefClaim(testContextCurrentYear, seClaimId1.claimId)
 
       val result: Either[ServiceError, Unit] = await(service.deleteReliefClaims(testContextCurrentYear, claims).value)
 

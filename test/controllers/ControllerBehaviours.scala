@@ -19,6 +19,7 @@ package controllers
 import play.api.libs.json.{Json, Writes}
 import play.api.mvc._
 import play.api.test.FakeRequest
+import utils.BaseSpec.mtditid
 import utils.TestUtils
 
 class ControllerBehaviours extends TestUtils {
@@ -47,10 +48,10 @@ class ControllerBehaviours extends TestUtils {
 
 object ControllerBehaviours {
   def buildRequest[A: Writes](body: A): FakeRequest[AnyContentAsJson] = FakeRequest()
-    .withHeaders("mtditid" -> "1234567890")
+    .withHeaders("mtditid" -> mtditid.toString)
     .withJsonBody(Json.toJson(body))
 
   def buildRequestNoContent: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
-    .withHeaders("mtditid" -> "1234567890")
+    .withHeaders("mtditid" -> mtditid.toString)
 
 }

@@ -18,7 +18,7 @@ package services.journeyAnswers
 
 import builders.BusinessDataBuilder.aBusiness
 import builders.NICsAnswersBuilder.{class4DiverAndTrusteeMultipleBusinessesAnswers, class4SingleBusinessAnswers}
-import config.AppConfig
+import mocks.MockAppConfig
 import mocks.connectors.MockIFSConnector
 import mocks.repositories.MockJourneyAnswersRepository
 import mocks.services.MockBusinessService
@@ -38,7 +38,6 @@ import models.frontend.nics.{ExemptionReason, NICsAnswers, NICsClass2Answers, NI
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.{TableDrivenPropertyChecks, TableFor3}
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.DefaultAwaitTimeout
 import play.api.test.Helpers.await
@@ -46,13 +45,16 @@ import utils.BaseSpec.{businessId, currTaxYearEnd, hc, journeyCtxWithNino, mtdit
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordSpecLike with Matchers with DefaultAwaitTimeout {
-
-  val mockAppConfig: AppConfig = mock[AppConfig]
+class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks
+  with AnyWordSpecLike
+  with Matchers
+  with DefaultAwaitTimeout
+  with MockJourneyAnswersRepository
+  with MockIFSConnector {
 
   val testService: NICsAnswersServiceImpl = new NICsAnswersServiceImpl(
-    MockIFSConnector.mockInstance,
-    MockJourneyAnswersRepository.mockInstance,
+    mockIFSConnector,
+    mockJourneyAnswersRepository,
     MockBusinessService.mockInstance
   )
 
@@ -69,13 +71,13 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       class2Nics = None
     )
 
-    "create a new answers model if nothing already exist" in new StubbedService {
+    "create a new answers model if nothing already exist" in {
       val answers: NICsClass2Answers = NICsClass2Answers(true)
       val newAnswers: JsValue = Json.toJson(NICsStorageAnswers.fromJourneyAnswers(answers))
 
-      MockIFSConnector.getDisclosuresSubmission(journeyCtxWithNino)(None)
-      MockIFSConnector.upsertDisclosuresSubmission(journeyCtxWithNino, RequestSchemaAPI1638(None, Some(RequestSchemaAPI1638Class2Nics(Some(true)))))
-      MockJourneyAnswersRepository.upsertAnswers(
+      IFSConnectorMock.getDisclosuresSubmission(journeyCtxWithNino)(None)
+      IFSConnectorMock.upsertDisclosuresSubmission(journeyCtxWithNino, RequestSchemaAPI1638(None, Some(RequestSchemaAPI1638Class2Nics(Some(true)))))
+      JourneyAnswersRepositoryMock.upsertAnswers(
         ctx = journeyCtxWithNino.toJourneyContext(NationalInsuranceContributions),
         newData = newAnswers
       )
@@ -85,16 +87,16 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       result shouldBe Right(())
     }
 
-    "setting class2 does not override other fields and true is not stored in DB" in new StubbedService {
+    "setting class2 does not override other fields and true is not stored in DB" in {
       val answers: NICsClass2Answers = NICsClass2Answers(true)
       val newAnswers: JsValue = Json.toJson(NICsStorageAnswers.fromJourneyAnswers(answers))
       val newDisclosureSubmission = RequestSchemaAPI1638(
         Some(List(RequestSchemaAPI1638TaxAvoidanceInner("srn", currTaxYearEnd.toUpperCase()))),
         Some(RequestSchemaAPI1638Class2Nics(Some(true))))
 
-      MockIFSConnector.getDisclosuresSubmission(journeyCtxWithNino)(Some(disclosuresWithOtherFields))
-      MockIFSConnector.upsertDisclosuresSubmission(journeyCtxWithNino, newDisclosureSubmission)
-      MockJourneyAnswersRepository.upsertAnswers(
+      IFSConnectorMock.getDisclosuresSubmission(journeyCtxWithNino)(Some(disclosuresWithOtherFields))
+      IFSConnectorMock.upsertDisclosuresSubmission(journeyCtxWithNino, newDisclosureSubmission)
+      JourneyAnswersRepositoryMock.upsertAnswers(
         ctx = journeyCtxWithNino.toJourneyContext(NationalInsuranceContributions),
         newData = newAnswers
       )
@@ -104,7 +106,7 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       result shouldBe Right(())
     }
 
-    "settings class2 to None when class2 is false and there are other fields in the object" in new StubbedService {
+    "settings class2 to None when class2 is false and there are other fields in the object" in {
       val answers: NICsClass2Answers = NICsClass2Answers(false)
       val newAnswers: JsValue = Json.toJson(NICsStorageAnswers.fromJourneyAnswers(answers))
       val newDisclosureSubmission = RequestSchemaAPI1638(
@@ -112,9 +114,9 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
         None
       )
 
-      MockIFSConnector.getDisclosuresSubmission(journeyCtxWithNino)(Some(disclosuresWithOtherFields))
-      MockIFSConnector.upsertDisclosuresSubmission(journeyCtxWithNino, newDisclosureSubmission)
-      MockJourneyAnswersRepository.upsertAnswers(
+      IFSConnectorMock.getDisclosuresSubmission(journeyCtxWithNino)(Some(disclosuresWithOtherFields))
+      IFSConnectorMock.upsertDisclosuresSubmission(journeyCtxWithNino, newDisclosureSubmission)
+      JourneyAnswersRepositoryMock.upsertAnswers(
         ctx = journeyCtxWithNino.toJourneyContext(NationalInsuranceContributions),
         newData = newAnswers
       )
@@ -124,13 +126,13 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       result shouldBe Right(())
     }
 
-    "call DELETE if setting to false and the object is empty" in new StubbedService {
+    "call DELETE if setting to false and the object is empty" in {
       val answers: NICsClass2Answers = NICsClass2Answers(false)
       val newAnswers: JsValue = Json.toJson(NICsStorageAnswers.fromJourneyAnswers(answers))
 
-      MockIFSConnector.getDisclosuresSubmission(journeyCtxWithNino)(Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))))
-      MockIFSConnector.deleteDisclosuresSubmission(journeyCtxWithNino)
-      MockJourneyAnswersRepository.upsertAnswers(
+      IFSConnectorMock.getDisclosuresSubmission(journeyCtxWithNino)(Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))))
+      IFSConnectorMock.deleteDisclosuresSubmission(journeyCtxWithNino)
+      JourneyAnswersRepositoryMock.upsertAnswers(
         ctx = journeyCtxWithNino.toJourneyContext(NationalInsuranceContributions),
         newData = newAnswers
       )
@@ -160,18 +162,18 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
   "saveClass4BusinessData" should {
     forAll(saveClass4DataCases) { (testDescription, answer, expectedApiData) =>
       testDescription when {
-        "creating a new answers model when there is no existing Class 4 data" in new StubbedService {
+        "creating a new answers model when there is no existing Class 4 data" in {
           val upsertBody = CreateAmendSEAnnualSubmissionRequestBody.mkRequest(None, None, Some(expectedApiData))
 
-          MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
-          MockIFSConnector.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, upsertBody)
+          IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
+          IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, upsertBody)()
 
           val result: Either[ServiceError, Unit] = await(testService.saveClass4BusinessData(journeyCtxWithNino, answer).value)
 
           result shouldBe Right(())
         }
 
-        "overriding existing details" in new StubbedService {
+        "overriding existing details" in {
           val getAnnualSummariesResponse = api_1803.SuccessResponseSchema(
             None,
             None,
@@ -179,8 +181,8 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
           )
           val upsertBody = CreateAmendSEAnnualSubmissionRequestBody.mkRequest(None, None, Some(expectedApiData))
 
-          MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(getAnnualSummariesResponse))
-          MockIFSConnector.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, upsertBody)
+          IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(getAnnualSummariesResponse))
+          IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, upsertBody)()
 
           val result: Either[ServiceError, Unit] = await(testService.saveClass4BusinessData(journeyCtxWithNino, answer).value)
 
@@ -191,12 +193,12 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
   }
 
   "saveClass4SingleBusiness" should {
-    "save Class 4 journey answers when user has a single business" in new StubbedService {
+    "save Class 4 journey answers when user has a single business" in {
       val expectedApiData: AnnualNonFinancials = AnnualNonFinancials(exemptFromPayingClass4Nics = true, Some(TrusteeExecutorAdmin.exemptionCode))
       val upsertBody = CreateAmendSEAnnualSubmissionRequestBody.mkRequest(None, None, Some(expectedApiData))
 
-      MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
-      MockIFSConnector.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, upsertBody)
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, upsertBody)()
       MockBusinessService.getBusiness(businessId, mtditid, nino)(aBusiness)
 
       val result: Either[ServiceError, Unit] = await(testService.saveClass4SingleBusiness(journeyCtxWithNino, class4SingleBusinessAnswers).value)
@@ -204,12 +206,12 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       result shouldBe Right(())
     }
 
-    "save Class 4 journey answers when user has a single business when hipMigration1171Enabled is true" in new StubbedService {
+    "save Class 4 journey answers when user has a single business when hipMigration1171Enabled is true" in {
       val expectedApiData: AnnualNonFinancials = AnnualNonFinancials(exemptFromPayingClass4Nics = true, Some(TrusteeExecutorAdmin.exemptionCode))
       val upsertBody = CreateAmendSEAnnualSubmissionRequestBody.mkRequest(None, None, Some(expectedApiData))
 
-      MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
-      MockIFSConnector.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, upsertBody)
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino, upsertBody)()
       MockBusinessService.getBusiness(businessId, mtditid, nino)(aBusiness)
 
       val result: Either[ServiceError, Unit] = await(testService.saveClass4SingleBusiness(journeyCtxWithNino, class4SingleBusinessAnswers).value)
@@ -219,7 +221,7 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
   }
 
   "saveClass4MultipleBusinesses" should {
-    "save journey answers - creating, replacing or clearing Class 4 exemptions data of any user business IDs" in new StubbedService {
+    "save journey answers - creating, replacing or clearing Class 4 exemptions data of any user business IDs" in {
       val businessId1: BusinessId = BusinessId("BusinessId1")
       val businessId2: BusinessId = BusinessId("BusinessId2")
       val businessId3: BusinessId = BusinessId("BusinessId3")
@@ -248,17 +250,17 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
 
       MockBusinessService.getUserBusinessIds(mtditid, nino)(List(businessId1, businessId2, businessId3, businessId4))
 
-      MockIFSConnector.getAnnualSummaries(journeyCtxWithNino(businessId1))(Right(api_1803.SuccessResponseSchema(None, None, Some(existingDataId1))))
-      MockIFSConnector.getAnnualSummaries(journeyCtxWithNino(businessId2))(Right(api_1803.SuccessResponseSchema(None, None, Some(existingDataId2))))
-      MockIFSConnector.getAnnualSummaries(journeyCtxWithNino(businessId3))(Right(api_1803.SuccessResponseSchema(None, None, Some(existingDataId3))))
-      MockIFSConnector.getAnnualSummaries(journeyCtxWithNino(businessId4))(Right(api_1803.SuccessResponseSchema(None, None, Some(existingDataId4))))
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino(businessId1))(Right(api_1803.SuccessResponseSchema(None, None, Some(existingDataId1))))
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino(businessId2))(Right(api_1803.SuccessResponseSchema(None, None, Some(existingDataId2))))
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino(businessId3))(Right(api_1803.SuccessResponseSchema(None, None, Some(existingDataId3))))
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino(businessId4))(Right(api_1803.SuccessResponseSchema(None, None, Some(existingDataId4))))
 
-      MockIFSConnector.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino(businessId1), Some(expectedResultId1))
-      MockIFSConnector.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino(businessId2), Some(expectedResultId2))
-      MockIFSConnector.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino(businessId3), Some(expectedResultId3))
-      MockIFSConnector.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino(businessId4), Some(expectedResultId4))
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino(businessId1), Some(expectedResultId1))()
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino(businessId2), Some(expectedResultId2))()
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino(businessId3), Some(expectedResultId3))()
+      IFSConnectorMock.createUpdateOrDeleteApiAnnualSummaries(journeyCtxWithNino(businessId4), Some(expectedResultId4))()
 
-      MockJourneyAnswersRepository.upsertAnswers(
+      JourneyAnswersRepositoryMock.upsertAnswers(
         journeyCtxWithNino(businessId1).toJourneyContext(NationalInsuranceContributions),
         Json.toJson(NICsStorageAnswers(None, None))
       )
@@ -273,11 +275,11 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
   }
 
   "get answers" should {
-    "return None if there are no answers" in new StubbedService {
-      MockBusinessService.getUserBusinessIds(mtditid, nino)(Nil)
-      MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
-      MockIFSConnector.getDisclosuresSubmission(journeyCtxWithNino)(None)
-      MockJourneyAnswersRepository.getAnswers[NICsStorageAnswers](nicsCtx)(None)
+    "return None if there are no answers" in {
+      MockBusinessService.getUserBusinessIds(mtditid, nino)(List(businessId))
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
+      IFSConnectorMock.getDisclosuresSubmission(journeyCtxWithNino)(None)
+      JourneyAnswersRepositoryMock.getAnswers[NICsStorageAnswers](nicsCtx)(None)
 
       val result: Either[ServiceError, Option[NICsAnswers]] = await(testService.getAnswers(journeyCtxWithNino).value)
 
@@ -285,22 +287,22 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
     }
 
     "return Class 2 Answers" when {
-      "API answers are returned even if database exist" in new StubbedService {
+      "API answers are returned even if database exist" in {
         MockBusinessService.getUserBusinessIds(mtditid, nino)(List(journeyCtxWithNino.businessId))
-        MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
-        MockIFSConnector.getDisclosuresSubmission(journeyCtxWithNino)(Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))))
-        MockJourneyAnswersRepository.getAnswers(nicsCtx)(Some(NICsStorageAnswers(Some(false), None)))
+        IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
+        IFSConnectorMock.getDisclosuresSubmission(journeyCtxWithNino)(Some(SuccessResponseAPI1639(None, Some(SuccessResponseAPI1639Class2Nics(Some(true))))))
+        JourneyAnswersRepositoryMock.getAnswers(nicsCtx)(Some(NICsStorageAnswers(Some(false), None)))
 
         val result: Either[ServiceError, Option[NICsAnswers]] = await(testService.getAnswers(journeyCtxWithNino).value)
 
         result shouldBe Right(Some(NICsAnswers(Some(NICsClass2Answers(true)), None)))
       }
 
-      "valid database answer exist and there is no API data" in new StubbedService {
+      "valid database answer exist and there is no API data" in {
         MockBusinessService.getUserBusinessIds(mtditid, nino)(List(journeyCtxWithNino.businessId))
-        MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
-        MockIFSConnector.getDisclosuresSubmission(journeyCtxWithNino)(None)
-        MockJourneyAnswersRepository.getAnswers(nicsCtx)(Some(NICsStorageAnswers(Some(false), None)))
+        IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(api_1803.SuccessResponseSchema(None, None, None)))
+        IFSConnectorMock.getDisclosuresSubmission(journeyCtxWithNino)(None)
+        JourneyAnswersRepositoryMock.getAnswers(nicsCtx)(Some(NICsStorageAnswers(Some(false), None)))
 
         val result: Either[ServiceError, Option[NICsAnswers]] = await(testService.getAnswers(journeyCtxWithNino).value)
 
@@ -308,7 +310,7 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       }
     }
 
-    "return Class 4 Answers from API data" in new StubbedService {
+    "return Class 4 Answers from API data" in {
       val annualNonFinancialsData: SuccessResponseSchema = SuccessResponseSchema(
         annualAdjustments = None,
         annualAllowances = None,
@@ -316,9 +318,9 @@ class NICsAnswersServiceImplSpec extends TableDrivenPropertyChecks with AnyWordS
       )
 
       MockBusinessService.getUserBusinessIds(mtditid, nino)(List(journeyCtxWithNino.businessId))
-      MockIFSConnector.getAnnualSummaries(journeyCtxWithNino)(Right(annualNonFinancialsData))
-      MockIFSConnector.getDisclosuresSubmission(journeyCtxWithNino)(None)
-      MockJourneyAnswersRepository.getAnswers(nicsCtx)(Some(NICsStorageAnswers(Some(false), None)))
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(Right(annualNonFinancialsData))
+      IFSConnectorMock.getDisclosuresSubmission(journeyCtxWithNino)(None)
+      JourneyAnswersRepositoryMock.getAnswers(nicsCtx)(Some(NICsStorageAnswers(Some(false), None)))
 
       val result: Either[ServiceError, Option[NICsAnswers]] = await(testService.getAnswers(journeyCtxWithNino).value)
 

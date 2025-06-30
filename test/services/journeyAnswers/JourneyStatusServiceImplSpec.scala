@@ -33,22 +33,28 @@ import utils.BaseSpec._
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers with DefaultAwaitTimeout {
+class JourneyStatusServiceImplSpec extends AnyWordSpecLike
+  with Matchers
+  with DefaultAwaitTimeout
+  with MockJourneyAnswersRepository {
 
   val now: Instant                                       = Instant.now()
 
-  val testService: JourneyStatusServiceImpl = new JourneyStatusServiceImpl(MockBusinessService.mockInstance, MockJourneyAnswersRepository.mockInstance)
+  val testService: JourneyStatusServiceImpl = new JourneyStatusServiceImpl(MockBusinessService.mockInstance, mockJourneyAnswersRepository)
 
   "set" should {
     "return unit" in {
+      JourneyAnswersRepositoryMock.setStatus(incomeCtx, Completed)
+
       val result = await(testService.set(incomeCtx, Completed).value)
+
       result shouldBe Right(())
     }
   }
 
   "get" should {
     "return check our record status if no answers" in {
-      MockJourneyAnswersRepository.get(incomeCtx)(None)
+      JourneyAnswersRepositoryMock.get(incomeCtx)(None)
 
       val result = await(testService.get(incomeCtx).value)
 
@@ -57,7 +63,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers with De
 
     "return status if the answer exist" in {
       val journeyAnswers = Some(JourneyAnswers(mtditid, businessId, taxYear, JourneyName.ExpensesTailoring, Completed, JsObject.empty, now, now, now))
-      MockJourneyAnswersRepository.get(expensesTailoringCtx)(journeyAnswers)
+      JourneyAnswersRepositoryMock.get(expensesTailoringCtx)(journeyAnswers)
 
       val result = await(testService.get(expensesTailoringCtx).value)
 
@@ -68,7 +74,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers with De
   "getLegacyTaskList" should {
     "return empty task list if no answers" in {
       MockBusinessService.getBusinesses(mtditid, nino)(List(aBusiness))
-      MockJourneyAnswersRepository.getAll(taxYear, mtditid, List(aBusiness))(TaskList.empty)
+      JourneyAnswersRepositoryMock.getAll(taxYear, mtditid, List(aBusiness))(TaskList.empty)
 
       val result = await(testService.getLegacyTaskList(taxYear, mtditid, nino).value)
 
@@ -78,7 +84,7 @@ class JourneyStatusServiceImplSpec extends AnyWordSpecLike with Matchers with De
     "return a task list" in {
       val taskList = TaskList(Nil, None)
       MockBusinessService.getBusinesses(mtditid, nino)(List(aBusiness))
-      MockJourneyAnswersRepository.getAll(taxYear, mtditid, Nil)(taskList)
+      JourneyAnswersRepositoryMock.getAll(taxYear, mtditid, List(aBusiness))(taskList)
 
       val result = await(testService.getLegacyTaskList(taxYear, mtditid, nino).value)
 
