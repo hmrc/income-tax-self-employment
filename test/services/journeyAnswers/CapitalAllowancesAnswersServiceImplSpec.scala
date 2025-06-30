@@ -138,7 +138,7 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike
         mkJourneyAnswers(JourneyName.ZeroEmissionCars, JourneyStatus.Completed, Json.toJsObject(dbAnswers))
 
       JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.ZeroEmissionCars))(Some(journeyAnswers))
-      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803SuccessResponse.asRight)
 
       val result          = service.getZeroEmissionCars(journeyCtxWithNino).rightValue
 
@@ -164,7 +164,7 @@ class CapitalAllowancesAnswersServiceImplSpec extends AnyWordSpecLike
         mkJourneyAnswers(JourneyName.ZeroEmissionGoodsVehicle, JourneyStatus.Completed, Json.toJsObject(dbAnswers))
 
       JourneyAnswersRepositoryMock.get(journeyCtxWithNino.toJourneyContext(JourneyName.ZeroEmissionGoodsVehicle))(Some(journeyAnswers))
-      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803EmptyResponse.asRight)
+      IFSConnectorMock.getAnnualSummaries(journeyCtxWithNino)(api1803SuccessResponse.asRight)
 
       val result          = service.getZeroEmissionGoodsVehicle(journeyCtxWithNino).rightValue
 
