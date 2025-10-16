@@ -32,8 +32,6 @@ import gens.SelfEmploymentAbroadAnswersGen.selfEmploymentAbroadAnswersGen
 import gens.genOne
 import mocks.services.{MockExpensesAnswersService, MockPeriodSummaryService}
 import models.common.JourneyName
-import models.connector.Api1786ExpensesResponseParser
-import models.database.expenses.WorkplaceRunningCostsDb
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
@@ -656,7 +654,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   "OfficeSupplies" should {
     s"Get answers and return a $OK when successful" in new GetExpensesTest[OfficeSuppliesJourneyAnswers] {
       override val journeyAnswers: OfficeSuppliesJourneyAnswers = genOne(officeSuppliesJourneyAnswersGen)
-      MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(EitherT.rightT(journeyAnswers))(Api1786ExpensesResponseParser.officeSuppliesParser)
+      MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(EitherT.rightT(journeyAnswers))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -682,7 +680,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[RepairsAndMaintenanceCostsJourneyAnswers] {
       override val journeyAnswers: RepairsAndMaintenanceCostsJourneyAnswers = genOne(repairsAndMaintenanceCostsJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))(Api1786ExpensesResponseParser.repairsAndMaintenanceCostsParser)
+        EitherT.rightT(journeyAnswers))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -708,7 +706,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[StaffCostsJourneyAnswers] {
       override val journeyAnswers: StaffCostsJourneyAnswers = genOne(staffCostsJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))(Api1786ExpensesResponseParser.staffCostsParser)
+        EitherT.rightT(journeyAnswers))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -747,7 +745,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[AdvertisingOrMarketingJourneyAnswers] {
       override val journeyAnswers: AdvertisingOrMarketingJourneyAnswers = genOne(advertisingOrMarketingJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))(Api1786ExpensesResponseParser.advertisingOrMarketingParser)
+        EitherT.rightT(journeyAnswers))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -773,7 +771,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[ConstructionJourneyAnswers] {
       override val journeyAnswers: ConstructionJourneyAnswers = genOne(constructionJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))(Api1786ExpensesResponseParser.constructionParser)
+        EitherT.rightT(journeyAnswers))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -799,7 +797,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[ProfessionalFeesJourneyAnswers] {
       override val journeyAnswers: ProfessionalFeesJourneyAnswers = genOne(professionalFeesJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))(Api1786ExpensesResponseParser.professionalFeesParser)
+        EitherT.rightT(journeyAnswers))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -825,7 +823,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[InterestJourneyAnswers] {
       override val journeyAnswers: InterestJourneyAnswers = genOne(interestJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))(Api1786ExpensesResponseParser.interestParser)
+        EitherT.rightT(journeyAnswers))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -851,7 +849,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[EntertainmentJourneyAnswers] {
       override val journeyAnswers: EntertainmentJourneyAnswers = genOne(entertainmentCostsJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))(Api1786ExpensesResponseParser.entertainmentCostsParser)
+        EitherT.rightT(journeyAnswers))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -866,7 +864,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[DepreciationCostsJourneyAnswers] {
       override val journeyAnswers: DepreciationCostsJourneyAnswers = genOne(depreciationJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))(Api1786ExpensesResponseParser.depreciationCostsParser)
+        EitherT.rightT(journeyAnswers))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -892,7 +890,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[OtherExpensesJourneyAnswers] {
       override val journeyAnswers: OtherExpensesJourneyAnswers = genOne(otherExpensesJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))(Api1786ExpensesResponseParser.otherExpensesParser)
+        EitherT.rightT(journeyAnswers))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -918,7 +916,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[FinancialChargesJourneyAnswers] {
       override val journeyAnswers: FinancialChargesJourneyAnswers = genOne(financialChargesJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))(Api1786ExpensesResponseParser.financialChargesParser)
+        EitherT.rightT(journeyAnswers))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -943,7 +941,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[IrrecoverableDebtsJourneyAnswers] {
       override val journeyAnswers: IrrecoverableDebtsJourneyAnswers = genOne(irrecoverableDebtsJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))(Api1786ExpensesResponseParser.irrecoverableDebtsParser)
+        EitherT.rightT(journeyAnswers))
 
       behave like testRoute(
         request = buildRequestNoContent,

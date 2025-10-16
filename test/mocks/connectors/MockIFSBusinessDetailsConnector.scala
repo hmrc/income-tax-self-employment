@@ -23,12 +23,13 @@ import models.common._
 import models.error.ServiceError
 import models.domain.ApiResultT
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
-import models.connector.api_2085
+import models.connector.{api_1870, api_2085}
 import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
 import org.mockito.stubbing.ScalaOngoingStubbing
 import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.ArgumentMatchersSugar.any
 import org.mockito.MockitoSugar.when
+import stubs.connectors.StubIFSConnector.api1870SuccessResponse
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}

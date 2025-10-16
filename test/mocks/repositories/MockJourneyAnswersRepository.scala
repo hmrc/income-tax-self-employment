@@ -28,7 +28,7 @@ import org.mockito.ArgumentMatchersSugar.eqTo
 import org.mockito.MockitoSugar.when
 import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
-import play.api.libs.json.{JsValue, Reads}
+import play.api.libs.json.JsValue
 import repositories.JourneyAnswersRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -69,7 +69,7 @@ object MockJourneyAnswersRepository {
     when(mockInstance.getAll(eqTo(taxYear), eqTo(mtdId), eqTo(businesses)))
       .thenReturn(EitherT.leftT(returnValue))
 
-  def getAnswers[A: Reads](ctx: JourneyContext)
+  def getAnswers[A](ctx: JourneyContext)
                           (returnValue: Option[A]): ScalaOngoingStubbing[ApiResultT[Option[A]]] =
     when(mockInstance.getAnswers[A](eqTo(ctx))(any()))
       .thenReturn(EitherT.pure(returnValue))

@@ -71,6 +71,6 @@ object BusinessDataDetails {
       (JsPath \ "latencyDetails").readNullable[LatencyDetails]
     )(BusinessDataDetails.apply _)
 
-  val hipFormat: Format[BusinessDataDetails] = Format(hipReads, businessDataDetailsJsonFormat.writes)
+  val hipFormat: Format[BusinessDataDetails] = Format(hipReads, businessDataDetailsJsonFormat.writes(_))
 
 }
