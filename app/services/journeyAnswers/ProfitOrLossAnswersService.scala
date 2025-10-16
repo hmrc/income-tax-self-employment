@@ -57,8 +57,8 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       _      <- handleAnnualSummaries(ctx, answers)
       _      <- storeReliefClaimAnswers(ctx, answers)
       _      <- storeBroughtForwardLossAnswers(ctx, answers)
-      result <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(answers.toDbAnswers))
-    } yield result
+      _ <- repository.upsertAnswers(ctx.toJourneyContext(JourneyName.ProfitOrLoss), Json.toJson(answers.toDbAnswers))
+    } yield (): Unit
 
   def getProfitOrLoss(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ProfitOrLossJourneyAnswers]] =
     for {
@@ -91,7 +91,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
     for {
       reliefClaims <- reliefClaimsService.getAllReliefClaims(ctx)
       optLossClaimAnswer: Option[Seq[WhatDoYouWantToDoWithLoss]] = getLossClaimData(submittedAnswers)
-      result <- (reliefClaims, optLossClaimAnswer) match {
+      _ <- (reliefClaims, optLossClaimAnswer) match {
         case (Nil, Some(lossClaimAnswer)) if lossClaimAnswer.nonEmpty =>
           reliefClaimsService.createReliefClaims(ctx, lossClaimAnswer)
         case (claims, Some(lossClaimAnswer)) if claims.nonEmpty && lossClaimAnswer.nonEmpty =>
@@ -101,7 +101,7 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
         case _ =>
           EitherT.rightT[Future, ServiceError](())
       }
-    } yield result
+    } yield (): Unit
 
   private def getLossClaimData(submittedAnswers: ProfitOrLossJourneyAnswers): Option[Seq[WhatDoYouWantToDoWithLoss]] =
     submittedAnswers.carryLossForward match {
@@ -155,9 +155,12 @@ class ProfitOrLossAnswersServiceImpl @Inject() (ifsConnector: IFSConnector,
       ec: ExecutionContext): ApiResultT[Unit] =
     broughtForwardLossConnector.deleteBroughtForwardLoss(nino = nino, taxYear = taxYear, lossId = lossId)
 
-  private def updateBroughtForwardLossYear(data: UpdateBroughtForwardLossYear)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] =
-    deleteBroughtForwardLoss(data.nino, data.taxYear, data.lossId).map(_ =>
-      ifsBusinessDetailsConnector.createBroughtForwardLoss(CreateBroughtForwardLossRequestData(data.nino, data.taxYear, data.body)))
+  private def updateBroughtForwardLossYear(data: UpdateBroughtForwardLossYear)(implicit hc: HeaderCarrier, ec: ExecutionContext): ApiResultT[Unit] = {
+    for {
+      _ <- deleteBroughtForwardLoss(data.nino, data.taxYear, data.lossId)
+      _ <- ifsBusinessDetailsConnector.createBroughtForwardLoss(CreateBroughtForwardLossRequestData(data.nino, data.taxYear, data.body))
+    } yield (): Unit
+  }
 
   private def handleBroughtForwardLossNoExistingLoss(ctx: JourneyContextWithNino, answers: ProfitOrLossJourneyAnswers)(implicit
       hc: HeaderCarrier): ApiResultT[Unit] =

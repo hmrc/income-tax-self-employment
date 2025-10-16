@@ -30,7 +30,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@deprecated("StubIFSBusinessDetailsConnector is deprecated. Use MockIFSBusinessDetailsConnector instead")
+@deprecated("StubIFSBusinessDetailsConnector is deprecated. Use MockIFSBusinessDetailsConnector instead", "2024-06-30")
 case class StubIFSBusinessDetailsConnector(
     getBusinessesResult: Api1171Response = api1171EmptyResponse.asRight,
     getBusinessIncomeSourcesSummaryResult: Api1871Response = api1871EmptyResponse.asRight,

@@ -30,7 +30,8 @@ import models.error.ServiceError
 import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
 import org.mockito.IdiomaticMockito.StubbingOps
-import org.mockito.Mockito.{reset, times, when}
+import org.mockito.Mockito
+import org.mockito.Mockito.{times, when}
 import org.mockito.MockitoSugar.{mock, never, verify}
 import org.mockito.matchers.MacroBasedMatchers
 import org.scalatest.BeforeAndAfterEach
@@ -58,7 +59,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   override def beforeEach(): Unit = {
-    reset(mockAuditService, mockBusinessService)
+    Mockito.reset(mockAuditService, mockBusinessService)
     super.beforeEach()
   }
 
@@ -172,7 +173,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
 }
 
 object IncomeAnswersServiceImplSpec {
-  val mockAuditService: AuditService       = mock[AuditService]
+  val mockAuditService: AuditService = mock[AuditService]
   val mockBusinessService: BusinessService = mock[BusinessService]
   abstract class TestCase(val repo: StubJourneyAnswersRepository = StubJourneyAnswersRepository(),
                           val connector: IFSConnector = StubIFSConnector(),

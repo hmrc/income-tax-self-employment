@@ -21,7 +21,6 @@ import cats.implicits._
 import config.AppConfig
 import data.TimeData
 import data.api1802.AnnualAllowancesData
-import gens.ExpensesJourneyAnswersGen._
 import gens.ExpensesTailoringAnswersGen.expensesTailoringIndividualCategoriesAnswersGen
 import gens.PrepopJourneyAnswersGen.annualAdjustmentsTypeGen
 import gens.genOne

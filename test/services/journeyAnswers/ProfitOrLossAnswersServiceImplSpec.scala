@@ -19,6 +19,7 @@ package services.journeyAnswers
 import cats.data.EitherT
 import cats.implicits.catsSyntaxEitherId
 import connectors.HIP.BroughtForwardLossConnector
+import mocks.connectors.{MockIFSBusinessDetailsConnector, MockIFSConnector}
 import mocks.services.MockReliefClaimsService
 import mocks.services.MockReliefClaimsService.mockInstance
 import models.common.{JourneyContextWithNino, Nino, TaxYear}
@@ -47,6 +48,7 @@ import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import stubs.connectors.StubIFSConnector._
 import stubs.connectors.{StubIFSBusinessDetailsConnector, StubIFSConnector}
 import stubs.repositories.StubJourneyAnswersRepository
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient}
 import utils.BaseSpec.{businessId, hc, journeyCtxWithNino}
 import utils.EitherTTestOps.convertScalaFuture
@@ -71,7 +73,9 @@ class ProfitOrLossAnswersServiceImplSpec
 
   override def afterEach(): Unit = {
     super.afterEach()
-    reset(MockReliefClaimsService.mockInstance)
+    reset(MockReliefClaimsService.mockInstance,
+      MockIFSBusinessDetailsConnector.mockInstance,
+      MockIFSConnector.mockInstance)
   }
 
   def testReliefClaim(claimId: ClaimId, claimType: ReliefClaimType): ReliefClaim =
@@ -149,7 +153,7 @@ class ProfitOrLossAnswersServiceImplSpec
         )
 
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
-      MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(List(testClaimId1))
+      MockReliefClaimsService.createReliefClaims(journeyCtxWithNino)(List(testClaimId1))
 
       val answers: ProfitOrLossJourneyAnswers = yesBroughtForwardLossAnswers.copy(whatDoYouWantToDoWithLoss = Option(Seq(CarryItForward)))
       val allowancesData: AnnualAllowances =
@@ -310,7 +314,7 @@ class ProfitOrLossAnswersServiceImplSpec
           getBroughtForwardLossResult = api1502SuccessResponse.asRight
         )
       when(mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(EitherT.rightT(Right(())))
+        .thenReturn(EitherT.rightT(Right((): Unit)))
 
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
 
@@ -442,7 +446,7 @@ class ProfitOrLossAnswersServiceImplSpec
     "the user is answering the WhatDoYouWantToDoWithLoss question for the first time" must {
       "call the ReliefClaimService create method once, with a single selection" in new StubbedService {
         MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(Nil)
-        MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(List(testClaimId1))
+        MockReliefClaimsService.createReliefClaims(journeyCtxWithNino)(List(testClaimId1))
 
         val result: Either[ServiceError, Unit] =
           service.storeReliefClaimAnswers(journeyCtxWithNino, testProfitOrLossAnswers(CarryItForward)).value.futureValue
@@ -460,7 +464,7 @@ class ProfitOrLossAnswersServiceImplSpec
 
       "call the ReliefClaimService create method once, with both selections" in new StubbedService {
         MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(Nil)
-        MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward, DeductFromOtherTypes)(List(testClaimId1))
+        MockReliefClaimsService.createReliefClaims(journeyCtxWithNino)(List(testClaimId1))
 
         val result: Either[ServiceError, Unit] = service
           .storeReliefClaimAnswers(
@@ -584,7 +588,7 @@ class ProfitOrLossAnswersServiceImplSpec
 
     "create a new loss claim when there is no existing data and submission data is provided" in new StubbedService {
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(returnValue = Nil)
-      MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(returnValue = List(api1505SuccessResponse))
+      MockReliefClaimsService.createReliefClaims(journeyCtxWithNino)(returnValue = List(api1505SuccessResponse))
 
       val result: Either[ServiceError, Unit] = service
         .storeReliefClaimAnswers(
@@ -599,7 +603,7 @@ class ProfitOrLossAnswersServiceImplSpec
 
     "do nothing when there is no existing data and no submission data" in new StubbedService {
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)(returnValue = Nil)
-      MockReliefClaimsService.createReliefClaims(journeyCtxWithNino, CarryItForward)(returnValue = Nil)
+      MockReliefClaimsService.createReliefClaims(journeyCtxWithNino)(returnValue = Nil)
 
       val result: Either[ServiceError, Unit] = service
         .storeReliefClaimAnswers(
@@ -662,7 +666,7 @@ class ProfitOrLossAnswersServiceImplSpec
 
         when(
           mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(EitherT.rightT(Right(())))
+          .thenReturn(EitherT.rightT(Right((): Unit)))
 
         val result: Either[ServiceError, Unit] = service
           .storeBroughtForwardLossAnswers(
@@ -827,7 +831,7 @@ class ProfitOrLossAnswersServiceImplSpec
 
 trait StubbedService {
   val lossId                     = "lossId123"
-  val mockHttpClient: HttpClient = mock[HttpClient]
+  val mockHttpClient: HttpClientV2 = mock[HttpClientV2]
 
   val ifsConnector: StubIFSConnector                               = new StubIFSConnector()
   val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector = StubIFSBusinessDetailsConnector()

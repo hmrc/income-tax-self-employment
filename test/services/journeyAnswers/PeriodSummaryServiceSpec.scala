@@ -87,7 +87,7 @@ class PeriodSummaryServiceSpec extends AnyWordSpec with Matchers with BeforeAndA
     amendBody
   )
 
-  MockIFSConnector.amendSEPeriodSummary(dataSample)(Right(()))
+  MockIFSConnector.amendSEPeriodSummary()(Right(()))
 
   "get answers" should {
 
