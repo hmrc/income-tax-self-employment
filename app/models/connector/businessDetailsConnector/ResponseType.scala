@@ -49,6 +49,6 @@ object ResponseType {
     (JsPath \ "businessData").readNullable[List[BusinessDataDetails]](Reads.list(BusinessDataDetails.hipFormat))
   )(ResponseType.apply _)
 
-  val hipFormat: Format[ResponseType] = Format(hipReads, responseTypeJsonFormat.writes)
+  val hipFormat: Format[ResponseType] = Format(hipReads, responseTypeJsonFormat.writes(_))
 
 }

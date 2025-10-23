@@ -46,7 +46,7 @@ import utils.BaseSpec._
 import java.time.OffsetDateTime
 import scala.concurrent.{ExecutionContext, Future}
 
-@deprecated("StubIFSConnector is deprecated. Use MockIFSConnector instead")
+@deprecated("StubIFSConnector is deprecated. Use MockIFSConnector instead", "2024-06-30")
 case class StubIFSConnector(
     createSEPeriodSummaryResult: Future[Api1894Response] = Future.successful(().asRight),
     amendSEPeriodSummaryResult: Either[DownstreamError, Unit] = Right(()),

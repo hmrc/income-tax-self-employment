@@ -17,14 +17,12 @@
 package stubs.services
 
 import cats.data.EitherT
-import models.common._
 import models.domain.ApiResultT
 import models.error.ServiceError
 import models.frontend.expenses.goodsToSellOrUse.GoodsToSellOrUseAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
 import stubs.serviceUnitT
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -39,22 +37,22 @@ case class StubExpensesAnswersService(expensesSaveTailoringAnswersRes: ApiResult
                                       clearExpensesAndCapitalAllowancesDataRes: ApiResultT[Unit] = serviceUnitT,
                                       clearExpensesDataRes: ApiResultT[Unit] = serviceUnitT) {
 
-  def getExpensesTailoringAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[ExpensesTailoringAnswers]] =
+  def getExpensesTailoringAnswers(): ApiResultT[Option[ExpensesTailoringAnswers]] =
     EitherT.rightT[Future, ServiceError](getTailoringJourneyAnswers)
 
-  def getGoodsToSellOrUseAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[GoodsToSellOrUseAnswers]] =
+  def getOptGoodsToSellOrUseAnswers(): ApiResultT[Option[GoodsToSellOrUseAnswers]] =
     EitherT.rightT[Future, ServiceError](getGoodsToSellOrUseAnswers)
 
-  def getWorkplaceRunningCostsAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Option[WorkplaceRunningCostsAnswers]] =
+  def getOptWorkplaceRunningCostsAnswers(): ApiResultT[Option[WorkplaceRunningCostsAnswers]] =
     EitherT.rightT[Future, ServiceError](getWorkplaceRunningCostsAnswers)
 
-  def saveTailoringAnswers(ctx: JourneyContextWithNino, answers: ExpensesTailoringAnswers)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def saveTailoringAnswers(): ApiResultT[Unit] =
     expensesSaveAnswersRes
 
-  def deleteSimplifiedExpensesAnswers(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] = deleteSimplifiedExpensesAnswersRes
+  def deleteSimplifiedExpensesAnswers(): ApiResultT[Unit] = deleteSimplifiedExpensesAnswersRes
 
-  def clearExpensesAndCapitalAllowancesData(ctx: JourneyContextWithNino)(implicit hc: HeaderCarrier): ApiResultT[Unit] =
+  def clearExpensesAndCapitalAllowancesData(): ApiResultT[Unit] =
     clearExpensesAndCapitalAllowancesDataRes
 
-  def clearExpensesData(ctx: JourneyContextWithNino, journeyName: JourneyName)(implicit hc: HeaderCarrier): ApiResultT[Unit] = clearExpensesDataRes
+  def clearExpensesData(): ApiResultT[Unit] = clearExpensesDataRes
 }
