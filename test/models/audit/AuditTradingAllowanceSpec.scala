@@ -92,7 +92,7 @@ class AuditTradingAllowanceSpec extends BaseSpec with Matchers with OptionValues
 
       Json
         .toJson(tradingAllowance) shouldBe Json.parse(
-        """{"nino":"nino","businessId":"SJPR05893938418","businessName":"BusinessName","taxYear":"24-25","isTradingIncomeAllowanceBeingUsed":true,"isMaximumTradingIncomeAllowanceBeingUsed":true}""")
+        """{"nino":"nino","businessId":"SJPR05893938418","businessName":"BusinessName","taxYear":"25-26","isTradingIncomeAllowanceBeingUsed":true,"isMaximumTradingIncomeAllowanceBeingUsed":true}""")
 
     }
   }
