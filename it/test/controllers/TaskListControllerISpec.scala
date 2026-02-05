@@ -62,7 +62,7 @@ class TaskListControllerISpec extends IntegrationBaseSpec with CommonTestData wi
           expectedStatus = OK
         )
 
-        val res: WSResponse = await(buildClient(s"/$testTaxYear/tasks/$testNino").get)
+        val res: WSResponse = await(buildClient(s"/$testTaxYear/tasks/$testNino").get())
 
         res.status mustBe OK
 
