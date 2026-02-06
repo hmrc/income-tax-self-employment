@@ -32,7 +32,7 @@ import repositories.MongoJourneyAnswersRepository
 import testdata.CommonTestData
 import uk.gov.hmrc.http.HeaderCarrier.Config
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, SessionId}
+import uk.gov.hmrc.http.{HeaderCarrier, SessionId}
 
 import scala.concurrent.ExecutionContext
 

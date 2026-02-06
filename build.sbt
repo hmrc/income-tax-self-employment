@@ -20,7 +20,7 @@ import uk.gov.hmrc.DefaultBuildSettings
 lazy val appName = "income-tax-self-employment"
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.16"
+ThisBuild / scalaVersion := "2.13.18"
 
 val additionalScalacOptions = if (sys.props.getOrElse("PLAY_ENV", "") == "CI") Seq("-Xfatal-warnings") else Seq()
 
