@@ -19,7 +19,7 @@ import sbt.*
 
 object AppDependencies {
 
-  private val bootstrapVersion = "10.5.0"
+  private val bootstrapVersion = "10.6.0"
   private val hmrcMongoVersion = "2.12.0"
 
   val jacksonAndPlayExclusions: Seq[InclusionRule] = Seq(
@@ -33,10 +33,10 @@ object AppDependencies {
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                  %% "bootstrap-backend-play-30" % bootstrapVersion,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.21.0",
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"      % "2.21.1",
     "org.typelevel"                %% "cats-core"                 % "2.13.0",
-    "com.beachape"                 %% "enumeratum"                % "1.9.4",
-    "com.beachape"                 %% "enumeratum-play-json"      % "1.9.4" excludeAll (jacksonAndPlayExclusions *),
+    "com.beachape"                 %% "enumeratum"                % "1.9.5",
+    "com.beachape"                 %% "enumeratum-play-json"      % "1.9.5" excludeAll (jacksonAndPlayExclusions *),
     "org.codehaus.janino"           % "janino"                    % "3.1.12" // it's required by logback for conditional logging
   )
 
