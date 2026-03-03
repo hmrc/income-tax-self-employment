@@ -19,7 +19,7 @@ import sbt.*
 
 object AppDependencies {
 
-  private val bootstrapVersion = "10.6.0"
+  private val bootstrapVersion = "10.7.0"
   private val hmrcMongoVersion = "2.12.0"
 
   val jacksonAndPlayExclusions: Seq[InclusionRule] = Seq(
@@ -46,7 +46,7 @@ object AppDependencies {
     "org.playframework"      %% "play-test"                % current,
     "org.scalatest"          %% "scalatest"                % "3.2.19",
     "org.scalatestplus"      %% "scalacheck-1-15"          % "3.2.11.0",
-    "org.mockito"            %% "mockito-scala-scalatest"  % "2.0.0",
+    "org.mockito"            %% "mockito-scala-scalatest"  % "2.1.0",
     "org.typelevel"          %% "cats-core"                % "2.13.0",
     "com.vladsch.flexmark"    % "flexmark-all"             % "0.64.8",
     "org.scalatestplus.play" %% "scalatestplus-play"       % "7.0.2",
