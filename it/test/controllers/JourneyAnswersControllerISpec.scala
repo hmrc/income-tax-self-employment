@@ -21,6 +21,8 @@ import models.connector.api_1803.{AnnualAllowancesType, SuccessResponseSchema}
 import models.frontend.adjustments.{ProfitOrLossJourneyAnswers, WhichYearIsLossReported}
 import play.api.http.Status.NO_CONTENT
 import play.api.libs.json.{JsValue, Json}
+import play.api.libs.ws.DefaultBodyWritables._
+import play.api.libs.ws.JsonBodyWritables._
 
 class JourneyAnswersControllerISpec extends IntegrationBaseSpec {
 

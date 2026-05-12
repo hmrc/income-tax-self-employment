@@ -16,8 +16,9 @@
 
 package utils
 
-import org.mockito.MockitoSugar
-import org.mockito.stubbing.ScalaOngoingStubbing
+import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing as ScalaOngoingStubbing
+import org.scalatestplus.mockito.MockitoSugar
 
 import java.time.temporal.ChronoUnit
 import java.time.{OffsetDateTime, ZonedDateTime}

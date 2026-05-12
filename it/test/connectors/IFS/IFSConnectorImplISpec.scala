@@ -33,7 +33,6 @@ import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ErrorType.DownstreamErrorCode
 import models.error.ServiceError
 import org.scalatest.EitherValues._
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.Helpers.await
@@ -50,7 +49,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1786ResponseJson,
         expectedStatus = OK
       )
-      await(connector.getPeriodicSummaryDetail(ctx)) shouldBe api1786Response.asRight
+      await(connector.getPeriodicSummaryDetail(ctx)) mustBe api1786Response.asRight
     }
   }
 
@@ -62,7 +61,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = OK)
 
-      await(connector.createAmendSEAnnualSubmission(data)) shouldBe ().asRight
+      await(connector.createAmendSEAnnualSubmission(data)) mustBe ().asRight
     }
   }
 
@@ -74,7 +73,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = OK
       )
 
-      await(connector.getAnnualSummaries(ctx)) shouldBe api1171Response.asRight
+      await(connector.getAnnualSummaries(ctx)) mustBe api1171Response.asRight
     }
 
     "return an empty annual summary if not found" in new Api1803Test {
@@ -84,7 +83,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = NOT_FOUND
       )
 
-      await(connector.getAnnualSummaries(ctx)) shouldBe SuccessResponseSchema(None, None, None).asRight
+      await(connector.getAnnualSummaries(ctx)) mustBe SuccessResponseSchema(None, None, None).asRight
     }
   }
 
@@ -109,7 +108,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = OK
       )
 
-      await(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, None).value) shouldBe ().asRight
+      await(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, None).value) mustBe ().asRight
     }
     "send a DELETE request when given no data to submit" in new Api1802Test {
       stubPutWithRequestAndResponseBody(
@@ -118,7 +117,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = OK)
 
-      await(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, requestBody.some).value) shouldBe ().asRight
+      await(connector.createUpdateOrDeleteApiAnnualSummaries(ctx, requestBody.some).value) mustBe ().asRight
     }
   }
 
@@ -130,7 +129,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = CREATED)
 
-      await(connector.createSEPeriodSummary(data)) shouldBe ().asRight
+      await(connector.createSEPeriodSummary(data)) mustBe ().asRight
     }
   }
 
@@ -142,7 +141,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = downstreamSuccessResponse,
         expectedStatus = OK)
 
-      await(connector.amendSEPeriodSummary(data)) shouldBe ().asRight
+      await(connector.amendSEPeriodSummary(data)) mustBe ().asRight
     }
   }
 
@@ -157,7 +156,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
       val expectedResponse: Option[ListSEPeriodSummariesResponse] =
         Option(ListSEPeriodSummariesResponse(Some(List(PeriodDetails(None, Some("2023-04-06"), Some("2024-04-05"))))))
 
-      await(connector.listSEPeriodSummary(ctx)) shouldBe expectedResponse.asRight
+      await(connector.listSEPeriodSummary(ctx)) mustBe expectedResponse.asRight
     }
   }
 
@@ -208,7 +207,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
     "return a success" in new Api1505Test {
       stubPostWithRequestAndResponseBody(url = downstreamUrl, requestBody = requestBody, expectedResponse = api1171ResponseJson, expectedStatus = OK)
 
-      await(connector.createLossClaim(ctx, requestBody).value) shouldBe api1171Response.asRight
+      await(connector.createLossClaim(ctx, requestBody).value) mustBe api1171Response.asRight
     }
 
     "return a ParsingError when expectedResponse is incorrect" in new Api1505Test {
@@ -218,7 +217,7 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = badRequestResponseRaw,
         expectedStatus = OK)
 
-      await(connector.createLossClaim(ctx, requestBody).value) shouldBe
+      await(connector.createLossClaim(ctx, requestBody).value) mustBe
         Left(SingleDownstreamError(500, SingleDownstreamErrorBody("PARSING_ERROR", "Error parsing response from API", DownstreamErrorCode)))
     }
 
@@ -233,10 +232,10 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
       val result: Either[ServiceError, ClaimId] = await(connector.createLossClaim(ctx, requestBody).value)
       result match {
         case Left(GenericDownstreamError(status, message)) =>
-          status shouldBe 400
-          message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
-          message should include(s"status=$BAD_REQUEST")
-          message should include(s"body:\n$api1171ResponseJson")
+          status mustBe 400
+          message must include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
+          message must include(s"status=$BAD_REQUEST")
+          message must include(s"body:\n$api1171ResponseJson")
         case _ => fail("Expected a GenericDownstreamError")
       }
     }
@@ -252,10 +251,10 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
       val result: Either[ServiceError, ClaimId] = await(connector.createLossClaim(ctx, requestBody).value)
       result match {
         case Left(GenericDownstreamError(status, message)) =>
-          status shouldBe 404
-          message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
-          message should include(s"status=$NOT_FOUND")
-          message should include(s"body:\n$api1171ResponseJson")
+          status mustBe 404
+          message must include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
+          message must include(s"status=$NOT_FOUND")
+          message must include(s"body:\n$api1171ResponseJson")
         case _ => fail("Expected a GenericDownstreamError")
       }
     }
@@ -271,10 +270,10 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
       val result: Either[ServiceError, ClaimId] = await(connector.createLossClaim(ctx, requestBody).value)
       result match {
         case Left(GenericDownstreamError(status, message)) =>
-          status shouldBe 409
-          message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
-          message should include(s"status=$CONFLICT")
-          message should include(s"body:\n$api1171ResponseJson")
+          status mustBe 409
+          message must include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
+          message must include(s"status=$CONFLICT")
+          message must include(s"body:\n$api1171ResponseJson")
         case _ => fail("Expected a GenericDownstreamError")
       }
     }
@@ -290,10 +289,10 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
       val result: Either[ServiceError, ClaimId] = await(connector.createLossClaim(ctx, requestBody).value)
       result match {
         case Left(GenericDownstreamError(status, message)) =>
-          status shouldBe 422
-          message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
-          message should include(s"status=$UNPROCESSABLE_ENTITY")
-          message should include(s"body:\n$api1171ResponseJson")
+          status mustBe 422
+          message must include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
+          message must include(s"status=$UNPROCESSABLE_ENTITY")
+          message must include(s"body:\n$api1171ResponseJson")
         case _ => fail("Expected a GenericDownstreamError")
       }
     }
@@ -310,10 +309,10 @@ class IFSConnectorImplISpec extends IntegrationBaseSpec {
 
       result match {
         case Left(GenericDownstreamError(status, message)) =>
-          status shouldBe 201
-          message should include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
-          message should include(s"status=$CREATED")
-          message should include(s"body:\n${api1171Response.claimId}")
+          status mustBe 201
+          message must include(s"Downstream error when calling POST http://localhost:11111$downstreamUrl")
+          message must include(s"status=$CREATED")
+          message must include(s"body:\n${api1171Response.claimId}")
         case _ => fail("Expected a GenericDownstreamError")
       }
     }

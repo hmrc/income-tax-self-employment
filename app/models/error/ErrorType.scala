@@ -38,6 +38,6 @@ object ErrorType {
         case JsString("DOMAIN_ERROR_CODE")     => JsSuccess(DomainErrorCode)
         case jsValue: JsValue                  => JsError(s"ErrorType $jsValue is not one of supported [DOWNSTREAM_ERROR_CODE, DOMAIN_ERROR_CODE]")
       },
-      Writes { errType: ErrorType => JsString(errType.errorCode) }
+      Writes { (errType: ErrorType) => JsString(errType.errorCode) }
     )
 }

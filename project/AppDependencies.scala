@@ -47,10 +47,10 @@ object AppDependencies {
     "org.playframework"      %% "play-test"                % current,
     "org.scalatest"          %% "scalatest"                % "3.2.19",
     "org.scalatestplus"      %% "scalacheck-1-15"          % "3.2.11.0",
-    "org.mockito"            %% "mockito-scala-scalatest"  % "2.1.0",
     "org.typelevel"          %% "cats-core"                % "2.13.0",
     "com.vladsch.flexmark"    % "flexmark-all"             % "0.64.8",
     "org.scalatestplus.play" %% "scalatestplus-play"       % "7.0.2",
+    "org.mockito"            %% "mockito-scala-scalatest"  % "2.2.1",
     "com.github.tomakehurst"  % "wiremock-jre8-standalone" % "3.0.1",
     "org.scalamock"          %% "scalamock"                % "7.5.5"
   ).map(_ % Test)

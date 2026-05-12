@@ -35,7 +35,7 @@ object LatencyDetails {
     val Q = Value("Q")
 
     type LatencyIndicator1 = Value
-    implicit lazy val LatencyIndicator1JsonFormat: Format[Value] = Format(Reads.enumNameReads(this), Writes.enumNameWrites[this.type])
+    implicit lazy val LatencyIndicator1JsonFormat: Format[Value] = Format(Reads.enumNameReads(this), Writes[Value](v => JsString(v.toString)))
   }
 
   // noinspection TypeAnnotation
@@ -44,6 +44,6 @@ object LatencyDetails {
     val Q = Value("Q")
 
     type LatencyIndicator2 = Value
-    implicit lazy val LatencyIndicator2JsonFormat: Format[Value] = Format(Reads.enumNameReads(this), Writes.enumNameWrites[this.type])
+    implicit lazy val LatencyIndicator2JsonFormat: Format[Value] = Format(Reads.enumNameReads(this), Writes[Value](v => JsString(v.toString)))
   }
 }

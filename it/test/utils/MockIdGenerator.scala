@@ -16,8 +16,8 @@
 
 package utils
 
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaOngoingStubbing
+import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing as ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
 
 trait MockIdGenerator {

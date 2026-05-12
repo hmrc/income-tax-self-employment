@@ -24,8 +24,9 @@ import models.common.{BusinessId, Nino, TaxYear}
 import play.api.http.Status.{BAD_REQUEST, NOT_FOUND, NO_CONTENT, OK}
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
+import play.api.libs.ws.DefaultBodyWritables._
+import play.api.libs.ws.JsonBodyWritables._
 import play.api.test.Helpers.await
-
 
 class TravelExpensesControllerISpec extends IntegrationBaseSpec with AuthStub {
 

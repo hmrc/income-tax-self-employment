@@ -20,20 +20,19 @@ import uk.gov.hmrc.DefaultBuildSettings
 lazy val appName = "income-tax-self-employment"
 
 ThisBuild / majorVersion := 0
-ThisBuild / scalaVersion := "2.13.18"
+ThisBuild / scalaVersion := "3.3.5"
 
 val additionalScalacOptions = if (sys.props.getOrElse("PLAY_ENV", "") == "CI") Seq("-Xfatal-warnings") else Seq()
 
 lazy val compileOpts = Seq(
   "-feature",
   "-unchecked",
-  "-Ywarn-unused:implicits",
-  "-Ywarn-unused:imports",
-  "-Ywarn-unused:locals",
-  "-Ywarn-unused:params",
-  "-Ywarn-unused:patvars",
-  "-Ywarn-unused:privates",
-  "-Ywarn-value-discard",
+  "-Wunused:implicits",
+  "-Wunused:imports",
+  "-Wunused:locals",
+  "-Wunused:params",
+  "-Wunused:privates",
+  "-Wvalue-discard",
   "-Wconf:src=routes/.*:s"
 ) ++ additionalScalacOptions
 
@@ -53,7 +52,7 @@ lazy val microservice = Project(appName, file("."))
   )
   .settings(CodeCoverageSettings.settings *)
 
-lazy val testSettings: Seq[Def.Setting[_]] = Seq(
+lazy val testSettings: Seq[Def.Setting[?]] = Seq(
   fork := true,
   unmanagedSourceDirectories += baseDirectory.value / "test-utils"
 )

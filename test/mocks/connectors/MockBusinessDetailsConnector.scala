@@ -22,9 +22,9 @@ import models.common.{BusinessId, Mtditid, Nino}
 import models.connector.businessDetailsConnector.BusinessDetailsHipSuccessWrapper
 import models.domain.ApiResultT
 import models.error.ServiceError
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaOngoingStubbing
+import org.mockito.ArgumentMatchersSugar.*
+import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing as ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
 import uk.gov.hmrc.http.HeaderCarrier
 

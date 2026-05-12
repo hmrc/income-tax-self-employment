@@ -18,7 +18,8 @@ package mocks
 
 import common._
 import controllers.actions.AuthorisedAction
-import org.mockito.IdiomaticMockito.StubbingOps
+import org.mockito.ArgumentMatchers.{any, `eq` as eqTo}
+import org.mockito.Mockito.when
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals
 import uk.gov.hmrc.auth.core.syntax.retrieved.authSyntaxForRetrieved
@@ -36,13 +37,13 @@ trait MockAuth extends BaseSpec with MockAppConfig {
       Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, "1234567890")), "Activated")
     ))
 
-  mockAuthConnector
-    .authorise(*, eqTo(Retrievals.allEnrolments and Retrievals.confidenceLevel))(*, *) returns Future
-    .successful(individualEnrolments and ConfidenceLevel.L250)
+  when(mockAuthConnector
+    .authorise(any(), eqTo(Retrievals.allEnrolments and Retrievals.confidenceLevel))(any(), any()))
+    .thenReturn(Future.successful(individualEnrolments and ConfidenceLevel.L250))
 
-  mockAuthConnector
-    .authorise(*, eqTo(Retrievals.affinityGroup))(*, *) returns Future
-    .successful(Some(AffinityGroup.Individual))
+  when(mockAuthConnector
+    .authorise(any(), eqTo(Retrievals.affinityGroup))(any(), any()))
+    .thenReturn(Future.successful(Some(AffinityGroup.Individual)))
 
   protected val mockAuthorisedAction = new AuthorisedAction()(mockAuthConnector, defaultActionBuilder, stubControllerComponents)
 

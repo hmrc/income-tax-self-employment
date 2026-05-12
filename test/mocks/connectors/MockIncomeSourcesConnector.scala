@@ -22,10 +22,9 @@ import models.common.Nino
 import models.connector.ApiResponse
 import models.connector.api_2085.ListOfIncomeSources
 import models.domain.ApiResultT
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaOngoingStubbing
+import org.mockito.ArgumentMatchersSugar.*
+import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing as ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
 import uk.gov.hmrc.http.HeaderCarrier
 

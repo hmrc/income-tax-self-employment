@@ -52,7 +52,7 @@ class JourneyAnswerValidationService @Inject() (implicit ec: ExecutionContext) e
   private def validate[A](json: JsValue)(implicit format: Format[A]): Either[InvalidSection, ValidSection] =
     json.validate[A] match {
       case JsSuccess(value, _) =>
-        val sanitizedJson = removeInvalidFields(Json.toJson(value), getInvalidFields(value))
+        val sanitizedJson = removeInvalidFields(Json.toJson(value)(format), getInvalidFields(value)(format))
         Right(ValidSection(sanitizedJson))
       case JsError(errors) =>
         Left(InvalidSection(errors.map(_._1.toString()).toSeq))

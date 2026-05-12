@@ -17,10 +17,10 @@
 package mocks.services
 
 import models.common.{Mtditid, TaxYear}
-import models.commonTaskList.{TaskListModel, TaskListSection}
+import models.commonTaskList.TaskListModel
 import models.frontend.TaskList
-import org.mockito.ArgumentMatchersSugar.eqTo
-import org.mockito.MockitoSugar.when
+import org.mockito.ArgumentMatchersSugar.*
+import org.mockito.Mockito.when
 import org.mockito.stubbing.OngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
 import services.TaskListService
@@ -32,7 +32,7 @@ object MockTaskListService {
   val mockInstance: TaskListService = mock[TaskListService]
 
   def mockBuildCommonTaskList(legacyTaskList: TaskList, taxYear: TaxYear, mtditid: Mtditid)(
-      response: Future[TaskListModel]): OngoingStubbing[TaskListSection] =
+      response: Future[TaskListModel]): OngoingStubbing[Future[TaskListModel]] =
     when(mockInstance.buildTaskList(eqTo(legacyTaskList), eqTo(taxYear), eqTo(mtditid)))
       .thenReturn(response)
 

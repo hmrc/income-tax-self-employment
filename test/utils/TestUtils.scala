@@ -84,16 +84,16 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
       Enrolment(EnrolmentKeys.nino, Seq(EnrolmentIdentifier(EnrolmentIdentifiers.nino, testNino)), "Activated")
     ))
 
-  def mockAuth(enrolments: Enrolments = individualEnrolments): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] = {
+  def mockAuth(enrolments: Enrolments = individualEnrolments): CallHandler4[Predicate, Retrieval[Any], HeaderCarrier, ExecutionContext, Future[Any]] = {
 
     (mockAuthConnector
-      .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.affinityGroup, *, *)
+      .authorise(_: Predicate, _: Retrieval[Any])(_: HeaderCarrier, _: ExecutionContext))
+      .expects(*, Retrievals.affinityGroup.asInstanceOf[Retrieval[Any]], *, *)
       .returning(Future.successful(Some(AffinityGroup.Individual)))
 
     (mockAuthConnector
-      .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.allEnrolments and Retrievals.confidenceLevel, *, *)
+      .authorise(_: Predicate, _: Retrieval[Any])(_: HeaderCarrier, _: ExecutionContext))
+      .expects(*, (Retrievals.allEnrolments and Retrievals.confidenceLevel).asInstanceOf[Retrieval[Any]], *, *)
       .returning(Future.successful(enrolments and ConfidenceLevel.L250))
   }
 
@@ -104,22 +104,22 @@ trait TestUtils extends AnyWordSpec with Matchers with MockFactory with GuiceOne
     ))
 
   def mockAuthAsAgent(
-      enrolments: Enrolments = agentEnrolments): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] = {
+      enrolments: Enrolments = agentEnrolments): CallHandler4[Predicate, Retrieval[Any], HeaderCarrier, ExecutionContext, Future[Any]] = {
 
     (mockAuthConnector
-      .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.affinityGroup, *, *)
+      .authorise(_: Predicate, _: Retrieval[Any])(_: HeaderCarrier, _: ExecutionContext))
+      .expects(*, Retrievals.affinityGroup.asInstanceOf[Retrieval[Any]], *, *)
       .returning(Future.successful(Some(AffinityGroup.Agent)))
 
     (mockAuthConnector
-      .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, Retrievals.allEnrolments, *, *)
+      .authorise(_: Predicate, _: Retrieval[Any])(_: HeaderCarrier, _: ExecutionContext))
+      .expects(*, Retrievals.allEnrolments.asInstanceOf[Retrieval[Any]], *, *)
       .returning(Future.successful(enrolments))
   }
 
-  def mockAuthReturnException(exception: Exception): CallHandler4[Predicate, Retrieval[_], HeaderCarrier, ExecutionContext, Future[Any]] =
+  def mockAuthReturnException(exception: Exception): CallHandler4[Predicate, Retrieval[Any], HeaderCarrier, ExecutionContext, Future[Any]] =
     (mockAuthConnector
-      .authorise(_: Predicate, _: Retrieval[_])(_: HeaderCarrier, _: ExecutionContext))
+      .authorise(_: Predicate, _: Retrieval[Any])(_: HeaderCarrier, _: ExecutionContext))
       .expects(*, *, *, *)
       .returning(Future.failed(exception))
 

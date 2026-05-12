@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import org.mongodb.scala._
 import org.mongodb.scala.MongoCollection
 import org.mongodb.scala.model.Filters
 

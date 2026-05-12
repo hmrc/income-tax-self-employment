@@ -35,8 +35,8 @@ import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss.{CarryItForward, DeductFromOtherTypes}
 import models.frontend.adjustments._
-import org.mockito.ArgumentMatchersSugar.{any, eqTo}
-import org.mockito.MockitoSugar.{reset, times, verify, when}
+import org.mockito.ArgumentMatchers.{any, `eq` as eqTo}
+import org.mockito.Mockito.{reset, times, verify, when}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -54,7 +54,7 @@ import utils.BaseSpec.{businessId, hc, journeyCtxWithNino}
 import utils.EitherTTestOps.convertScalaFuture
 
 import java.time.LocalDateTime
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class ProfitOrLossAnswersServiceImplSpec
@@ -314,7 +314,7 @@ class ProfitOrLossAnswersServiceImplSpec
           getBroughtForwardLossResult = api1502SuccessResponse.asRight
         )
       when(mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(EitherT.rightT(Right((): Unit)))
+        .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
       MockReliefClaimsService.getAllReliefClaims(journeyCtxWithNino)()
 
@@ -421,7 +421,7 @@ class ProfitOrLossAnswersServiceImplSpec
 
     "must return error when the downstream api 'getAllReliefClaims' fails to get the data" in new StubbedService {
 
-      when(mockInstance.getAllReliefClaims(eqTo(journeyCtxWithNino))(any[HeaderCarrier])).thenReturn(EitherT.leftT(downstreamError))
+      when(mockInstance.getAllReliefClaims(eqTo(journeyCtxWithNino))(any[HeaderCarrier])).thenReturn(EitherT.left[List[ReliefClaim]](Future.successful(downstreamError: ServiceError)))
       val result: Either[ServiceError, Option[ProfitOrLossJourneyAnswers]] = service.getProfitOrLoss(journeyCtxWithNino).value.futureValue
 
       assert(result === downstreamError.asLeft)
@@ -666,7 +666,7 @@ class ProfitOrLossAnswersServiceImplSpec
 
         when(
           mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(EitherT.rightT(Right((): Unit)))
+          .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
         val result: Either[ServiceError, Unit] = service
           .storeBroughtForwardLossAnswers(
@@ -685,7 +685,7 @@ class ProfitOrLossAnswersServiceImplSpec
 
         when(
           mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(EitherT.rightT(()))
+          .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
         val result: Either[ServiceError, Unit] =
           service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers).value.futureValue
@@ -699,7 +699,7 @@ class ProfitOrLossAnswersServiceImplSpec
 
           when(
             mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-            .thenReturn(EitherT.rightT(()))
+            .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
           override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
             StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)
@@ -765,7 +765,7 @@ class ProfitOrLossAnswersServiceImplSpec
 
         when(
           mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(EitherT.leftT(downstreamError))
+          .thenReturn(EitherT.left[Unit](Future.successful(downstreamError: ServiceError)))
 
         val result: Either[ServiceError, Unit] = service
           .storeBroughtForwardLossAnswers(
@@ -784,7 +784,7 @@ class ProfitOrLossAnswersServiceImplSpec
 
         when(
           mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(EitherT.leftT(downstreamError))
+          .thenReturn(EitherT.left[Unit](Future.successful(downstreamError: ServiceError)))
 
         val res: ApiResultT[Unit] =
           service.storeBroughtForwardLossAnswers(journeyCtxWithNino, noBroughtForwardLossAnswers)
@@ -799,7 +799,7 @@ class ProfitOrLossAnswersServiceImplSpec
 
           when(
             mockBroughtForwardLossConnector.deleteBroughtForwardLoss(any[Nino], any[TaxYear], any[String])(any[HeaderCarrier], any[ExecutionContext]))
-            .thenReturn(EitherT.leftT(downstreamError))
+            .thenReturn(EitherT.left[Unit](Future.successful(downstreamError: ServiceError)))
 
           override val ifsBusinessDetailsConnector: StubIFSBusinessDetailsConnector =
             StubIFSBusinessDetailsConnector(listBroughtForwardLossesResult = api1870SuccessResponse.asRight)

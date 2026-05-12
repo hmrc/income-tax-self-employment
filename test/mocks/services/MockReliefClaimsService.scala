@@ -17,40 +17,41 @@
 package mocks.services
 
 import cats.data.EitherT
-import cats.implicits.catsStdInstancesForFuture
 import models.common.JourneyContextWithNino
 import models.connector.api_1505.ClaimId
 import models.connector.common.ReliefClaim
 import models.domain.ApiResultT
+import models.error.ServiceError
 import models.frontend.adjustments.WhatDoYouWantToDoWithLoss
 import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaOngoingStubbing
+import org.mockito.ArgumentMatchers.{`eq` as eqTo}
+import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing as ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
 import services.journeyAnswers.{ReliefClaimsService, UpdateReliefClaimsResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 object MockReliefClaimsService {
   val mockInstance: ReliefClaimsService = mock[ReliefClaimsService]
 
   def getAllReliefClaims(ctx: JourneyContextWithNino)(returnValue: List[ReliefClaim] = Nil): ScalaOngoingStubbing[ApiResultT[List[ReliefClaim]]] =
     when(mockInstance.getAllReliefClaims(eqTo(ctx))(any()))
-      .thenReturn(EitherT.pure(returnValue))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(returnValue)))
 
   def createReliefClaims(ctx: JourneyContextWithNino)(
       returnValue: List[ClaimId] = Nil): ScalaOngoingStubbing[ApiResultT[List[ClaimId]]] =
     when(mockInstance.createReliefClaims(eqTo(ctx), any())(any(), any()))
-      .thenReturn(EitherT.pure(returnValue))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(returnValue)))
 
   def updateReliefClaims(ctx: JourneyContextWithNino, oldAnswers: List[ReliefClaim], newAnswers: WhatDoYouWantToDoWithLoss*)(
       returnValue: UpdateReliefClaimsResponse): ScalaOngoingStubbing[ApiResultT[UpdateReliefClaimsResponse]] =
     when(mockInstance.updateReliefClaims(eqTo(ctx), eqTo(oldAnswers), eqTo(newAnswers))(any()))
-      .thenReturn(EitherT.pure(returnValue))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(returnValue)))
 
   def deleteReliefClaims(ctx: JourneyContextWithNino, answersToDelete: Seq[ReliefClaim]): ScalaOngoingStubbing[ApiResultT[Unit]] =
     when(mockInstance.deleteReliefClaims(eqTo(ctx), eqTo(answersToDelete))(any()))
-      .thenReturn(EitherT.pure(()))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
 }

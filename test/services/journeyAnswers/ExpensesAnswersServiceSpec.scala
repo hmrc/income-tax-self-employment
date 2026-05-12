@@ -39,7 +39,7 @@ import models.frontend.expenses.tailoring.ExpensesTailoring.{IndividualCategorie
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers
 import models.frontend.expenses.tailoring.ExpensesTailoringAnswers.{AsOneTotalAnswers, NoExpensesAnswers}
 import models.frontend.expenses.workplaceRunningCosts.WorkplaceRunningCostsAnswers
-import org.mockito.MockitoSugar.when
+import org.mockito.Mockito.when
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.mockito.MockitoSugar.mock

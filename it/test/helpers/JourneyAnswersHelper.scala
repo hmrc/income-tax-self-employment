@@ -20,6 +20,7 @@ import models.common.JourneyName
 import models.common.JourneyName.TravelExpenses
 import models.common.JourneyStatus.InProgress
 import models.database.JourneyAnswers
+import org.mongodb.scala._
 import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.Filters
 import org.mongodb.scala.result.DeleteResult

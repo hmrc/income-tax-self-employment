@@ -106,7 +106,7 @@ object ServiceError {
             case JsString(s"Mongo exception occurred. Exception: $error") => JsSuccess(MongoError(error))
             case _                                                        => JsError("Invalid format for MongoError")
           },
-          Writes { mge: MongoError =>
+          Writes { (mge: MongoError) =>
             JsString(mge.errorMessage)
           }
         )
@@ -123,7 +123,7 @@ object ServiceError {
               .reads(jsValue)
               .orElse(JsError(s"DataBaseError $jsValue is not one of supported"))
         },
-        Writes { dbError: DatabaseError => JsString(dbError.errorMessage) }
+        Writes { (dbError: DatabaseError) => JsString(dbError.errorMessage) }
       )
 
   }

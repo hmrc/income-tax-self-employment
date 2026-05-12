@@ -16,11 +16,10 @@
 
 package models.connector
 
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.wordspec.AnyWordSpecLike
 import play.api.libs.json.{JsString, Json}
 
-class ClaimIdSpec extends AnyWordSpecLike {
+class ClaimIdSpec extends AnyWordSpecLike with org.scalatest.matchers.should.Matchers {
   "ClaimId" must {
     "serialise to json" in {
       val claimId = ClaimId("12345678900")

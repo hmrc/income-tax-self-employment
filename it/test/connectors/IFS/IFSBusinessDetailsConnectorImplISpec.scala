@@ -23,7 +23,6 @@ import models.common.JourneyContextWithNino
 import models.connector.api_2085.ListOfIncomeSources
 import models.error.DownstreamError.GenericDownstreamError
 import models.error.ServiceError
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import play.api.http.Status._
 import play.api.test.Helpers.await
 
@@ -40,7 +39,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
 //        expectedResponse = api1171IfsResponseJson,
 //        expectedStatus = OK
 //      )
-//      connector.getBusinesses(testNino).value.futureValue shouldBe Right(api1171IfsResponse)
+//      connector.getBusinesses(testNino).value.futureValue mustBe Right(api1171IfsResponse)
     }
   }
 
@@ -51,7 +50,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1871ResponseJson,
         expectedStatus = OK
       )
-      await(connector.getBusinessIncomeSourcesSummary(testTaxYear, testNino, testBusinessId).value) shouldBe Right(api1871Response)
+      await(connector.getBusinessIncomeSourcesSummary(testTaxYear, testNino, testBusinessId).value) mustBe Right(api1871Response)
     }
   }
 
@@ -63,7 +62,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1500ResponseJson,
         expectedStatus = OK
       )
-      await(connector.createBroughtForwardLoss(data).value) shouldBe api1500Response.asRight
+      await(connector.createBroughtForwardLoss(data).value) mustBe api1500Response.asRight
     }
   }
 
@@ -75,7 +74,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1501ResponseJson,
         expectedStatus = OK
       )
-      await(connector.updateBroughtForwardLoss(data).value) shouldBe api1501Response.asRight
+      await(connector.updateBroughtForwardLoss(data).value) mustBe api1501Response.asRight
     }
   }
 
@@ -86,7 +85,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1502ResponseJson,
         expectedStatus = OK
       )
-      await(connector.getBroughtForwardLoss(testNino, testBusinessId.value).value) shouldBe api1502Response.asRight
+      await(connector.getBroughtForwardLoss(testNino, testBusinessId.value).value) mustBe api1502Response.asRight
     }
   }
 
@@ -97,7 +96,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         expectedResponse = api1870ResponseJson,
         expectedStatus = OK
       )
-      await(connector.listBroughtForwardLosses(testNino, testTaxYear).value) shouldBe api1870Response.asRight
+      await(connector.listBroughtForwardLosses(testNino, testTaxYear).value) mustBe api1870Response.asRight
     }
   }
 
@@ -109,7 +108,7 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         expectedStatus = OK
       )
 
-      await(connector.getListOfIncomeSources(testTaxYear, testNino).value) shouldBe api2085Response.asRight
+      await(connector.getListOfIncomeSources(testTaxYear, testNino).value) mustBe api2085Response.asRight
     }
 
     for (errorStatus <- Seq(BAD_REQUEST, NOT_FOUND, SERVICE_UNAVAILABLE, INTERNAL_SERVER_ERROR))
@@ -123,11 +122,11 @@ class IFSBusinessDetailsConnectorImplISpec extends IntegrationBaseSpec {
         val result: Either[ServiceError, ListOfIncomeSources] = await(connector.getListOfIncomeSources(testTaxYear, testNino).value)
         result match {
           case Left(GenericDownstreamError(status, message)) =>
-            status shouldBe errorStatus
-            message should include(
+            status mustBe errorStatus
+            message must include(
               s"Downstream error when calling GET http://localhost:11111/income-tax/income-sources/$testNino?taxYear=${testTaxYear.toYYYY_YY}")
-            message should include(s"status=$errorStatus")
-            message should include(s"body:\n$api2085FailedResponse")
+            message must include(s"status=$errorStatus")
+            message must include(s"body:\n$api2085FailedResponse")
           case _ => fail("Expected a GenericDownstreamError")
         }
       }

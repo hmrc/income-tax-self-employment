@@ -17,7 +17,6 @@
 package mocks.connectors
 
 import cats.data.EitherT
-import cats.implicits._
 import connectors.IFS.IFSConnector
 import connectors.IFS.IFSConnector.{Api1786Response, Api1803Response, Api1895Response}
 import models.common.JourneyContextWithNino
@@ -26,10 +25,11 @@ import models.connector.api_1639.SuccessResponseAPI1639
 import models.connector.api_1802.request.CreateAmendSEAnnualSubmissionRequestBody
 import models.connector.api_1895.request.AmendSEPeriodSummaryRequestData
 import models.domain.ApiResultT
+import models.error.ServiceError
 import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaOngoingStubbing
+import org.mockito.ArgumentMatchers.{`eq` as eqTo}
+import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing as ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -43,15 +43,15 @@ object MockIFSConnector {
   def getDisclosuresSubmission(ctx: JourneyContextWithNino)
                               (returnValue: Option[SuccessResponseAPI1639]): ScalaOngoingStubbing[ApiResultT[Option[SuccessResponseAPI1639]]] =
     when(mockInstance.getDisclosuresSubmission(eqTo(ctx))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(EitherT.rightT(returnValue))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(returnValue)))
 
   def upsertDisclosuresSubmission(ctx: JourneyContextWithNino, data: RequestSchemaAPI1638): ScalaOngoingStubbing[ApiResultT[Unit]] =
     when(mockInstance.upsertDisclosuresSubmission(eqTo(ctx), eqTo(data))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(EitherT.rightT(()))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
   def deleteDisclosuresSubmission(ctx: JourneyContextWithNino): ScalaOngoingStubbing[ApiResultT[Unit]] =
     when(mockInstance.deleteDisclosuresSubmission(eqTo(ctx))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(EitherT.rightT(()))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
   def getAnnualSummaries(ctx: JourneyContextWithNino)(response: Api1803Response): ScalaOngoingStubbing[Future[Api1803Response]] =
     when(mockInstance.getAnnualSummaries(eqTo(ctx))(any[HeaderCarrier], any[ExecutionContext]))
@@ -60,7 +60,7 @@ object MockIFSConnector {
   def createUpdateOrDeleteApiAnnualSummaries(ctx: JourneyContextWithNino,
                                              requestBody: Option[CreateAmendSEAnnualSubmissionRequestBody]): ScalaOngoingStubbing[ApiResultT[Unit]] =
     when(mockInstance.createUpdateOrDeleteApiAnnualSummaries(eqTo(ctx), eqTo(requestBody))(any[HeaderCarrier], any[ExecutionContext]))
-      .thenReturn(EitherT.rightT(()))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
   def getPeriodicSummaryDetail(ctx: JourneyContextWithNino)(returnValue: Api1786Response): ScalaOngoingStubbing[Future[Api1786Response]] =
     when(mockInstance.getPeriodicSummaryDetail(eqTo(ctx))(any[HeaderCarrier], any[ExecutionContext]))
@@ -71,8 +71,9 @@ object MockIFSConnector {
 //    when(mockInstance.amendSEPeriodSummary(eqTo(data))(any[HeaderCarrier], any[ExecutionContext]))
 //      .thenReturn(Future.successful(returnValue))
 
-    def amendSEPeriodSummary()(returnValue: Api1895Response): ScalaOngoingStubbing[Future[Api1895Response]] =
-      when(mockInstance.amendSEPeriodSummary(any[AmendSEPeriodSummaryRequestData])(any[HeaderCarrier], any[ExecutionContext]))
-        .thenReturn(Future.successful(returnValue))
+  def amendSEPeriodSummary()(returnValue: Api1895Response): ScalaOngoingStubbing[Future[Api1895Response]] = {
+    when(mockInstance.amendSEPeriodSummary(any[AmendSEPeriodSummaryRequestData])(any[HeaderCarrier], any[ExecutionContext]))
+      .thenReturn(Future.successful(returnValue))
+  }
 
 }
