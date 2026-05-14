@@ -49,6 +49,6 @@ object UkAddressType {
     val GB = Value("GB")
 
     type CountryCode = Value
-    implicit lazy val CountryCodeJsonFormat: Format[Value] = Format(Reads.enumNameReads(this), Writes.enumNameWrites[this.type])
+    implicit lazy val CountryCodeJsonFormat: Format[Value] = Format(Reads.enumNameReads(this), Writes[Value](v => JsString(v.toString)))
   }
 }

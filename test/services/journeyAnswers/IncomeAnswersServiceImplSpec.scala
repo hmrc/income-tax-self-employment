@@ -29,11 +29,10 @@ import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
 import models.error.ServiceError
 import models.error.ServiceError.InvalidJsonFormatError
 import models.frontend.income.IncomeJourneyAnswers
-import org.mockito.IdiomaticMockito.StubbingOps
+import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
-import org.mockito.Mockito.{times, when}
-import org.mockito.MockitoSugar.{mock, never, verify}
-import org.mockito.matchers.MacroBasedMatchers
+import org.mockito.Mockito.{never, times, verify, when}
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.EitherValues._
 import org.scalatest.OptionValues._
@@ -55,7 +54,7 @@ import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with MacroBasedMatchers with BeforeAndAfterEach {
+class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with BeforeAndAfterEach {
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
   override def beforeEach(): Unit = {
@@ -101,60 +100,61 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
     "no period summary or annual submission data exists" must { // businessId, mtditid, nino
       "successfully store data and create the period summary" in new TestCase(connector = mock[IFSConnector]) {
         when(mockBusinessService.getBusiness(any[BusinessId], any[Mtditid], any[Nino])(any[HeaderCarrier]))
-          .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
+          .thenReturn(EitherT.right[ServiceError](Future.successful(BusinessDataBuilder.aBusiness)))
 
-        connector.listSEPeriodSummary(*)(*, *) returns
-          Future.successful(api1965EmptyResponse.asRight)
+        when(connector.listSEPeriodSummary(any())(any(), any()))
+          .thenReturn(Future.successful(api1965EmptyResponse.asRight))
 
-        connector.createSEPeriodSummary(*)(*, *) returns
-          Future.successful(().asRight)
+        when(connector.createSEPeriodSummary(any())(any(), any()))
+          .thenReturn(Future.successful(().asRight))
 
-        connector.getAnnualSummaries(*)(*, *) returns
-          Future.successful(SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound).asLeft)
+        when(connector.getAnnualSummaries(any())(any(), any()))
+          .thenReturn(Future.successful(SingleDownstreamError(NOT_FOUND, SingleDownstreamErrorBody.notFound).asLeft))
 
-        connector.createUpdateOrDeleteApiAnnualSummaries(*, *)(*, *) returns
-          EitherT.rightT(())
+        when(connector.createUpdateOrDeleteApiAnnualSummaries(any(), any())(any(), any()))
+          .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
         val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
 
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
-        verify(connector, times(1)).createSEPeriodSummary(*)(*, *)
-        verify(auditService, times(1)).sendAuditEvent(*, *)(*, *)
+        verify(connector, times(1)).createSEPeriodSummary(any())(any(), any())
+        verify(auditService, times(1)).sendAuditEvent(any(), any())(any(), any())
         verify(mockBusinessService, times(1)).getBusiness(any[BusinessId], any[Mtditid], any[Nino])(any[HeaderCarrier])
-        verify(connector, never).amendSEPeriodSummary(*)(*, *)
+        verify(connector, never).amendSEPeriodSummary(any())(any(), any())
       }
     }
 
     "prior submission data exists" must {
       "successfully store data and amend the period summary" in new TestCase(connector = mock[IFSConnector]) {
         when(mockBusinessService.getBusiness(any[BusinessId], any[Mtditid], any[Nino])(any[HeaderCarrier]))
-          .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
+          .thenReturn(EitherT.right[ServiceError](Future.successful(BusinessDataBuilder.aBusiness)))
 
-        connector.listSEPeriodSummary(*)(*, *) returns
-          Future.successful(api1965MatchedResponse.asRight)
+        when(connector.listSEPeriodSummary(any())(any(), any()))
+          .thenReturn(Future.successful(api1965MatchedResponse.asRight))
 
-        connector.getPeriodicSummaryDetail(*)(*, *) returns
-          Future.successful(api1786DeductionsSuccessResponse.asRight)
+        when(connector.getPeriodicSummaryDetail(any())(any(), any()))
+          .thenReturn(Future.successful(api1786DeductionsSuccessResponse.asRight))
 
-        connector.amendSEPeriodSummary(*)(*, *) returns Future.successful(().asRight)
+        when(connector.amendSEPeriodSummary(any())(any(), any()))
+          .thenReturn(Future.successful(().asRight))
 
-        connector.getAnnualSummaries(*)(*, *) returns
-          Future.successful(api1803SuccessResponse.asRight)
+        when(connector.getAnnualSummaries(any())(any(), any()))
+          .thenReturn(Future.successful(api1803SuccessResponse.asRight))
 
-        connector.createUpdateOrDeleteApiAnnualSummaries(*, *)(*, *) returns
-          EitherT.rightT(())
+        when(connector.createUpdateOrDeleteApiAnnualSummaries(any(), any())(any(), any()))
+          .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
         val answers: IncomeJourneyAnswers = incomeJourneyAnswersGen.sample.get
         val ctx: JourneyContextWithNino   = JourneyContextWithNino(currTaxYear, businessId, mtditid, nino)
 
         service.saveAnswers(ctx, answers).value.futureValue shouldBe ().asRight
 
-        verify(connector, times(1)).amendSEPeriodSummary(*)(*, *)
-        verify(auditService, times(1)).sendAuditEvent(*, *)(*, *)
+        verify(connector, times(1)).amendSEPeriodSummary(any())(any(), any())
+        verify(auditService, times(1)).sendAuditEvent(any(), any())(any(), any())
         verify(mockBusinessService, times(1)).getBusiness(any[BusinessId], any[Mtditid], any[Nino])(any[HeaderCarrier])
-        verify(connector, never).createSEPeriodSummary(*)(*, *)
+        verify(connector, never).createSEPeriodSummary(any())(any(), any())
       }
     }
   }
@@ -162,7 +162,7 @@ class IncomeAnswersServiceImplSpec extends AnyWordSpecLike with Matchers with Ma
   "saveAnswers" should {
     "save data in the repository" in new TestCase() {
       when(mockBusinessService.getBusiness(any[BusinessId], any[Mtditid], any[Nino])(any[HeaderCarrier]))
-        .thenReturn(EitherT.rightT(BusinessDataBuilder.aBusiness))
+        .thenReturn(EitherT.right[ServiceError](Future.successful(BusinessDataBuilder.aBusiness)))
 
       service
         .saveAnswers(journeyCtxWithNino, sampleIncomeJourneyAnswersData)

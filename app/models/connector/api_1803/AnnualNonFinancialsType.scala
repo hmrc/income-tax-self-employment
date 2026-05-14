@@ -45,6 +45,6 @@ object AnnualNonFinancialsType {
     val _006 = Value("006")
 
     type Class4NicsExemptionReason = Value
-    implicit lazy val Class4NicsExemptionReasonJsonFormat: Format[Value] = Format(Reads.enumNameReads(this), Writes.enumNameWrites[this.type])
+    implicit lazy val Class4NicsExemptionReasonJsonFormat: Format[Value] = Format(Reads.enumNameReads(this), Writes[Value](v => JsString(v.toString)))
   }
 }

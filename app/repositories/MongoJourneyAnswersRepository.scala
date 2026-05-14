@@ -70,7 +70,7 @@ class MongoJourneyAnswersRepository @Inject() (mongo: MongoComponent, appConfig:
         IndexModel(
           Indexes.ascending("updatedAt"),
           IndexOptions()
-            .expireAfter(appConfig.mongoTTL, TimeUnit.DAYS)
+            .expireAfter(appConfig.mongoTTL.toLong, TimeUnit.DAYS)
             .name("UserDataTTL")
         ),
         IndexModel(

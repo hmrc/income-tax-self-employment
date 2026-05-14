@@ -18,7 +18,8 @@ package services
 
 import config.AppConfig
 import org.mockito.ArgumentMatchers.any
-import org.mockito.MockitoSugar
+import org.mockito.Mockito.{reset, times, verify, when}
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.freespec.AnyFreeSpec
@@ -27,12 +28,11 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.audit.http.connector.AuditResult.{Disabled, Failure, Success}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
-import utils.TestUtils.convertToAnyMustWrapper
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuditServiceSpec extends AnyFreeSpec with MockitoSugar with BeforeAndAfterEach with ScalaFutures {
+class AuditServiceSpec extends AnyFreeSpec with MockitoSugar with BeforeAndAfterEach with ScalaFutures with org.scalatest.matchers.must.Matchers {
 
   case class Test(data: String)
   val mockAuditConnector: AuditConnector = mock[AuditConnector]

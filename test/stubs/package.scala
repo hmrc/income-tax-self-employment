@@ -27,5 +27,5 @@ import scala.concurrent.Future
 package object stubs {
   val downstreamError: SingleDownstreamError = SingleDownstreamError(INTERNAL_SERVER_ERROR, SingleDownstreamErrorBody.serviceUnavailable)
   def serviceUnitT: ApiResultT[Unit]         = EitherT.right[ServiceError](Future.successful(()))
-  def serviceErrorT: ApiResultT[Unit]        = EitherT.leftT(downstreamError)
+  def serviceErrorT: ApiResultT[Unit]        = EitherT.left[Unit](Future.successful(downstreamError: ServiceError))
 }

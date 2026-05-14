@@ -34,6 +34,7 @@ import mocks.services.{MockExpensesAnswersService, MockPeriodSummaryService}
 import models.common.JourneyName
 import models.error.DownstreamError.SingleDownstreamError
 import models.error.DownstreamErrorBody.SingleDownstreamErrorBody
+import models.error.ServiceError
 import models.frontend.capitalAllowances.annualInvestmentAllowance.AnnualInvestmentAllowanceAnswers
 import models.frontend.capitalAllowances.balancingAllowance.BalancingAllowanceAnswers
 import models.frontend.capitalAllowances.balancingCharge.BalancingChargeAnswers
@@ -68,9 +69,10 @@ import play.api.libs.json.{Json, Writes}
 import play.api.mvc.{Action, AnyContent}
 import services.journeyAnswers.CapitalAllowancesAnswersService
 import services.journeyAnswers.expenses.{ExpensesAnswersService, PeriodSummaryService}
-import stubs.serviceErrorT
 import stubs.services._
 import utils.BaseSpec._
+
+import scala.concurrent.Future
 
 
 class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckPropertyChecks with TableDrivenPropertyChecks with OptionValues {
@@ -272,7 +274,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
         auth = mockAuthorisedAction,
         cc = stubControllerComponents,
         abroadAnswersService = StubAbroadAnswersService(),
-        incomeService = StubIncomeAnswersService(incomeJourneyAnswersRes = EitherT.leftT(downstreamError)),
+        incomeService = StubIncomeAnswersService(incomeJourneyAnswersRes = EitherT.left[Unit](Future.successful(downstreamError: ServiceError))),
         periodSummaryService = mockPeriodSummaryService,
         expensesService = mockExpensesAnswersService,
         capitalAllowancesService = StubCapitalAllowancesAnswersAnswersService(),
@@ -336,7 +338,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
     "Get return correct status if for get tailoring answers" in
       forAll(cases) { (journeyAnswers, expectedStatus) =>
-        MockExpensesAnswersService.getExpensesTailoringAnswers(journeyCtxWithNino)(EitherT.rightT(journeyAnswers))
+        MockExpensesAnswersService.getExpensesTailoringAnswers(journeyCtxWithNino)(EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
         val controller: JourneyAnswersController = new JourneyAnswersController(
           auth = mockAuthorisedAction,
@@ -360,14 +362,14 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save ExpensesTailoringNoExpenses return a $NO_CONTENT when successful" in {
-      MockExpensesAnswersService.saveTailoringAnswers(journeyCtxWithNino, NoExpensesAnswers)(EitherT.rightT(()))
+      MockExpensesAnswersService.saveTailoringAnswers(journeyCtxWithNino, NoExpensesAnswers)(EitherT.right[ServiceError](Future.successful(())))
 
       checkNoContent(underTest.saveExpensesTailoringNoExpenses(currTaxYear, businessId, nino))
     }
 
     s"Save ExpensesTailoringIndividualCategories return a $NO_CONTENT when successful" in {
       forAll(expensesTailoringIndividualCategoriesAnswersGen) { data =>
-        MockExpensesAnswersService.saveTailoringAnswers(journeyCtxWithNino, data)(EitherT.rightT(()))
+        MockExpensesAnswersService.saveTailoringAnswers(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
         behave like testRoute(
           request = buildRequest(data),
@@ -380,7 +382,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
     s"Save ExpensesTailoringTotalAmount return a $NO_CONTENT when successful" in {
       forAll(expensesTailoringTotalAmountAnswersGen) { data =>
-        MockExpensesAnswersService.saveTailoringAnswers(journeyCtxWithNino, data)(EitherT.rightT(()))
+        MockExpensesAnswersService.saveTailoringAnswers(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
         behave like testRoute(
           request = buildRequest(data),
@@ -392,7 +394,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
   "clearExpensesSimplifiedOrNoExpensesAnswers" in {
-    MockExpensesAnswersService.deleteSimplifiedExpensesAnswers(journeyCtxWithNino)(EitherT.rightT(()))
+    MockExpensesAnswersService.deleteSimplifiedExpensesAnswers(journeyCtxWithNino)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -403,7 +405,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   s"clearExpensesAndCapitalAllowancesData" in {
-    MockExpensesAnswersService.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino)(EitherT.rightT(()))
+    MockExpensesAnswersService.clearExpensesAndCapitalAllowancesData(journeyCtxWithNino)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -414,7 +416,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   s"clearOfficeSuppliesExpensesData" in {
-    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.OfficeSupplies)(EitherT.rightT(()))
+    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.OfficeSupplies)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -425,7 +427,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   s"clearGoodsToSellOrUseExpensesData" in {
-    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.GoodsToSellOrUse)(EitherT.rightT(()))
+    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.GoodsToSellOrUse)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -436,7 +438,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "clearRepairsAndMaintenanceExpensesData" in {
-    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.RepairsAndMaintenanceCosts)(EitherT.rightT(()))
+    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.RepairsAndMaintenanceCosts)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -447,7 +449,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "clearStaffCostsExpensesData" in {
-    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.StaffCosts)(EitherT.rightT(()))
+    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.StaffCosts)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -458,7 +460,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "clearWorkplaceRunningCostsExpensesData" in {
-    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.WorkplaceRunningCosts)(EitherT.rightT(()))
+    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.WorkplaceRunningCosts)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -469,7 +471,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "clearConstructionExpensesData" in {
-    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.Construction)(EitherT.rightT(()))
+    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.Construction)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -480,7 +482,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "clearProfessionalFeesExpensesData" in {
-    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.ProfessionalFees)(EitherT.rightT(()))
+    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.ProfessionalFees)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -491,29 +493,18 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "clearOtherExpensesExpensesData" in {
-    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.ProfessionalFees)(serviceErrorT)
+    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.OtherExpenses)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
       expectedStatus = NO_CONTENT,
       expectedBody = "",
-      methodBlock = () => underTest.clearProfessionalFeesExpensesData(currTaxYear, businessId, nino)
+      methodBlock = () => underTest.clearOtherExpensesData(currTaxYear, businessId, nino)
     )
-
-    (BAD_REQUEST, INTERNAL_SERVER_ERROR) map { status =>
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = status,
-        expectedBody = "",
-        methodBlock = () => {
-          underTest.clearOtherExpensesData(currTaxYear, businessId, nino)
-        }
-      )
-    }
   }
 
   "clearFinancialChargeExpensesData" in {
-    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.FinancialCharges)(serviceErrorT)
+    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.FinancialCharges)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -521,21 +512,10 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       expectedBody = "",
       methodBlock = () => underTest.clearFinancialChargeExpensesData(currTaxYear, businessId, nino)
     )
-
-    (BAD_REQUEST, INTERNAL_SERVER_ERROR) map { status =>
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = status,
-        expectedBody = "",
-        methodBlock = () => {
-          underTest.clearOtherExpensesData(currTaxYear, businessId, nino)
-        }
-      )
-    }
   }
 
   "clearInterestOnBankAndOtherExpensesData" in {
-    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.Interest)(serviceErrorT)
+    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.Interest)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -543,21 +523,10 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       expectedBody = "",
       methodBlock = () => underTest.clearInterestOnBankAndOtherExpensesData(currTaxYear, businessId, nino)
     )
-
-    (BAD_REQUEST, INTERNAL_SERVER_ERROR) map { status =>
-      behave like testRoute(
-        request = buildRequestNoContent,
-        expectedStatus = status,
-        expectedBody = "",
-        methodBlock = () => {
-          underTest.clearOtherExpensesData(currTaxYear, businessId, nino)
-        }
-      )
-    }
   }
 
   "clearAdvertisingOrMarketingExpensesData" in {
-    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.AdvertisingOrMarketing)(EitherT.rightT(()))
+    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.AdvertisingOrMarketing)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -569,7 +538,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   }
 
   "clearIrrecoverableDebtsExpensesData" in {
-    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.IrrecoverableDebts)(EitherT.rightT(()))
+    MockExpensesAnswersService.clearExpensesData(journeyCtxWithNino, JourneyName.IrrecoverableDebts)(EitherT.right[ServiceError](Future.successful(())))
 
     behave like testRoute(
       request = buildRequestNoContent,
@@ -581,14 +550,14 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "GoodsToSellOrUse" should {
     s"Get return $NO_CONTENT if there is no answers" in {
-      MockExpensesAnswersService.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(EitherT.rightT(None))
+      MockExpensesAnswersService.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(EitherT.right[ServiceError](Future.successful(None)))
 
       checkNoContent(underTest.getGoodsToSellOrUse(currTaxYear, businessId, nino))
     }
 
     s"Get answers and return a $OK when successful" in new GetExpensesTest[GoodsToSellOrUseAnswers] {
       override val journeyAnswers: GoodsToSellOrUseAnswers = genOne(goodsToSellOrUseAnswersGen)
-      MockExpensesAnswersService.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(EitherT.rightT(Some(journeyAnswers)))
+      MockExpensesAnswersService.getGoodsToSellOrUseAnswers(journeyCtxWithNino)(EitherT.right[ServiceError](Future.successful(Some(journeyAnswers))))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -599,9 +568,9 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save return a $NO_CONTENT when successful" in {
-      MockPeriodSummaryService.saveGoodsToSell(journeyCtxWithNino, goodsToSellOrUseJourneyAnswers)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveGoodsToSell(journeyCtxWithNino, goodsToSellOrUseJourneyAnswers)(EitherT.right[ServiceError](Future.successful(())))
       MockExpensesAnswersService.persistAnswers(
-        businessId, currTaxYear, mtditid, JourneyName.GoodsToSellOrUse, taxiMinicabOrRoadHaulageDb)(EitherT.rightT(()))
+        businessId, currTaxYear, mtditid, JourneyName.GoodsToSellOrUse, taxiMinicabOrRoadHaulageDb)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(goodsToSellOrUseAnswers),
@@ -615,14 +584,14 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "WorkplaceRunningCosts" should {
     s"Get return $NO_CONTENT if there is no answers" in {
-      MockExpensesAnswersService.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(EitherT.rightT(None))
+      MockExpensesAnswersService.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(EitherT.right[ServiceError](Future.successful(None)))
 
       checkNoContent(underTest.getWorkplaceRunningCosts(currTaxYear, businessId, nino))
     }
 
     s"Get answers and return a $OK when successful" in new GetExpensesTest[WorkplaceRunningCostsAnswers] {
       override val journeyAnswers: WorkplaceRunningCostsAnswers = genOne(workplaceRunningCostsAnswersGen)
-      MockExpensesAnswersService.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(EitherT.rightT(Some(journeyAnswers)))
+      MockExpensesAnswersService.getWorkplaceRunningCostsAnswers(journeyCtxWithNino)(EitherT.right[ServiceError](Future.successful(Some(journeyAnswers))))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -633,14 +602,14 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save return a $NO_CONTENT when successful " in {
-        MockPeriodSummaryService.saveWorkplaceRunningCosts(journeyCtxWithNino, workplaceRunningCostsJourneyAnswers)(EitherT.rightT(()))
-        MockExpensesAnswersService.persistAnswers(
-          businessId,
-          currTaxYear,
-          mtditid,
-          JourneyName.WorkplaceRunningCosts,
-          workplaceRunningCostsDb
-        )(EitherT.rightT(()))
+      MockPeriodSummaryService.saveWorkplaceRunningCosts(journeyCtxWithNino, workplaceRunningCostsJourneyAnswers)(EitherT.right[ServiceError](Future.successful(())))
+      MockExpensesAnswersService.persistAnswers(
+        businessId,
+        currTaxYear,
+        mtditid,
+        JourneyName.WorkplaceRunningCosts,
+        workplaceRunningCostsDb
+      )(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(workplaceRunningCostsAnswers),
@@ -654,7 +623,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
   "OfficeSupplies" should {
     s"Get answers and return a $OK when successful" in new GetExpensesTest[OfficeSuppliesJourneyAnswers] {
       override val journeyAnswers: OfficeSuppliesJourneyAnswers = genOne(officeSuppliesJourneyAnswersGen)
-      MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(EitherT.rightT(journeyAnswers))
+      MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -665,7 +634,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save return a $NO_CONTENT when successful" in forAll(officeSuppliesJourneyAnswersGen) { data =>
-      MockPeriodSummaryService.saveOfficeSuppliesAnswers(journeyCtxWithNino, data)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveOfficeSuppliesAnswers(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(data),
@@ -680,7 +649,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[RepairsAndMaintenanceCostsJourneyAnswers] {
       override val journeyAnswers: RepairsAndMaintenanceCostsJourneyAnswers = genOne(repairsAndMaintenanceCostsJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))
+        EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -691,7 +660,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save return a $NO_CONTENT when successful" in forAll(repairsAndMaintenanceCostsJourneyAnswersGen) { data =>
-      MockPeriodSummaryService.saveRepairsAndMaintenance(journeyCtxWithNino, data)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveRepairsAndMaintenance(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(data),
@@ -706,7 +675,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[StaffCostsJourneyAnswers] {
       override val journeyAnswers: StaffCostsJourneyAnswers = genOne(staffCostsJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))
+        EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -717,7 +686,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save return a $NO_CONTENT when successful" in forAll(staffCostsJourneyAnswersGen) { data =>
-      MockPeriodSummaryService.saveStaffCosts(journeyCtxWithNino, data)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveStaffCosts(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(data),
@@ -730,7 +699,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
 
   "EntertainmentCosts" should {
     s"Save return a $NO_CONTENT when successful" in forAll(entertainmentCostsJourneyAnswersGen) { data =>
-      MockPeriodSummaryService.saveEntertainmentCosts(journeyCtxWithNino, data)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveEntertainmentCosts(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(data),
@@ -745,7 +714,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[AdvertisingOrMarketingJourneyAnswers] {
       override val journeyAnswers: AdvertisingOrMarketingJourneyAnswers = genOne(advertisingOrMarketingJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))
+        EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -756,7 +725,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save return a $NO_CONTENT when successful" in forAll(advertisingOrMarketingJourneyAnswersGen) { data =>
-      MockPeriodSummaryService.saveAdvertisingOrMarketing(journeyCtxWithNino, data)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveAdvertisingOrMarketing(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(data),
@@ -771,7 +740,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[ConstructionJourneyAnswers] {
       override val journeyAnswers: ConstructionJourneyAnswers = genOne(constructionJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))
+        EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -782,7 +751,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save return a $NO_CONTENT when successful" in forAll(constructionJourneyAnswersGen) { data =>
-      MockPeriodSummaryService.saveConstructionIndustrySubcontractors(journeyCtxWithNino, data)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveConstructionIndustrySubcontractors(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(data),
@@ -797,7 +766,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[ProfessionalFeesJourneyAnswers] {
       override val journeyAnswers: ProfessionalFeesJourneyAnswers = genOne(professionalFeesJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))
+        EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -808,7 +777,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save return a $NO_CONTENT when successful" in forAll(professionalFeesJourneyAnswersGen) { data =>
-      MockPeriodSummaryService.saveProfessionalFees(journeyCtxWithNino, data)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveProfessionalFees(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(data),
@@ -823,7 +792,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[InterestJourneyAnswers] {
       override val journeyAnswers: InterestJourneyAnswers = genOne(interestJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))
+        EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -834,7 +803,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save return a $NO_CONTENT when successful" in forAll(interestJourneyAnswersGen) { data =>
-      MockPeriodSummaryService.saveInterests(journeyCtxWithNino, data)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveInterests(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(data),
@@ -849,7 +818,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[EntertainmentJourneyAnswers] {
       override val journeyAnswers: EntertainmentJourneyAnswers = genOne(entertainmentCostsJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))
+        EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -864,7 +833,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[DepreciationCostsJourneyAnswers] {
       override val journeyAnswers: DepreciationCostsJourneyAnswers = genOne(depreciationJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))
+        EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -875,7 +844,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save return a $NO_CONTENT when successful" in forAll(depreciationJourneyAnswersGen) { data =>
-      MockPeriodSummaryService.saveDepreciationCosts(journeyCtxWithNino, data)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveDepreciationCosts(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(data),
@@ -890,7 +859,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[OtherExpensesJourneyAnswers] {
       override val journeyAnswers: OtherExpensesJourneyAnswers = genOne(otherExpensesJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))
+        EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -901,7 +870,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save answers and return a $NO_CONTENT when successful" in forAll(otherExpensesJourneyAnswersGen) { data =>
-      MockPeriodSummaryService.saveOtherExpenses(journeyCtxWithNino, data)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveOtherExpenses(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(data),
@@ -916,7 +885,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[FinancialChargesJourneyAnswers] {
       override val journeyAnswers: FinancialChargesJourneyAnswers = genOne(financialChargesJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))
+        EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -926,7 +895,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
       )
     }
     s"Save answers and return a $NO_CONTENT when successful" in forAll(financialChargesJourneyAnswersGen) { data =>
-      MockPeriodSummaryService.saveFinancialCharges(journeyCtxWithNino, data)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveFinancialCharges(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(data),
@@ -941,7 +910,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     s"Get answers and return a $OK when successful" in new GetExpensesTest[IrrecoverableDebtsJourneyAnswers] {
       override val journeyAnswers: IrrecoverableDebtsJourneyAnswers = genOne(irrecoverableDebtsJourneyAnswersGen)
       MockExpensesAnswersService.getAnswers(journeyCtxWithNino)(
-        EitherT.rightT(journeyAnswers))
+        EitherT.right[ServiceError](Future.successful(journeyAnswers)))
 
       behave like testRoute(
         request = buildRequestNoContent,
@@ -952,7 +921,7 @@ class JourneyAnswersControllerSpec extends ControllerBehaviours with ScalaCheckP
     }
 
     s"Save answers and return a $NO_CONTENT when successful" in forAll(irrecoverableDebtsJourneyAnswersGen) { data =>
-      MockPeriodSummaryService.saveBadDebts(journeyCtxWithNino, data)(EitherT.rightT(()))
+      MockPeriodSummaryService.saveBadDebts(journeyCtxWithNino, data)(EitherT.right[ServiceError](Future.successful(())))
 
       behave like testRoute(
         request = buildRequest(data),

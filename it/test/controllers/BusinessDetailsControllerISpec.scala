@@ -22,6 +22,7 @@ import helpers.AuthStub
 import models.common.{BusinessId, Nino}
 import play.api.http.Status.{NOT_FOUND, OK}
 import play.api.libs.json.Json
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
 import play.api.test.Helpers.await
 
 class BusinessDetailsControllerISpec extends IntegrationBaseSpec with AuthStub with Api1171Test {

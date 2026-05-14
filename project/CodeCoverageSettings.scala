@@ -32,7 +32,7 @@ object CodeCoverageSettings {
     "controllers.testonly.*"
   )
 
-  val settings: Seq[Setting[_]] = Seq(
+  val settings: Seq[Setting[?]] = Seq(
     ScoverageKeys.coverageExcludedPackages   := excludedPackages.mkString(";"),
     ScoverageKeys.coverageMinimumStmtTotal   := 85.62,
     ScoverageKeys.coverageMinimumBranchTotal := 73.17,

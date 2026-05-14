@@ -27,8 +27,8 @@ import models.connector.common.{ReliefClaim, UkProperty}
 import models.error.ServiceError
 import models.frontend.adjustments._
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.times
-import org.mockito.MockitoSugar.{mock, reset, verify, when}
+import org.mockito.Mockito.{reset, times, verify, when}
+import org.scalatestplus.mockito.MockitoSugar.mock
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike

@@ -28,7 +28,7 @@ import models.database.expenses.travel.TravelExpensesDb
 import models.domain.{JourneyNameAndStatus, TradesJourneyStatuses}
 import models.error.ServiceError
 import models.frontend.TaskList
-import org.mockito.MockitoSugar.{reset, when}
+import org.mockito.Mockito.{reset, when}
 import org.scalatest.EitherValues._
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.libs.json.{JsObject, Json}
@@ -49,7 +49,7 @@ class MongoJourneyAnswersRepositoryISpec extends MongoSpec with MongoTestSupport
 
   private val TTLinSeconds = mockAppConfig.mongoTTL * 3600 * 24
 
-  override val repository                           = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, mockClock)
+  override val repository: MongoJourneyAnswersRepository = new MongoJourneyAnswersRepository(mongoComponent, mockAppConfig, mockClock)
   override val mongo: MongoJourneyAnswersRepository = repository // Required by JourneyAnswersHelper
 
   override def beforeEach(): Unit = {

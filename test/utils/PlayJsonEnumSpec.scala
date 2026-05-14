@@ -21,15 +21,17 @@ import enumeratum._
 import play.api.libs.json._
 import cats.implicits._
 
+// Defined at file scope so enumeratum's findValues macro works correctly in Scala 3
+sealed trait Foo extends EnumEntry
+
+object Foo extends Enum[Foo] with utils.PlayJsonEnum[Foo] {
+  override def values: IndexedSeq[Foo] = findValues
+
+  case object FooOne extends Foo
+  case object FooTwo extends Foo
+}
+
 class PlayJsonEnumSpec extends AnyWordSpecLike {
-  sealed trait Foo extends EnumEntry
-
-  object Foo extends Enum[Foo] with utils.PlayJsonEnum[Foo] {
-    override def values: IndexedSeq[Foo] = findValues
-
-    case object FooOne extends Foo
-    case object FooTwo extends Foo
-  }
 
   "PlayJsonEnum" should {
     "serialize enum values to JSON" in {

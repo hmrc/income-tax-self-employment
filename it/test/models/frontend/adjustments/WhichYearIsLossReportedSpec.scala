@@ -18,9 +18,9 @@ package models.frontend.adjustments
 
 import models.frontend.adjustments.WhichYearIsLossReported.{Year2018to2019, Year2019to2020, Year2020to2021, Year2021to2022, Year2022to2023}
 import org.scalatest.freespec.AnyFreeSpec
-import utils.TestUtils.convertToAnyMustWrapper
+import org.scalatest.matchers.must.Matchers
 
-class WhichYearIsLossReportedSpec extends AnyFreeSpec {
+class WhichYearIsLossReportedSpec extends AnyFreeSpec with Matchers {
 
   "WhichYearIsLossReported" - {
     "convert to WhichYearIsLossReported for the valid input" in {

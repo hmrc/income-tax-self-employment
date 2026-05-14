@@ -19,7 +19,7 @@ package connectors.HIP
 import base.IntegrationBaseSpec
 import models.connector.api_2085.ListOfIncomeSources
 import models.error.DownstreamError
-import org.mockito.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.Helpers.await

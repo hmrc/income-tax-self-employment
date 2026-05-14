@@ -23,6 +23,8 @@ import models.database.expenses.travel._
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.libs.ws.WSResponse
+import play.api.libs.ws.DefaultBodyWritables._
+import play.api.libs.ws.JsonBodyWritables._
 import play.api.test.Helpers.await
 import services.answers.CollectionSection
 

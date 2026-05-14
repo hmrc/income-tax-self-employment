@@ -46,7 +46,7 @@ object TaskListData {
         (__ \ "taxYear").write[Int] and
         (__ \ "data").write[JsObject] and
         (__ \ "lastUpdated").write(MongoJavatimeFormats.instantFormat)
-    )(unlift(TaskListData.unapply))
+    )(td => (td.mtdItId, td.taxYear, td.data, td.lastUpdated))
   }
 
   implicit val format: OFormat[TaskListData] = OFormat(reads, writes)

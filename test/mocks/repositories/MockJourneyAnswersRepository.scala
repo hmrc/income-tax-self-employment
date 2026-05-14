@@ -17,16 +17,15 @@
 package mocks.repositories
 
 import cats.data.EitherT
-import cats.implicits._
 import models.common._
 import models.database.JourneyAnswers
 import models.domain.{ApiResultT, Business}
 import models.error.DownstreamError.SingleDownstreamError
+import models.error.ServiceError
 import models.frontend.TaskList
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchersSugar.eqTo
-import org.mockito.MockitoSugar.when
-import org.mockito.stubbing.ScalaOngoingStubbing
+import org.mockito.ArgumentMatchersSugar.*
+import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing as ScalaOngoingStubbing
 import org.scalatestplus.mockito.MockitoSugar.mock
 import play.api.libs.json.JsValue
 import repositories.JourneyAnswersRepository
@@ -57,34 +56,34 @@ object MockJourneyAnswersRepository {
   def get(context: JourneyContext)
          (returnValue: Option[JourneyAnswers]): ScalaOngoingStubbing[ApiResultT[Option[JourneyAnswers]]] =
     when(mockInstance.get(eqTo(context)))
-      .thenReturn(EitherT.pure(returnValue))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(returnValue)))
 
   def getAll(taxYear: TaxYear, mtdId: Mtditid, businesses: List[Business])
             (returnValue: TaskList): ScalaOngoingStubbing[ApiResultT[TaskList]] =
     when(mockInstance.getAll(eqTo(taxYear), eqTo(mtdId), eqTo(businesses)))
-      .thenReturn(EitherT.pure(returnValue))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(returnValue)))
 
   def getAllError(taxYear: TaxYear, mtdId: Mtditid, businesses: List[Business])
                  (returnValue: SingleDownstreamError): ScalaOngoingStubbing[ApiResultT[TaskList]] =
     when(mockInstance.getAll(eqTo(taxYear), eqTo(mtdId), eqTo(businesses)))
-      .thenReturn(EitherT.leftT(returnValue))
+      .thenReturn(EitherT.left[TaskList](Future.successful(returnValue: ServiceError)))
 
   def getAnswers[A](ctx: JourneyContext)
                           (returnValue: Option[A]): ScalaOngoingStubbing[ApiResultT[Option[A]]] =
     when(mockInstance.getAnswers[A](eqTo(ctx))(any()))
-      .thenReturn(EitherT.pure(returnValue))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(returnValue)))
 
   def upsertAnswers(ctx: JourneyContext, newData: JsValue): ScalaOngoingStubbing[ApiResultT[Unit]] =
     when(mockInstance.upsertAnswers(eqTo(ctx), eqTo(newData)))
-      .thenReturn(EitherT.pure(()))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
   def setStatus(ctx: JourneyContext, status: JourneyStatus): ScalaOngoingStubbing[ApiResultT[Unit]] =
     when(mockInstance.setStatus(eqTo(ctx), eqTo(status)))
-      .thenReturn(EitherT.pure(()))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
   def deleteOneOrMoreJourneys(ctx: JourneyContext, multiplePrefix: Option[String] = None): ScalaOngoingStubbing[ApiResultT[Unit]] =
     when(
       mockInstance.deleteOneOrMoreJourneys(eqTo(ctx), eqTo(multiplePrefix)))
-      .thenReturn(EitherT.pure(()))
+      .thenReturn(EitherT.right[ServiceError](Future.successful(())))
 
 }

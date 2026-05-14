@@ -25,10 +25,9 @@ import models.domain.ApiResultT
 import models.connector.api_1871.BusinessIncomeSourcesSummaryResponse
 import models.connector.api_2085
 import models.connector.businessDetailsConnector.BusinessDetailsSuccessResponseSchema
-import org.mockito.stubbing.ScalaOngoingStubbing
-import org.mockito.ArgumentMatchersSugar.eqTo
-import org.mockito.ArgumentMatchersSugar.any
-import org.mockito.MockitoSugar.when
+import org.mockito.ArgumentMatchersSugar.*
+import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing as ScalaOngoingStubbing
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
